@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0C0C14" />
-    <meta name="description" content="Бесплатная подготовка к ЕНТ: 27 000+ вопросов по 13 предметам, адаптивное обучение, полная симуляция экзамена, разбор ошибок и калькулятор грантов. Формат ЕНТ 2025/2026." />
+    <meta name="description" content="Бесплатная подготовка к ЕНТ: 28 000+ вопросов по 13 предметам, адаптивное обучение, полная симуляция экзамена, разбор ошибок и калькулятор грантов. Формат ЕНТ 2025/2026." />
     <meta name="keywords" content="ЕНТ, подготовка к ЕНТ, тесты ЕНТ, Единое национальное тестирование, Казахстан, пробный ЕНТ, вопросы ЕНТ, ент 2025, ент 2026, гранты, ҰБТ, ҰБТ дайындық" />
     <link rel="canonical" href="https://entprep.netlify.app" />
     <link rel="alternate" hreflang="ru" href="https://entprep.netlify.app" />
@@ -14,14 +14,14 @@
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://entprep.netlify.app" />
     <meta property="og:title" content="ENTprep — Бесплатная подготовка к ЕНТ" />
-    <meta property="og:description" content="27 000+ вопросов по 13 предметам, адаптивное обучение, симуляция экзамена и калькулятор грантов. Формат ЕНТ 2025/2026." />
+    <meta property="og:description" content="28 000+ вопросов по 13 предметам, адаптивное обучение, симуляция экзамена и калькулятор грантов. Формат ЕНТ 2025/2026." />
     <meta property="og:image" content="https://entprep.netlify.app/og-image.png" />
     <meta property="og:locale" content="ru_KZ" />
     <meta property="og:locale:alternate" content="kk_KZ" />
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="ENTprep — Бесплатная подготовка к ЕНТ" />
-    <meta name="twitter:description" content="27 000+ вопросов, адаптивное обучение, симуляция экзамена. Бесплатно." />
+    <meta name="twitter:description" content="28 000+ вопросов, адаптивное обучение, симуляция экзамена. Бесплатно." />
     <meta name="twitter:image" content="https://entprep.netlify.app/og-image.png" />
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
@@ -30,10 +30,14 @@
       "@type": "WebApplication",
       "name": "ENTprep",
       "url": "https://entprep.netlify.app",
-      "description": "Бесплатная подготовка к ЕНТ: 27 000+ вопросов по 13 предметам, адаптивное обучение, симуляция экзамена и калькулятор грантов.",
+      "description": "Бесплатная подготовка к ЕНТ: 28 000+ вопросов по 13 предметам, адаптивное обучение, симуляция экзамена и калькулятор грантов.",
       "applicationCategory": "EducationalApplication",
       "operatingSystem": "Any",
-      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "KZT" },
+      "offers": [
+        { "@type": "Offer", "price": "0", "priceCurrency": "KZT", "description": "Бесплатный доступ" },
+        { "@type": "Offer", "price": "1990", "priceCurrency": "KZT", "description": "Премиум (месяц)" },
+        { "@type": "Offer", "price": "9990", "priceCurrency": "KZT", "description": "Премиум (год)" }
+      ],
       "inLanguage": ["ru", "kk"],
       "audience": { "@type": "EducationalAudience", "educationalRole": "student" },
       "about": {
@@ -79,12 +83,12 @@
           if(d.st&&d.st.theme==='light'){
             var s=document.getElementById('splash');
             s.style.background='#FAFAF8';
-            s.querySelector('.sub').style.color='#94a3b8';
+            s.querySelector('.sub').style.color='#6b7a8d';
             document.querySelector('meta[name="theme-color"]').setAttribute('content','#FAFAF8');
             var st=document.createElement('style');
             st.id='pre-theme';
             /* GENERATED FROM constants/themes.ts LIGHT palette — keep in sync */
-            st.textContent=':root{--bg:#FAFAF8;--bg-card:rgba(255,255,255,0.92);--bg-header:rgba(255,255,255,0.95);--bg-footer:rgba(255,255,255,0.96);--bg-hero:linear-gradient(135deg,rgba(255,248,240,0.9),rgba(250,245,238,0.9),rgba(240,248,246,0.8));--bg-modal:linear-gradient(180deg,#F5F3F0,#FAFAF8);--bg-sheet:rgba(255,255,255,0.99);--bg-prompt:rgba(255,255,255,0.95);--bg-overlay:rgba(0,0,0,0.5);--bg-overlay-light:rgba(0,0,0,0.3);--bg-elevated:rgba(250,250,248,0.95);--bg-subtle:rgba(0,0,0,0.03);--bg-subtle-2:rgba(0,0,0,0.05);--bg-option:rgba(0,0,0,0.02);--bg-disabled:rgba(230,230,235,0.8);--bg-card-dim:rgba(255,255,255,0.5);--text:#1a1a2e;--text-body:#334155;--text-secondary:#64748b;--text-muted:#94a3b8;--text-dim:#b0b8c4;--text-light:#475569;--border:rgba(0,0,0,0.08);--border-light:rgba(0,0,0,0.06);--border-md:rgba(0,0,0,0.1);--border-strong:rgba(0,0,0,0.1);--border-stronger:rgba(0,0,0,0.12);--scroll-thumb:rgba(0,0,0,0.1);--spinner-track:rgba(0,0,0,0.08);--toggle-off:rgba(0,0,0,0.08);--sheet-handle:rgba(0,0,0,0.12);--skeleton-bg:rgba(0,0,0,0.06);--shadow-sm:0 2px 8px rgba(0,0,0,0.04);--shadow-md:0 4px 16px rgba(0,0,0,0.06);--shadow-glow:0 4px 16px rgba(255,107,53,0.06);--color-scheme:light;--theme-color:#FAFAF8}';
+            st.textContent=':root{--bg:#FAFAF8;--bg-card:rgba(255,255,255,0.92);--bg-header:rgba(255,255,255,0.95);--bg-footer:rgba(255,255,255,0.96);--bg-hero:linear-gradient(135deg,rgba(255,248,240,0.9),rgba(250,245,238,0.9),rgba(240,248,246,0.8));--bg-modal:linear-gradient(180deg,#F5F3F0,#FAFAF8);--bg-sheet:rgba(255,255,255,0.99);--bg-prompt:rgba(255,255,255,0.95);--bg-overlay:rgba(0,0,0,0.5);--bg-overlay-light:rgba(0,0,0,0.3);--bg-elevated:rgba(250,250,248,0.95);--bg-subtle:rgba(0,0,0,0.03);--bg-subtle-2:rgba(0,0,0,0.05);--bg-option:rgba(0,0,0,0.02);--bg-disabled:rgba(230,230,235,0.8);--bg-card-dim:rgba(255,255,255,0.5);--text:#1a1a2e;--text-body:#334155;--text-secondary:#64748b;--text-muted:#6b7a8d;--text-dim:#8491a0;--text-light:#475569;--border:rgba(0,0,0,0.08);--border-light:rgba(0,0,0,0.06);--border-md:rgba(0,0,0,0.1);--border-strong:rgba(0,0,0,0.1);--border-stronger:rgba(0,0,0,0.12);--scroll-thumb:rgba(0,0,0,0.1);--spinner-track:rgba(0,0,0,0.08);--toggle-off:rgba(0,0,0,0.08);--sheet-handle:rgba(0,0,0,0.12);--skeleton-bg:rgba(0,0,0,0.06);--shadow-sm:0 2px 8px rgba(0,0,0,0.04);--shadow-md:0 4px 16px rgba(0,0,0,0.06);--shadow-glow:0 4px 16px rgba(255,107,53,0.06);--color-scheme:light;--theme-color:#FAFAF8}';
             document.head.appendChild(st);
           }
         }catch(e){}

@@ -1,4 +1,5 @@
 import type { UserData, SRCard } from '../types/index';
+import { captureError } from '../config/sentry';
 
 const STORAGE_KEY = 'entprep_data';
 
@@ -16,7 +17,7 @@ function saveData(d: UserData): boolean {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
     return true;
   } catch (e) {
-    console.warn('saveData: localStorage write failed (quota?)', e);
+    captureError(e, { context: 'storage.saveData' });
     return false;
   }
 }

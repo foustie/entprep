@@ -1,4 +1,5 @@
 import { supabase } from '../config/supabase';
+import { captureError } from '../config/sentry';
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY as string;
 
@@ -97,8 +98,8 @@ async function saveSubscription(subscription: PushSubscription): Promise<void> {
       headers,
       body: JSON.stringify({ action: 'subscribe', subscription: subscription.toJSON() }),
     });
-  } catch {
-    console.error('Failed to save push subscription to server');
+  } catch (e) {
+    captureError(e, { context: 'pushHelpers.saveSubscription' });
   }
 }
 
@@ -111,8 +112,8 @@ async function deleteSubscription(endpoint: string): Promise<void> {
       headers,
       body: JSON.stringify({ action: 'unsubscribe', endpoint }),
     });
-  } catch {
-    console.error('Failed to delete push subscription from server');
+  } catch (e) {
+    captureError(e, { context: 'pushHelpers.deleteSubscription' });
   }
 }
 

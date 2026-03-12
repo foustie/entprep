@@ -110,8 +110,8 @@ export default function FullENT({ finish }: FullENTProps) {
   // Pause timer when offline
   useEffect(() => {
     if (phase !== "test") return;
-    const goOffline = () => { setOffline(true); toast.warning((t.test as Record<string, string>).connectionLost || 'Соединение потеряно'); };
-    const goOnline = () => { setOffline(false); toast.success((t.test as Record<string, string>).connectionRestored || 'Соединение восстановлено'); };
+    const goOffline = () => { setOffline(true); toast.warning((t.test as Record<string, string>).connectionLost); };
+    const goOnline = () => { setOffline(false); toast.success((t.test as Record<string, string>).connectionRestored); };
     window.addEventListener('offline', goOffline);
     window.addEventListener('online', goOnline);
     return () => { window.removeEventListener('offline', goOffline); window.removeEventListener('online', goOnline); };
@@ -384,8 +384,8 @@ export default function FullENT({ finish }: FullENTProps) {
       </div>}
       {offline && <div style={{ ...CARD, background: "linear-gradient(135deg,rgba(26,26,50,0.95),rgba(22,33,62,0.95))", borderRadius: 18, padding: "48px 20px", textAlign: "center", marginBottom: 16, animation: "slideUp 0.3s cubic-bezier(0.16,1,0.3,1)" }}>
         <WifiOff size={40} color={COLORS.red} style={{ marginBottom: 12 }} />
-        <div style={{ fontSize: 18, fontWeight: 700, color: COLORS.red, marginBottom: 8 }}>{(t.test as Record<string, string>).connectionLost || 'Соединение потеряно'}</div>
-        <div style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 16 }}>{(t.test as Record<string, string>).timerPaused || 'Таймер на паузе. Ваш прогресс сохранён.'}</div>
+        <div style={{ fontSize: 18, fontWeight: 700, color: COLORS.red, marginBottom: 8 }}>{(t.test as Record<string, string>).connectionLost}</div>
+        <div style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 16 }}>{(t.test as Record<string, string>).timerPaused}</div>
         <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{t.fullent.pauseStats} {totalAnswered}/120 {t.fullent.pauseRemaining} {fm(timeLeft)}</div>
       </div>}
       {!paused && !offline && <><div style={{ display: "flex", gap: 4, marginBottom: 12, overflowX: "auto" }}>

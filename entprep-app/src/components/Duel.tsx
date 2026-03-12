@@ -499,7 +499,7 @@ export default function Duel() {
                 background: 'var(--bg-card)', border: '1.5px solid var(--border)',
                 borderRadius: 14, color: 'var(--text)', fontSize: 24,
                 fontFamily: "'JetBrains Mono',monospace", fontWeight: 700,
-                letterSpacing: 6, outline: 'none', boxSizing: 'border-box',
+                letterSpacing: 6, boxSizing: 'border-box',
               }}
             />
             <button
@@ -513,7 +513,7 @@ export default function Duel() {
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               }}
             >
-              <Swords size={18} />Присоединиться
+              <Swords size={18} />{t.duel.join}
             </button>
           </div>
         )}
@@ -622,7 +622,7 @@ export default function Duel() {
   if (phase === 'playing') {
     if (waitingForOpponent) {
       return (
-        <div style={{ padding: `0 var(--content-padding) ${padBottom}px`, textAlign: 'center', paddingTop: 60 }}>
+        <div style={{ paddingTop: 60, paddingRight: 'var(--content-padding)', paddingBottom: padBottom, paddingLeft: 'var(--content-padding)', textAlign: 'center' }}>
           <div style={{ width: 64, height: 64, borderRadius: 20, background: 'rgba(34,197,94,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
             <Check size={32} color={COLORS.green} />
           </div>

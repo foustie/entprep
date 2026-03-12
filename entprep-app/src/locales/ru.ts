@@ -225,6 +225,7 @@ const ru = {
     goalDone: 'Цель дня выполнена!',
     goalDay: 'Цель дня:',
     errorReviewBanner: 'Повтори ошибки за сегодня',
+    dailyGoalDone: 'Дневная цель выполнена! 🎯',
     challengeDone: 'Пройден!',
     dailyChallenge: 'Ежедневный вызов',
     yesterday: 'вчера',
@@ -522,6 +523,8 @@ const ru = {
     planError: 'Ошибка генерации плана',
     networkError: 'Сетевая ошибка. Проверьте подключение.',
     networkErrorShort: 'Сетевая ошибка',
+    stable: 'стабильно',
+    retry: 'Повторить',
   },
 
   // ── Calc ─────────────────────────────────────────────────────────────
@@ -733,7 +736,7 @@ const ru = {
     upgradeTitle: 'ENTprep Premium',
     upgradeDesc: 'Безлимитный AI-разбор, полная симуляция ЕНТ и персональный план подготовки.',
     monthlyPlan: '1 990 \u20B8/мес',
-    yearlyPlan: '4 990 \u20B8',
+    yearlyPlan: '9 990 \u20B8',
     yearlyPlanDesc: 'автопродление раз в год',
     monthlyLabel: 'Ежемесячно',
     yearlyLabel: 'Ежегодно',
@@ -744,7 +747,7 @@ const ru = {
     noPurchaseFound: 'Подписка не найдена. Если вы покупали — попробуйте позже.',
     webOnly: 'Скачать приложение',
     purchasing: 'Оформление...',
-    yearlyPlanAuto: '4 990 \u20B8/год',
+    yearlyPlanAuto: '9 990 \u20B8/год',
   },
 
   // ── Share ──────────────────────────────────────────────────────────

@@ -1,6 +1,7 @@
 // Duel API: create, join, submit answers, forfeit
 // Real-time 1v1 duels — action-based routing (same pattern as social.mjs)
 
+import { randomBytes } from "node:crypto";
 import { CORS_HEADERS, corsResponse, verifyAuth, createRateLimiter, rateLimitResponse } from "./utils/shared.mjs";
 
 const SB_URL = process.env.VITE_SUPABASE_URL;
@@ -45,20 +46,22 @@ const joinLimit = createRateLimiter("duel_join", { max: 10, windowSec: 60 });
 const answerLimit = createRateLimiter("duel_answer", { max: 60, windowSec: 60 });
 const generalLimit = createRateLimiter("duel_general", { max: 30, windowSec: 60 });
 
-// Fisher-Yates shuffle
+// Fisher-Yates shuffle (crypto-secure)
 function shuffle(arr) {
+  const bytes = randomBytes(arr.length * 4);
   for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = bytes.readUInt32BE(i * 4) % (i + 1);
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   return arr;
 }
 
-// Generate 6-char uppercase alphanumeric code
+// Generate 6-char uppercase alphanumeric code (crypto-secure)
 function genCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0/O/1/I to avoid confusion
+  const bytes = randomBytes(6);
   let code = "";
-  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  for (let i = 0; i < 6; i++) code += chars[bytes[i] % chars.length];
   return code;
 }
 
@@ -280,7 +283,7 @@ export default async function handler(req) {
         const newAnswers = { ...currentAnswers, [String(question_index)]: answer };
         const scoreField = isCreator ? "creator_score" : "opponent_score";
         const doneField = isCreator ? "creator_done" : "opponent_done";
-        const newScore = duel[scoreField] + (correct ? 1 : 0);
+        const newScore = (duel[scoreField] ?? 0) + (correct ? 1 : 0);
         const isDone = Object.keys(newAnswers).length >= duel.question_ids.length;
 
         const update = {

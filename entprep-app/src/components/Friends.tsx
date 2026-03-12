@@ -73,7 +73,7 @@ export default function Friends() {
       setFriends(f);
       setRequests(r);
     } catch {
-      // silently fail
+      toast.error(t.error);
     }
     setLoading(false);
   }, [user]);
@@ -192,7 +192,6 @@ export default function Friends() {
                 color: 'var(--text)',
                 fontSize: 14,
                 fontFamily: "'JetBrains Mono',monospace",
-                outline: 'none',
               }}
             />
             <button
@@ -304,7 +303,6 @@ export default function Friends() {
             borderRadius: 14,
             color: 'var(--text)',
             fontSize: 13,
-            outline: 'none',
             boxSizing: 'border-box',
           }}
         />
@@ -394,10 +392,10 @@ export default function Friends() {
                   <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: "'JetBrains Mono',monospace" }}>@{req.profile.nickname}</div>
                 </div>
                 <div style={{ display: 'flex', gap: 6, marginLeft: 8 }}>
-                  <button onClick={() => handleRespond(req.id, 'accepted')} style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                  <button onClick={() => handleRespond(req.id, 'accepted')} aria-label={t.friends.friendAdded} style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                     <UserCheck size={18} color={COLORS.green} />
                   </button>
-                  <button onClick={() => handleRespond(req.id, 'declined')} style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                  <button onClick={() => handleRespond(req.id, 'declined')} aria-label={t.friends.requestDeclined} style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                     <UserX size={18} color={COLORS.red} />
                   </button>
                 </div>
@@ -503,16 +501,16 @@ const FriendCard = memo(function FriendCard({ friendship, index, onRemove, onDue
             <Zap size={10} />{p.streak}
           </div>
         )}
-        <button onClick={onDuel} title={t.friends.challengeToDuel} style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-          <Swords size={14} color={COLORS.red} />
+        <button onClick={onDuel} aria-label={t.friends.challengeToDuel} style={{ width: 44, height: 44, borderRadius: 8, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <Swords size={16} color={COLORS.red} />
         </button>
         {confirmRemove ? (
           <button onClick={() => onRemove(friendship.id)} style={{ padding: '5px 10px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, color: COLORS.red, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>
             {t.friends.removeFriend}
           </button>
         ) : (
-          <button onClick={() => setConfirmRemove(true)} style={{ width: 30, height: 30, borderRadius: 8, background: 'none', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: 0.5 }}>
-            <X size={14} color="var(--text-muted)" />
+          <button onClick={() => setConfirmRemove(true)} aria-label={t.friends.removeFriend} style={{ width: 44, height: 44, borderRadius: 8, background: 'none', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: 0.5 }}>
+            <X size={16} color="var(--text-muted)" />
           </button>
         )}
       </div>

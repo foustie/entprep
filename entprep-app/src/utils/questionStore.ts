@@ -1,6 +1,7 @@
 // Central question store: memory cache -> Supabase -> localStorage -> static fallback
 import { supabase } from '../config/supabase';
 import type { Question, Passage } from '../types/index';
+import { captureError } from '../config/sentry';
 
 const CACHE_KEY = 'entprep_qcache';
 const COUNTS_KEY = 'entprep_qcounts';
@@ -29,17 +30,19 @@ const STATIC_FILES: Record<string, () => Promise<Question[] | Passage[]>> = {
   literature: () => import('../data/questions/literature').then(m => m.LIT),
 };
 
-// --- version check: clear stale question cache ---
-try {
-  const v = localStorage.getItem(DATA_VERSION_KEY);
-  if (v !== String(DATA_VERSION)) {
-    Object.keys(localStorage).forEach(k => {
-      if (k.startsWith(CACHE_KEY)) localStorage.removeItem(k);
-    });
-    // Keep COUNTS_KEY — counts are independent of question cache
-    localStorage.setItem(DATA_VERSION_KEY, String(DATA_VERSION));
-  }
-} catch {}
+// --- version check: clear stale question cache (deferred to avoid blocking init) ---
+queueMicrotask(() => {
+  try {
+    const v = localStorage.getItem(DATA_VERSION_KEY);
+    if (v !== String(DATA_VERSION)) {
+      Object.keys(localStorage).forEach(k => {
+        if (k.startsWith(CACHE_KEY)) localStorage.removeItem(k);
+      });
+      // Keep COUNTS_KEY — counts are independent of question cache
+      localStorage.setItem(DATA_VERSION_KEY, String(DATA_VERSION));
+    }
+  } catch {}
+});
 
 // --- Supabase row type ---
 interface SupabaseRow {
@@ -80,7 +83,7 @@ function lsWrite(sid: string, data: SupabaseRow[]): void {
     localStorage.setItem(CACHE_KEY + '_' + sid, JSON.stringify(data));
   } catch (e) {
     if (e instanceof DOMException && e.name === 'QuotaExceededError') {
-      console.warn('localStorage quota exceeded for', sid);
+      captureError(e, { context: 'questionStore.lsWrite', sid });
     }
   }
 }
@@ -121,19 +124,24 @@ async function fetchFromSupabase(sid: string): Promise<{ rows: SupabaseRow[]; co
     let complete = false;
 
     for (let offset = 0; ; offset += PAGE) {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10000);
-      const { data, error } = await supabase
-        .from('questions')
-        .select(cols)
-        .eq('subject', sid)
-        .order('idx', { ascending: true })
-        .range(offset, offset + PAGE - 1)
-        .abortSignal(controller.signal);
-      clearTimeout(timeout);
-      if (error || !data) break;
-      allRows.push(...(data as SupabaseRow[]));
-      if (data.length < PAGE) { complete = true; break; } // last page
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+        const { data, error } = await supabase
+          .from('questions')
+          .select(cols)
+          .eq('subject', sid)
+          .order('idx', { ascending: true })
+          .range(offset, offset + PAGE - 1)
+          .abortSignal(controller.signal);
+        clearTimeout(timeout);
+        if (error || !data) break;
+        allRows.push(...(data as SupabaseRow[]));
+        if (data.length < PAGE) { complete = true; break; } // last page
+      } catch (pageErr) {
+        captureError(pageErr, { context: 'questionStore.fetchPage', sid, offset });
+        break; // return partial data rather than null
+      }
     }
 
     return allRows.length > 0 ? { rows: allRows, complete } : null;

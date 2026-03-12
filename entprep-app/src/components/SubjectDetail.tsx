@@ -10,8 +10,10 @@ import { assembleProfileSection } from '../utils/questionAssembler';
 import { PROFILE_BLOCKS } from '../config/ent';
 import { useT } from '../locales';
 import BackButton from './ui/BackButton';
+import SkeletonCard from './ui/SkeletonCard';
 import { ChevronRight, ChevronDown, Play, GraduationCap } from 'lucide-react';
 import type { ProfileSubject, Question } from '../types';
+import { captureError } from '../config/sentry';
 
 interface SubjectDetailProps {
   sid: string;
@@ -35,9 +37,11 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
   const [subtopicCounts, setSubtopicCounts] = useState<Record<string, number>>({});
   const [hasSubtopics, setHasSubtopics] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [poolLoading, setPoolLoading] = useState(true);
 
   useEffect(() => {
     if (!topics) return;
+    setPoolLoading(true);
     getPool(sid).then((pool: Question[]) => {
       setPoolSize(pool.length);
       const hasDbTopics = pool.some(q => q._topic);
@@ -60,7 +64,8 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
         }
         setSubtopicCounts(stCounts);
       }
-    });
+      setPoolLoading(false);
+    }).catch(err => { captureError(err, { context: 'SubjectDetail.getPool', sid }); setPoolLoading(false); });
   }, [sid, topics]);
 
   const startExam = async () => {
@@ -139,7 +144,11 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
         {hasSubtopics ? t.subjectDetail.sectionsTitle : t.subjectDetail.topicsTitle}
       </h3>
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        {topics.map(tp => {
+        {poolLoading ? (
+          <>
+            {[0, 1, 2, 3, 4].map(i => <SkeletonCard key={i} style={{ animationDelay: `${i * 0.08}s` }} />)}
+          </>
+        ) : topics.map(tp => {
           const cnt = topicCounts[tp.id] ?? getTopicCount(tp.ranges);
           const tpHist = subHist.filter(t => t.tp === tp.id);
           const lastSc = tpHist.length ? tpHist[tpHist.length - 1].sc : null;
@@ -173,7 +182,8 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
                 {canExpand && (
                   <button
                     onClick={e => { e.stopPropagation(); nav("test", sid, tp.id); }}
-                    style={{ width: 32, height: 32, borderRadius: 8, background: sub.color + "18", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, marginRight: 6, transition: "background 0.2s" }}
+                    aria-label={t.subjectDetail.fullTest}
+                    style={{ width: 44, height: 44, borderRadius: 8, background: sub.color + "18", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, marginRight: 6, transition: "background 0.2s" }}
                     title={isKk && tp.name_kk ? tp.name_kk : tp.name}
                   >
                     <Play size={14} color={sub.color} />
@@ -234,3 +244,4 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
     </div>
   );
 }
+

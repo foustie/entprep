@@ -4,6 +4,7 @@ import { syncProfileStats } from './socialHelpers';
 import { calcTotalXP, getLevel } from './xpHelpers';
 import { calcStreak } from './adaptiveHelpers';
 import { mergeSrCards } from './srEngine';
+import { captureError } from '../config/sentry';
 
 interface CloudData {
   hist: TestResult[];
@@ -20,7 +21,7 @@ export async function cloudLoad(userId: string): Promise<CloudData | null> {
     .eq('id', userId)
     .single();
   if (error && error.code === 'PGRST116') return null;
-  if (error) { console.error('cloudLoad:', error); return null; }
+  if (error) { captureError(error, { context: 'cloudLoad' }); return null; }
   const raw = data as { hist: TestResult[]; prof: string[]; st: Settings & { srCards?: SRCard[] } };
   // Unpack srCards from st field
   const srCards = raw.st?.srCards || [];
@@ -36,7 +37,7 @@ export async function cloudSave(userId: string, { hist, prof, st, srCards }: Clo
   const { error } = await supabase
     .from('user_data')
     .upsert({ id: userId, hist, prof, st: stWithSr, updated_at: new Date().toISOString() });
-  if (error) { console.error('cloudSave:', error); return { ok: false, error: error.message }; }
+  if (error) { captureError(error, { context: 'cloudSave' }); return { ok: false, error: error.message }; }
 
   // Also sync XP/level/streak/avatar to profiles table (fire-and-forget)
   try {
@@ -45,7 +46,7 @@ export async function cloudSave(userId: string, { hist, prof, st, srCards }: Clo
     const { current: streak } = calcStreak(hist);
     const avatarUrl = supabase ? (await supabase.auth.getUser()).data.user?.user_metadata?.avatar_url : undefined;
     syncProfileStats(userId, totalXP, level, streak, avatarUrl);
-  } catch (e) { console.warn('cloudSave: profile stats sync failed', e); }
+  } catch (e) { captureError(e, { context: 'cloudSave.profileStatsSync' }); }
 
   return { ok: true };
 }

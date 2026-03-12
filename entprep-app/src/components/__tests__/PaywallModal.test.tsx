@@ -30,6 +30,7 @@ vi.mock('../../locales', () => ({
       fullEntSim: 'Разбор каждого вопроса с объяснением',
       monthlyPlan: '1 990 ₸/мес',
       yearlyPlan: '4 990 ₸',
+      yearlyPlanAuto: '9 990 ₸/год',
       yearlyPlanDesc: 'автопродление раз в год',
       monthlyLabel: 'Ежемесячно',
       yearlyLabel: 'Ежегодно',

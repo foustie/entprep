@@ -229,6 +229,26 @@ function Badges({ hist, subjects }: { hist: TestResult[]; subjects: string[] }) 
   const earned = badges.filter(b => b.earned).length;
   const [selected, setSelected] = useState<string | null>(null);
   const selBadge = selected ? badges.find(b => b.id === selected) : null;
+
+  // Track seen badges for "NEW" indicator
+  const [seenBadges, setSeenBadges] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem('entprep_seen_badges');
+      return stored ? new Set(JSON.parse(stored)) : new Set<string>();
+    } catch { return new Set<string>(); }
+  });
+
+  const markSeen = (id: string) => {
+    setSeenBadges(prev => {
+      const next = new Set(prev);
+      next.add(id);
+      localStorage.setItem('entprep_seen_badges', JSON.stringify([...next]));
+      return next;
+    });
+  };
+
+  const isNew = (b: Badge) => b.earned && !seenBadges.has(b.id);
+
   return (
     <div style={{ ...CARD_COMPACT, padding: "12px 14px", marginBottom: 28 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
@@ -239,9 +259,12 @@ function Badges({ hist, subjects }: { hist: TestResult[]; subjects: string[] }) 
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
         {badges.map(b => (
-          <div key={b.id} onClick={() => setSelected(selected === b.id ? null : b.id)} style={{ textAlign: "center", padding: "8px 4px", borderRadius: 8, background: selected === b.id ? (b.earned ? "rgba(245,158,11,0.15)" : "rgba(100,100,100,0.1)") : b.earned ? "rgba(245,158,11,0.06)" : "var(--bg-subtle)", border: selected === b.id ? (b.earned ? "1.5px solid rgba(245,158,11,0.4)" : "1.5px solid var(--border)") : b.earned ? "1px solid rgba(245,158,11,0.15)" : "1px solid transparent", opacity: b.earned ? 1 : 0.35, cursor: "pointer", transition: "all 0.15s" }}>
+          <div key={b.id} role="button" tabIndex={0} onClick={() => { setSelected(selected === b.id ? null : b.id); if (isNew(b)) markSeen(b.id); }} style={{ textAlign: "center", padding: "8px 4px", borderRadius: 8, background: selected === b.id ? (b.earned ? "rgba(245,158,11,0.15)" : "rgba(100,100,100,0.1)") : b.earned ? "rgba(245,158,11,0.06)" : "var(--bg-subtle)", border: selected === b.id ? (b.earned ? "1.5px solid rgba(245,158,11,0.4)" : "1.5px solid var(--border)") : b.earned ? "1px solid rgba(245,158,11,0.15)" : "1px solid transparent", opacity: b.earned ? 1 : 0.35, cursor: "pointer", transition: "all 0.15s", position: "relative", animation: isNew(b) ? "confetti 0.8s ease-out" : undefined }}>
             <div style={{ fontSize: 20 }}>{b.icon}</div>
             <div style={{ fontSize: 8, color: b.earned ? "var(--text-secondary)" : "var(--text-muted)", marginTop: 2, lineHeight: 1.2 }}>{b.name}</div>
+            {isNew(b) && (
+              <div style={{ position: "absolute", top: -4, right: -4, background: COLORS.accent, color: "#fff", fontSize: 7, fontWeight: 700, padding: "1px 4px", borderRadius: 4, lineHeight: 1.3 }}>NEW</div>
+            )}
           </div>
         ))}
       </div>

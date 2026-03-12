@@ -159,7 +159,7 @@ export default function Settings() {
                     onChange={e => { setNickInput(e.target.value.replace(/[^a-zA-Z0-9_]/g, '')); setNickError(''); }}
                     placeholder="my_nickname"
                     maxLength={20}
-                    style={{ flex: 1, padding: '10px 12px', background: 'var(--bg-subtle-2)', border: nickError ? `1.5px solid ${COLORS.red}` : '1px solid var(--border-stronger)', borderRadius: 10, color: 'var(--text)', fontSize: 13, fontFamily: "'JetBrains Mono',monospace", outline: 'none' }}
+                    style={{ flex: 1, padding: '10px 12px', background: 'var(--bg-subtle-2)', border: nickError ? `1.5px solid ${COLORS.red}` : '1px solid var(--border-stronger)', borderRadius: 10, color: 'var(--text)', fontSize: 13, fontFamily: "'JetBrains Mono',monospace" }}
                   />
                   <button
                     onClick={async () => {
@@ -319,7 +319,7 @@ export default function Settings() {
               </div>
               <div style={{ marginBottom: 10 }}>
                 <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 4 }}>{t.settings.entDate}</div>
-                <input type="date" value={goalDate} onChange={e => setGoalDate(e.target.value)} style={{ display: 'block', width: '100%', boxSizing: 'border-box', padding: '8px 10px', background: 'var(--bg-subtle-2)', border: '1px solid var(--border-stronger)', borderRadius: 8, color: 'var(--text)', fontSize: 13, outline: 'none', fontFamily: 'inherit', colorScheme: 'var(--color-scheme)', margin: 0, WebkitAppearance: 'none', appearance: 'none' }} />
+                <input type="date" value={goalDate} onChange={e => setGoalDate(e.target.value)} style={{ display: 'block', width: '100%', boxSizing: 'border-box', padding: '8px 10px', background: 'var(--bg-subtle-2)', border: '1px solid var(--border-stronger)', borderRadius: 8, color: 'var(--text)', fontSize: 13, fontFamily: 'inherit', colorScheme: 'var(--color-scheme)', margin: 0, WebkitAppearance: 'none', appearance: 'none' }} />
               </div>
               <button onClick={() => { updSt({ ...st, goal: { target: goalTarget, date: goalDate } }); setEditGoal(false); }} disabled={!goalDate} style={{ width: '100%', padding: '10px', background: goalDate ? `linear-gradient(135deg,${COLORS.amber},#d97706)` : 'var(--bg-subtle-2)', border: 'none', borderRadius: 10, color: goalDate ? '#fff' : 'var(--text-muted)', fontSize: 12, fontWeight: 700, cursor: goalDate ? 'pointer' : 'default' }}>
                 {t.settings.saveGoal}

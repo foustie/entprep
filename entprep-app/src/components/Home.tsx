@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { ALL_PROFILES, SUBS, TOTAL_Q } from '../config/questionPools';
 import { getRecommendations, calcStreak, getTopWeakTopic } from '../utils/adaptiveHelpers';
 import { getDailyChallenge, getPersonalBests, getGoalProgress } from '../utils/competitionHelpers';
@@ -12,6 +12,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { prefetchCounts, getPoolSize, getTotalQ } from '../utils/questionStore';
 import { calcTotalXP, getTodayXP } from '../utils/xpHelpers';
 import { useT } from '../locales';
+import { useToast } from '../contexts/ToastContext';
 import HomeHeaderBar from './HomeHeaderBar';
 import HomeCountdown from './HomeCountdown';
 import HomeTodayStrip from './HomeTodayStrip';
@@ -45,6 +46,7 @@ export default function Home() {
   const { user, isPremium } = useAuth();
   const bp = useBreakpoint();
   const t = useT();
+  const toast = useToast();
   const today = new Date().toLocaleDateString('ru-RU');
   const todayTestCount = hist.filter(h => h.dt === today && h.type !== 'fullent').length;
 
@@ -103,6 +105,15 @@ export default function Home() {
   const dailyProgress = Math.min(todayTestCount, dailyGoal);
   const dailyDone = dailyProgress >= dailyGoal;
   const srDueCount = getDueCount(srCards);
+
+  // Daily goal completion toast (once per session)
+  const dailyDoneFired = useRef(false);
+  useEffect(() => {
+    if (dailyDone && !dailyDoneFired.current) {
+      dailyDoneFired.current = true;
+      toast.success(t.home.dailyGoalDone);
+    }
+  }, [dailyDone]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-save freeze date when freeze activates
   useEffect(() => {

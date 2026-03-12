@@ -131,8 +131,8 @@ export default function PaywallModal({ open, reason, onClose }: PaywallModalProp
     t.paywall.fullEntSim,
   ];
 
-  const monthlyPrice = packages.monthly?.product?.priceString || '1 990 \u20B8/мес';
-  const yearlyPrice = packages.yearly?.product?.priceString || '9 990 \u20B8/год';
+  const monthlyPrice = packages.monthly?.product?.priceString || t.paywall.monthlyPlan;
+  const yearlyPrice = packages.yearly?.product?.priceString || t.paywall.yearlyPlanAuto;
 
   return (
     <BottomSheet visible={open} onClose={onClose}>

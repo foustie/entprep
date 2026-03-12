@@ -778,7 +778,7 @@ describe('Friends', () => {
     });
 
     // Find the duel/challenge button (Swords icon, red background)
-    const duelBtn = screen.getByTitle('Вызвать на дуэль');
+    const duelBtn = screen.getByLabelText('Вызвать на дуэль');
     expect(duelBtn).toBeInTheDocument();
 
     fireEvent.click(duelBtn);

@@ -61,7 +61,7 @@ export default function AuthPrompt({ onFinish }: AuthPromptProps) {
 
   return (
     <div style={{
-      padding: '0 20px', minHeight: '100vh',
+      padding: '0 20px', minHeight: '100dvh',
       display: 'flex', flexDirection: 'column', justifyContent: 'center',
     }}>
       <div style={{ textAlign: 'center', marginBottom: 8 }}>

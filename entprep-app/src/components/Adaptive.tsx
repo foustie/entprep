@@ -109,14 +109,14 @@ export default function Adaptive() {
         body: JSON.stringify({ weak: weakWithTopics, strong: strongData, overall, totalTests, streak, lang: st.lang }),
       });
       if (res.status === 403) { openPaywall('ai'); setPlanLoading(false); return; }
-      if (!res.ok) { const err = await res.json().catch(() => ({})); setPlanError((err as Record<string, string>).error || t.adaptive.planError); toast.error(t.adaptive.planError, { action: generatePlan, actionLabel: 'Повторить' }); setPlanLoading(false); return; }
+      if (!res.ok) { const err = await res.json().catch(() => ({})); setPlanError((err as Record<string, string>).error || t.adaptive.planError); toast.error(t.adaptive.planError, { action: generatePlan, actionLabel: t.adaptive.retry }); setPlanLoading(false); return; }
       const json = await res.json();
       usePlanLimit(); // consume limit only on success
       setPlan(json);
       setPlanDate(new Date().toISOString());
       savePlanCache(json);
       setOpenDay(0);
-    } catch { setPlanError(t.adaptive.networkError); toast.error(t.adaptive.networkErrorShort, { action: generatePlan, actionLabel: 'Повторить' }); }
+    } catch { setPlanError(t.adaptive.networkError); toast.error(t.adaptive.networkErrorShort, { action: generatePlan, actionLabel: t.adaptive.retry }); }
     setPlanLoading(false);
   };
 
@@ -136,7 +136,7 @@ export default function Adaptive() {
     if (trend === "declining") return <TrendingDown size={13} color={COLORS.red} />;
     return <Minus size={13} color="var(--text-secondary)" />;
   };
-  const trendLabel = (trend: string) => trend === "improving" ? t.adaptive.improving : trend === "declining" ? t.adaptive.declining : trend === "none" ? "" : "стабильно";
+  const trendLabel = (trend: string) => trend === "improving" ? t.adaptive.improving : trend === "declining" ? t.adaptive.declining : trend === "none" ? "" : t.adaptive.stable;
   const stripColor = (score: number) => score > 60 ? COLORS.red : score > 40 ? COLORS.yellow : COLORS.green;
 
   const taskIcon = (type: string) => {
@@ -298,7 +298,7 @@ export default function Adaptive() {
             <div style={{ ...CARD_COMPACT, border: "1px solid rgba(26,154,140,0.12)", padding: "14px 14px", animation: "slideUp 0.3s ease" }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", marginBottom: 12 }}>{plan.days[openDay].title}</div>
               {(plan.days[openDay].tasks || []).map((task, ti) => (
-                <div key={ti} onClick={() => { if (task.type === "test" && task.subject) nav("test", task.subject, task.topic || null); }} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 12px", marginBottom: 6, borderRadius: 10, background: task.type === "test" ? "rgba(26,154,140,0.06)" : task.type === "review" ? "rgba(26,154,140,0.06)" : "rgba(234,179,8,0.06)", border: `1px solid ${task.type === "test" ? "rgba(26,154,140,0.12)" : task.type === "review" ? "rgba(26,154,140,0.12)" : "rgba(234,179,8,0.12)"}`, cursor: task.type === "test" ? "pointer" : "default", transition: "all 0.2s" }} onMouseEnter={e => { if (task.type === "test") (e.currentTarget as HTMLElement).style.borderColor = "rgba(26,154,140,0.3)"; }} onMouseLeave={e => { if (task.type === "test") (e.currentTarget as HTMLElement).style.borderColor = "rgba(26,154,140,0.12)"; }}>
+                <div key={ti} role={task.type === "test" ? "button" : undefined} tabIndex={task.type === "test" ? 0 : undefined} onClick={() => { if (task.type === "test" && task.subject) nav("test", task.subject, task.topic || null); }} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 12px", marginBottom: 6, borderRadius: 10, background: task.type === "test" ? "rgba(26,154,140,0.06)" : task.type === "review" ? "rgba(26,154,140,0.06)" : "rgba(234,179,8,0.06)", border: `1px solid ${task.type === "test" ? "rgba(26,154,140,0.12)" : task.type === "review" ? "rgba(26,154,140,0.12)" : "rgba(234,179,8,0.12)"}`, cursor: task.type === "test" ? "pointer" : "default", transition: "all 0.2s" }} onMouseEnter={e => { if (task.type === "test") (e.currentTarget as HTMLElement).style.borderColor = "rgba(26,154,140,0.3)"; }} onMouseLeave={e => { if (task.type === "test") (e.currentTarget as HTMLElement).style.borderColor = "rgba(26,154,140,0.12)"; }}>
                   <div style={{ marginTop: 2, flexShrink: 0 }}>{taskIcon(task.type)}</div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, color: "var(--text-body)", lineHeight: 1.4 }}>{task.text}</div>
@@ -370,7 +370,7 @@ export default function Adaptive() {
       {renderPlanSection()}
 
       {hasQd && (
-        <div onClick={() => nav("errors")} style={{ ...CARD_COMPACT, border: "1px solid rgba(239,68,68,0.18)", padding: "16px 16px", marginBottom: 28, cursor: "pointer", display: "flex", alignItems: "center", gap: 12, transition: "all 0.2s" }} onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(239,68,68,0.35)"; }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(239,68,68,0.18)"; }}>
+        <div role="button" tabIndex={0} onClick={() => nav("errors")} style={{ ...CARD_COMPACT, border: "1px solid rgba(239,68,68,0.18)", padding: "16px 16px", marginBottom: 28, cursor: "pointer", display: "flex", alignItems: "center", gap: 12, transition: "all 0.2s" }} onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(239,68,68,0.35)"; }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(239,68,68,0.18)"; }}>
           <div style={{ width: 42, height: 42, borderRadius: 12, background: "rgba(239,68,68,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <XCircle size={22} color={COLORS.red} />
           </div>

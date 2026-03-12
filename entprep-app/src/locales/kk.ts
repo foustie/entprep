@@ -225,6 +225,7 @@ const kk: Translations = {
     goalDone: 'Күнделікті мақсат орындалды!',
     goalDay: 'Күннің мақсаты:',
     errorReviewBanner: 'Бүгінгі қателерді қайталаңыз',
+    dailyGoalDone: 'Күнделікті мақсат орындалды! 🎯',
     challengeDone: 'Өтілді!',
     dailyChallenge: 'Күнделікті сынақ',
     yesterday: 'кеше',
@@ -509,6 +510,8 @@ const kk: Translations = {
     planError: 'Жоспар жасау қатесі',
     networkError: 'Желі қатесі. Байланысты тексеріңіз.',
     networkErrorShort: 'Желі қатесі',
+    stable: 'тұрақты',
+    retry: 'Қайталау',
   },
 
   // ── Calc ─────────────────────────────────────────────────────────────
@@ -719,7 +722,7 @@ const kk: Translations = {
     upgradeTitle: 'ENTprep Premium',
     upgradeDesc: 'Шексіз AI-талдау, толық ҰБТ симуляциясы және жеке дайындық жоспары.',
     monthlyPlan: '1 990 \u20B8/ай',
-    yearlyPlan: '4 990 \u20B8',
+    yearlyPlan: '9 990 \u20B8',
     yearlyPlanDesc: 'жылына бір рет автоұзарту',
     monthlyLabel: 'Ай сайын',
     yearlyLabel: 'Жыл сайын',
@@ -730,7 +733,7 @@ const kk: Translations = {
     noPurchaseFound: 'Жазылым табылмады. Сатып алған болсаңыз — кейінірек қайталаңыз.',
     webOnly: 'Қосымшаны жүктеу',
     purchasing: 'Рәсімдеу...',
-    yearlyPlanAuto: '4 990 \u20B8/жыл',
+    yearlyPlanAuto: '9 990 \u20B8/жыл',
   },
 
   // ── Share ──────────────────────────────────────────────────────────

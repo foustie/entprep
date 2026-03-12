@@ -1,10 +1,20 @@
 /// <reference lib="webworker" />
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
 import { registerRoute, NavigationRoute } from 'workbox-routing';
-import { StaleWhileRevalidate, CacheFirst, NetworkFirst } from 'workbox-strategies';
+import { CacheFirst, NetworkFirst } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
 
 declare let self: ServiceWorkerGlobalScope;
+
+// ── Activate new SW immediately (don't wait for old tabs to close) ──────
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim());
+});
+// Also handle explicit SKIP_WAITING message from vite-plugin-pwa
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
+});
 
 // ── Workbox precaching (injected by vite-plugin-pwa) ─────────────────────
 precacheAndRoute(self.__WB_MANIFEST);
@@ -18,13 +28,10 @@ const navigationRoute = new NavigationRoute(
 registerRoute(navigationRoute);
 
 // ── Runtime caching ──────────────────────────────────────────────────────
-registerRoute(
-  /^https:\/\/.*\.supabase\.co\/rest\/v1\//,
-  new StaleWhileRevalidate({
-    cacheName: 'supabase-data',
-    plugins: [new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 86400 })],
-  })
-);
+// NOTE: Supabase API is NOT cached by SW — questionStore has its own
+// 3-tier cache (memCache → localStorage → static). SW caching broke
+// paginated fetches because .range() uses Range header, not URL params,
+// so all pages got the same cached response.
 
 registerRoute(
   /^https:\/\/fonts\.(googleapis|gstatic)\.com\//,

@@ -16,6 +16,7 @@ import { Lightbulb, Bot, Share2, Check, X, ChevronDown, ChevronUp, Swords, Troph
 import { trackEvent } from '../utils/analytics';
 import ShareModal from './ShareModal';
 import ReportSheet from './ui/ReportSheet';
+import { captureError } from '../config/sentry';
 import type { Question, TestResult, AnswerValue } from '../types';
 import { getSingleCorrect, getQType } from '../types';
 import { scoreQuestion } from '../utils/scoringEngine';
@@ -130,8 +131,8 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
   // Pause timer when offline
   useEffect(() => {
     if (loading || fin) return;
-    const goOffline = () => { setOffline(true); toast.warning((t.test as Record<string, string>).connectionLost || 'Соединение потеряно'); };
-    const goOnline = () => { setOffline(false); toast.success((t.test as Record<string, string>).connectionRestored || 'Соединение восстановлено'); };
+    const goOffline = () => { setOffline(true); toast.warning((t.test as Record<string, string>).connectionLost); };
+    const goOnline = () => { setOffline(false); toast.success((t.test as Record<string, string>).connectionRestored); };
     window.addEventListener('offline', goOffline);
     window.addEventListener('online', goOnline);
     return () => { window.removeEventListener('offline', goOffline); window.removeEventListener('online', goOnline); };
@@ -182,7 +183,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
       if (error && error.code === '23505') {
         // Already reported
       } else if (error) {
-        console.error('Report error:', error.message);
+        captureError(error, { context: 'Test.report', sid });
         toast.error(t.test.reportFailed);
         setReportLoading(false);
         return;
@@ -190,7 +191,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
       setReportSent(p => ({ ...p, [index]: true }));
       toast.success(t.test.reportSent);
     } catch (err) {
-      console.error('Report failed:', err);
+      captureError(err, { context: 'Test.report', sid });
       toast.error(t.test.reportNetError);
     }
     setReportLoading(false);
@@ -315,8 +316,8 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
     </div>
     {offline && <div style={{ ...CARD, background: "linear-gradient(135deg,rgba(26,26,50,0.95),rgba(22,33,62,0.95))", borderRadius: 18, padding: "32px 20px", textAlign: "center", marginBottom: 16, animation: "slideUp 0.3s cubic-bezier(0.16,1,0.3,1)" }}>
       <WifiOff size={32} color={COLORS.red} style={{ marginBottom: 10 }} />
-      <div style={{ fontSize: 16, fontWeight: 700, color: COLORS.red, marginBottom: 6 }}>{(t.test as Record<string, string>).connectionLost || 'Соединение потеряно'}</div>
-      <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{(t.test as Record<string, string>).timerPaused || 'Таймер на паузе. Ваш прогресс сохранён.'}</div>
+      <div style={{ fontSize: 16, fontWeight: 700, color: COLORS.red, marginBottom: 6 }}>{(t.test as Record<string, string>).connectionLost}</div>
+      <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{(t.test as Record<string, string>).timerPaused}</div>
     </div>}
     {!offline && <div key={`qblock-${cur}`}>
     {isR && <div style={{ ...CARD_COMPACT, background: "rgba(26,154,140,0.06)", border: "1px solid rgba(26,154,140,0.18)", padding: "12px 14px", marginBottom: 12 }}>

@@ -37,7 +37,7 @@ export default function ReportSheet({ visible, questionText, comment, loading, o
         onChange={e => onCommentChange(e.target.value)}
         placeholder={t.test.commentOptional}
         rows={3}
-        style={{ width: '100%', padding: '10px 12px', background: 'var(--bg-subtle)', border: '1px solid var(--border)', borderRadius: 10, color: 'var(--text-body)', fontSize: 12, resize: 'vertical', marginBottom: 10, fontFamily: 'inherit', outline: 'none' }}
+        style={{ width: '100%', padding: '10px 12px', background: 'var(--bg-subtle)', border: '1px solid var(--border)', borderRadius: 10, color: 'var(--text-body)', fontSize: 12, resize: 'vertical', marginBottom: 10, fontFamily: 'inherit' }}
       />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {REASONS.map(r => (
