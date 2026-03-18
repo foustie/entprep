@@ -11,10 +11,10 @@ import { useNav } from '../contexts/NavigationContext';
 import { useToast } from '../contexts/ToastContext';
 import { useT } from '../locales';
 import { getGoalProgress } from '../utils/competitionHelpers';
-import { setNickname } from '../utils/socialHelpers';
+import { setNickname, buildReferralUrl } from '../utils/socialHelpers';
 import Toggle from './ui/Toggle';
 import ProgressBar from './ui/ProgressBar';
-import { Settings as SettingsIcon, BarChart2, Trash2, Target, Wrench, Trophy, Sun, Moon, Crown, Sparkles, AtSign, Check, Globe, User, BookOpen, Palette, Database, Info, Bell, Shield } from 'lucide-react';
+import { Settings as SettingsIcon, BarChart2, Trash2, Target, Wrench, Trophy, Sun, Moon, Crown, Sparkles, AtSign, Check, Globe, User, BookOpen, Palette, Database, Info, Bell, Shield, Gift, Share2 } from 'lucide-react';
 import { isPushSupported, getPushPermission, subscribeToPush, unsubscribeFromPush, isSubscribed, syncPushPrefs } from '../utils/pushHelpers';
 
 /* ─── Section wrapper ─── */
@@ -125,6 +125,33 @@ export default function Settings() {
               <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.accent, whiteSpace: 'nowrap' }}>{t.settings.premiumPrice}</div>
             </div>
           </button>
+        )}
+
+        {/* Invite friend (referral) */}
+        {user && profile && !profile.nickname.startsWith('user_') && (
+          <div style={ROW}>
+            <button
+              onClick={async () => {
+                const url = buildReferralUrl(profile.nickname);
+                const text = `${t.settings.inviteShareText}\n${url}`;
+                if (navigator.share) {
+                  try { await navigator.share({ text, url }); } catch { /* cancelled */ }
+                } else {
+                  try { await navigator.clipboard.writeText(text); toast.success(t.errors.copied); } catch { /* ignore */ }
+                }
+              }}
+              style={{ width: '100%', background: 'linear-gradient(135deg, rgba(255,107,53,0.08), rgba(26,154,140,0.08))', border: '1px solid rgba(255,107,53,0.15)', borderRadius: 12, padding: '14px 16px', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, transition: 'all 0.2s' }}
+            >
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg, rgba(255,107,53,0.15), rgba(26,154,140,0.15))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Gift size={18} color={COLORS.accent} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{t.settings.inviteFriend}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>{t.settings.inviteFriendDesc}</div>
+              </div>
+              <Share2 size={16} color="var(--text-muted)" />
+            </button>
+          </div>
         )}
 
         {/* Nickname */}
@@ -251,7 +278,7 @@ export default function Settings() {
                     updSt({ ...st, pushEnabled: true, pushStreak: true, pushErrors: true, pushWeekly: true });
                     toast.success(t.push?.enabled || 'Уведомления включены');
                   } else {
-                    toast.error(t.push?.blocked || 'Не удалось включить уведомления');
+                    toast.error(t.errors.notificationEnableFailed);
                   }
                 } else {
                   await unsubscribeFromPush();

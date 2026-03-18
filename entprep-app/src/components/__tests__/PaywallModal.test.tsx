@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import PaywallModal from '../PaywallModal';
 
 vi.mock('../../config/payment', () => ({
-  PLANS: { monthly: { amount: 1990 }, yearly: { amount: 4990 } },
+  PLANS: { monthly: { amount: 1990 }, yearly: { amount: 9990 } },
   RC_PRODUCT_IDS: { monthly: 'entprep_monthly', yearly: 'entprep_yearly' },
 }));
 
@@ -12,6 +12,14 @@ vi.mock('../../config/purchases', () => ({
   getOfferings: async () => null,
   purchasePackage: async () => false,
   restorePurchases: async () => false,
+}));
+
+vi.mock('../../contexts/AuthContext', () => ({
+  useAuth: () => ({ user: { id: 'test', email: 'test@test.com' }, premium: false }),
+}));
+
+vi.mock('../../contexts/NavigationContext', () => ({
+  useNav: () => ({ nav: vi.fn() }),
 }));
 
 vi.mock('../../locales', () => ({
@@ -29,7 +37,7 @@ vi.mock('../../locales', () => ({
       aiPlan: 'Полная симуляция ЕНТ без ограничений',
       fullEntSim: 'Разбор каждого вопроса с объяснением',
       monthlyPlan: '1 990 ₸/мес',
-      yearlyPlan: '4 990 ₸',
+      yearlyPlan: '9 990 ₸',
       yearlyPlanAuto: '9 990 ₸/год',
       yearlyPlanDesc: 'автопродление раз в год',
       monthlyLabel: 'Ежемесячно',

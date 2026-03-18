@@ -1,4 +1,4 @@
-import { corsResponse, CORS_HEADERS, verifyAuth, createRateLimiter, rateLimitResponse, validateExplain } from "./utils/shared.mjs";
+import { corsResponse, CORS_HEADERS, verifyAuth, createRateLimiter, rateLimitResponse, validateExplain, checkPremium } from "./utils/shared.mjs";
 import { AI_MODEL, ANTHROPIC_API_URL } from "./utils/constants.mjs";
 
 const checkRate = createRateLimiter("explain", { max: 30, windowSec: 60 });
@@ -11,10 +11,12 @@ export default async function handler(req) {
   const user = await verifyAuth(req);
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401, headers: CORS_HEADERS });
 
-  // Premium check
+  // Premium check — subscriptions table is authoritative, user_metadata is fallback
   const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map(e => e.trim());
   const isAdmin = adminEmails.includes(user.email);
-  const isPremium = isAdmin || (user.user_metadata?.is_premium && new Date(user.user_metadata.premium_until) > new Date());
+  const hasSub = await checkPremium(user.id);
+  const metaPremium = user.user_metadata?.is_premium && new Date(user.user_metadata.premium_until) > new Date();
+  const isPremium = isAdmin || hasSub || metaPremium;
   if (!isPremium) return Response.json({ error: "Premium required" }, { status: 403, headers: CORS_HEADERS });
 
   // Rate limit

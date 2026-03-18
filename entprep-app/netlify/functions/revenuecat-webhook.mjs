@@ -51,6 +51,7 @@ async function findUserByEmail(email) {
 }
 
 async function revokePremium(userId, userMeta) {
+  // Keep user_metadata write as cache (backwards compatibility)
   const res = await fetch(`${SB_URL}/auth/v1/admin/users/${userId}`, {
     method: "PUT",
     headers: sbHeaders(),
@@ -59,6 +60,22 @@ async function revokePremium(userId, userMeta) {
     }),
   });
   if (!res.ok) throw new Error("Failed to revoke premium: " + await res.text());
+
+  // Upsert subscriptions table (authoritative source)
+  try {
+    await fetch(`${SB_URL}/rest/v1/subscriptions`, {
+      method: "POST",
+      headers: { ...sbHeaders(), Prefer: "resolution=merge-duplicates,return=minimal" },
+      body: JSON.stringify({
+        user_id: userId,
+        is_active: false,
+        expires_at: null,
+        updated_at: new Date().toISOString(),
+      }),
+    });
+  } catch (e) {
+    console.error("Failed to upsert subscriptions on revoke:", e);
+  }
 }
 
 async function resolveUser(event) {
@@ -137,6 +154,26 @@ export default async function handler(req) {
         plan,
         kaspiTxId: `rc_${event.id || eventType}`,
       });
+      // Also store RC customer ID in subscriptions table
+      try {
+        const rcCustomerId = event.app_user_id || event.original_app_user_id || null;
+        if (rcCustomerId) {
+          await fetch(`${SB_URL}/rest/v1/subscriptions`, {
+            method: "POST",
+            headers: { ...sbHeaders(), Prefer: "resolution=merge-duplicates,return=minimal" },
+            body: JSON.stringify({
+              user_id: user.id,
+              is_active: true,
+              plan,
+              expires_at: premiumUntil,
+              rc_customer_id: rcCustomerId,
+              updated_at: new Date().toISOString(),
+            }),
+          });
+        }
+      } catch (e) {
+        console.error("Failed to update rc_customer_id in subscriptions:", e);
+      }
       console.log(`RC webhook: premium granted to ${user.id} until ${premiumUntil}`);
     } else {
       await revokePremium(user.id, user.user_metadata || {});

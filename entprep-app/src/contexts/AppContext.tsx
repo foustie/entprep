@@ -89,8 +89,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (user && syncedRef.current) debouncedCloudSave(user.id, { hist, prof, st, srCards });
   }, [hist, st, prof, srCards]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Sync state from other tabs writing to localStorage
+  useEffect(() => {
+    const handler = (e: StorageEvent) => {
+      if (e.key !== 'entprep_data' || !e.newValue) return;
+      try {
+        const fresh = JSON.parse(e.newValue) as { hist?: TestResult[]; prof?: string[]; st?: Settings; srCards?: SRCard[] };
+        if (fresh.hist) setHist(fresh.hist);
+        if (fresh.prof) setProf(fresh.prof);
+        if (fresh.st) setSt(fresh.st);
+        if (fresh.srCards) setSrCards(fresh.srCards);
+      } catch { /* ignore malformed data */ }
+    };
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  }, []);
+
   const addHist = useCallback((result: TestResult) => {
-    setHist(prev => [...prev, result]);
+    // Strip _leaderboard before persisting — it's only used for server submission
+    const { _leaderboard: _, ...clean } = result;
+    setHist(prev => [...prev, clean]);
   }, []);
 
   const clearHist = useCallback(() => {

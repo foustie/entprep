@@ -22,7 +22,10 @@ function copyQuestion(q: Question): Question {
   };
 }
 
-/** Shuffle options for any question type */
+/** Shuffle options for any question type.
+ *  Sets _shuffleMap so the user's shuffled answer can be mapped back to original indices.
+ *  _shuffleMap[shuffledIdx] = originalIdx
+ */
 function shuffleOptions(q: Question): Question {
   const qType = getQType(q);
 
@@ -37,13 +40,13 @@ function shuffleOptions(q: Question): Question {
     const indices = shuffleArray(Array.from({ length: q.o.length }, (_, i) => i));
     const correctArr = Array.isArray(q.c) ? q.c : [q.c];
     const newCorrect = correctArr.map(ci => indices.indexOf(ci));
-    return { ...q, o: indices.map(i => q.o[i]), c: newCorrect };
+    return { ...q, o: indices.map(i => q.o[i]), c: newCorrect, _shuffleMap: indices };
   }
 
   // single: 4 options
   const indices = shuffleArray(Array.from({ length: q.o.length }, (_, i) => i));
   const c = typeof q.c === 'number' ? q.c : q.c[0];
-  return { ...q, o: indices.map(i => q.o[i]), c: indices.indexOf(c) };
+  return { ...q, o: indices.map(i => q.o[i]), c: indices.indexOf(c), _shuffleMap: indices };
 }
 
 /**

@@ -344,8 +344,32 @@ export default async function handler(req) {
         );
         const profileMap = Object.fromEntries(profiles.map(p => [p.id, p]));
 
+        // Strip sensitive data — only return what the current user should see
+        const isCreator = duel.creator_id === user.id;
+        const oppAnswers = isCreator ? duel.opponent_answers : duel.creator_answers;
+        const safeDuel = {
+          id: duel.id,
+          status: duel.status,
+          subject: duel.subject,
+          created_at: duel.created_at,
+          creator_id: duel.creator_id,
+          opponent_id: duel.opponent_id,
+          creator_score: duel.creator_score,
+          opponent_score: duel.opponent_score,
+          my_role: isCreator ? "creator" : "opponent",
+          my_answers: isCreator ? duel.creator_answers : duel.opponent_answers,
+          my_done: isCreator ? duel.creator_done : duel.opponent_done,
+          opponent_done: isCreator ? duel.opponent_done : duel.creator_done,
+          opponent_progress: Object.keys(oppAnswers || {}).length,
+          // When finished, both players' answers are no longer secret
+          ...(duel.status === "finished" ? {
+            creator_answers: duel.creator_answers,
+            opponent_answers: duel.opponent_answers,
+          } : {}),
+        };
+
         return Response.json({
-          duel,
+          duel: safeDuel,
           questions: stripQuestions(ordered),
           creator_profile: profileMap[duel.creator_id] || null,
           opponent_profile: duel.opponent_id ? profileMap[duel.opponent_id] || null : null,
@@ -386,7 +410,7 @@ export default async function handler(req) {
     }
   } catch (err) {
     console.error("Duel action error:", action, err);
-    return Response.json({ error: err.message || "Server error" }, { status: 500, headers: CORS_HEADERS });
+    return Response.json({ error: "Internal server error" }, { status: 500, headers: CORS_HEADERS });
   }
 }
 

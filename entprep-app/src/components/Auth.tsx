@@ -6,8 +6,35 @@ import { useAuth } from '../contexts/AuthContext';
 import { uploadAvatar } from '../utils/avatarHelpers';
 import { useToast } from '../contexts/ToastContext';
 import { useT } from '../locales';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
 import type { AuthUser } from '../types/index';
+
+interface AppleSignInPlugin {
+  authorize(options: { nonce: string }): Promise<{
+    identityToken: string;
+    authorizationCode: string;
+    user: string;
+    email?: string;
+    givenName?: string;
+    familyName?: string;
+  }>;
+}
+
+const AppleSignIn = registerPlugin<AppleSignInPlugin>('AppleSignIn');
+
+/** Generate a random nonce string for Apple Sign In. */
+function generateRawNonce(length = 32): string {
+  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+  const values = crypto.getRandomValues(new Uint8Array(length));
+  return Array.from(values, v => charset[v % charset.length]).join('');
+}
+
+/** SHA-256 hash a string and return the hex digest. */
+async function sha256(plain: string): Promise<string> {
+  const data = new TextEncoder().encode(plain);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hash), b => b.toString(16).padStart(2, '0')).join('');
+}
 
 interface AuthProps {
   user: AuthUser | null;
@@ -24,11 +51,43 @@ export default function Auth({ user, onSignOut }: AuthProps) {
   if (!supabase) return null;
 
   const signInWith = async (provider: 'google' | 'apple') => {
+    // Native iOS Apple Sign In — use AuthenticationServices via Capacitor plugin
+    if (provider === 'apple' && Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') {
+      try {
+        const rawNonce = generateRawNonce();
+        const hashedNonce = await sha256(rawNonce);
+        const result = await AppleSignIn.authorize({ nonce: hashedNonce });
+        if (!result.identityToken) {
+          toast.error('Apple Sign In: no token received');
+          return;
+        }
+        const { data, error } = await supabase!.auth.signInWithIdToken({
+          provider: 'apple',
+          token: result.identityToken,
+          nonce: rawNonce,
+        });
+        if (error) {
+          toast.error(`Apple Sign In: ${error.message}`);
+          console.error('Apple sign-in error:', error.message);
+        } else if (data?.user) {
+          toast.success(t.auth.signedIn);
+        }
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        // User cancelled is not an error
+        if (!msg.includes('1000') && !msg.includes('cancel')) {
+          toast.error(`Apple Sign In: ${msg}`);
+        }
+        console.error('Apple native sign-in failed:', err);
+      }
+      return;
+    }
+
     if (Capacitor.isNativePlatform()) {
       const { data, error } = await supabase!.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: 'https://entprep.netlify.app/auth-callback.html',
+          redirectTo: 'https://entprep.org/auth-callback.html',
           skipBrowserRedirect: true,
         },
       });

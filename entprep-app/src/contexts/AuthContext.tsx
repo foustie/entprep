@@ -23,6 +23,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [nativePremium, setNativePremium] = useState(false);
+  const [dbPremium, setDbPremium] = useState(false);
+
+  // Check subscriptions table (authoritative source, RLS allows reading own row)
+  const checkSubscription = useCallback(async (userId: string) => {
+    if (!supabase) return false;
+    try {
+      const { data } = await supabase.from('subscriptions')
+        .select('is_active, expires_at')
+        .eq('user_id', userId)
+        .single();
+      if (!data) return false;
+      return data.is_active && (!data.expires_at || new Date(data.expires_at) > new Date());
+    } catch {
+      return false; // table may not exist yet — graceful fallback
+    }
+  }, []);
 
   const refreshProfile = useCallback(async () => {
     if (!supabase) return;
@@ -60,6 +76,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSentryUser(u?.id ?? null);
       if (u) {
         refreshProfile();
+        // Check subscriptions table (authoritative)
+        checkSubscription(u.id).then(setDbPremium).catch(() => setDbPremium(false));
         // Link RevenueCat user and check entitlements
         try {
           await loginPurchases(u.id, u.email ?? undefined);
@@ -70,26 +88,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } else {
         setProfile(null);
+        setDbPremium(false);
         setNativePremium(false);
         logoutPurchases().catch(() => {});
       }
       if (event === 'SIGNED_IN') trackEvent('Login');
     });
     return () => subscription.unsubscribe();
-  }, [refreshProfile]);
+  }, [refreshProfile, checkSubscription]);
 
   const isAdmin = useMemo(() => !!user?.email && ADMIN_EMAILS.includes(user.email), [user]);
   const needsNickname = useMemo(() => !!profile && profile.nickname.startsWith('user_'), [profile]);
 
   const FREE_PREMIUM = false as boolean;
   const isPremium = useMemo(() => {
-    if (FREE_PREMIUM || isAdmin || nativePremium) return true;
+    if (FREE_PREMIUM || isAdmin || nativePremium || dbPremium) return true;
+    // Fallback to user_metadata (cache, not authoritative)
     const meta = user?.user_metadata;
     if (!meta || !meta.is_premium) return false;
     const until = meta.premium_until;
     if (typeof until !== 'string') return false;
     return new Date(until) > new Date();
-  }, [FREE_PREMIUM, user, isAdmin, nativePremium]);
+  }, [FREE_PREMIUM, user, isAdmin, nativePremium, dbPremium]);
 
   const value = useMemo<AuthContextValue>(
     () => ({ user, profile, isPremium, isAdmin, needsNickname, refreshUser, refreshProfile }),

@@ -89,7 +89,7 @@ export default async function handler(req) {
     switch (action) {
       case "update_question": {
         const { id, q, o, c, e } = body;
-        if (!id) return Response.json({ error: "Missing id" }, { status: 400, headers: CORS_HEADERS });
+        if (!id || typeof id !== "number" || !Number.isInteger(id)) return Response.json({ error: "Invalid id" }, { status: 400, headers: CORS_HEADERS });
 
         // Quality check before update (same as insert)
         if (q && Array.isArray(o) && o.length === 4 && typeof c === "number") {
@@ -109,7 +109,7 @@ export default async function handler(req) {
 
       case "delete_question": {
         const { id } = body;
-        if (!id) return Response.json({ error: "Missing id" }, { status: 400, headers: CORS_HEADERS });
+        if (!id || typeof id !== "number" || !Number.isInteger(id)) return Response.json({ error: "Invalid id" }, { status: 400, headers: CORS_HEADERS });
         await sbDelete("questions", `id=eq.${id}`);
         await logAudit({ id });
         return Response.json({ ok: true }, { headers: CORS_HEADERS });
@@ -117,7 +117,7 @@ export default async function handler(req) {
 
       case "dismiss_reports": {
         const { question_id } = body;
-        if (!question_id) return Response.json({ error: "Missing question_id" }, { status: 400, headers: CORS_HEADERS });
+        if (!question_id || typeof question_id !== "number" || !Number.isInteger(question_id)) return Response.json({ error: "Invalid question_id" }, { status: 400, headers: CORS_HEADERS });
         await sbDelete("question_reports", `question_id=eq.${question_id}`);
         await sbUpdate("questions", `id=eq.${question_id}`, { report_count: 0 });
         await logAudit({ question_id });
@@ -174,7 +174,7 @@ export default async function handler(req) {
 
       case "get_reports": {
         const { question_id } = body;
-        if (!question_id) return Response.json({ error: "Missing question_id" }, { status: 400, headers: CORS_HEADERS });
+        if (!question_id || typeof question_id !== "number" || !Number.isInteger(question_id)) return Response.json({ error: "Invalid question_id" }, { status: 400, headers: CORS_HEADERS });
         const data = await sbSelect(
           "question_reports",
           `select=id,reason,comment,created_at,user_id&question_id=eq.${question_id}&order=created_at.desc`
@@ -206,6 +206,6 @@ export default async function handler(req) {
     }
   } catch (err) {
     console.error("Admin action error:", err);
-    return Response.json({ error: err.message || "Server error" }, { status: 500, headers: CORS_HEADERS });
+    return Response.json({ error: "Internal server error" }, { status: 500, headers: CORS_HEADERS });
   }
 }

@@ -37,5 +37,15 @@ coverage/
 # Translation batch files (transient)
 translations/
 
+# Signing keys & secrets
+*.pem
+*.p8
+*.jks
+*.keystore
+
+# Build artifacts (Android)
+*.aab
+*.apk
+
 # Vercel (legacy)
 .vercel

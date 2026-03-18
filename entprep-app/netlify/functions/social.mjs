@@ -55,6 +55,9 @@ async function sbDelete(table, filter) {
   if (!res.ok) throw new Error(await res.text());
 }
 
+// UUID format validation
+const isUUID = (s) => typeof s === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+
 // Rate limiters per action
 const searchLimit = createRateLimiter("social_search", { max: 30, windowSec: 60 });
 const nicknameLimit = createRateLimiter("social_nickname", { max: 5, windowSec: 60 });
@@ -129,7 +132,7 @@ export default async function handler(req) {
         if (rl) return rateLimitResponse(rl);
 
         const { friend_id } = body;
-        if (!friend_id || friend_id === user.id) {
+        if (!friend_id || friend_id === user.id || !isUUID(friend_id)) {
           return Response.json({ error: "Invalid friend_id" }, { status: 400, headers: CORS_HEADERS });
         }
         // Check target user exists
@@ -162,7 +165,7 @@ export default async function handler(req) {
         if (rl) return rateLimitResponse(rl);
 
         const { friendship_id, response } = body;
-        if (!friendship_id || !["accepted", "declined"].includes(response)) {
+        if (!friendship_id || typeof friendship_id !== "number" || !Number.isInteger(friendship_id) || !["accepted", "declined"].includes(response)) {
           return Response.json({ error: "Invalid params" }, { status: 400, headers: CORS_HEADERS });
         }
         // Verify this user is the recipient
@@ -181,7 +184,9 @@ export default async function handler(req) {
         if (rl) return rateLimitResponse(rl);
 
         const { friendship_id } = body;
-        if (!friendship_id) return Response.json({ error: "Missing friendship_id" }, { status: 400, headers: CORS_HEADERS });
+        if (!friendship_id || typeof friendship_id !== "number" || !Number.isInteger(friendship_id)) {
+          return Response.json({ error: "Invalid friendship_id" }, { status: 400, headers: CORS_HEADERS });
+        }
 
         // Verify this user is one of the parties
         const rows = await sbGet("friendships", `select=id,user_id,friend_id&id=eq.${friendship_id}&limit=1`);
@@ -309,7 +314,7 @@ export default async function handler(req) {
     }
   } catch (err) {
     console.error("Social action error:", action, err);
-    return Response.json({ error: err.message || "Server error" }, { status: 500, headers: CORS_HEADERS });
+    return Response.json({ error: "Internal server error" }, { status: 500, headers: CORS_HEADERS });
   }
 }
 

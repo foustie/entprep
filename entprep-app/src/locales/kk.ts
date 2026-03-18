@@ -318,6 +318,11 @@ const kk: Translations = {
     signOutConfirm: 'Аккаунттан шығу?',
     signOutConfirmDesc: 'Деректер жергілікті сақталған, бірақ синхрондау тоқтайды.',
     resetProfileConfirm: 'Бейіндік пәндерді қалпына келтіру?',
+    inviteFriend: 'Досты шақыр',
+    inviteFriendDesc: 'Саған да, досыңа да 7 күн Premium тегін',
+    inviteShareText: 'ENTprep-пен ҰБТ-ға дайындалып жатырмын — 30 000+ сұрақ, AI-талдау және дуэльдер! Менің сілтемем арқылы қосыл және 7 күн Premium тегін ал:',
+    referralSuccess: 'Реферал бонусы алынды! 7 күн Premium',
+    referralAlready: 'Реферал бонусы алынып қойған',
   },
 
   // ── Test ─────────────────────────────────────────────────────────────
@@ -364,6 +369,7 @@ const kk: Translations = {
     reportQuestion: 'Сұраққа шағымдану',
     commentOptional: 'Пікір (міндетті емес)',
     exit: 'Шығу',
+    leaveTestConfirm: 'Сенімдісіз бе? Тест барысы жоғалады.',
     questionN: 'Сұрақ',
     of: 'ішінен',
     answerOptions: 'Жауап нұсқалары',
@@ -596,6 +602,7 @@ const kk: Translations = {
     syncDesc: 'Құрылғылар арасында прогресті синхрондау үшін кіріңіз',
     signInGoogle: 'Google арқылы кіру',
     signInApple: 'Apple арқылы кіру',
+    signedIn: 'Кіру сәтті!',
   },
 
   // ── Auth Prompt ─────────────────────────────────────────────────────
@@ -612,7 +619,7 @@ const kk: Translations = {
 
   // ── Onboarding ──────────────────────────────────────────────────────
   onboarding: {
-    slide1Title: '27 000+ сұрақ',
+    slide1Title: '30 000+ сұрақ',
     slide1Desc: 'ҰБТ-ның барлық 13 пәні толық түсіндірмелермен. Жеке, көп таңдаулы және сәйкестік',
     slide2Title: 'AI-көмекші',
     slide2Desc: 'Кез келген сұрақты түсіндіреді, оқу жоспарын құрады және әлсіз тақырыптарды табады',
@@ -731,6 +738,8 @@ const kk: Translations = {
     getPremium: 'Жазылу',
     alreadyPaid: 'Сатып алуды қалпына келтіру',
     noPurchaseFound: 'Жазылым табылмады. Сатып алған болсаңыз — кейінірек қайталаңыз.',
+    loginToSubscribe: 'Жазылу үшін кіріңіз',
+    loginToSubscribeDesc: 'Жазылымды рәсімдеу үшін аккаунт қажет',
     webOnly: 'Қосымшаны жүктеу',
     purchasing: 'Рәсімдеу...',
     yearlyPlanAuto: '9 990 \u20B8/жыл',
@@ -743,7 +752,7 @@ const kk: Translations = {
     challengeFriend: 'Досқа сынақ жіберу',
     challengeTitle: 'Досқа сынақ',
     trialEnt: 'Сынақ ҰБТ',
-    tryYourself: 'Күшіңді сына: entprep.netlify.app',
+    tryYourself: 'Күшіңді сына: entprep.org',
     iScored: 'Мен жинадым',
     inApp: 'ENTprep-те! Жеңе аласың ба?',
     points: 'балл',
@@ -806,6 +815,40 @@ const kk: Translations = {
     message: 'Қате орын алды. Бетті қайта жүктеп көріңіз.',
     goBack: 'Артқа',
     reload: 'Қайта жүктеу',
+  },
+
+  // ── Contextual Errors (ErrorBoundary per screen) ──────────────────
+  errors: {
+    subjectTitle: 'Пән қатесі',
+    subjectMessage: 'Пәнді жүктеу мүмкін болмады.',
+    challengeTitle: 'Сынақ қатесі',
+    challengeMessage: 'Сынақты жүктеу мүмкін болмады.',
+    testTitle: 'Тест қатесі',
+    testMessage: 'Тест кезінде қате орын алды.',
+    calcTitle: 'Калькулятор қатесі',
+    calcMessage: 'Калькуляторды жүктеу мүмкін болмады.',
+    fullentTitle: 'Сынақ ҰБТ қатесі',
+    fullentMessage: 'ҰБТ симуляциясы кезінде қате орын алды.',
+    errorReviewTitle: 'Қателерді қайталау қатесі',
+    errorReviewMessage: 'Бөлімді жүктеу мүмкін болмады.',
+    adminTitle: 'Админ-панель қатесі',
+    adminMessage: 'Админ-панельді жүктеу мүмкін болмады.',
+    leaderboardTitle: 'Көшбасшылар кестесі қатесі',
+    leaderboardMessage: 'Көшбасшылар кестесін жүктеу мүмкін болмады.',
+    friendsTitle: 'Достар қатесі',
+    friendsMessage: 'Достар бөлімін жүктеу мүмкін болмады.',
+    duelTitle: 'Дуэль қатесі',
+    duelMessage: 'Дуэльді жүктеу мүмкін болмады.',
+    reviewTitle: 'Қайталау қатесі',
+    reviewMessage: 'Қайталауды жүктеу мүмкін болмады.',
+    adaptiveTitle: 'Талдау қатесі',
+    adaptiveMessage: 'Талдауды жүктеу мүмкін болмады.',
+    progressTitle: 'Прогресс қатесі',
+    progressMessage: 'Прогресті жүктеу мүмкін болмады.',
+    settingsTitle: 'Баптау қатесі',
+    settingsMessage: 'Баптауларды жүктеу мүмкін болмады.',
+    notificationEnableFailed: 'Хабарландыруларды қосу мүмкін болмады',
+    copied: 'Көшірілді!',
   },
 } as const;
 

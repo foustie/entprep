@@ -81,11 +81,28 @@ export async function forfeitDuel(duelId: number): Promise<void> {
 }
 
 // ── Realtime subscription ────────────────────────────────────────────────────
+// Uses Realtime as notification-only: when a change is detected, fetches
+// safe data via the API instead of trusting the raw Realtime payload
+// (which contains question_ids and full answer maps).
 
 export type DuelRealtimeCallback = (payload: DuelState) => void;
 
 export function subscribeToDuel(duelId: number, callback: DuelRealtimeCallback): () => void {
   if (!supabase) return () => {};
+
+  let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+  let destroyed = false;
+
+  const fetchAndNotify = () => {
+    if (destroyed) return;
+    getDuel(duelId)
+      .then((res) => {
+        if (!destroyed) callback(res.duel as unknown as DuelState);
+      })
+      .catch(() => {
+        // Silently ignore — polling fallback will cover gaps
+      });
+  };
 
   const channel = supabase
     .channel(`duel-${duelId}`)
@@ -97,13 +114,17 @@ export function subscribeToDuel(duelId: number, callback: DuelRealtimeCallback):
         table: 'duels',
         filter: `id=eq.${duelId}`,
       },
-      (payload) => {
-        callback(payload.new as DuelState);
+      () => {
+        // Debounce: avoid hammering the API on rapid successive updates
+        if (debounceTimer) clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(fetchAndNotify, 500);
       }
     )
     .subscribe();
 
   return () => {
+    destroyed = true;
+    if (debounceTimer) clearTimeout(debounceTimer);
     supabase!.removeChannel(channel);
   };
 }

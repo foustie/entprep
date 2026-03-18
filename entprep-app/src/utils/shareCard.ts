@@ -211,7 +211,7 @@ async function drawFooterWithQR(
     ctx.font = "600 32px 'Segoe UI', sans-serif";
     ctx.textAlign = "center";
     ctx.fillStyle = "#94a3b8";
-    ctx.fillText("entprep.netlify.app", W / 2, H - 60);
+    ctx.fillText("entprep.org", W / 2, H - 60);
   }
 }
 

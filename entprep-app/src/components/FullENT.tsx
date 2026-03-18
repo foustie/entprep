@@ -97,8 +97,11 @@ export default function FullENT({ finish }: FullENTProps) {
   const [paused, setPaused] = useState(false);
   const [offline, setOffline] = useState(false);
   const [passageOpen, setPassageOpen] = useState(true);
+  const [focused, setFocused] = useState(-1);
   // Reset passage to open when navigating to a new question
   useEffect(() => { setPassageOpen(true); }, [curSec, curQ]);
+  // Reset focus when question changes
+  useEffect(() => { setFocused(-1); }, [curSec, curQ]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -116,6 +119,34 @@ export default function FullENT({ finish }: FullENTProps) {
     window.addEventListener('online', goOnline);
     return () => { window.removeEventListener('offline', goOffline); window.removeEventListener('online', goOnline); };
   }, [phase, toast, t.test]);
+
+  // Keyboard navigation for answer options
+  useEffect(() => {
+    if (phase !== 'test' || paused || offline || !sections) return;
+    const currentSec = sections[curSec];
+    const currentQ = currentSec?.qs[curQ];
+    if (!currentQ || getQType(currentQ) !== 'single') return;
+    const optCount = currentQ.o?.length || 4;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        setFocused(f => f < optCount - 1 ? f + 1 : 0);
+      } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        setFocused(f => f > 0 ? f - 1 : optCount - 1);
+      } else if ((e.key === 'Enter' || e.key === ' ') && focused >= 0) {
+        e.preventDefault();
+        sel(focused);
+      } else if (e.key >= '1' && e.key <= String(optCount)) {
+        e.preventDefault();
+        const idx = parseInt(e.key) - 1;
+        setFocused(idx);
+        sel(idx);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [phase, paused, offline, sections, curSec, curQ, focused]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const sec = sections?.[curSec];
   const q = sec?.qs[curQ];
@@ -434,13 +465,15 @@ export default function FullENT({ finish }: FullENTProps) {
       ) : getQType(q!) === 'matching' ? (
         <MatchingCard key={`m-${curSec}-${curQ}`} question={q!} onConfirm={confirmMatch} showResult={false} userAnswer={secAnswers[curQ] as Record<number, number> | undefined} />
       ) : (
-      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <div role="radiogroup" aria-label={t.test.answerOptions} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         {q?.o.map((opt, idx) => {
           const picked = secAnswers[curQ] === idx;
           const locked = secAnswers[curQ] !== undefined;
           let bg = "var(--bg-card)", bd = "1px solid var(--border)", tc = "var(--text-body)";
           if (picked) { bg = "rgba(26,154,140,0.1)"; bd = "1px solid rgba(26,154,140,0.35)"; tc = COLORS.teal; }
-          return (<button key={idx} onClick={() => sel(idx)} style={{ display: "flex", alignItems: "center", background: bg, border: bd, borderRadius: 12, padding: "12px 13px", cursor: locked ? "default" : "pointer", textAlign: "left", transition: "all 0.2s" }}>
+          const isFocused = focused === idx && !locked;
+          if (isFocused && !picked) { bd = "1px solid rgba(26,154,140,0.5)"; bg = "rgba(26,154,140,0.08)"; }
+          return (<button key={idx} onClick={() => sel(idx)} role="radio" aria-checked={picked} aria-label={`${t.test.option} ${String.fromCharCode(65 + idx)}: ${opt}`} style={{ display: "flex", alignItems: "center", background: bg, border: bd, borderRadius: 12, padding: "12px 13px", cursor: locked ? "default" : "pointer", textAlign: "left", transition: "all 0.2s", outline: isFocused ? "2px solid rgba(26,154,140,0.4)" : "none", outlineOffset: 1 }}>
             <div style={{ width: 24, height: 24, borderRadius: 12, border: `2px solid ${tc}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: tc, flexShrink: 0, marginRight: 10 }}>
               {picked ? <Check size={12} /> : String.fromCharCode(65 + idx)}
             </div>

@@ -30,6 +30,7 @@ import AuthPrompt from './components/AuthPrompt';
 import PushPrompt from './components/PushPrompt';
 import { supabase } from './config/supabase';
 import { useAuth } from './contexts/AuthContext';
+import { parseReferralParam, claimReferral } from './utils/socialHelpers';
 import type { TestResult, SRCard } from './types';
 
 const submitLeaderboard = async (result: TestResult) => {
@@ -38,10 +39,16 @@ const submitLeaderboard = async (result: TestResult) => {
     const session = await supabase.auth.getSession();
     const token = session?.data.session?.access_token;
     if (!token) return;
+    const lb = result._leaderboard;
+    if (!lb) return; // No verification data available
     await fetch('/api/leaderboard', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ subject: result.su, score: result.sc }),
+      body: JSON.stringify({
+        subject: result.su,
+        question_indices: lb.question_indices,
+        answers: lb.answers,
+      }),
     });
   } catch { /* silently fail */ }
 };
@@ -91,6 +98,17 @@ function AppContent() {
   const [totalQ, setTotalQ] = useState(TOTAL_Q);
   useEffect(() => { prefetchCounts().then(ok => { if (ok) setTotalQ(getTotalQ()); }); }, []);
 
+  // Persist ?ref= for users who haven't signed in yet
+  useEffect(() => {
+    const refNick = parseReferralParam();
+    if (refNick) {
+      sessionStorage.setItem('entprep_ref', refNick);
+      const url = new URL(window.location.href);
+      url.searchParams.delete('ref');
+      window.history.replaceState({}, '', url.pathname + url.search);
+    }
+  }, []);
+
   const prevSyncError = useRef<string | null>(null);
   useEffect(() => {
     if (syncError && syncError !== prevSyncError.current) {
@@ -103,6 +121,20 @@ function AppContent() {
   const showNav = !needProfile && screen !== SCREENS.TEST && screen !== SCREENS.FULL_ENT && screen !== SCREENS.PROFILE && screen !== SCREENS.SUBJECT && screen !== SCREENS.ERROR_REVIEW && screen !== SCREENS.ADMIN && screen !== SCREENS.CHALLENGE && screen !== SCREENS.LEADERBOARD && screen !== SCREENS.FRIENDS && screen !== SCREENS.DUEL && screen !== SCREENS.REVIEW && !showOnboarding && !showAuthPrompt;
 
   const { user } = useAuth();
+
+  // Handle referral after user signs in
+  const refClaimedRef = useRef(false);
+  useEffect(() => {
+    if (!user || refClaimedRef.current) return;
+    const refNick = sessionStorage.getItem('entprep_ref');
+    if (!refNick) return;
+    refClaimedRef.current = true;
+    sessionStorage.removeItem('entprep_ref');
+    claimReferral(refNick).then(ok => {
+      if (ok) toast.success(tr.settings.referralSuccess);
+    });
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleFinish = (result: TestResult) => { addHist(result); addSrFromResult(result); if (user) { submitLeaderboard(result); } goHome(); };
   const handleReviewFinish = (updated: SRCard[]) => {
     setSrCards(prev => {
@@ -146,74 +178,74 @@ function AppContent() {
         {!needProfile && screen === SCREENS.PROFILE && <ProfileSelect onConfirm={handleConfirmProfile} />}
         {!needProfile && screen === SCREENS.HOME && <Home />}
         {!needProfile && screen === SCREENS.SUBJECT && curSub && (
-          <ErrorBoundary key="subject" title="Ошибка предмета" message="Не удалось загрузить предмет." onRecover={goHome}>
+          <ErrorBoundary key="subject" title={tr.errors.subjectTitle} message={tr.errors.subjectMessage} onRecover={goHome}>
             <SubjectDetail sid={curSub} />
           </ErrorBoundary>
         )}
         {!needProfile && screen === SCREENS.CHALLENGE && challengeData && (
-          <ErrorBoundary key="challenge" title="Ошибка челленджа" message="Не удалось загрузить челлендж." onRecover={goHome}>
+          <ErrorBoundary key="challenge" title={tr.errors.challengeTitle} message={tr.errors.challengeMessage} onRecover={goHome}>
             <Challenge data={challengeData} />
           </ErrorBoundary>
         )}
         <Suspense fallback={<LoadingSpinner />}>
           {!needProfile && screen === SCREENS.TEST && curSub && (
-            <ErrorBoundary key="test" title="Ошибка теста" message="Произошла ошибка во время теста." onRecover={goHome}>
+            <ErrorBoundary key="test" title={tr.errors.testTitle} message={tr.errors.testMessage} onRecover={goHome}>
               <Test sid={curSub} tid={selTopic} customQs={customQs} finish={handleFinish} />
             </ErrorBoundary>
           )}
           {!needProfile && screen === SCREENS.CALC && (
-            <ErrorBoundary key="calc" title="Ошибка калькулятора" message="Не удалось загрузить калькулятор." onRecover={goHome}>
+            <ErrorBoundary key="calc" title={tr.errors.calcTitle} message={tr.errors.calcMessage} onRecover={goHome}>
               <Calc />
             </ErrorBoundary>
           )}
           {!needProfile && screen === SCREENS.FULL_ENT && (
-            <ErrorBoundary key="fullent" title="Ошибка пробного ЕНТ" message="Произошла ошибка при симуляции ЕНТ." onRecover={goHome}>
+            <ErrorBoundary key="fullent" title={tr.errors.fullentTitle} message={tr.errors.fullentMessage} onRecover={goHome}>
               <FullENT finish={handleFinish} />
             </ErrorBoundary>
           )}
           {!needProfile && screen === SCREENS.ERROR_REVIEW && (
-            <ErrorBoundary key="errors" title="Ошибка работы над ошибками" message="Не удалось загрузить раздел." onRecover={goHome}>
+            <ErrorBoundary key="errors" title={tr.errors.errorReviewTitle} message={tr.errors.errorReviewMessage} onRecover={goHome}>
               <ErrorReview />
             </ErrorBoundary>
           )}
           {!needProfile && screen === SCREENS.ADMIN && (
-            <ErrorBoundary key="admin" title="Ошибка админ-панели" message="Не удалось загрузить админку." onRecover={goHome}>
+            <ErrorBoundary key="admin" title={tr.errors.adminTitle} message={tr.errors.adminMessage} onRecover={goHome}>
               <Admin />
             </ErrorBoundary>
           )}
           {!needProfile && screen === SCREENS.LEADERBOARD && (
-            <ErrorBoundary key="leaderboard" title="Ошибка таблицы лидеров" message="Не удалось загрузить таблицу лидеров." onRecover={goHome}>
+            <ErrorBoundary key="leaderboard" title={tr.errors.leaderboardTitle} message={tr.errors.leaderboardMessage} onRecover={goHome}>
               <Leaderboard />
             </ErrorBoundary>
           )}
           {!needProfile && screen === SCREENS.FRIENDS && (
-            <ErrorBoundary key="friends" title="Ошибка друзей" message="Не удалось загрузить раздел друзей." onRecover={goHome}>
+            <ErrorBoundary key="friends" title={tr.errors.friendsTitle} message={tr.errors.friendsMessage} onRecover={goHome}>
               <Friends />
             </ErrorBoundary>
           )}
           {!needProfile && screen === SCREENS.DUEL && (
-            <ErrorBoundary key="duel" title="Ошибка дуэли" message="Не удалось загрузить дуэль." onRecover={goHome}>
+            <ErrorBoundary key="duel" title={tr.errors.duelTitle} message={tr.errors.duelMessage} onRecover={goHome}>
               <Duel />
             </ErrorBoundary>
           )}
           {!needProfile && screen === SCREENS.REVIEW && (
-            <ErrorBoundary key="review" title="Ошибка повторения" message="Не удалось загрузить повторение." onRecover={goHome}>
+            <ErrorBoundary key="review" title={tr.errors.reviewTitle} message={tr.errors.reviewMessage} onRecover={goHome}>
               <ReviewSession cards={srCards} onFinish={handleReviewFinish} />
             </ErrorBoundary>
           )}
         </Suspense>
         {!needProfile && screen === SCREENS.ADAPTIVE && (
-          <ErrorBoundary key="adaptive" title="Ошибка анализа" message="Не удалось загрузить анализ." onRecover={() => changeTab(SCREENS.HOME)}>
+          <ErrorBoundary key="adaptive" title={tr.errors.adaptiveTitle} message={tr.errors.adaptiveMessage} onRecover={() => changeTab(SCREENS.HOME)}>
             <Adaptive />
           </ErrorBoundary>
         )}
         {!needProfile && screen === SCREENS.PROGRESS && (
-          <ErrorBoundary key="progress" title="Ошибка прогресса" message="Не удалось загрузить прогресс." onRecover={() => changeTab(SCREENS.HOME)}>
+          <ErrorBoundary key="progress" title={tr.errors.progressTitle} message={tr.errors.progressMessage} onRecover={() => changeTab(SCREENS.HOME)}>
             <Progress />
           </ErrorBoundary>
         )}
         {!needProfile && screen === SCREENS.SETTINGS && (
-          <ErrorBoundary key="settings" title="Ошибка настроек" message="Не удалось загрузить настройки." onRecover={() => changeTab(SCREENS.HOME)}>
+          <ErrorBoundary key="settings" title={tr.errors.settingsTitle} message={tr.errors.settingsMessage} onRecover={() => changeTab(SCREENS.HOME)}>
             <Settings />
           </ErrorBoundary>
         )}

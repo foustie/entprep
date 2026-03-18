@@ -8,6 +8,7 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test-setup.ts'],
     css: false,
+    exclude: ['node_modules/**', 'ios/**', 'android/**'],
   },
   build: {
     rollupOptions: {
@@ -30,7 +31,7 @@ export default defineConfig({
       manifest: {
         name: 'ENTprep — Подготовка к ЕНТ',
         short_name: 'ENTprep',
-        description: 'Бесплатная подготовка к ЕНТ: 10 000+ вопросов, 13 предметов, адаптивное обучение',
+        description: 'Подготовка к ЕНТ: 28 000+ вопросов, 13 предметов, AI-помощник, адаптивное обучение',
         theme_color: '#0f0f1a',
         background_color: '#0f0f1a',
         lang: 'ru',

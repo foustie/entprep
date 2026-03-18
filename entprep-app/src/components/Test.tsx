@@ -72,6 +72,9 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
   const [offline, setOffline] = useState(false);
 
   const handleBack = () => {
+    if (!fin && Object.keys(ans).length > 0) {
+      if (!window.confirm(t.test.leaveTestConfirm)) return;
+    }
     if (customQs) { setNavCustomQs(null); setScreen('errors'); }
     else if (sid === "reading") { goHome(); }
     else { setScreen('topics'); }
@@ -79,7 +82,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
 
   useEffect(() => { let cancelled = false; (async () => { const questions = customQs ? customQs.map(q => ({ ...q, o: [...q.o] })) : await getQs(sid, sub.cnt, useShuffle, tid, st.lang); if (cancelled) return; const tot = questions.length; const timerSec = tid ? Math.max(5 * 60, Math.round(baseTime * (tot / sub.cnt))) : baseTime; setQs(questions); setTl(timerSec); setLoading(false); })(); return () => { cancelled = true } }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (loading || !useTmr || offline) { if (tr.current) { clearInterval(tr.current); tr.current = null; } return; } tr.current = setInterval(() => setTl(p => { if (p <= 1) { clearInterval(tr.current!); autoFinished.current = true; setFin(true); return 0; } return p - 1; }), 1000); return () => { if (tr.current) clearInterval(tr.current); }; }, [loading, offline]);
-  useEffect(() => { if (!fin || !autoFinished.current || !qs) return; autoFinished.current = false; const tot = qs.length; const timerSec = tid ? Math.max(5 * 60, Math.round(baseTime * (tot / sub.cnt))) : baseTime; const cc = qs.filter((q, i) => ans[i] !== undefined && scoreQuestion(q, ans[i]).correct).length; const qd = qs.map((q, i) => ({ oi: q._oi!, ok: ans[i] !== undefined && scoreQuestion(q, ans[i]).correct, tp: q._topic, stp: q._subtopic })); finish({ su: sid, tp: tid || undefined, co: cc, to: tot, sc: tot ? Math.round(cc / tot * 100) : 0, dt: new Date().toLocaleDateString("ru-RU"), tm: timerSec, qd }); }, [fin]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (!fin || !autoFinished.current || !qs) return; autoFinished.current = false; const tot = qs.length; const timerSec = tid ? Math.max(5 * 60, Math.round(baseTime * (tot / sub.cnt))) : baseTime; const cc = qs.filter((q, i) => ans[i] !== undefined && scoreQuestion(q, ans[i]).correct).length; const qd = qs.map((q, i) => ({ oi: q._oi!, ok: ans[i] !== undefined && scoreQuestion(q, ans[i]).correct, tp: q._topic, stp: q._subtopic })); finish({ su: sid, tp: tid || undefined, co: cc, to: tot, sc: tot ? Math.round(cc / tot * 100) : 0, dt: new Date().toLocaleDateString("ru-RU"), tm: timerSec, qd, _leaderboard: buildLeaderboardData() }); }, [fin]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!fin || dailyMarkedRef.current || customQs || !qs) return;
     const tot = qs.length;
@@ -201,6 +204,27 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
 
   const openReport = (idx: number) => { setReportComment(''); setReportIdx(idx); };
 
+  /** Build leaderboard verification payload: question indices + answers mapped to original (pre-shuffle) space */
+  const buildLeaderboardData = () => {
+    if (!qs) return undefined;
+    const question_indices = qs.map(q => q._oi!);
+    const answers: (number | number[] | Record<number, number> | null)[] = qs.map((q, i) => {
+      const a = ans[i];
+      if (a === undefined) return null;
+      const qt = getQType(q);
+      if (qt === 'single' && typeof a === 'number') {
+        // Map shuffled answer index back to original option index
+        return q._shuffleMap ? q._shuffleMap[a] : a;
+      }
+      if (qt === 'multiple' && Array.isArray(a)) {
+        return q._shuffleMap ? (a as number[]).map(idx => q._shuffleMap![idx]) : a;
+      }
+      // matching: no option shuffle, pass through
+      return a;
+    });
+    return { question_indices, answers };
+  };
+
   const pct = tot ? Math.round(cc / tot * 100) : 0;
   const record = fin && !customQs ? isNewRecord(hist, { su: sid, sc: pct } as TestResult) : { isRecord: false, prevBest: 0, improvement: 0 };
   const aiBtn = (index: number) => (
@@ -296,7 +320,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
     <button onClick={() => setShowShare(true)} style={{ width: "100%", padding: "15px", marginTop: 14, background: `linear-gradient(135deg,${COLORS.teal},${COLORS.tealLight})`, color: "#fff", border: "none", borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 20px rgba(26,154,140,0.25)", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
       <Share2 size={16} />{t.test.share}
     </button>
-    <button onClick={() => { if (challenge) sessionStorage.removeItem("entprep_challenge"); const qd = qs.map((qq, i) => ({ oi: qq._oi!, ok: ans[i] !== undefined && scoreQuestion(qq, ans[i]).correct, tp: qq._topic, stp: qq._subtopic })); finish({ su: sid, tp: tid || undefined, co: cc, to: tot, sc: pct, dt: new Date().toLocaleDateString("ru-RU"), tm: timerSec - tl, qd }); }} style={{ width: "100%", padding: "15px", marginTop: 8, background: sub.color, color: "#fff", border: "none", borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{t.test.goHome}</button>
+    <button onClick={() => { if (challenge) sessionStorage.removeItem("entprep_challenge"); const qd = qs.map((qq, i) => ({ oi: qq._oi!, ok: ans[i] !== undefined && scoreQuestion(qq, ans[i]).correct, tp: qq._topic, stp: qq._subtopic })); finish({ su: sid, tp: tid || undefined, co: cc, to: tot, sc: pct, dt: new Date().toLocaleDateString("ru-RU"), tm: timerSec - tl, qd, _leaderboard: buildLeaderboardData() }); }} style={{ width: "100%", padding: "15px", marginTop: 8, background: sub.color, color: "#fff", border: "none", borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{t.test.goHome}</button>
     <ShareModal visible={showShare} onClose={() => setShowShare(false)} type="test" data={{ subjectName: (t.subjects as Record<string, string>)[sid] || sub.name, subjectEmoji: sub.icon, topicName: tid || null, subjectId: sid, topicId: tid, score: cc, total: tot, pct }} />
     <ReportSheet visible={reportIdx !== null} questionText={reportIdx !== null ? qs[reportIdx]?.q : undefined} comment={reportComment} loading={reportLoading} onClose={() => { setReportIdx(null); setReportComment(''); }} onCommentChange={setReportComment} onReport={reason => reportQuestion(reportIdx!, reason)} />
   </div>);

@@ -318,6 +318,11 @@ const ru = {
     signOutConfirm: 'Выйти из аккаунта?',
     signOutConfirmDesc: 'Данные сохранены локально, но синхронизация остановится.',
     resetProfileConfirm: 'Сбросить профильные предметы?',
+    inviteFriend: 'Пригласи друга',
+    inviteFriendDesc: '7 дней Premium бесплатно тебе и другу',
+    inviteShareText: 'Готовлюсь к ЕНТ с ENTprep — 30 000+ вопросов, AI-разбор ошибок и дуэли! Присоединяйся по моей ссылке и получи 7 дней Premium бесплатно:',
+    referralSuccess: 'Реферальный бонус получен! 7 дней Premium',
+    referralAlready: 'Реферальный бонус уже получен',
   },
 
   // ── Test ─────────────────────────────────────────────────────────────
@@ -370,6 +375,7 @@ const ru = {
     commentOptional: 'Комментарий (необязательно)',
     // Navigation
     exit: 'Выйти',
+    leaveTestConfirm: 'Вы уверены? Прогресс теста будет потерян.',
     questionN: 'Вопрос',
     of: 'из',
     answerOptions: 'Варианты ответа',
@@ -610,6 +616,7 @@ const ru = {
     syncDesc: 'Войдите для синхронизации прогресса между устройствами',
     signInGoogle: 'Войти через Google',
     signInApple: 'Войти через Apple',
+    signedIn: 'Вход выполнен!',
   },
 
   // ── Auth Prompt ─────────────────────────────────────────────────────
@@ -626,7 +633,7 @@ const ru = {
 
   // ── Onboarding ──────────────────────────────────────────────────────
   onboarding: {
-    slide1Title: '27 000+ вопросов',
+    slide1Title: '30 000+ вопросов',
     slide1Desc: 'Все 13 предметов ЕНТ с подробными объяснениями. Обычные, множественные и на соответствие',
     slide2Title: 'AI-помощник',
     slide2Desc: 'Объяснит любой вопрос, составит учебный план и найдёт слабые темы',
@@ -745,6 +752,8 @@ const ru = {
     getPremium: 'Подписаться',
     alreadyPaid: 'Восстановить покупку',
     noPurchaseFound: 'Подписка не найдена. Если вы покупали — попробуйте позже.',
+    loginToSubscribe: 'Войдите, чтобы подписаться',
+    loginToSubscribeDesc: 'Для оформления подписки нужен аккаунт',
     webOnly: 'Скачать приложение',
     purchasing: 'Оформление...',
     yearlyPlanAuto: '9 990 \u20B8/год',
@@ -757,7 +766,7 @@ const ru = {
     challengeFriend: 'Бросить вызов другу',
     challengeTitle: 'Вызов другу',
     trialEnt: 'Пробный ЕНТ',
-    tryYourself: 'Попробуй свои силы: entprep.netlify.app',
+    tryYourself: 'Попробуй свои силы: entprep.org',
     iScored: 'Я набрал',
     inApp: 'в ENTprep! Сможешь лучше?',
     points: 'баллов',
@@ -820,6 +829,40 @@ const ru = {
     message: 'Произошла ошибка. Попробуйте перезагрузить страницу.',
     goBack: 'Назад',
     reload: 'Перезагрузить',
+  },
+
+  // ── Contextual Errors (ErrorBoundary per screen) ──────────────────
+  errors: {
+    subjectTitle: 'Ошибка предмета',
+    subjectMessage: 'Не удалось загрузить предмет.',
+    challengeTitle: 'Ошибка челленджа',
+    challengeMessage: 'Не удалось загрузить челлендж.',
+    testTitle: 'Ошибка теста',
+    testMessage: 'Произошла ошибка во время теста.',
+    calcTitle: 'Ошибка калькулятора',
+    calcMessage: 'Не удалось загрузить калькулятор.',
+    fullentTitle: 'Ошибка пробного ЕНТ',
+    fullentMessage: 'Произошла ошибка при симуляции ЕНТ.',
+    errorReviewTitle: 'Ошибка работы над ошибками',
+    errorReviewMessage: 'Не удалось загрузить раздел.',
+    adminTitle: 'Ошибка админ-панели',
+    adminMessage: 'Не удалось загрузить админку.',
+    leaderboardTitle: 'Ошибка таблицы лидеров',
+    leaderboardMessage: 'Не удалось загрузить таблицу лидеров.',
+    friendsTitle: 'Ошибка друзей',
+    friendsMessage: 'Не удалось загрузить раздел друзей.',
+    duelTitle: 'Ошибка дуэли',
+    duelMessage: 'Не удалось загрузить дуэль.',
+    reviewTitle: 'Ошибка повторения',
+    reviewMessage: 'Не удалось загрузить повторение.',
+    adaptiveTitle: 'Ошибка анализа',
+    adaptiveMessage: 'Не удалось загрузить анализ.',
+    progressTitle: 'Ошибка прогресса',
+    progressMessage: 'Не удалось загрузить прогресс.',
+    settingsTitle: 'Ошибка настроек',
+    settingsMessage: 'Не удалось загрузить настройки.',
+    notificationEnableFailed: 'Не удалось включить уведомления',
+    copied: 'Скопировано!',
   },
 } as const;
 

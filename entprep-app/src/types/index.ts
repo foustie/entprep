@@ -29,6 +29,8 @@ export interface Question {
   _su?: string;
   pt?: string;
   px?: string;
+  /** Shuffle mapping: _shuffleMap[shuffledIdx] = originalIdx. Set by shuffleOptions. */
+  _shuffleMap?: number[];
   // Kazakh translations (same row, shared c/type/difficulty)
   q_kk?: string;
   o_kk?: string[];
@@ -79,6 +81,8 @@ export interface TestResult {
   type?: 'fullent' | 'regular' | 'duel';
   qd?: QuestionDetail[];
   sections?: Record<string, { correct: number; total: number; score: number }>;
+  /** Server-verified leaderboard submission data. Not persisted to history. */
+  _leaderboard?: { question_indices: number[]; answers: (number | number[] | Record<number, number> | null)[]; };
 }
 
 // ── User Data & Settings ───────────────────────────────────────────────────
@@ -369,19 +373,26 @@ export type DuelStatus = 'waiting' | 'active' | 'finished' | 'expired' | 'forfei
 
 export interface DuelState {
   id: number;
-  code: string;
+  code?: string;
   subject: string;
   creator_id: string;
   opponent_id: string | null;
   status: DuelStatus;
   creator_score: number;
   opponent_score: number;
-  creator_done: boolean;
+  // SafeDuel fields returned by get_duel API
+  my_role: 'creator' | 'opponent';
+  my_answers: Record<string, number | null>;
+  my_done: boolean;
   opponent_done: boolean;
-  creator_answers: Record<string, number | null>;
-  opponent_answers: Record<string, number | null>;
-  started_at: string | null;
-  finished_at: string | null;
+  opponent_progress: number;
+  // Only present when status === 'finished' (both players' answers revealed)
+  creator_answers?: Record<string, number | null>;
+  opponent_answers?: Record<string, number | null>;
+  creator_done?: boolean;
+  created_at?: string;
+  started_at?: string | null;
+  finished_at?: string | null;
 }
 
 // ── Style Types ────────────────────────────────────────────────────────────

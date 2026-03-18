@@ -1,7 +1,8 @@
 # ENTprep Full Audit & Roadmap
 
-> Generated: 2026-03-08 | Pre-release deep analysis
+> Generated: 2026-03-08 | Updated: 2026-03-18
 > Use this file as context for any Claude session working on ENTprep.
+> ✅ = fixed, ⚠️ = partially fixed, ❌ = not fixed
 
 ---
 
@@ -22,31 +23,31 @@
 
 | # | Issue | File:Line | Details |
 |---|-------|-----------|---------|
-| S1 | **Payment system disabled** | `AuthContext.tsx:78` | `FREE_PREMIUM = true` — all users bypass premium gates. Set to `false` when RevenueCat products are created |
-| S2 | **Rate limiter broken in push-subscribe** | `netlify/functions/push-subscribe.mjs:13` | `checkRate(req)` passes Request object instead of `user.id`. Rate limiting is completely bypassed. Fix: move rate check after auth, use `user.id` |
-| S3 | **Leaderboard score not validated** | `netlify/functions/leaderboard.mjs:102` | Client submits any score 0-100, server accepts at face value. Users can fake high scores. Fix: submit `test_id` + answers, verify server-side |
+| S1 | ✅ **Payment system disabled** | `AuthContext.tsx:84` | Fixed: RevenueCat IAP active, `FREE_PREMIUM = false`, premium checks DB + native |
+| S2 | ✅ **Rate limiter broken in push-subscribe** | `netlify/functions/push-subscribe.mjs:17` | Fixed: uses `user.id` after auth verification |
+| S3 | ✅ **Leaderboard score not validated** | `netlify/functions/leaderboard.mjs:127-272` | Fixed: server-side verification — fetches questions, verifies answers, calculates score |
 
 ### HIGH
 
 | # | Issue | File:Line | Details |
 |---|-------|-----------|---------|
-| S4 | **Duel question IDs not sanitized** | `netlify/functions/duel.mjs:200` | `qIds.join(",")` inserted directly into Supabase filter. Non-integer values could break query. Fix: `if (!qIds.every(id => Number.isInteger(id))) throw Error` |
-| S5 | **Duel fetched questions not validated** | `netlify/functions/duel.mjs:204` | `.filter(Boolean)` silently drops missing questions. Score manipulation possible. Fix: validate `ordered.length === qIds.length` |
-| S6 | **Webhook timing attack** | `netlify/functions/revenuecat-webhook.mjs:96` | `authHeader !== Bearer ${SECRET}` is timing-vulnerable. Fix: use `crypto.timingSafeEqual()` |
+| S4 | ✅ **Duel question IDs not sanitized** | `netlify/functions/duel.mjs:200` | Fixed: explicit integer validation `qIds.every(id => Number.isInteger(id))` |
+| S5 | ✅ **Duel fetched questions not validated** | `netlify/functions/duel.mjs:213` | Fixed: validates `ordered.length === qIds.length` |
+| S6 | ✅ **Webhook timing attack** | `netlify/functions/revenuecat-webhook.mjs:112` | Fixed: uses `crypto.timingSafeEqual()` |
 
 ### MEDIUM
 
 | # | Issue | File:Line | Details |
 |---|-------|-----------|---------|
 | S7 | **In-memory rate limiter not persistent** | `netlify/functions/utils/shared.mjs:42` | Each Netlify Function instance has own store. Effective rate = `max × instances`. Fix: move to Supabase table or Redis |
-| S8 | **Admin email check case-sensitive** | `netlify/functions/ai-generate.mjs:21` | `includes(user.email)` — if email casing differs, auth fails. Fix: `.toLowerCase()` on both sides |
+| S8 | ✅ **Admin email check case-sensitive** | `netlify/functions/ai-generate.mjs:21` | Fixed: `.toLowerCase()` on both sides |
 | S9 | **No admin audit logging** | `netlify/functions/admin-action.mjs` | Admin can delete/modify questions with no trail. Fix: add `audit_logs` table |
 
 ### LOW
 
 | # | Issue | File:Line | Details |
 |---|-------|-----------|---------|
-| S10 | **Android keystore passwords in plaintext** | `android/app/build.gradle:19-25` | `storePassword 'entprep2026'`, `keyPassword 'entprep2026'` committed to git. Anyone with repo access can sign APKs. Fix: move to `local.properties` or env vars, add to `.gitignore` |
+| S10 | ✅ **Android keystore passwords in plaintext** | `android/app/build.gradle:22` | Fixed: uses `System.getenv()` with fallback to project properties |
 | S11 | **npm audit: 12 vulnerabilities** | `package.json` | 1 moderate, 11 high (rollup, serialize-javascript, minimatch, tar). Build-time only. Fix: `npm audit fix` |
 | S12 | **AI endpoint returns raw text on parse failure** | `netlify/functions/ai-explain.mjs:96` | If Claude returns bad JSON, raw text shown as explanation. Fix: return proper error |
 
@@ -58,20 +59,20 @@
 
 | # | Issue | File:Line | Details |
 |---|-------|-----------|---------|
-| C1 | **Unsafe type coercion** | `NavigationContext.tsx:69` | `sub as unknown as Question[]` — violates function signature, potential runtime crash. Fix: refactor `nav()` to accept proper types |
-| C2 | **SubjectDetail shows wrong count** | `SubjectDetail.tsx:113` | Displays `sub.cnt` (static 10/20) instead of `poolSize` (actual from Supabase). User sees "10 questions" but gets 150+. Fix: replace `sub.cnt` with `poolSize` |
-| C3 | **Timer not cleared on unmount** | `Test.tsx:136`, `FullENT.tsx:100-104` | `setInterval` continues after component unmounts = memory leak. Fix: add cleanup `return () => clearInterval(timerRef.current)` in useEffect |
-| C4 | **Pool size mismatch Home vs SubjectDetail** | `SubjectDetail.tsx:32` | Was using static `sub.pool` from module load time. Partially fixed (now uses `getPoolSize(sid)`), but `SUBS` object is still frozen at bundle load with stale values |
+| C1 | ✅ **Unsafe type coercion** | `NavigationContext.tsx:85` | Fixed: `navToErrorTest()` accepts `Question[]` properly |
+| C2 | ✅ **SubjectDetail shows wrong count** | `SubjectDetail.tsx:106` | Fixed: shows `poolSize` (actual from Supabase) |
+| C3 | ✅ **Timer not cleared on unmount** | `Test.tsx:141`, `FullENT.tsx:110` | Fixed: cleanup functions call `clearInterval()` |
+| C4 | ✅ **Pool size mismatch Home vs SubjectDetail** | `SubjectDetail.tsx:32` | Fixed: uses `getPoolSize(sid)` |
 
 ### MEDIUM
 
 | # | Issue | File:Line | Details |
 |---|-------|-----------|---------|
-| C5 | **Debounce race condition** | `AppContext.tsx:42-49` | `debouncedCloudSave` has `[]` dependency array — stale closure possible. Cloud sync may save outdated data |
+| C5 | ✅ **Debounce race condition** | `AppContext.tsx:47` | Fixed: reads fresh `loadData()` inside debounced callback |
 | C6 | **SUBS/TOTAL_Q static initialization** | `questionPools.ts:1-17` | `TOTAL_Q` calculated at module load from localStorage (may be stale). Shows 1950 (13×150) until `prefetchCounts()` completes. Causes UI flicker |
-| C7 | **Missing Kazakh translations** | `kk.ts` | 21 lines shorter than `ru.ts`. Missing keys in FullENT/Test sections. No `Translations` type export |
+| C7 | ✅ **Missing Kazakh translations** | `kk.ts` | Fixed: 855 lines (ru.ts: 877), all UI keys present. `Translations` type exported from ru.ts |
 | C8 | **26 components have no tests** | `src/components/` | Core untested: Test, FullENT, Adaptive, SubjectDetail, Home, Duel, Friends, Leaderboard, Progress, Settings |
-| C9 | **Silent localStorage failures** | `questionStore.ts:78` | `try { localStorage.setItem(...) } catch {}` — quota exceeded = silent data loss, no user notification |
+| C9 | ✅ **Silent localStorage failures** | `questionStore.ts:85` | Fixed: calls `captureError()` for QuotaExceededError (Sentry) |
 
 ### LOW
 
@@ -89,15 +90,15 @@
 
 | # | Issue | File:Line | Details |
 |---|-------|-----------|---------|
-| D1 | **No safe area handling (iOS notch)** | `index.html:5` | Missing `viewport-fit=cover`. Content hidden under notch/Dynamic Island. Fix: add to viewport meta + CSS `env(safe-area-inset-*)` padding |
-| D2 | **Touch targets too small** | `Home.tsx:216`, `Friends.tsx:395`, `BackButton.tsx` | Many buttons 36×36px or smaller. iOS minimum: 44×44, Android: 48×48. Fix: increase all interactive elements to 44px minimum |
-| D3 | **White (#fff) hardcoded on accent backgrounds** | `FullENT.tsx:189`, `Duel.tsx`, `Settings.tsx:93`, `Auth.tsx:64` | Icons/text colored `#fff` — invisible in light theme. Fix: use theme-aware colors |
+| D1 | ✅ **No safe area handling (iOS notch)** | `index.html:5,64` | Fixed: `viewport-fit=cover` + `env(safe-area-inset-*)` CSS padding |
+| D2 | ✅ **Touch targets too small** | `Home.tsx:231` | Fixed: close buttons 44×44px, multiple components updated |
+| D3 | ⚠️ **White (#fff) hardcoded on accent backgrounds** | `FullENT.tsx`, `Duel.tsx`, `Settings.tsx` | Partially fixed: some `color="#fff"` remain on gradient buttons |
 
 ### HIGH
 
 | # | Issue | File:Line | Details |
 |---|-------|-----------|---------|
-| D4 | **Hardcoded Russian in UI components** | `MultipleAnswerCard.tsx:57`, `MatchingCard.tsx:84` | "Несколько ответов", "Соответствие" not i18n'd. Kazakh users see Russian labels. Fix: use `useT()` |
+| D4 | ✅ **Hardcoded Russian in UI components** | `MultipleAnswerCard.tsx:59`, `MatchingCard.tsx:86` | Fixed: uses `t.test.multipleAnswers` / `t.test.matching` via `useT()` |
 | D5 | **Inconsistent icon sizes** | Multiple files | Sizes: 10/13/14/15/16/18/20/22/28/32/38/44px — no standard. Fix: create constants (sm=14, md=16, lg=20, xl=24) |
 | D6 | **Close buttons lack context** | `Home.tsx:211-243` | `aria-label={t.close}` — screen readers don't know what is being closed. Fix: context-specific labels |
 
@@ -105,7 +106,7 @@
 
 | # | Issue | File:Line | Details |
 |---|-------|-----------|---------|
-| D7 | **Onboarding 100vh ignores safe area** | `Onboarding.tsx:34` | `minHeight: '100vh'` doesn't account for notch/keyboard. Fix: use `100dvh` |
+| D7 | ✅ **Onboarding 100vh ignores safe area** | `Onboarding.tsx:34` | Fixed: uses `100dvh` |
 | D8 | **Keyboard navigation stuck after answer** | `Test.tsx:98-127` | After selecting answer, can't change via keyboard. Fix: allow re-navigation |
 | D9 | **MatchingCard dropdowns not accessible** | `MatchingCard.tsx:36-58` | `<select>` elements missing `aria-label`. Fix: add descriptive labels |
 | D10 | **Auth avatar missing alt text** | `Auth.tsx:62` | `<img alt="">` — empty alt. Fix: `alt={user.name}` |
@@ -126,8 +127,8 @@
 
 | # | Issue | File:Line | Details |
 |---|-------|-----------|---------|
-| A1 | **Placeholder App Store ID** | `PaywallModal.tsx:27` | `id0000000000` — broken link. Replace with real ID after listing |
-| A2 | **FREE_PREMIUM = true** | `AuthContext.tsx:78` | No revenue collection. Must flip to `false` with RevenueCat configured |
+| A1 | ✅ **Placeholder App Store ID** | `PaywallModal.tsx:30` | Fixed: real ID `id6760261689` |
+| A2 | ✅ **FREE_PREMIUM = true** | `AuthContext.tsx:84` | Fixed: RevenueCat active, premium checks DB + native |
 | A3 | **No app icon** | `ios/App/App/Assets.xcassets/AppIcon.appiconset/` | Only 1024px provided. Need proper icon or verify Xcode auto-scales |
 | A4 | **No screenshots** | App Store Connect | Need 6.7" and 6.5" screenshots (5-6 screens) |
 
@@ -136,8 +137,8 @@
 | # | Issue | File:Line | Details |
 |---|-------|-----------|---------|
 | A5 | **WebView-only app risk** | — | Apple may reject as "website wrapper". Mitigations: RevenueCat IAP (native), push notifications, offline support. Need to emphasize native features in review notes |
-| A6 | **Missing viewport-fit=cover** | `index.html:5` | Content under notch = poor native experience = possible rejection |
-| A7 | **RevenueCat not configured** | `purchases.ts` | Products not created in App Store Connect / RevenueCat dashboard. IAP won't work |
+| A6 | ✅ **Missing viewport-fit=cover** | `index.html:5` | Fixed: `viewport-fit=cover` added |
+| A7 | ✅ **RevenueCat not configured** | `purchases.ts` | Fixed: products created, IAP working on TestFlight |
 | A8 | **Push notifications setup incomplete** | — | Web Push may not work on iOS native. Need Capacitor Push plugin or verify |
 
 ### MODERATE
@@ -147,7 +148,7 @@
 | A9 | **Splash screen notch support** | `LaunchScreen.storyboard` | No safe area constraints for notch |
 | A10 | **App description/keywords** | App Store Connect | Not yet filled in |
 | A11 | **Age rating** | App Store Connect | Not yet configured |
-| A12 | **Privacy policy** | ✅ Done | `https://entprep.netlify.app/privacy` |
+| A12 | **Privacy policy** | ✅ Done | `https://entprep.org/privacy` |
 
 ---
 
@@ -157,15 +158,16 @@
 
 | Integration | Code Written | Configured | Working | Blocker |
 |-------------|:---:|:---:|:---:|---------|
-| **Apple Sign In** | ✅ | ❌ | ❌ | Need .p8 key + Supabase Apple provider setup |
+| **Apple Sign In** | ✅ | ✅ | ✅ | — |
 | **Google OAuth** | ✅ | ✅ | ✅ | — |
-| **RevenueCat IAP** | ✅ | 50% | ❌ | Products not created in stores |
+| **RevenueCat IAP (iOS)** | ✅ | ✅ | ✅ | — |
+| **RevenueCat IAP (Android)** | ✅ | ❌ | ❌ | Service account JSON + Play Console setup needed |
 | **Push (Web)** | ✅ | ✅ | ✅ | — |
 | **Push (Native iOS)** | ❌ | ❌ | ❌ | @capacitor/push-notifications not installed |
 | **Push (Native Android)** | ❌ | ❌ | ❌ | google-services.json missing |
 | **Sentry** | ✅ | ✅ | ✅ | — |
 | **Plausible** | ✅ | ✅ | ✅ | — |
-| **Kaspi Payments** | ✅ | ❌ | ❌ | Intentionally dropped, dead code remains |
+| **Referral System** | ✅ | ✅ | ✅ | — |
 
 ### I1. Apple Sign In — Setup Steps
 
@@ -201,7 +203,7 @@
    - Add products with same IDs
    - Upload Apple .p8 key
    - Upload Google service account JSON
-   - Set webhook URL: `https://entprep.netlify.app/.netlify/functions/revenuecat-webhook`
+   - Set webhook URL: `https://entprep.org/.netlify/functions/revenuecat-webhook`
 4. **Netlify env vars:**
    - `VITE_RC_API_KEY_APPLE=appl_xxxxx`
    - `VITE_RC_API_KEY_GOOGLE=goog_xxxxx`
@@ -339,7 +341,7 @@ Kaspi was dropped in favor of RevenueCat. Code lingers but is disabled. Can be r
 - [ ] **C7**: Complete Kazakh translations (missing UI keys)
 - [ ] **C8**: Write tests for core components (Test, FullENT, SubjectDetail, Home)
 - [ ] **C6**: Make TOTAL_Q reactive (not frozen at module load)
-- [ ] Kazakh question translations (~22k remaining, ~22% done)
+- [x] Kazakh question translations — **28 593/28 593 (100%) fully translated**
 - [ ] Topic/section name localization (80 sections, 284 subtopics)
 - [ ] Add more questions per subject (target: 2000+ each)
 - [ ] Native push notifications (Capacitor plugin + APNs)
@@ -356,7 +358,7 @@ Kaspi was dropped in favor of RevenueCat. Code lingers but is disabled. Can be r
 | `AppContext.tsx` | C5 |
 | `Home.tsx` | D2, D6 |
 | `SubjectDetail.tsx` | C2, C4 |
-| `Test.tsx` | C3, D8, C12 |
+| `Test.tsx` | C3, D8, C12 |no nnen
 | `FullENT.tsx` | C3, D3 |
 | `Duel.tsx` | D3, C11 |
 | `PaywallModal.tsx` | A1 |
@@ -386,11 +388,11 @@ Kaspi was dropped in favor of RevenueCat. Code lingers but is disabled. Can be r
 
 ## Stats Summary
 
-| Category | Critical | High | Medium | Low | Total |
-|----------|----------|------|--------|-----|-------|
-| Security | 3 | 3 | 3 | 3 | **12** |
-| Code/Logic | 4 | — | 5 | 3 | **12** |
-| UX/Design | 3 | 3 | 5 | 2 | **13** |
-| App Store | 4 | 4 | 3 | — | **11** |
-| Integrations | — | — | — | — | **5 incomplete** |
-| **Total** | **14** | **10** | **16** | **8** | **48 + 5 integrations** |
+| Category | Total | ✅ Fixed | ⚠️ Partial | ❌ Open |
+|----------|-------|---------|-----------|--------|
+| Security | 12 | 8 | 0 | 4 (S7, S9, S11, S12) |
+| Code/Logic | 12 | 7 | 0 | 5 (C6, C8, C10, C11, C12) |
+| UX/Design | 13 | 4 | 2 | 7 (D5, D6, D8, D9, D10, D12, D13) |
+| App Store | 11 | 5 | 2 | 4 (A3, A4, A10, A11) |
+| Integrations | 5 | 3 | 0 | 2 (native push iOS/Android) |
+| **Total** | **53** | **27** | **4** | **22** |

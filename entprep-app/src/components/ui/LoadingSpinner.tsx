@@ -1,12 +1,15 @@
 import React from 'react';
 import { COLORS } from '../../constants/styles';
+import { useT } from '../../locales';
 
 interface LoadingSpinnerProps {
   text?: string;
   color?: string;
 }
 
-export default function LoadingSpinner({ text = 'Загрузка...', color = COLORS.accent }: LoadingSpinnerProps) {
+export default function LoadingSpinner({ text, color = COLORS.accent }: LoadingSpinnerProps) {
+  const t = useT();
+  const displayText = text ?? t.loading;
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', flexDirection: 'column', gap: 12 }}>
       <div
@@ -19,7 +22,7 @@ export default function LoadingSpinner({ text = 'Загрузка...', color = C
           animation: 'spin 0.8s linear infinite',
         }}
       />
-      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{text}</div>
+      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{displayText}</div>
     </div>
   );
 }

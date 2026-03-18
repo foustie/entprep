@@ -3,8 +3,35 @@ import { Cloud, Swords, Trophy, Flame } from 'lucide-react';
 import { supabase } from '../config/supabase';
 import { CARD_HERO, TYPE, COLORS } from '../constants/styles';
 import { useT } from '../locales';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
 import type { LucideIcon } from 'lucide-react';
+
+interface AppleSignInPlugin {
+  authorize(options: { nonce: string }): Promise<{
+    identityToken: string;
+    authorizationCode: string;
+    user: string;
+    email?: string;
+    givenName?: string;
+    familyName?: string;
+  }>;
+}
+
+const AppleSignIn = registerPlugin<AppleSignInPlugin>('AppleSignIn');
+
+/** Generate a random nonce string for Apple Sign In. */
+function generateRawNonce(length = 32): string {
+  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+  const values = crypto.getRandomValues(new Uint8Array(length));
+  return Array.from(values, v => charset[v % charset.length]).join('');
+}
+
+/** SHA-256 hash a string and return the hex digest. */
+async function sha256(plain: string): Promise<string> {
+  const data = new TextEncoder().encode(plain);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hash), b => b.toString(16).padStart(2, '0')).join('');
+}
 
 interface BenefitConfig {
   Icon: LucideIcon;
@@ -37,11 +64,33 @@ export default function AuthPrompt({ onFinish }: AuthPromptProps) {
     if (!supabase) return;
     setLoading(provider);
     try {
+      // Native iOS Apple Sign In — use AuthenticationServices via Capacitor plugin
+      if (provider === 'apple' && Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') {
+        const rawNonce = generateRawNonce();
+        const hashedNonce = await sha256(rawNonce);
+        const result = await AppleSignIn.authorize({ nonce: hashedNonce });
+        if (!result.identityToken) {
+          setLoading(null);
+          return;
+        }
+        const { error } = await supabase.auth.signInWithIdToken({
+          provider: 'apple',
+          token: result.identityToken,
+          nonce: rawNonce,
+        });
+        if (error) {
+          console.error('Apple sign-in error:', error.message);
+          alert(`Apple Sign In: ${error.message}`);
+        }
+        setLoading(null);
+        return;
+      }
+
       if (Capacitor.isNativePlatform()) {
         const { data, error } = await supabase.auth.signInWithOAuth({
           provider,
           options: {
-            redirectTo: 'https://entprep.netlify.app/auth-callback.html',
+            redirectTo: 'https://entprep.org/auth-callback.html',
             skipBrowserRedirect: true,
           },
         });

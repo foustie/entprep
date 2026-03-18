@@ -119,17 +119,13 @@ export default function Duel() {
   }, []);
 
   // Handle duel state update (shared between Realtime and polling)
+  // Now receives safeDuel shape from API (my_role, my_answers, opponent_done, opponent_progress)
   const handleDuelUpdate = useCallback((duel: DuelState, amCreator: boolean) => {
-    // Update opponent's score and progress
-    if (amCreator) {
-      setOppScore(duel.opponent_score);
-      setOppProgress(Object.keys(duel.opponent_answers || {}).length);
-      setOppDone(duel.opponent_done);
-    } else {
-      setOppScore(duel.creator_score);
-      setOppProgress(Object.keys(duel.creator_answers || {}).length);
-      setOppDone(duel.creator_done);
-    }
+    // Update opponent's score and progress using safeDuel fields
+    const oppScoreVal = amCreator ? duel.opponent_score : duel.creator_score;
+    setOppScore(oppScoreVal);
+    setOppProgress(duel.opponent_progress ?? 0);
+    setOppDone(duel.opponent_done);
 
     // Opponent joined (lobby → vs) — also fetch opponent profile
     if (duel.status === 'active' && duel.opponent_id) {
@@ -232,7 +228,7 @@ export default function Duel() {
       setPhase('lobby');
       trackEvent('Duel Started', { subject: subjectId });
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Ошибка');
+      setError(e instanceof Error ? e.message : t.error);
     }
     setLoading(false);
   };
@@ -258,7 +254,7 @@ export default function Duel() {
       setupRealtime(result.duel_id, false);
       setPhase('vs');
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Ошибка');
+      setError(e instanceof Error ? e.message : t.error);
     }
     setLoading(false);
   };
@@ -324,7 +320,8 @@ export default function Duel() {
             setFinalCreatorScore(final.duel.creator_score);
             setFinalOpponentScore(final.duel.opponent_score);
             // Reconstruct opponent answers for per-question grid
-            const oppAns = final.duel[isCreator ? 'opponent_answers' : 'creator_answers'];
+            // creator_answers/opponent_answers are included in safeDuel when status=finished
+            const oppAns = final.duel[isCreator ? 'opponent_answers' : 'creator_answers'] || {};
             const oppCorrectList: (boolean | null)[] = [];
             for (let i = 0; i < TOTAL_QUESTIONS; i++) {
               const a = oppAns[String(i)];
@@ -558,8 +555,8 @@ export default function Duel() {
             <button onClick={() => shareToTelegram(inviteText)} style={{ flex: 1, padding: '10px', background: 'rgba(26,154,140,0.1)', border: '1px solid rgba(26,154,140,0.2)', borderRadius: 10, color: COLORS.teal, fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
               <Send size={15} />Telegram
             </button>
-            <button onClick={async () => { const ok = await copyText(inviteUrl); toast.success(ok ? 'Скопировано!' : 'Ошибка'); }} style={{ flex: 1, padding: '10px', background: 'rgba(255,107,53,0.1)', border: '1px solid rgba(255,107,53,0.2)', borderRadius: 10, color: COLORS.accent, fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-              <Copy size={15} />Ссылка
+            <button onClick={async () => { const ok = await copyText(inviteUrl); toast.success(ok ? t.errors.copied : t.error); }} style={{ flex: 1, padding: '10px', background: 'rgba(255,107,53,0.1)', border: '1px solid rgba(255,107,53,0.2)', borderRadius: 10, color: COLORS.accent, fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+              <Copy size={15} />{t.friends.link}
             </button>
           </div>
 
@@ -591,7 +588,7 @@ export default function Duel() {
           <div style={{ textAlign: 'center' }}>
             <PlayerAvatar profile={p1} size={64} />
             <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginTop: 8 }}>
-              {p1?.nickname && !p1.nickname.startsWith('user_') ? `@${p1.nickname}` : (p1?.display_name || 'Вы')}
+              {p1?.nickname && !p1.nickname.startsWith('user_') ? `@${p1.nickname}` : (p1?.display_name || t.you)}
             </div>
           </div>
 
@@ -661,7 +658,7 @@ export default function Duel() {
             <div style={{ fontSize: 20, fontWeight: 800, fontFamily: "'JetBrains Mono',monospace", color: COLORS.green }}>
               {myScore}
             </div>
-            <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>Вы</div>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{t.you}</div>
           </div>
 
           {/* Question counter + timer */}
@@ -788,11 +785,11 @@ export default function Duel() {
           }}>
             <div style={{ textAlign: 'center' }}>
               <PlayerAvatar profile={myProfile} size={44} />
-              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginTop: 6 }}>Вы</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginTop: 6 }}>{t.you}</div>
               <div style={{ fontSize: 28, fontWeight: 800, fontFamily: "'JetBrains Mono',monospace", color: COLORS.green }}>
                 {myFinalScore}
               </div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>из {TOTAL_QUESTIONS}</div>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{t.from} {TOTAL_QUESTIONS}</div>
             </div>
             <div style={{
               fontSize: 14, fontWeight: 800, color: 'var(--text-muted)',
@@ -806,7 +803,7 @@ export default function Duel() {
               <div style={{ fontSize: 28, fontWeight: 800, fontFamily: "'JetBrains Mono',monospace", color: COLORS.red }}>
                 {oppFinalScore}
               </div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>из {TOTAL_QUESTIONS}</div>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{t.from} {TOTAL_QUESTIONS}</div>
             </div>
           </div>
 

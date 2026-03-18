@@ -57,7 +57,7 @@ export function mergeData(local: CloudData | null, cloud: CloudData | null): Clo
   const allHist = [...(cloud.hist || []), ...(local.hist || [])];
   const seen = new Set<string>();
   const hist = allHist.filter(h => {
-    const key = `${h.dt}_${h.su}_${h.sc}`;
+    const key = `${h.dt}_${h.su}_${h.sc}_${h.tm ?? ''}_${h.tp ?? ''}_${h.co ?? ''}_${h.to ?? ''}`;
     if (seen.has(key)) return false;
     seen.add(key); return true;
   });

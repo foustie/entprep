@@ -63,6 +63,15 @@ vi.mock('../../locales', () => ({
       math: 'Мат. грамотность',
       physics: 'Физика',
     },
+    friends: {
+      link: 'Ссылка',
+    },
+    errors: {
+      copied: 'Скопировано!',
+    },
+    error: 'Ошибка',
+    you: 'Вы',
+    from: 'из',
   }),
 }));
 
@@ -79,7 +88,7 @@ const mockSubscribeToDuel = vi.fn().mockImplementation((_id: number, cb: (duel: 
   realtimeCallback = cb;
   return () => { realtimeCallback = null; };
 });
-const mockBuildDuelInviteUrl = vi.fn().mockReturnValue('https://entprep.netlify.app/?duel=ABC123');
+const mockBuildDuelInviteUrl = vi.fn().mockReturnValue('https://entprep.org/?duel=ABC123');
 const mockParseDuelInviteParam = vi.fn().mockReturnValue(null);
 
 vi.mock('../../utils/duelHelpers', () => ({
@@ -492,7 +501,7 @@ describe('Duel', () => {
       fireEvent.click(screen.getByText('Ссылка'));
 
       await waitFor(() => {
-        expect(mockCopyText).toHaveBeenCalledWith('https://entprep.netlify.app/?duel=ABC123');
+        expect(mockCopyText).toHaveBeenCalledWith('https://entprep.org/?duel=ABC123');
       });
       await waitFor(() => {
         expect(mockToast.success).toHaveBeenCalledWith('Скопировано!');

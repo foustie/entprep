@@ -1,8 +1,8 @@
-# ENTprep — План развития (февраль 2026)
+# ENTprep — План развития (обновлено: март 2026)
 
 ## Контекст
 
-ENTprep — PWA для подготовки к ЕНТ. 25 000+ вопросов (284 подтемы), AI Claude Sonnet 4.6, полная симуляция, калькулятор грантов (52 вуза).
+ENTprep — PWA для подготовки к ЕНТ. 28 000+ вопросов (284 подтемы), AI Claude Sonnet 4.6, полная симуляция, калькулятор грантов (52 вуза).
 **Рынок:** 300-400K готовящихся, 75% на казахском. **Конкуренты:** iTest (60K вопросов), Testter (40K), TestCenter (официальный).
 **Формат ЕНТ:** без изменений в 2026, новый формат (SAT-подобный) с 2027.
 
@@ -78,22 +78,24 @@ ENTprep — PWA для подготовки к ЕНТ. 25 000+ вопросов 
 - [x] Proxy через Netlify (обход ad-blockers): `/js/script.js` + `/api/event`
 - [x] `src/utils/analytics.ts` — `trackEvent()` хелпер
 - [x] Кастомные события: Test Completed, FullENT Completed, Duel Started, Profile Selected, Login, Result Shared
-- [x] Dashboard: https://plausible.io/entprep.netlify.app
+- [x] Dashboard: https://plausible.io/entprep.org
 
-### 3.2 Платежный бэкенд
-- [ ] Создать `/api/payment-webhook` для Kaspi.kz
-- [ ] При оплате: `is_premium: true`, `premium_until` в Supabase user_metadata
-- [ ] Серверная проверка `premium_until > now()`
+### 3.2 Платежный бэкенд ✅ (RevenueCat)
+- [x] ~~Kaspi.kz~~ → RevenueCat IAP (Google Play + App Store)
+- [x] `revenuecat-webhook.mjs` — обработка событий подписки (crypto.timingSafeEqual)
+- [x] `config/purchases.ts` — RevenueCat Capacitor wrapper
+- [x] Supabase: `payments` + `subscriptions` таблицы
+- [x] IAP работает на TestFlight, монетизация live
 
-### 3.3 Включить paywall
-- [ ] `FREE_PREMIUM = false` в `AuthContext.tsx`
-- [ ] Раскомментировать premium-проверки в `ai-explain.mjs` и `ai-plan.mjs`
-- [ ] Протестировать: лимит 5 тестов/день, AI 3/день, Full ЕНТ, учебный план
+### 3.3 Включить paywall ✅
+- [x] `FREE_PREMIUM = false` в `AuthContext.tsx` (с 2026-03-11)
+- [x] Premium-проверки в `ai-explain.mjs` и `ai-plan.mjs` активны
+- [x] Paywall: лимит 5 тестов/день, AI 3/день, Full ЕНТ, учебный план
 
-### 3.4 Управление подпиской
-- [ ] В Settings: секция "Моя подписка" (статус, дата, продление)
-- [ ] Grace period 3 дня после истечения
-- [ ] Автоудаление premium по истечении
+### 3.4 Управление подпиской ✅
+- [x] RevenueCat управляет подписками (автопродление, отмена через магазин)
+- [x] Webhook синхронизирует статус в Supabase
+- [ ] В Settings: секция "Моя подписка" (статус, дата) — отложено
 
 ---
 
@@ -118,7 +120,7 @@ ENTprep — PWA для подготовки к ЕНТ. 25 000+ вопросов 
 - [ ] informatics: 1410 → 2000 (генерация идёт)
 - [ ] law: 1995 → 2000 (+5, быстро)
 - [ ] literature: 834 → 2000 (генерация в очереди)
-- **Итог на данный момент:** 18 302 → ~24 000 вопросов. Таргет: ~25 500
+- **Итог:** 28 593 вопросов (13 предметов). Таргет был 25 500 — превышен.
 
 ### 4.2 Типы вопросов в обычных тестах ✅
 - [x] Включить multiple и matching в обычные тесты (сейчас только Full ЕНТ)
@@ -262,7 +264,7 @@ ENTprep — PWA для подготовки к ЕНТ. 25 000+ вопросов 
 - [x] UI: Button (12), Card (7), Toggle (5), EmptyState (6), ProgressBar (7), Chip (8), StatBadge (5), ScoreRing (6)
 - [x] Components: PaywallModal (9), ErrorBoundary (7), Onboarding (10)
 - [x] Contexts: ToastContext (10)
-- [x] **241 тестов, 18 файлов, coverage: components 96%, components/ui 84%, tested utils 80%+**
+- [x] **345 тестов, 22 файла, coverage: components 96%, components/ui 84%, tested utils 80%+**
 - [ ] Contexts (AppContext, AuthContext) — тяжёлые зависимости, нужны integration tests
 
 ### 8.2 E2E тесты
@@ -284,7 +286,7 @@ ENTprep — PWA для подготовки к ЕНТ. 25 000+ вопросов 
 - [x] `useT()` хук + `getT()` функция
 - [x] Переключатель в Settings, сохраняется в `st.lang`
 
-### 9.2 Контент (в процессе)
+### 9.2 Контент ✅
 - [x] Архитектурное решение: колонки `q_kk, o_kk, e_kk, pairs_kk` на той же строке (не отдельные строки с `lang`) — общий `c` (индекс ответа), matching pairs order shared
 - [x] Supabase миграция: `20260228_add_kk_translations.sql`
 - [x] TypeScript типы: `_kk` поля в Question + SupabaseRow
@@ -293,14 +295,13 @@ ENTprep — PWA для подготовки к ЕНТ. 25 000+ вопросов 
 - [x] Компоненты (Test, FullENT, ErrorReview): передают `st.lang`
 - [x] AI функции (ai-explain, ai-plan): казахский промпт при `lang === 'kk'`
 - [x] Скрипты: `translate-export.mjs`, `translate-import.mjs`, `translate-progress.mjs`
-- [ ] Перевод ~28 500 вопросов батчами через Claude Code (math → history → профильные)
-- [ ] Reading: генерация новых казахских пассажей (отдельная задача, не перевод)
+- [x] **Перевод 28 593 / 28 593 вопросов (100%) — все 13 предметов полностью переведены на казахский**
 - [ ] Статические fallback файлы (150/предмет) — отложено
 - [ ] Университеты на казахском
 
-### 9.3 AI на казахском
-- [ ] Промпты ai-explain/ai-plan с параметром lang
-- [ ] Claude Sonnet 4.6 поддерживает казахский
+### 9.3 AI на казахском ✅
+- [x] Промпты ai-explain/ai-plan с параметром lang (`isKk = lang === 'kk'`, полные казахские системные промпты)
+- [x] Claude Sonnet 4.6 поддерживает казахский
 
 ---
 
@@ -309,14 +310,15 @@ ENTprep — PWA для подготовки к ЕНТ. 25 000+ вопросов 
 > Запускать после казахского — сразу с двумя языками.
 
 ### 10.1 Android (Google Play)
-- [ ] Пересобрать Capacitor с актуальными зависимостями
-- [ ] Splash, иконки, deep links
-- [ ] Подписать и опубликовать ($25 одноразово)
+- [ ] Google Play service account JSON (нужен для RevenueCat + автоматизации)
+- [ ] Подписки в Google Play Console
+- [ ] Пересобрать Capacitor + подписать + опубликовать ($25 одноразово)
 
-### 10.2 iOS (App Store)
-- [ ] Apple Developer аккаунт ($99/год)
-- [x] Apple Sign In (обязательно) — кнопка добавлена в Auth.tsx, AuthPrompt.tsx; нужна настройка провайдера в Supabase Dashboard
-- [ ] Пройти App Store Review
+### 10.2 iOS (App Store) ✅
+- [x] Apple Developer аккаунт ($99/год) — оплачен
+- [x] Apple Sign In — работает (Auth.tsx, AuthPrompt.tsx, Supabase провайдер)
+- [x] RevenueCat IAP — работает на TestFlight
+- [x] Приложение подано на App Store Review (2026-03-12)
 
 ### 10.3 Нативные push
 - [ ] Firebase Cloud Messaging (Android) + APNs (iOS)
@@ -422,9 +424,9 @@ ENTprep — PWA для подготовки к ЕНТ. 25 000+ вопросов 
 
 | Метрика | Сейчас | 6 мес | 12 мес |
 |---------|--------|-------|--------|
-| Вопросов | ~25 000 (284 подтемы) | 35 000+ | 60 000+ |
+| Вопросов | 28 593 (284 подтемы, 100% kk, 13 предметов) | 35 000+ | 60 000+ |
 | MAU | ? | 5 000 | 20 000 |
 | Подписчики | 0 | 200 | 1 000 |
-| Языки UI | 2 (рус+каз) | 2 | 2 |
+| Языки UI + контент | 2 (рус+каз, 100% переведено) | 2 | 2 |
 | MRR | 0₸ | 300K₸ | 1.5M₸ |
 | App Store | — | 4.5+ | 4.7+ |

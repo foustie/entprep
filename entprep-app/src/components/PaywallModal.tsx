@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import BottomSheet from './ui/BottomSheet';
-import { Crown, Sparkles, Bot, GraduationCap, BookOpen, RotateCcw, Loader2 } from 'lucide-react';
+import { Crown, Sparkles, Bot, GraduationCap, BookOpen, RotateCcw, Loader2, LogIn } from 'lucide-react';
 import { COLORS } from '../constants/styles';
 import { useT } from '../locales';
+import { useAuth } from '../contexts/AuthContext';
+import { useNav } from '../contexts/NavigationContext';
 import type { PaywallReason } from '../types';
 import type { PlanType } from '../config/payment';
 import {
@@ -30,6 +32,8 @@ const STORE_LINKS = {
 
 export default function PaywallModal({ open, reason, onClose }: PaywallModalProps) {
   const t = useT();
+  const { user } = useAuth();
+  const { nav } = useNav();
   const [plan, setPlan] = useState<PlanType>('yearly');
   const [packages, setPackages] = useState<{ monthly?: RCPackage; yearly?: RCPackage }>({});
   const [loading, setLoading] = useState(false);
@@ -234,41 +238,64 @@ export default function PaywallModal({ open, reason, onClose }: PaywallModalProp
         )}
 
         {/* CTA */}
-        <button
-          onClick={handlePay}
-          disabled={purchasing}
-          style={{
-            width: '100%', padding: '15px',
-            background: purchasing ? 'var(--bg-muted)' : `linear-gradient(135deg, ${COLORS.accent}, ${COLORS.accentDark})`,
-            color: '#fff', border: 'none', borderRadius: 14,
-            fontSize: 15, fontWeight: 700, cursor: purchasing ? 'default' : 'pointer',
-            boxShadow: purchasing ? 'none' : '0 4px 20px rgba(255,107,53,0.3)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            opacity: purchasing ? 0.7 : 1,
-          }}
-        >
-          {purchasing ? (
-            <><Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />{t.paywall.purchasing}</>
-          ) : (
-            <><Crown size={18} />{isNative ? t.paywall.getPremium : t.paywall.webOnly}</>
-          )}
-        </button>
+        {!user ? (
+          <>
+            <button
+              onClick={() => { onClose(); nav('settings'); }}
+              style={{
+                width: '100%', padding: '15px',
+                background: `linear-gradient(135deg, ${COLORS.teal}, ${COLORS.cyan})`,
+                color: '#fff', border: 'none', borderRadius: 14,
+                fontSize: 15, fontWeight: 700, cursor: 'pointer',
+                boxShadow: '0 4px 20px rgba(26,154,140,0.3)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              }}
+            >
+              <LogIn size={18} />{t.paywall.loginToSubscribe || 'Войдите, чтобы подписаться'}
+            </button>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8, textAlign: 'center' }}>
+              {t.paywall.loginToSubscribeDesc || 'Для оформления подписки нужен аккаунт'}
+            </div>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={handlePay}
+              disabled={purchasing}
+              style={{
+                width: '100%', padding: '15px',
+                background: purchasing ? 'var(--bg-muted)' : `linear-gradient(135deg, ${COLORS.accent}, ${COLORS.accentDark})`,
+                color: '#fff', border: 'none', borderRadius: 14,
+                fontSize: 15, fontWeight: 700, cursor: purchasing ? 'default' : 'pointer',
+                boxShadow: purchasing ? 'none' : '0 4px 20px rgba(255,107,53,0.3)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                opacity: purchasing ? 0.7 : 1,
+              }}
+            >
+              {purchasing ? (
+                <><Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />{t.paywall.purchasing}</>
+              ) : (
+                <><Crown size={18} />{isNative ? t.paywall.getPremium : t.paywall.webOnly}</>
+              )}
+            </button>
 
-        <button
-          onClick={isNative ? handleRestore : onClose}
-          disabled={purchasing}
-          style={{
-            width: '100%', padding: '12px', marginTop: 8,
-            background: 'transparent',
-            border: '1px solid var(--border)',
-            borderRadius: 12, color: 'var(--text-secondary)',
-            fontSize: 12, fontWeight: 500, cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-          }}
-        >
-          {isNative && <RotateCcw size={14} />}
-          {t.paywall.alreadyPaid}
-        </button>
+            <button
+              onClick={isNative ? handleRestore : onClose}
+              disabled={purchasing}
+              style={{
+                width: '100%', padding: '12px', marginTop: 8,
+                background: 'transparent',
+                border: '1px solid var(--border)',
+                borderRadius: 12, color: 'var(--text-secondary)',
+                fontSize: 12, fontWeight: 500, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              }}
+            >
+              {isNative && <RotateCcw size={14} />}
+              {t.paywall.alreadyPaid}
+            </button>
+          </>
+        )}
       </div>
     </BottomSheet>
   );

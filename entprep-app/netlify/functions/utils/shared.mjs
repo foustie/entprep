@@ -4,7 +4,7 @@ import { VALID_SUBJECTS, PLANS } from "./constants.mjs";
 
 // ── CORS ────────────────────────────────────────────────────────────────────
 
-const ORIGIN = process.env.ALLOWED_ORIGIN || "https://entprep.netlify.app";
+const ORIGIN = process.env.ALLOWED_ORIGIN || "https://entprep.org";
 
 export const CORS_HEADERS = {
   "Access-Control-Allow-Origin": ORIGIN,
@@ -133,6 +133,31 @@ export function validatePlan(body) {
   return null;
 }
 
+// ── Premium check (subscriptions table) ─────────────────────────────────────
+// Authoritative server-side premium check. Queries the subscriptions table
+// (only service_role can write). Falls back to user_metadata if table missing.
+
+export async function checkPremium(userId, supabaseAdmin) {
+  try {
+    const res = await fetch(
+      `${process.env.VITE_SUPABASE_URL}/rest/v1/subscriptions?user_id=eq.${userId}&select=is_active,expires_at`,
+      {
+        headers: {
+          apikey: process.env.SUPABASE_SERVICE_KEY,
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_KEY}`,
+        },
+      },
+    );
+    if (!res.ok) return false; // table may not exist yet
+    const rows = await res.json();
+    const data = rows[0];
+    if (!data) return false;
+    return data.is_active && (!data.expires_at || new Date(data.expires_at) > new Date());
+  } catch {
+    return false; // graceful fallback
+  }
+}
+
 // ── Premium activation ──────────────────────────────────────────────────────
 // Shared logic used by admin-action (manual) and payment-webhook (Kaspi).
 // Looks up user by email, sets is_premium + premium_until in user_metadata,
@@ -182,6 +207,24 @@ export async function activatePremium({ userId, userMeta, plan, kaspiTxId }) {
     }),
   });
   if (!updateRes.ok) throw new Error("Failed to update user: " + await updateRes.text());
+
+  // Upsert subscriptions table (authoritative source)
+  try {
+    await fetch(`${SB_URL_SHARED}/rest/v1/subscriptions`, {
+      method: "POST",
+      headers: { ...sbHeadersShared(), Prefer: "resolution=merge-duplicates,return=minimal" },
+      body: JSON.stringify({
+        user_id: userId,
+        is_active: true,
+        plan,
+        expires_at: premiumUntil,
+        updated_at: new Date().toISOString(),
+      }),
+    });
+  } catch (e) {
+    console.error("Failed to upsert subscriptions table:", e);
+    // Non-fatal — user_metadata was already updated above
+  }
 
   // Insert payment record
   const insertRes = await fetch(`${SB_URL_SHARED}/rest/v1/payments`, {

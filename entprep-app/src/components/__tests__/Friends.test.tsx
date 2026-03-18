@@ -135,7 +135,7 @@ const mockSendFriendRequest = vi.fn().mockResolvedValue(undefined);
 const mockRespondFriendRequest = vi.fn().mockResolvedValue(undefined);
 const mockRemoveFriend = vi.fn().mockResolvedValue(undefined);
 const mockSetNickname = vi.fn().mockResolvedValue(undefined);
-const mockBuildFriendInviteUrl = vi.fn().mockReturnValue('https://entprep.netlify.app/?add=testuser');
+const mockBuildFriendInviteUrl = vi.fn().mockReturnValue('https://entprep.org/?add=testuser');
 const mockParseFriendInviteParam = vi.fn().mockReturnValue(null);
 const mockResolveNickname = vi.fn().mockResolvedValue(null);
 
