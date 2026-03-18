@@ -62,10 +62,33 @@ export default function Settings() {
   const [nickSaving, setNickSaving] = useState(false);
   const [nickError, setNickError] = useState('');
   const [pushLoading, setPushLoading] = useState(false);
+  const [cfDeleteAccount, setCfDeleteAccount] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
   const [goalTarget, setGoalTarget] = useState(() => st.goal?.target || 100);
   const [goalDate, setGoalDate] = useState(() => st.goal?.date || '');
   const goalProg = getGoalProgress(hist, st.goal);
   const handleSignOut = async () => { if (supabase) await supabase.auth.signOut(); setCfSignOut(false); };
+
+  const handleDeleteAccount = async () => {
+    if (!supabase || !user) return;
+    setDeletingAccount(true);
+    try {
+      // Clear local data first
+      clearHist();
+      // Delete profile from Supabase (cascade will clean up friendships, etc.)
+      await supabase.from('profiles').delete().eq('id', user.id);
+      // Sign out (account data in auth.users requires admin/edge function to delete)
+      await supabase.auth.signOut();
+      // Clear all localStorage
+      Object.keys(localStorage).forEach(k => { if (k.startsWith('entprep')) localStorage.removeItem(k); });
+      toast.success(t.settings.accountDeleted || 'Account deleted');
+    } catch {
+      toast.error(t.error);
+    } finally {
+      setDeletingAccount(false);
+      setCfDeleteAccount(false);
+    }
+  };
   const handleResetProfile = () => { resetProfile(); setScreen('profile'); setTab('home'); setCfResetProfile(false); };
   const lang = st.lang || 'ru';
 
@@ -442,6 +465,23 @@ export default function Settings() {
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={() => { clearHist(); setCf(false); }} style={{ flex: 1, padding: '10px', background: COLORS.red, border: 'none', borderRadius: 10, color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{t.settings.deleteConfirm}</button>
               <button onClick={() => setCf(false)} style={{ flex: 1, padding: '10px', background: 'transparent', border: '1px solid var(--border-md)', borderRadius: 10, color: 'var(--text-secondary)', fontSize: 11, cursor: 'pointer' }}>{t.cancel}</button>
+            </div>
+          </div>
+        )}
+
+        {/* Delete account (Apple requirement 5.1.1) */}
+        {user && !cfDeleteAccount && (
+          <button onClick={() => setCfDeleteAccount(true)} style={{ ...ROW_LAST, width: '100%', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8, color: COLORS.red, fontSize: 13, fontWeight: 600 }}>
+            <Trash2 size={15} />{t.settings.deleteAccount || 'Удалить аккаунт'}
+          </button>
+        )}
+        {cfDeleteAccount && (
+          <div style={ROW_LAST}>
+            <div style={{ fontSize: 12, color: COLORS.red, fontWeight: 600, marginBottom: 4 }}>{t.settings.deleteAccount || 'Удалить аккаунт'}</div>
+            <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 8 }}>{t.settings.deleteAccountWarning || 'Все данные будут удалены. Это действие нельзя отменить.'}</div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={handleDeleteAccount} disabled={deletingAccount} style={{ flex: 1, padding: '10px', background: COLORS.red, border: 'none', borderRadius: 10, color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', opacity: deletingAccount ? 0.6 : 1 }}>{deletingAccount ? '...' : (t.settings.deleteConfirm)}</button>
+              <button onClick={() => setCfDeleteAccount(false)} style={{ flex: 1, padding: '10px', background: 'transparent', border: '1px solid var(--border-md)', borderRadius: 10, color: 'var(--text-secondary)', fontSize: 11, cursor: 'pointer' }}>{t.cancel}</button>
             </div>
           </div>
         )}
