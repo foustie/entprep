@@ -8,6 +8,7 @@ import { useNav } from '../contexts/NavigationContext';
 import { useApp } from '../contexts/AppContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
+import { API_BASE } from '../config/app';
 import { useT } from '../locales';
 import EmptyState from './ui/EmptyState';
 import { TrendingUp, TrendingDown, Minus, ChevronDown, ChevronRight, AlertTriangle, FileText, XCircle, Sparkles, Calendar, BookOpen, Lightbulb, ClipboardList, RefreshCw, Lock, Loader } from 'lucide-react';
@@ -103,7 +104,7 @@ export default function Adaptive() {
       });
       const strongData = strong.map(s => ({ name: s.name, avg: s.avg }));
       const { current: streak } = calcStreak(hist);
-      const res = await fetch("/api/ai-plan", {
+      const res = await fetch(`${API_BASE}/api/ai-plan`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ weak: weakWithTopics, strong: strongData, overall, totalTests, streak, lang: st.lang }),

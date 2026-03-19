@@ -1,7 +1,7 @@
 // Client-side helpers for 1v1 duels: API calls, Realtime subscriptions, invite URLs
 
 import { supabase } from '../config/supabase';
-import { APP_URL } from '../config/app';
+import { APP_URL, API_BASE } from '../config/app';
 import type { DuelQuestion, DuelState, Profile } from '../types/index';
 
 // ── API call helper ──────────────────────────────────────────────────────────
@@ -11,7 +11,7 @@ async function duelAPI<T = unknown>(action: string, params: Record<string, unkno
   const session = (await supabase.auth.getSession()).data.session;
   if (!session) throw new Error('Not authenticated');
 
-  const res = await fetch('/api/duel', {
+  const res = await fetch(`${API_BASE}/api/duel`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

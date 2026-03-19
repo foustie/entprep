@@ -87,7 +87,7 @@ export default function Auth({ user, onSignOut }: AuthProps) {
       const { data, error } = await supabase!.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: 'https://entprep.org/auth-callback.html',
+          redirectTo: 'kz.entprep.app://auth',
           skipBrowserRedirect: true,
         },
       });

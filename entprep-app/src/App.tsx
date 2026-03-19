@@ -27,6 +27,7 @@ import UpdatePrompt from './components/UpdatePrompt';
 import PaywallModal from './components/PaywallModal';
 import Onboarding from './components/Onboarding';
 import AuthPrompt from './components/AuthPrompt';
+import { API_BASE } from './config/app';
 import PushPrompt from './components/PushPrompt';
 import { supabase } from './config/supabase';
 import { useAuth } from './contexts/AuthContext';
@@ -41,7 +42,7 @@ const submitLeaderboard = async (result: TestResult) => {
     if (!token) return;
     const lb = result._leaderboard;
     if (!lb) return; // No verification data available
-    await fetch('/api/leaderboard', {
+    await fetch(`${API_BASE}/api/leaderboard`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({

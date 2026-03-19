@@ -1,7 +1,7 @@
 // Client-side helpers for social features (friends, profiles, invite links)
 
 import { supabase } from '../config/supabase';
-import { APP_URL } from '../config/app';
+import { APP_URL, API_BASE } from '../config/app';
 import type { Profile, Friendship } from '../types/index';
 
 // ── API call helper ──────────────────────────────────────────────────────────
@@ -11,7 +11,7 @@ async function socialAPI<T = unknown>(action: string, params: Record<string, unk
   const session = (await supabase.auth.getSession()).data.session;
   if (!session) throw new Error('Not authenticated');
 
-  const res = await fetch('/api/social', {
+  const res = await fetch(`${API_BASE}/api/social`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -125,7 +125,7 @@ export async function claimReferral(referrerNickname: string): Promise<boolean> 
   if (!session) return false;
 
   try {
-    const res = await fetch('/api/referral', {
+    const res = await fetch(`${API_BASE}/api/referral`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

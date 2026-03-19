@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNav } from '../contexts/NavigationContext';
 import { useToast } from '../contexts/ToastContext';
 import { formatTime } from '../utils/formatters';
+import { API_BASE } from '../config/app';
 import { isNewRecord, completeDailyChallenge, loadDaily } from '../utils/competitionHelpers';
 import TestSkeleton from './ui/TestSkeleton';
 import BackButton from './ui/BackButton';
@@ -159,7 +160,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
       const token = session?.access_token;
       if (!token) { setAiLoad(p => ({ ...p, [index]: false })); return; }
       const qItem = qs[index];
-      const res = await fetch("/api/ai-explain", {
+      const res = await fetch(`${API_BASE}/api/ai-explain`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
         body: JSON.stringify({ question: qItem.q, options: qItem.o, userAnswer: ans[index], correctAnswer: qItem.c, explanation: qItem.e, questionType: getQType(qItem), pairs: qItem.pairs, lang: st.lang })

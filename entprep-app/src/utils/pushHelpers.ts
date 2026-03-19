@@ -1,5 +1,6 @@
 import { supabase } from '../config/supabase';
 import { captureError } from '../config/sentry';
+import { API_BASE } from '../config/app';
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY as string;
 
@@ -93,7 +94,7 @@ async function saveSubscription(subscription: PushSubscription): Promise<void> {
   const headers = await getAuthHeaders();
   if (!headers) return;
   try {
-    await fetch('/api/push-subscribe', {
+    await fetch(`${API_BASE}/api/push-subscribe`, {
       method: 'POST',
       headers,
       body: JSON.stringify({ action: 'subscribe', subscription: subscription.toJSON() }),
@@ -107,7 +108,7 @@ async function deleteSubscription(endpoint: string): Promise<void> {
   const headers = await getAuthHeaders();
   if (!headers) return;
   try {
-    await fetch('/api/push-subscribe', {
+    await fetch(`${API_BASE}/api/push-subscribe`, {
       method: 'POST',
       headers,
       body: JSON.stringify({ action: 'unsubscribe', endpoint }),
@@ -122,7 +123,7 @@ export async function syncPushPrefs(prefs: { streak?: boolean; errors?: boolean;
   const headers = await getAuthHeaders();
   if (!headers) return false;
   try {
-    const res = await fetch('/api/push-subscribe', {
+    const res = await fetch(`${API_BASE}/api/push-subscribe`, {
       method: 'POST',
       headers,
       body: JSON.stringify({ action: 'update_prefs', prefs }),

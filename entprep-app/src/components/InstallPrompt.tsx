@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Download } from 'lucide-react';
 import { COLORS } from '../constants/styles';
 import { useT } from '../locales';
+import { Capacitor } from '@capacitor/core';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -27,6 +28,9 @@ export default function InstallPrompt() {
   const t = useT();
 
   useEffect(() => {
+    // Never show install prompt inside native app — user already has the app
+    if (Capacitor.isNativePlatform()) return;
+
     const ua = navigator.userAgent || '';
     const ios = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
     const standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;

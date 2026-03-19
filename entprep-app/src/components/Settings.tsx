@@ -8,6 +8,7 @@ import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useApp } from '../contexts/AppContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useNav } from '../contexts/NavigationContext';
+import { API_BASE } from '../config/app';
 import { useToast } from '../contexts/ToastContext';
 import { useT } from '../locales';
 import { getGoalProgress } from '../utils/competitionHelpers';
@@ -76,13 +77,17 @@ export default function Settings() {
     if (!supabase || !user) return;
     setDeletingAccount(true);
     try {
-      // Clear local data first
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      // Server-side: delete auth.users, profile, avatar, push subscriptions
+      const res = await fetch(`${API_BASE}/api/delete-account`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Server deletion failed');
+      // Clear local data
       clearHist();
-      // Delete profile from Supabase (cascade will clean up friendships, etc.)
-      await supabase.from('profiles').delete().eq('id', user.id);
-      // Sign out (account data in auth.users requires admin/edge function to delete)
       await supabase.auth.signOut();
-      // Clear all localStorage
       Object.keys(localStorage).forEach(k => { if (k.startsWith('entprep')) localStorage.removeItem(k); });
       toast.success(t.settings.accountDeleted || 'Account deleted');
     } catch {
@@ -172,7 +177,7 @@ export default function Settings() {
                   setPromoMsg(null);
                   try {
                     const token = (await supabase.auth.getSession()).data.session?.access_token;
-                    const res = await fetch('/api/promo', {
+                    const res = await fetch(`${API_BASE}/api/promo`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                       body: JSON.stringify({ code: promoInput.trim() }),

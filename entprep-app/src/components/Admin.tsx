@@ -3,6 +3,7 @@ import { SUBS, ALL_PROFILES } from '../config/questionPools';
 import { getPool } from '../utils/questionStore';
 import { TOPIC_MAP, getTopicQuestions } from '../config/topics';
 import { SUBJECT_META } from '../config/subjects';
+import { API_BASE } from '../config/app';
 import { supabase } from '../config/supabase';
 import { CARD_COMPACT, TYPE } from '../constants/styles';
 import { useBreakpoint } from '../hooks/useBreakpoint';
@@ -20,7 +21,7 @@ async function adminAction(action: string, payload: Record<string, unknown> = {}
   const session = await supabase?.auth.getSession();
   const token = session?.data.session?.access_token;
   if (!token) return { error: 'Не авторизован' };
-  const res = await fetch('/api/admin-action', {
+  const res = await fetch(`${API_BASE}/api/admin-action`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
     body: JSON.stringify({ action, ...payload }),
@@ -161,7 +162,7 @@ export default function Admin() {
       const session = await supabase!.auth.getSession();
       const token = session.data.session?.access_token;
       if (!token) { setError("Не авторизован"); setLoading(false); return; }
-      const res = await fetch("/api/ai-generate", {
+      const res = await fetch(`${API_BASE}/api/ai-generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ subject, topic: topicName, examples }),
