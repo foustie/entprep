@@ -6,6 +6,8 @@ import { Capacitor } from '@capacitor/core'
 
 initSentry();
 
+// Web OAuth: implicit flow — Supabase detects #access_token automatically
+
 // Handle OAuth deep links in native app
 if (Capacitor.isNativePlatform()) {
   Promise.all([

@@ -95,10 +95,11 @@ export default function Auth({ user, onSignOut }: AuthProps) {
       const { Browser } = await import('@capacitor/browser');
       await Browser.open({ url: data.url, presentationStyle: 'popover' });
     } else {
-      await supabase!.auth.signInWithOAuth({
+      const { error } = await supabase!.auth.signInWithOAuth({
         provider,
         options: { redirectTo: window.location.origin },
       });
+      if (error) toast.error(error.message);
     }
   };
 

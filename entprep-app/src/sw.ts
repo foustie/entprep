@@ -6,12 +6,9 @@ import { ExpirationPlugin } from 'workbox-expiration';
 
 declare let self: ServiceWorkerGlobalScope;
 
-// ── Activate new SW immediately (don't wait for old tabs to close) ──────
-self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
-});
-// Also handle explicit SKIP_WAITING message from vite-plugin-pwa
+// ── SW activation: only via user action (UpdatePrompt), never auto ──────
+// Don't skipWaiting on install — wait for user to accept update via prompt.
+// This prevents page reloads during OAuth flows.
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
