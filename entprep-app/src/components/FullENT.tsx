@@ -62,6 +62,7 @@ export default function FullENT({ finish }: FullENTProps) {
   const [sectionsLoading, setSectionsLoading] = useState(true);
 
   useEffect(() => { let cancelled = false; (async () => {
+    try {
     const p1 = ALL_PROFILES.find(p => p.id === prof[0]);
     const p2 = ALL_PROFILES.find(p => p.id === prof[1]);
     const lang = st.lang;
@@ -81,7 +82,9 @@ export default function FullENT({ finish }: FullENTProps) {
       { sid: prof[0], label: (t.subjects as Record<string, string>)[prof[0]] || p1?.name || prof[0], icon: p1?.icon || "\uD83D\uDD2C", cnt: ENT_CONFIG.profileCnt, maxPts: calcMaxPts(prof0Qs), threshold: ENT_CONFIG.profileThreshold, ptsPerQ: ENT_CONFIG.profilePtsPerQ, qs: prof0Qs },
       { sid: prof[1], label: (t.subjects as Record<string, string>)[prof[1]] || p2?.name || prof[1], icon: p2?.icon || "\uD83D\uDCBB", cnt: ENT_CONFIG.profileCnt, maxPts: calcMaxPts(prof1Qs), threshold: ENT_CONFIG.profileThreshold, ptsPerQ: ENT_CONFIG.profilePtsPerQ, qs: prof1Qs },
     ];
-    setSections(secs); setSectionsLoading(false);
+    setSections(secs);
+    } catch (err) { console.error('FullENT load error:', err); toast.error('Не удалось загрузить вопросы. Попробуйте позже.'); goHome(); }
+    finally { setSectionsLoading(false); }
   })(); return () => { cancelled = true } }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [curSec, setCurSec] = useState(0);
