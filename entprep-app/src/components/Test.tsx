@@ -347,11 +347,11 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
     {!offline && <div key={`qblock-${cur}`}>
     {isR && <div style={{ ...CARD_COMPACT, background: "rgba(26,154,140,0.06)", border: "1px solid rgba(26,154,140,0.18)", padding: "12px 14px", marginBottom: 12 }}>
       <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.teal, marginBottom: 4 }}>{"\uD83D\uDCD6"} {q.pt}</div>
-      <div style={{ fontSize: 11, color: "var(--text-light)", lineHeight: 1.7 }}>{q.px}</div>
+      <div style={{ fontSize: 12, color: "var(--text-light)", lineHeight: 1.75 }}>{q.px}</div>
     </div>}
     <div style={{ ...CARD, padding: "20px 16px", marginBottom: 12, animation: "slideUp 0.35s cubic-bezier(0.16,1,0.3,1)" }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-        <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", lineHeight: 1.6 }}>{q.q}</div>
+        <div style={{ fontSize: 16, fontWeight: 600, color: "var(--text)", lineHeight: 1.65 }}>{q.q}</div>
         {user && !reportSent[cur] && <button onClick={() => openReport(cur)} style={{ background: 'none', border: 'none', padding: 4, cursor: 'pointer', flexShrink: 0, opacity: 0.4 }}><Flag size={14} color="var(--text-secondary)" /></button>}
         {user && reportSent[cur] && <Check size={14} color={COLORS.green} style={{ flexShrink: 0, marginTop: 4 }} />}
       </div>
@@ -373,7 +373,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
         userAnswer={ans[cur] as Record<number, number> | undefined}
       />
     ) : (
-    <div role="radiogroup" aria-label={t.test.answerOptions} style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+    <div role="radiogroup" aria-label={t.test.answerOptions} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       {q.o.map((opt, idx) => {
         const picked = ans[cur] === idx; const correct = getSingleCorrect(q) === idx;
         let bg = "var(--bg-card)", bd = "1px solid var(--border)", tc = "var(--text-body)";
