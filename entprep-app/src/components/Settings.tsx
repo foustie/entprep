@@ -624,9 +624,14 @@ export default function Settings() {
         </div>
         <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 3 }}>{t.settings.version} • {getTotalQ()} {t.settings.questionsCount} • {Math.floor(getPoolSize('reading') / 5)} {t.settings.textsCount}</div>
         <div style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 2 }}>{UNIS.length} {t.settings.unisFormat}</div>
-        <a href="/privacy.html" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'var(--text-muted)', marginTop: 6, textDecoration: 'none' }}>
-          <Shield size={10} /> {t.settings.privacy}
-        </a>
+        <div style={{ display: 'flex', gap: 12, marginTop: 6 }}>
+          <a href="/privacy.html" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'var(--text-muted)', textDecoration: 'none' }}>
+            <Shield size={10} /> {t.settings.privacy}
+          </a>
+          <a href="/terms.html" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'var(--text-muted)', textDecoration: 'none' }}>
+            <Shield size={10} /> Условия использования
+          </a>
+        </div>
       </div>
     </div>
   );

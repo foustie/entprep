@@ -296,6 +296,14 @@ export default function PaywallModal({ open, reason, onClose }: PaywallModalProp
             </button>
           </>
         )}
+
+        {/* Legal links (Apple requirement) */}
+        <div style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 14, lineHeight: 1.6, textAlign: 'center' }}>
+          Оформляя подписку, вы соглашаетесь с{' '}
+          <a href="https://entprep.org/terms.html" target="_blank" rel="noopener" style={{ color: 'var(--text-muted)', textDecoration: 'underline' }}>Условиями использования</a>
+          {' '}и{' '}
+          <a href="https://entprep.org/privacy.html" target="_blank" rel="noopener" style={{ color: 'var(--text-muted)', textDecoration: 'underline' }}>Политикой конфиденциальности</a>
+        </div>
       </div>
     </BottomSheet>
   );
