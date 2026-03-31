@@ -14,8 +14,8 @@ export default function Landing({ onStart, totalQ }: Props) {
     <div style={{ minHeight: '100dvh', background: 'var(--bg)', color: 'var(--text)', fontFamily: "'Segoe UI',-apple-system,sans-serif" }}>
 
       {/* Hero */}
-      <section style={{ padding: '60px 24px 48px', textAlign: 'center', maxWidth: 440, margin: '0 auto' }}>
-        <div style={{ fontSize: 18, fontWeight: 800, fontFamily: "'Unbounded',sans-serif", marginBottom: 40 }}>
+      <section style={{ padding: '28px 24px 36px', textAlign: 'center', maxWidth: 440, margin: '0 auto' }}>
+        <div style={{ fontSize: 18, fontWeight: 800, fontFamily: "'Unbounded',sans-serif", marginBottom: 28 }}>
           <span style={{ color: COLORS.accent }}>ENT</span><span style={{ color: COLORS.teal }}>prep</span>
         </div>
 
