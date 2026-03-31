@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { ALL_PROFILES } from '../config/questionPools';
 import { CARD_COMPACT, CARD_HERO, TYPE, COLORS } from '../constants/styles';
 import { Target, Check, ArrowRight, Trophy } from 'lucide-react';
+import SubjectIcon from './ui/SubjectIcon';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { trackEvent } from '../utils/analytics';
 import { useT } from '../locales';
@@ -67,7 +68,7 @@ export default function ProfileSelect({ onConfirm }: ProfileSelectProps) {
           {active && <div style={{ position: 'absolute', top: 7, right: 7, width: 20, height: 20, borderRadius: 10, background: COLORS.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Check size={12} color="#fff" />
           </div>}
-          <div style={{ fontSize: 28, marginBottom: 6 }}>{p.icon}</div>
+          <div style={{ marginBottom: 6 }}><SubjectIcon sid={p.id} size={28} color={p.color} /></div>
           <div style={{ fontSize: 12, fontWeight: 700, color: disabled ? 'var(--text-muted)' : 'var(--text)' }}>{subName(p.id)}</div>
           {p.available ? <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 3 }}>{p.pool} {t.profileSelect.questionsLabel}</div>
           : <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3, fontStyle: 'italic' }}>{t.profileSelect.soon}</div>}
