@@ -1,6 +1,6 @@
 import React from 'react';
 import { COLORS, TINT, R } from '../constants/styles';
-import { BookOpen, Brain, Zap, Users, ArrowRight, GraduationCap, CheckCircle2 } from 'lucide-react';
+import { BookOpen, Brain, Zap, Users, ArrowRight, GraduationCap, CheckCircle2, ChevronDown } from 'lucide-react';
 
 interface Props {
   onStart: () => void;
@@ -44,6 +44,11 @@ export default function Landing({ onStart, totalQ }: Props) {
         <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 12 }}>
           Без регистрации · без оплаты · сразу к вопросам
         </p>
+
+        <div style={{ marginTop: 24, display: 'flex', justifyContent: 'center' }}>
+          <ChevronDown size={24} color="var(--text-muted)" style={{ opacity: 0.5, animation: 'bounce 2s infinite' }} />
+        </div>
+        <style>{`@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}`}</style>
       </section>
 
       {/* Features */}
@@ -113,7 +118,7 @@ export default function Landing({ onStart, totalQ }: Props) {
           Панель учителя: следите за прогрессом класса, находите слабые предметы, мотивируйте учеников.
         </p>
         <a
-          href="https://wa.me/87473564629?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5!%20%D0%A5%D0%BE%D1%87%D1%83%20%D0%BF%D0%BE%D0%B4%D0%BA%D0%BB%D1%8E%D1%87%D0%B8%D1%82%D1%8C%20%D1%88%D0%BA%D0%BE%D0%BB%D1%83%20%D0%BA%20ENTprep"
+          href="https://wa.me/77473564629?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5!%20%D0%A5%D0%BE%D1%87%D1%83%20%D0%BF%D0%BE%D0%B4%D0%BA%D0%BB%D1%8E%D1%87%D0%B8%D1%82%D1%8C%20%D1%88%D0%BA%D0%BE%D0%BB%D1%83%20%D0%BA%20ENTprep"
           target="_blank"
           rel="noopener"
           style={{
