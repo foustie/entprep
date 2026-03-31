@@ -3,6 +3,7 @@ import { CARD_COMPACT, COLORS, SECTION_LABEL, hoverGlow, scoreColor } from '../c
 import { useT } from '../locales';
 import { useNav } from '../contexts/NavigationContext';
 import { Trophy } from 'lucide-react';
+import SubjectIcon from './ui/SubjectIcon';
 import type { SubjectConfig, TestResult } from '../types';
 
 interface Props {
@@ -50,7 +51,7 @@ export default function HomeSubjectGrid({ mandatory, profile, hist, poolSizes, b
         <div style={{ width: 4, alignSelf: 'stretch', background: s.color, borderRadius: '16px 0 0 16px', flexShrink: 0 }} />
 
         <div style={{ padding: '10px 14px', flex: 1, display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-          <span style={{ fontSize: 20, flexShrink: 0 }}>{s.icon}</span>
+          <SubjectIcon sid={s.id} size={20} color={s.color} />
           <span style={{
             fontSize: 13, fontWeight: 600, color: 'var(--text)',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
@@ -116,7 +117,7 @@ export default function HomeSubjectGrid({ mandatory, profile, hist, poolSizes, b
 
         <div style={{ padding: '12px 12px 10px', flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <span style={{ fontSize: 18 }}>{s.icon}</span>
+            <SubjectIcon sid={s.id} size={18} color={s.color} />
             <span style={{
               fontSize: 13, fontWeight: 600, color: 'var(--text)',
               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
