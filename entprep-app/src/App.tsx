@@ -63,6 +63,7 @@ const Leaderboard = React.lazy(() => import('./components/Leaderboard'));
 const Friends = React.lazy(() => import('./components/Friends'));
 const Duel = React.lazy(() => import('./components/Duel'));
 const ReviewSession = React.lazy(() => import('./components/ReviewSession'));
+const TeacherDashboard = React.lazy(() => import('./components/TeacherDashboard'));
 
 interface NavItem {
   id: string;
@@ -119,7 +120,7 @@ function AppContent() {
   }, [syncError]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const needProfile = prof.length === 0 && screen !== SCREENS.PROFILE;
-  const showNav = !needProfile && screen !== SCREENS.TEST && screen !== SCREENS.FULL_ENT && screen !== SCREENS.PROFILE && screen !== SCREENS.SUBJECT && screen !== SCREENS.ERROR_REVIEW && screen !== SCREENS.ADMIN && screen !== SCREENS.CHALLENGE && screen !== SCREENS.LEADERBOARD && screen !== SCREENS.FRIENDS && screen !== SCREENS.DUEL && screen !== SCREENS.REVIEW && !showOnboarding && !showAuthPrompt;
+  const showNav = !needProfile && screen !== SCREENS.TEST && screen !== SCREENS.FULL_ENT && screen !== SCREENS.PROFILE && screen !== SCREENS.SUBJECT && screen !== SCREENS.ERROR_REVIEW && screen !== SCREENS.ADMIN && screen !== SCREENS.CHALLENGE && screen !== SCREENS.LEADERBOARD && screen !== SCREENS.FRIENDS && screen !== SCREENS.DUEL && screen !== SCREENS.REVIEW && screen !== SCREENS.TEACHER && !showOnboarding && !showAuthPrompt;
 
   const { user } = useAuth();
 
@@ -233,6 +234,9 @@ function AppContent() {
             <ErrorBoundary key="review" title={tr.errors.reviewTitle} message={tr.errors.reviewMessage} onRecover={goHome}>
               <ReviewSession cards={srCards} onFinish={handleReviewFinish} />
             </ErrorBoundary>
+          )}
+          {!needProfile && screen === SCREENS.TEACHER && (
+            <TeacherDashboard onBack={goHome} />
           )}
         </Suspense>
         {!needProfile && screen === SCREENS.ADAPTIVE && (

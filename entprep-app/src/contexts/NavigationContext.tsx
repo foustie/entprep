@@ -77,6 +77,8 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
       setScreen(SCREENS.DUEL);
     } else if (target === 'review') {
       setScreen(SCREENS.REVIEW);
+    } else if (target === 'teacher') {
+      setScreen(SCREENS.TEACHER);
     } else {
       setScreen(SCREENS.HOME);
     }

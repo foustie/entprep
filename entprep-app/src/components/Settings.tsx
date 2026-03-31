@@ -15,7 +15,7 @@ import { getGoalProgress } from '../utils/competitionHelpers';
 import { setNickname, buildReferralUrl } from '../utils/socialHelpers';
 import Toggle from './ui/Toggle';
 import ProgressBar from './ui/ProgressBar';
-import { Settings as SettingsIcon, BarChart2, Trash2, Target, Wrench, Trophy, Sun, Moon, Crown, Sparkles, AtSign, Check, Globe, User, BookOpen, Palette, Database, Info, Bell, Shield, Gift, Share2 } from 'lucide-react';
+import { Settings as SettingsIcon, BarChart2, Trash2, Target, Wrench, Trophy, Sun, Moon, Crown, Sparkles, AtSign, Check, Globe, User, BookOpen, Palette, Database, Info, Bell, Shield, Gift, Share2, Users, GraduationCap } from 'lucide-react';
 import { isPushSupported, getPushPermission, subscribeToPush, unsubscribeFromPush, isSubscribed, syncPushPrefs } from '../utils/pushHelpers';
 
 /* ─── Section wrapper ─── */
@@ -68,6 +68,9 @@ export default function Settings() {
   const [promoInput, setPromoInput] = useState('');
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoMsg, setPromoMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [classCode, setClassCode] = useState('');
+  const [classJoining, setClassJoining] = useState(false);
+  const [classMsg, setClassMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [goalTarget, setGoalTarget] = useState(() => st.goal?.target || 100);
   const [goalDate, setGoalDate] = useState(() => st.goal?.date || '');
   const goalProg = getGoalProgress(hist, st.goal);
@@ -482,6 +485,71 @@ export default function Settings() {
           </div>
         )}
       </Section>
+
+      {/* ════════ CLASS ════════ */}
+      {user && (
+        <Section icon={<GraduationCap size={11} />} label="Класс">
+          {/* Teacher dashboard button */}
+          <button onClick={() => nav('teacher')} style={{ ...ROW, width: '100%', background: 'none', border: 'none', borderBottom: '1px solid var(--border-light)', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Users size={16} color={COLORS.teal} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Панель учителя</div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Создайте класс и следите за прогрессом</div>
+            </div>
+          </button>
+          {/* Join class with code */}
+          <div style={ROW_LAST}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <BookOpen size={15} /> Код класса
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                value={classCode}
+                onChange={e => { setClassCode(e.target.value.toUpperCase()); setClassMsg(null); }}
+                placeholder="ENT-XXXX"
+                maxLength={8}
+                style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border-md)', background: 'var(--bg-subtle)', color: 'var(--text)', fontSize: 13, fontFamily: "'JetBrains Mono',monospace", letterSpacing: 1 }}
+              />
+              <button
+                disabled={classJoining || classCode.length < 6}
+                onClick={async () => {
+                  if (!supabase || !classCode.trim()) return;
+                  setClassJoining(true);
+                  setClassMsg(null);
+                  try {
+                    const session = await supabase.auth.getSession();
+                    const token = session?.data.session?.access_token;
+                    const res = await fetch(`${API_BASE}/api/teacher?action=join_class`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                      body: JSON.stringify({ code: classCode.trim() }),
+                    });
+                    const data = await res.json();
+                    if (!res.ok) {
+                      setClassMsg({ ok: false, text: data.error || 'Ошибка' });
+                    } else if (data.already) {
+                      setClassMsg({ ok: true, text: `Вы уже в классе ${data.class.name}` });
+                    } else {
+                      setClassMsg({ ok: true, text: `Вы присоединились к ${data.class.name} (${data.class.school})` });
+                      setClassCode('');
+                    }
+                  } catch {
+                    setClassMsg({ ok: false, text: 'Ошибка соединения' });
+                  } finally {
+                    setClassJoining(false);
+                  }
+                }}
+                style={{ padding: '10px 16px', borderRadius: 10, background: COLORS.teal, color: '#fff', border: 'none', fontSize: 12, fontWeight: 600, cursor: classCode.length >= 6 ? 'pointer' : 'default', opacity: classCode.length >= 6 ? 1 : 0.5 }}
+              >
+                {classJoining ? '...' : 'Войти'}
+              </button>
+            </div>
+            {classMsg && (
+              <div style={{ fontSize: 12, color: classMsg.ok ? COLORS.green : COLORS.red, marginTop: 6 }}>{classMsg.text}</div>
+            )}
+          </div>
+        </Section>
+      )}
 
       {/* ════════ DATA ════════ */}
       <Section icon={<Database size={11} />} label={t.settings.sectionData || 'Data'}>

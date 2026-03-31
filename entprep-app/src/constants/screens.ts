@@ -15,6 +15,7 @@ export const SCREENS = {
   FRIENDS: 'friends',
   DUEL: 'duel',
   REVIEW: 'review',
+  TEACHER: 'teacher',
 } as const;
 
 export type Screen = (typeof SCREENS)[keyof typeof SCREENS];
