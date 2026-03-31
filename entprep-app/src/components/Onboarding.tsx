@@ -38,17 +38,17 @@ export default function Onboarding({ onFinish }: OnboardingProps) {
         </div>
       </div>
 
-      <div key={idx} style={{ ...CARD_HERO, textAlign: 'center', padding: '40px 24px', marginBottom: 32, animation: 'screenIn 0.4s cubic-bezier(0.16,1,0.3,1)' }}>
+      <div key={idx} style={{ ...CARD_HERO, textAlign: 'center', padding: '48px 28px', marginBottom: 36, animation: 'screenIn 0.4s cubic-bezier(0.16,1,0.3,1)' }}>
         <div style={{
-          width: 80, height: 80, borderRadius: 24, margin: '0 auto 24px',
+          width: 80, height: 80, borderRadius: 24, margin: '0 auto 28px',
           background: `${cfg.color}18`,
           border: `2px solid ${cfg.color}33`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
           <cfg.Icon size={38} color={cfg.color} strokeWidth={1.8} />
         </div>
-        <h2 style={{ ...TYPE.h1, fontSize: 22, marginBottom: 12 }}>{titles[idx]}</h2>
-        <p style={{ ...TYPE.bodySmall, fontSize: 13, maxWidth: 280, margin: '0 auto', lineHeight: 1.6 }}>{descs[idx]}</p>
+        <h2 style={{ ...TYPE.h1, fontSize: 26, marginBottom: 14 }}>{titles[idx]}</h2>
+        <p style={{ ...TYPE.bodySmall, fontSize: 14, maxWidth: 300, margin: '0 auto', lineHeight: 1.65 }}>{descs[idx]}</p>
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 32 }}>
@@ -74,9 +74,9 @@ export default function Onboarding({ onFinish }: OnboardingProps) {
         )}
         <button onClick={() => isLast ? onFinish() : setIdx(idx + 1)} aria-label={isLast ? t.onboarding.startPrep : t.onboarding.nextSlide} style={{
           flex: 1, padding: '15px 20px',
-          background: isLast ? `linear-gradient(135deg,${COLORS.accent},${COLORS.accentDark})` : 'var(--bg-subtle-2)',
-          border: isLast ? 'none' : '1px solid var(--border-md)',
-          borderRadius: 14, color: isLast ? '#fff' : 'var(--text)', fontSize: 15, fontWeight: 700,
+          background: isLast ? `linear-gradient(135deg,${COLORS.accent},${COLORS.accentDark})` : COLORS.teal,
+          border: 'none',
+          borderRadius: 14, color: '#fff', fontSize: 15, fontWeight: 700,
           cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           boxShadow: isLast ? '0 4px 20px rgba(255,107,53,0.3)' : 'none',
           transition: 'all 0.3s',
