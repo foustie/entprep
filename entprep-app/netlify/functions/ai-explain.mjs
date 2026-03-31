@@ -11,13 +11,7 @@ export default async function handler(req) {
   const user = await verifyAuth(req);
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401, headers: CORS_HEADERS });
 
-  // Premium check — subscriptions table is authoritative, user_metadata is fallback
-  const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map(e => e.trim());
-  const isAdmin = adminEmails.includes(user.email);
-  const hasSub = await checkPremium(user.id);
-  const metaPremium = user.user_metadata?.is_premium && new Date(user.user_metadata.premium_until) > new Date();
-  const isPremium = isAdmin || hasSub || metaPremium;
-  if (!isPremium) return Response.json({ error: "Premium required" }, { status: 403, headers: CORS_HEADERS });
+  // AI explanations now free for all authenticated users (rate-limited below)
 
   // Rate limit
   const retryAfter = checkRate(user.id);

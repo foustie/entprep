@@ -279,12 +279,8 @@ export default function FullENT({ finish }: FullENTProps) {
         </div>
         <div style={{ fontSize: 11, color: "var(--text-secondary)", lineHeight: 1.7 }}>{t.fullent.importantDesc}</div>
       </div>
-      <button onClick={() => {
-        if (isPremium) { setPhase("test"); return; }
-        if (canUseFreeFullEnt()) { useFreeFullEnt(); setPhase("test"); return; }
-        openPaywall('fullent');
-      }} style={{ width: "100%", padding: "16px", background: (isPremium || canUseFreeFullEnt()) ? COLORS.teal : 'var(--bg-subtle-2)', color: (isPremium || canUseFreeFullEnt()) ? "#fff" : 'var(--text-muted)', border: (isPremium || canUseFreeFullEnt()) ? "none" : '1px solid var(--border)', borderRadius: 14, fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: (isPremium || canUseFreeFullEnt()) ? "0 4px 24px rgba(26,154,140,0.25)" : 'none', display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-        {isPremium ? <Play size={18} /> : canUseFreeFullEnt() ? <Play size={18} /> : <Crown size={18} />}{isPremium ? t.fullent.startEnt : canUseFreeFullEnt() ? t.fullent.startEnt : t.paywall.getPremium}
+      <button onClick={() => setPhase("test")} style={{ width: "100%", padding: "16px", background: COLORS.teal, color: "#fff", border: "none", borderRadius: 14, fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 24px rgba(26,154,140,0.25)", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+        <Play size={18} />{t.fullent.startEnt}
       </button>
     </div>
   );

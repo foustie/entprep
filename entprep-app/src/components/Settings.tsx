@@ -146,20 +146,7 @@ export default function Settings() {
               </div>
             </div>
           </div>
-        ) : (
-          <button onClick={() => openPaywall('upgrade')} style={{ ...ROW, width: '100%', background: 'linear-gradient(135deg, rgba(255,107,53,0.04), rgba(26,154,140,0.04))', cursor: 'pointer', textAlign: 'left', border: 'none', borderBottom: '1px solid var(--border-light)', transition: 'all 0.2s' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: TINT.accent.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <Crown size={18} color={COLORS.accent} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{t.settings.getPremium}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>{t.settings.premiumDesc}</div>
-              </div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.accent, whiteSpace: 'nowrap' }}>{t.settings.premiumPrice}</div>
-            </div>
-          </button>
-        )}
+        ) : null /* Premium upgrade hidden — all features free */}
 
         {/* Promo code */}
         {user && !isPremium && (

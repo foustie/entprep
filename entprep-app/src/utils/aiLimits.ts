@@ -28,7 +28,7 @@ function save(usage: AIUsage) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(usage));
 }
 
-const DAILY_EXPLAIN_LIMIT = 3;
+const DAILY_EXPLAIN_LIMIT = 10;
 
 export function getExplainRemaining(): number {
   const usage = load();

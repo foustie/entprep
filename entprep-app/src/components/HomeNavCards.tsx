@@ -24,7 +24,7 @@ export default function HomeNavCards({ isPremium }: Props) {
     <>
       {/* Full ENT - prominent card */}
       <button
-        onClick={() => isPremium ? nav("fullent") : openPaywall('fullent')}
+        onClick={() => nav("fullent")}
         aria-label={`${t.home.fullEnt} — ${t.home.fullEntDesc}`}
         style={{
           ...CARD_COMPACT,

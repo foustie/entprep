@@ -61,6 +61,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initPurchases().catch(() => {});
   }, []);
 
+  // Eagerly restore session on mount (before onAuthStateChange fires)
+  useEffect(() => {
+    if (!supabase) return;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser(session.user as AuthUser);
+        refreshProfile();
+        checkSubscription(session.user.id).then(setDbPremium).catch(() => {});
+      }
+    }).catch(() => {});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     if (!supabase) return;
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {

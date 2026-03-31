@@ -109,7 +109,7 @@ export default function Adaptive() {
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ weak: weakWithTopics, strong: strongData, overall, totalTests, streak, lang: st.lang }),
       });
-      if (res.status === 403) { openPaywall('ai'); setPlanLoading(false); return; }
+      if (res.status === 403) { setPlanError('AI план на сегодня недоступен. Попробуйте завтра.'); setPlanLoading(false); return; }
       if (!res.ok) { const err = await res.json().catch(() => ({})); setPlanError((err as Record<string, string>).error || t.adaptive.planError); toast.error(t.adaptive.planError, { action: generatePlan, actionLabel: t.adaptive.retry }); setPlanLoading(false); return; }
       const json = await res.json();
       usePlanLimit(); // consume limit only on success
