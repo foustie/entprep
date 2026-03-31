@@ -14,8 +14,8 @@ export default function Landing({ onStart, totalQ }: Props) {
     <div style={{ minHeight: '100dvh', background: 'var(--bg)', color: 'var(--text)', fontFamily: "'Segoe UI',-apple-system,sans-serif" }}>
 
       {/* Hero */}
-      <section style={{ padding: '28px 24px 36px', textAlign: 'center', maxWidth: 440, margin: '0 auto' }}>
-        <div style={{ fontSize: 18, fontWeight: 800, fontFamily: "'Unbounded',sans-serif", marginBottom: 28 }}>
+      <section style={{ padding: '20px 24px 28px', textAlign: 'center', maxWidth: 440, margin: '0 auto' }}>
+        <div style={{ fontSize: 18, fontWeight: 800, fontFamily: "'Unbounded',sans-serif", marginBottom: 20 }}>
           <span style={{ color: COLORS.accent }}>ENT</span><span style={{ color: COLORS.teal }}>prep</span>
         </div>
 
@@ -26,7 +26,7 @@ export default function Landing({ onStart, totalQ }: Props) {
           Бесплатная подготовка к&nbsp;ЕНТ
         </h1>
 
-        <p style={{ fontSize: 16, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 32, maxWidth: 340, margin: '0 auto 32px' }}>
+        <p style={{ fontSize: 16, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 24, maxWidth: 340, margin: '0 auto 24px' }}>
           {qLabel} вопросов · 13 предметов · AI объясняет каждую ошибку
         </p>
 
@@ -113,7 +113,7 @@ export default function Landing({ onStart, totalQ }: Props) {
           Панель учителя: следите за прогрессом класса, находите слабые предметы, мотивируйте учеников.
         </p>
         <a
-          href="https://wa.me/77057575299?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5!%20%D0%A5%D0%BE%D1%87%D1%83%20%D0%BF%D0%BE%D0%B4%D0%BA%D0%BB%D1%8E%D1%87%D0%B8%D1%82%D1%8C%20%D1%88%D0%BA%D0%BE%D0%BB%D1%83%20%D0%BA%20ENTprep"
+          href="https://wa.me/87473564629?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5!%20%D0%A5%D0%BE%D1%87%D1%83%20%D0%BF%D0%BE%D0%B4%D0%BA%D0%BB%D1%8E%D1%87%D0%B8%D1%82%D1%8C%20%D1%88%D0%BA%D0%BE%D0%BB%D1%83%20%D0%BA%20ENTprep"
           target="_blank"
           rel="noopener"
           style={{
