@@ -12,6 +12,7 @@ import { useT } from '../locales';
 import BackButton from './ui/BackButton';
 import SkeletonCard from './ui/SkeletonCard';
 import { ChevronRight, ChevronDown, Play, GraduationCap } from 'lucide-react';
+import SubjectIcon from './ui/SubjectIcon';
 import type { ProfileSubject, Question } from '../types';
 import { captureError } from '../config/sentry';
 
@@ -99,7 +100,7 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
     <div style={{ padding: `0 var(--content-padding) ${isDesktop ? 40 : 100}px` }}>
       <BackButton onClick={goHome} style={{ marginBottom: 14 }} />
       <div style={{ display: "flex", alignItems: "center", marginBottom: 18 }}>
-        <div style={{ width: 50, height: 50, borderRadius: 15, background: sub.color + "15", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, flexShrink: 0 }}>{sub.icon}</div>
+        <div style={{ width: 50, height: 50, borderRadius: 15, background: sub.color + "15", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><SubjectIcon sid={sub.id} size={24} color={sub.color} /></div>
         <div style={{ marginLeft: 14 }}>
           <div style={{ ...TYPE.h2, fontSize: 18 }}>{(t.subjects as Record<string, string>)[sid] || sub.name}</div>
           <div style={{ ...TYPE.bodySmall }}>
