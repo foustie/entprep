@@ -194,6 +194,7 @@ export default function Home() {
 
       {/* 4. Subject Grid (2-col) */}
       <Stagger index={3}>
+        <div style={{ marginTop: 8 }} />
         <HomeSubjectGrid
           mandatory={mandatorySubs}
           profile={profSubs}
