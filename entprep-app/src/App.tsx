@@ -27,6 +27,7 @@ import UpdatePrompt from './components/UpdatePrompt';
 import PaywallModal from './components/PaywallModal';
 import Onboarding from './components/Onboarding';
 import AuthPrompt from './components/AuthPrompt';
+import Landing from './components/Landing';
 import { API_BASE } from './config/app';
 import PushPrompt from './components/PushPrompt';
 import { supabase } from './config/supabase';
@@ -158,6 +159,17 @@ function AppContent() {
     }
   };
   const handleResetProfile = () => { resetProfile(); setScreen(SCREENS.PROFILE); setTab(SCREENS.HOME); };
+
+  // Landing page for brand-new visitors (no history, not logged in, hasn't seen onboarding)
+  const isNewVisitor = !user && hist.length === 0 && showOnboarding;
+  const [landingDismissed, setLandingDismissed] = useState(false);
+
+  if (isNewVisitor && !landingDismissed) return (
+    <div style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: "'Segoe UI',-apple-system,sans-serif" }}>
+      <style>{`:root{${themeToCss(palette)}}${GLOBAL_STYLES}`}</style>
+      <Landing totalQ={totalQ} onStart={() => setLandingDismissed(true)} />
+    </div>
+  );
 
   if (showOnboarding) return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: "'Segoe UI',-apple-system,sans-serif", maxWidth: LAYOUT.maxWidth, margin: "0 auto", position: "relative" }}>
