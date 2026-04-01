@@ -11,7 +11,7 @@ import BackButton from './ui/BackButton';
 import ProgressBar from './ui/ProgressBar';
 import MultipleAnswerCard from './ui/MultipleAnswerCard';
 import MatchingCard from './ui/MatchingCard';
-import { Check, X, RotateCcw, ArrowRight } from 'lucide-react';
+import { Check, X, RotateCcw, ArrowRight, PartyPopper } from 'lucide-react';
 import type { Question, SRCard, AnswerValue } from '../types';
 import { getSingleCorrect, getQType } from '../types';
 
@@ -75,7 +75,7 @@ export default function ReviewSession({ cards, onFinish }: ReviewSessionProps) {
   if (dueCards.length === 0) {
     return (
       <div style={{ padding: '40px 20px', textAlign: 'center' }}>
-        <div style={{ fontSize: 36, marginBottom: 12 }}>🎉</div>
+        <PartyPopper size={36} color={COLORS.amber} style={{ marginBottom: 12 }} />
         <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{review.done}</div>
         <button onClick={goHome} style={{
           ...CARD_COMPACT, padding: '10px 24px', background: COLORS.purple,

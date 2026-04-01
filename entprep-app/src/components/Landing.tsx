@@ -11,10 +11,10 @@ export default function Landing({ onStart, totalQ }: Props) {
   const qLabel = `${Math.floor(totalQ / 1000)} 000+`;
 
   return (
-    <div style={{ minHeight: '100dvh', background: 'var(--bg)', color: 'var(--text)', fontFamily: "'Segoe UI',-apple-system,sans-serif" }}>
+    <div style={{ minHeight: '100dvh', background: 'var(--bg)', color: 'var(--text)', fontFamily: "'Segoe UI',-apple-system,sans-serif", paddingBottom: 80 }}>
 
       {/* Hero */}
-      <section style={{ padding: '20px 24px 28px', textAlign: 'center', maxWidth: 440, margin: '0 auto' }}>
+      <section style={{ padding: '16px 24px 20px', textAlign: 'center', maxWidth: 440, margin: '0 auto' }}>
         <div style={{ fontSize: 18, fontWeight: 800, fontFamily: "'Unbounded',sans-serif", marginBottom: 20 }}>
           <span style={{ color: COLORS.accent }}>ENT</span><span style={{ color: COLORS.teal }}>prep</span>
         </div>
@@ -132,26 +132,36 @@ export default function Landing({ onStart, totalQ }: Props) {
         </a>
       </section>
 
-      {/* Final CTA */}
-      <section style={{ padding: '32px 24px 60px', textAlign: 'center', maxWidth: 440, margin: '0 auto' }}>
-        <button onClick={onStart} style={{
-          width: '100%', maxWidth: 320, padding: '18px 24px',
-          background: `linear-gradient(135deg,${COLORS.accent},${COLORS.accentDark})`,
-          border: 'none', borderRadius: 16, color: '#fff',
-          fontSize: 17, fontWeight: 700, cursor: 'pointer',
-          boxShadow: '0 6px 24px rgba(255,107,53,0.3)',
-          display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-        }}>
-          Начать готовиться <ArrowRight size={20} />
-        </button>
-
-        <div style={{ marginTop: 24, fontSize: 12, color: 'var(--text-dim)' }}>
+      {/* Footer */}
+      <section style={{ padding: '32px 24px 20px', textAlign: 'center', maxWidth: 440, margin: '0 auto' }}>
+        <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>
           <span style={{ fontFamily: "'Unbounded',sans-serif", fontWeight: 800 }}>
             <span style={{ color: COLORS.accent }}>ENT</span><span style={{ color: COLORS.teal }}>prep</span>
           </span>
-          {' '}· Формат ЕНТ 2025/2026
+          {' '}· Формат ЕНТ 2026
         </div>
       </section>
+
+      {/* Sticky CTA — mobile */}
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
+        padding: '12px 20px', paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
+        background: 'var(--bg-footer)',
+        borderTop: '1px solid var(--border-light)',
+        backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+      }}>
+        <button onClick={onStart} style={{
+          width: '100%', maxWidth: 440, padding: '16px 24px',
+          background: `linear-gradient(135deg,${COLORS.accent},${COLORS.accentDark})`,
+          border: 'none', borderRadius: 14, color: '#fff',
+          fontSize: 16, fontWeight: 700, cursor: 'pointer',
+          boxShadow: '0 4px 20px rgba(255,107,53,0.3)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          margin: '0 auto',
+        }}>
+          Начать бесплатно <ArrowRight size={18} />
+        </button>
+      </div>
     </div>
   );
 }

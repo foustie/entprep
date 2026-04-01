@@ -7,7 +7,8 @@ import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useApp } from '../contexts/AppContext';
 import { getScoreHistory, getPersonalBests } from '../utils/competitionHelpers';
 import EmptyState from './ui/EmptyState';
-import { BarChart3, GraduationCap, Calendar, FileText, Trophy, ArrowUpDown, Filter, Flame, Medal, Users, Zap, Snowflake, Target } from 'lucide-react';
+import { BarChart3, GraduationCap, Calendar, FileText, Trophy, ArrowUpDown, Filter, Flame, Medal, Users, Zap, Snowflake, Target, Star, Sparkles, BookOpen, Building2, Rocket, TrendingUp, Timer, Palette, Hash } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { supabase } from '../config/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { calcStreak } from '../utils/adaptiveHelpers';
@@ -88,7 +89,7 @@ function ActivityHeatmap({ hist }: { hist: TestResult[] }) {
   );
 }
 
-interface Badge { id: string; icon: string; name: string; desc: string; earned: boolean; }
+interface Badge { id: string; Icon: LucideIcon; color: string; name: string; desc: string; earned: boolean; }
 
 function computeBadges(hist: TestResult[], subjects: string[], badgeTexts: Record<string, { name: string; desc: string }>): Badge[] {
   const regular = hist.filter(t => t.type !== "fullent");
@@ -201,25 +202,25 @@ function computeBadges(hist: TestResult[], subjects: string[], badgeTexts: Recor
 
   return [
     // — Milestones —
-    { id: "firstTest",   icon: "🎯", name: b('firstTest').name,   desc: b('firstTest').desc,   earned: total >= 1 },
-    { id: "hundred",     icon: "💯", name: b('hundred').name,     desc: b('hundred').desc,     earned: total >= 100 },
-    { id: "perfect",     icon: "⭐", name: b('perfect').name,     desc: b('perfect').desc,     earned: perfects >= 1 },
-    { id: "fivePerfect", icon: "🌟", name: b('fivePerfect').name, desc: b('fivePerfect').desc, earned: perfects >= 5 },
+    { id: "firstTest",   Icon: Target,        color: COLORS.accent,  name: b('firstTest').name,   desc: b('firstTest').desc,   earned: total >= 1 },
+    { id: "hundred",     Icon: Hash,           color: COLORS.accent,  name: b('hundred').name,     desc: b('hundred').desc,     earned: total >= 100 },
+    { id: "perfect",     Icon: Star,           color: COLORS.amber,   name: b('perfect').name,     desc: b('perfect').desc,     earned: perfects >= 1 },
+    { id: "fivePerfect", Icon: Sparkles,       color: COLORS.amber,   name: b('fivePerfect').name, desc: b('fivePerfect').desc, earned: perfects >= 5 },
     // — Consistency —
-    { id: "weekStreak",  icon: "🔥", name: b('weekStreak').name,  desc: b('weekStreak').desc,  earned: maxStreak >= 7 },
-    { id: "monthStreak", icon: "🏆", name: b('monthStreak').name, desc: b('monthStreak').desc, earned: maxStreak >= 30 },
-    { id: "polyglot",    icon: "📚", name: b('polyglot').name,    desc: b('polyglot').desc,    earned: uniqueSubs.size >= subjects.length },
-    { id: "trialEnt",    icon: "🏛️", name: b('trialEnt').name,   desc: b('trialEnt').desc,    earned: fullents >= 1 },
+    { id: "weekStreak",  Icon: Flame,          color: COLORS.accent,  name: b('weekStreak').name,  desc: b('weekStreak').desc,  earned: maxStreak >= 7 },
+    { id: "monthStreak", Icon: Trophy,         color: COLORS.amber,   name: b('monthStreak').name, desc: b('monthStreak').desc, earned: maxStreak >= 30 },
+    { id: "polyglot",    Icon: BookOpen,       color: COLORS.teal,    name: b('polyglot').name,    desc: b('polyglot').desc,    earned: uniqueSubs.size >= subjects.length },
+    { id: "trialEnt",    Icon: Building2,      color: COLORS.teal,    name: b('trialEnt').name,    desc: b('trialEnt').desc,    earned: fullents >= 1 },
     // — Skill —
-    { id: "speedrun",    icon: "🚀", name: b('speedrun').name,    desc: b('speedrun').desc,    earned: hasSpeedrun },
-    { id: "comeback",    icon: "📈", name: b('comeback').name,    desc: b('comeback').desc,    earned: hasComeback },
-    { id: "hatTrick",    icon: "💫", name: b('hatTrick').name,    desc: b('hatTrick').desc,    earned: hasTriple },
-    { id: "grantee",     icon: "🎓", name: b('grantee').name,     desc: b('grantee').desc,     earned: hasFullent100 },
+    { id: "speedrun",    Icon: Rocket,         color: COLORS.accent,  name: b('speedrun').name,    desc: b('speedrun').desc,    earned: hasSpeedrun },
+    { id: "comeback",    Icon: TrendingUp,     color: COLORS.green,   name: b('comeback').name,    desc: b('comeback').desc,    earned: hasComeback },
+    { id: "hatTrick",    Icon: Zap,            color: COLORS.amber,   name: b('hatTrick').name,    desc: b('hatTrick').desc,    earned: hasTriple },
+    { id: "grantee",     Icon: GraduationCap,  color: COLORS.teal,    name: b('grantee').name,     desc: b('grantee').desc,     earned: hasFullent100 },
     // — Dedication —
-    { id: "marathon",    icon: "🏃", name: b('marathon').name,    desc: b('marathon').desc,    earned: hasMarathon },
-    { id: "variety",     icon: "🎨", name: b('variety').name,     desc: b('variety').desc,     earned: hasVariety },
-    { id: "xp1000",      icon: "⚡", name: b('xp1000').name,      desc: b('xp1000').desc,      earned: totalXP >= 1000 },
-    { id: "improver",    icon: "📊", name: b('improver').name,    desc: b('improver').desc,    earned: hasImprover },
+    { id: "marathon",    Icon: Timer,          color: COLORS.accent,  name: b('marathon').name,    desc: b('marathon').desc,    earned: hasMarathon },
+    { id: "variety",     Icon: Palette,        color: COLORS.teal,    name: b('variety').name,     desc: b('variety').desc,     earned: hasVariety },
+    { id: "xp1000",      Icon: Zap,            color: COLORS.amber,   name: b('xp1000').name,      desc: b('xp1000').desc,      earned: totalXP >= 1000 },
+    { id: "improver",    Icon: BarChart3,      color: COLORS.green,   name: b('improver').name,    desc: b('improver').desc,    earned: hasImprover },
   ];
 }
 
@@ -260,7 +261,7 @@ function Badges({ hist, subjects }: { hist: TestResult[]; subjects: string[] }) 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
         {badges.map(b => (
           <div key={b.id} role="button" tabIndex={0} onClick={() => { setSelected(selected === b.id ? null : b.id); if (isNew(b)) markSeen(b.id); }} style={{ textAlign: "center", padding: "8px 4px", borderRadius: 8, background: selected === b.id ? (b.earned ? "rgba(245,158,11,0.15)" : "rgba(100,100,100,0.1)") : b.earned ? "rgba(245,158,11,0.06)" : "var(--bg-subtle)", border: selected === b.id ? (b.earned ? "1.5px solid rgba(245,158,11,0.4)" : "1.5px solid var(--border)") : b.earned ? "1px solid rgba(245,158,11,0.15)" : "1px solid transparent", opacity: b.earned ? 1 : 0.35, cursor: "pointer", transition: "all 0.15s", position: "relative", animation: isNew(b) ? "confetti 0.8s ease-out" : undefined }}>
-            <div style={{ fontSize: 20 }}>{b.icon}</div>
+            <b.Icon size={20} color={b.earned ? b.color : 'var(--text-muted)'} />
             <div style={{ fontSize: 8, color: b.earned ? "var(--text-secondary)" : "var(--text-muted)", marginTop: 2, lineHeight: 1.2 }}>{b.name}</div>
             {isNew(b) && (
               <div style={{ position: "absolute", top: -4, right: -4, background: COLORS.accent, color: "#fff", fontSize: 7, fontWeight: 700, padding: "1px 4px", borderRadius: 4, lineHeight: 1.3 }}>NEW</div>
@@ -270,7 +271,7 @@ function Badges({ hist, subjects }: { hist: TestResult[]; subjects: string[] }) 
       </div>
       {selBadge && (
         <div style={{ marginTop: 8, padding: "8px 10px", borderRadius: 8, background: selBadge.earned ? "rgba(245,158,11,0.06)" : "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 8, animation: "fadeIn 0.2s ease" }}>
-          <span style={{ fontSize: 22, flexShrink: 0 }}>{selBadge.icon}</span>
+          <selBadge.Icon size={22} color={selBadge.earned ? selBadge.color : 'var(--text-muted)'} style={{ flexShrink: 0 }} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text)" }}>{selBadge.name}</div>
             <div style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 1 }}>{selBadge.desc}</div>

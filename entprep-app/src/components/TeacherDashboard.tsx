@@ -4,7 +4,7 @@ import { SUBJECT_META } from '../config/subjects';
 import { useAuth } from '../contexts/AuthContext';
 import { API_BASE } from '../config/app';
 import { supabase } from '../config/supabase';
-import { ArrowLeft, Users, Copy, Check, BookOpen, TrendingUp, Clock, AlertTriangle, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Users, Copy, Check, BookOpen, TrendingUp, Clock, AlertTriangle, ChevronDown, Flame } from 'lucide-react';
 import Button from './ui/Button';
 
 interface StudentData {
@@ -364,7 +364,7 @@ export default function TeacherDashboard({ onBack }: Props) {
                     {tests > 0 ? `${score}%` : '—'}
                   </div>
                   {st.streak > 0 && (
-                    <div style={{ fontSize: 10, color: COLORS.amber }}>🔥 {st.streak}</div>
+                    <div style={{ fontSize: 10, color: COLORS.amber, display: 'flex', alignItems: 'center', gap: 2, justifyContent: 'flex-end' }}><Flame size={10} /> {st.streak}</div>
                   )}
                 </div>
               </div>
