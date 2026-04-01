@@ -45,7 +45,24 @@ export default function Landing({ onStart, totalQ }: Props) {
           Без регистрации · без оплаты · сразу к вопросам
         </p>
 
-        <div style={{ marginTop: 24, display: 'flex', justifyContent: 'center' }}>
+        {/* Social proof bar */}
+        <div style={{
+          display: 'flex', justifyContent: 'center', gap: 16, marginTop: 24,
+          flexWrap: 'wrap',
+        }}>
+          {[
+            { value: qLabel, label: 'вопросов' },
+            { value: '13', label: 'предметов' },
+            { value: 'AI', label: 'объяснения' },
+          ].map((s, i) => (
+            <div key={i} style={{ textAlign: 'center', minWidth: 70 }}>
+              <div style={{ fontSize: 18, fontWeight: 800, fontFamily: "'Unbounded',sans-serif", color: i === 2 ? COLORS.accent : COLORS.teal }}>{s.value}</div>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ marginTop: 20, display: 'flex', justifyContent: 'center' }}>
           <ChevronDown size={24} color="var(--text-muted)" style={{ opacity: 0.5, animation: 'bounce 2s infinite' }} />
         </div>
         <style>{`@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}`}</style>

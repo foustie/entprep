@@ -12,7 +12,7 @@ import { ToastProvider, useToast } from './contexts/ToastContext';
 import { useT } from './locales';
 import ErrorBoundary from './components/ErrorBoundary';
 import LoadingSpinner from './components/ui/LoadingSpinner';
-import { Home as HomeIcon, Brain, BarChart3, Settings as SettingsIcon } from 'lucide-react';
+import { Home as HomeIcon, Brain, BarChart3, Settings as SettingsIcon, MessageCircle } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import ProfileSelect from './components/ProfileSelect';
 import Home from './components/Home';
@@ -33,6 +33,7 @@ import PushPrompt from './components/PushPrompt';
 import { supabase } from './config/supabase';
 import { useAuth } from './contexts/AuthContext';
 import { parseReferralParam, claimReferral } from './utils/socialHelpers';
+import { trackEvent } from './utils/analytics';
 import type { TestResult, SRCard } from './types';
 
 const submitLeaderboard = async (result: TestResult) => {
@@ -101,13 +102,27 @@ function AppContent() {
   const [totalQ, setTotalQ] = useState(TOTAL_Q);
   useEffect(() => { prefetchCounts().then(ok => { if (ok) setTotalQ(getTotalQ()); }); }, []);
 
-  // Persist ?ref= for users who haven't signed in yet
+  // Persist ?ref= and UTM params for users who haven't signed in yet
   useEffect(() => {
     const refNick = parseReferralParam();
     if (refNick) {
       sessionStorage.setItem('entprep_ref', refNick);
+    }
+    // Save UTM params (Plausible tracks these automatically, but store for user_data on signup)
+    const params = new URLSearchParams(window.location.search);
+    const utm: Record<string, string> = {};
+    for (const key of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term']) {
+      const val = params.get(key);
+      if (val) utm[key] = val;
+    }
+    if (Object.keys(utm).length > 0) {
+      sessionStorage.setItem('entprep_utm', JSON.stringify(utm));
+    }
+    // Clean URL
+    if (refNick || Object.keys(utm).length > 0) {
       const url = new URL(window.location.href);
       url.searchParams.delete('ref');
+      ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'].forEach(k => url.searchParams.delete(k));
       window.history.replaceState({}, '', url.pathname + url.search);
     }
   }, []);
@@ -125,17 +140,21 @@ function AppContent() {
 
   const { user } = useAuth();
 
-  // Handle referral after user signs in
+  // Handle referral + UTM tracking after user signs in
   const refClaimedRef = useRef(false);
   useEffect(() => {
     if (!user || refClaimedRef.current) return;
-    const refNick = sessionStorage.getItem('entprep_ref');
-    if (!refNick) return;
     refClaimedRef.current = true;
-    sessionStorage.removeItem('entprep_ref');
-    claimReferral(refNick).then(ok => {
-      if (ok) toast.success(tr.settings.referralSuccess);
-    });
+    const refNick = sessionStorage.getItem('entprep_ref');
+    if (refNick) {
+      sessionStorage.removeItem('entprep_ref');
+      claimReferral(refNick).then(ok => { if (ok) toast.success(tr.settings.referralSuccess); });
+    }
+    const utmRaw = sessionStorage.getItem('entprep_utm');
+    if (utmRaw) {
+      try { trackEvent('Signup UTM', JSON.parse(utmRaw)); } catch { /* ignore */ }
+      sessionStorage.removeItem('entprep_utm');
+    }
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFinish = (result: TestResult) => { addHist(result); addSrFromResult(result); if (user) { submitLeaderboard(result); } goHome(); };
@@ -160,14 +179,14 @@ function AppContent() {
   };
   const handleResetProfile = () => { resetProfile(); setScreen(SCREENS.PROFILE); setTab(SCREENS.HOME); };
 
-  // Landing page for brand-new visitors (no history, not logged in, hasn't seen onboarding)
-  const isNewVisitor = !user && hist.length === 0 && showOnboarding;
-  const [landingDismissed, setLandingDismissed] = useState(false);
+  // Landing page for unauthenticated visitors with no test history
+  const [landingDismissed, setLandingDismissed] = useState(() => !!localStorage.getItem('entprep_landing_seen'));
+  const isNewVisitor = !user && hist.length === 0 && !landingDismissed;
 
   if (isNewVisitor && !landingDismissed) return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: "'Segoe UI',-apple-system,sans-serif" }}>
       <style>{`:root{${themeToCss(palette)}}${GLOBAL_STYLES}`}</style>
-      <Landing totalQ={totalQ} onStart={() => setLandingDismissed(true)} />
+      <Landing totalQ={totalQ} onStart={() => { localStorage.setItem('entprep_landing_seen', '1'); setLandingDismissed(true); }} />
     </div>
   );
 
@@ -317,7 +336,7 @@ function AppContent() {
               <div style={{ fontSize: 15, fontWeight: 800, fontFamily: "'Unbounded',sans-serif" }}>
                 <span style={{ color: COLORS.accent }}>ENT</span>
                 <span style={{ color: COLORS.teal }}>prep</span>
-                <span style={{ fontSize: 9, color: "var(--text-muted)", marginLeft: 6 }}>{totalQ}q</span>
+                <span style={{ fontSize: 9, color: "var(--text-muted)", marginLeft: 6 }}>{Math.floor(totalQ / 1000)}K+</span>
               </div>
             </header>
             {mainContent}
@@ -329,7 +348,7 @@ function AppContent() {
             <div style={{ fontSize: 15, fontWeight: 800, fontFamily: "'Unbounded',sans-serif" }}>
               <span style={{ color: COLORS.accent }}>ENT</span>
               <span style={{ color: COLORS.teal }}>prep</span>
-              <span style={{ fontSize: 9, color: "var(--text-muted)", marginLeft: 6 }}>{totalQ}q</span>
+              <span style={{ fontSize: 9, color: "var(--text-muted)", marginLeft: 6 }}>{Math.floor(totalQ / 1000)}K+</span>
             </div>
           </header>
           {mainContent}
@@ -340,6 +359,25 @@ function AppContent() {
       <UpdatePrompt />
       <PushPrompt />
       <PaywallModal open={paywallReason !== null} reason={paywallReason} onClose={closePaywall} />
+      {/* WhatsApp floating button — mobile only */}
+      {bp === 'mobile' && (
+        <a
+          href="https://wa.me/77473564629?text=%D0%9F%D1%80%D0%B8%D0%B2%D0%B5%D1%82!%20%D0%A5%D0%BE%D1%87%D1%83%20%D1%83%D0%B7%D0%BD%D0%B0%D1%82%D1%8C%20%D0%BF%D1%80%D0%BE%20ENTprep"
+          target="_blank"
+          rel="noopener"
+          aria-label="WhatsApp"
+          style={{
+            position: 'fixed', bottom: showNav ? 82 : 20, right: 16, zIndex: 90,
+            width: 48, height: 48, borderRadius: 14,
+            background: '#25D366', border: 'none',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 4px 16px rgba(37,211,102,0.3)',
+            textDecoration: 'none',
+          }}
+        >
+          <MessageCircle size={22} color="#fff" fill="#fff" />
+        </a>
+      )}
     </div>
   );
 }

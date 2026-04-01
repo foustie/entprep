@@ -66,7 +66,7 @@ export default function HomeCountdown({ countdown, timeStr, goalApprox }: Props)
           ))}
         </div>
       )}
-      {goalApprox && (
+      {goalApprox && goalApprox.approxScore > 0 && (
         <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
           <Trophy size={12} color={COLORS.amber} />
           {t.home.prediction}{goalApprox.approxScore}/{goalApprox.target || 140} {t.score}

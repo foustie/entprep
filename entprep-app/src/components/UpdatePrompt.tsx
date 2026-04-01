@@ -13,7 +13,12 @@ export default function UpdatePrompt() {
     import('virtual:pwa-register').then(({ registerSW }) => {
       if (cancelled) return;
       updateSW.current = registerSW({
-        onNeedRefresh() { setTimeout(() => { if (!cancelled) setShow(true); }, 800); },
+        onNeedRefresh() {
+          // Delay update prompt: 60s for first-time users (no history), 3s for returning
+          const hasHistory = !!localStorage.getItem('entprep_data');
+          const delay = hasHistory ? 3000 : 60000;
+          setTimeout(() => { if (!cancelled) setShow(true); }, delay);
+        },
         onOfflineReady() {},
       });
     });

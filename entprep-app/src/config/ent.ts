@@ -28,8 +28,8 @@ export const ENT_SCHEDULE: EntPeriod[] = [
   },
   {
     key: 'main',
-    regStart: '2026-04-28', regEnd: '2026-05-14',
-    examStart: '2026-05-16', examEnd: '2026-07-05',
+    regStart: '2026-04-10', regEnd: '2026-04-25',
+    examStart: '2026-05-10', examEnd: '2026-07-10',
   },
   {
     key: 'august',
