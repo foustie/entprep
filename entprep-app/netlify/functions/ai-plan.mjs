@@ -30,15 +30,23 @@ export default async function handler(req) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return Response.json({ error: "AI not configured" }, { status: 500, headers: CORS_HEADERS });
 
+  // Sanitize user-provided text fields to prevent prompt injection
+  const sanitize = (s) => typeof s === 'string' ? s.replace(/[{}\[\]<>]/g, '').slice(0, 100) : '';
+  const sanitizeNum = (n) => typeof n === 'number' && isFinite(n) ? Math.max(0, Math.min(100, Math.round(n))) : 0;
+  const VALID_TRENDS = new Set(['improving', 'declining', 'stable', 'none']);
+
   const weakText = (weak || []).map(s => {
-    let line = `${s.name}: средний ${s.avg}%, тренд ${s.trend === "declining" ? "падает" : s.trend === "improving" ? "растёт" : "стабильно"}`;
-    if (s.topics && s.topics.length > 0) {
-      line += ". Темы: " + s.topics.map(t => `${t.name} (${t.pct}%)`).join(", ");
+    const name = sanitize(s.name);
+    const avg = sanitizeNum(s.avg);
+    const trend = VALID_TRENDS.has(s.trend) ? s.trend : 'stable';
+    let line = `${name}: средний ${avg}%, тренд ${trend === "declining" ? "падает" : trend === "improving" ? "растёт" : "стабильно"}`;
+    if (s.topics && Array.isArray(s.topics)) {
+      line += ". Темы: " + s.topics.slice(0, 10).map(t => `${sanitize(t.name)} (${sanitizeNum(t.pct)}%)`).join(", ");
     }
     return line;
   }).join("\n");
 
-  const strongText = (strong || []).map(s => `${s.name}: ${s.avg}%`).join(", ");
+  const strongText = (strong || []).map(s => `${sanitize(s.name)}: ${sanitizeNum(s.avg)}%`).join(", ");
 
   const isKk = lang === 'kk';
   const systemPrompt = isKk

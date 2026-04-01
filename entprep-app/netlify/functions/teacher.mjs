@@ -205,6 +205,6 @@ export default async function handler(req) {
     }
   } catch (err) {
     console.error(`Teacher API error [${action}]:`, err);
-    return Response.json({ error: err.message || "Server error" }, { status: 500, headers: CORS_HEADERS });
+    return Response.json({ error: "Произошла ошибка. Попробуйте позже." }, { status: 500, headers: CORS_HEADERS });
   }
 }
