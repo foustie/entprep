@@ -13,7 +13,8 @@ import { isNewRecord, completeDailyChallenge, loadDaily } from '../utils/competi
 import TestSkeleton from './ui/TestSkeleton';
 import BackButton from './ui/BackButton';
 import ProgressBar from './ui/ProgressBar';
-import { Lightbulb, Bot, Share2, Check, X, ChevronDown, ChevronUp, Swords, Trophy, Flag, WifiOff } from 'lucide-react';
+import { Lightbulb, Bot, Share2, Check, X, ChevronDown, ChevronUp, Swords, Trophy, Flag, WifiOff, RotateCcw, ArrowRight } from 'lucide-react';
+import { getRecommendation } from '../utils/recommendationEngine';
 import { trackEvent } from '../utils/analytics';
 import ShareModal from './ShareModal';
 import ReportSheet from './ui/ReportSheet';
@@ -46,9 +47,9 @@ interface ChallengeSession {
 }
 
 export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
-  const { st, hist } = useApp();
+  const { st, hist, prof } = useApp();
   const { user, isPremium } = useAuth();
-  const { goHome, setCustomQs: setNavCustomQs, setScreen, openPaywall } = useNav();
+  const { goHome, nav: navFn, navToErrorTest, setCustomQs: setNavCustomQs, setScreen, openPaywall } = useNav();
   const toast = useToast();
   const t = useT();
   const { exp: showExp = true, tmr: useTmr = true, shf: useShuffle = true } = st;
@@ -83,7 +84,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
 
   useEffect(() => { let cancelled = false; (async () => { const questions = customQs ? customQs.map(q => ({ ...q, o: [...q.o] })) : await getQs(sid, sub.cnt, useShuffle, tid, st.lang); if (cancelled) return; const tot = questions.length; const timerSec = tid ? Math.max(5 * 60, Math.round(baseTime * (tot / sub.cnt))) : baseTime; setQs(questions); setTl(timerSec); setLoading(false); })(); return () => { cancelled = true } }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (loading || !useTmr || offline) { if (tr.current) { clearInterval(tr.current); tr.current = null; } return; } tr.current = setInterval(() => setTl(p => { if (p <= 1) { clearInterval(tr.current!); autoFinished.current = true; setFin(true); return 0; } return p - 1; }), 1000); return () => { if (tr.current) clearInterval(tr.current); }; }, [loading, offline]);
-  useEffect(() => { if (!fin || !autoFinished.current || !qs) return; autoFinished.current = false; const tot = qs.length; const timerSec = tid ? Math.max(5 * 60, Math.round(baseTime * (tot / sub.cnt))) : baseTime; const cc = qs.filter((q, i) => ans[i] !== undefined && scoreQuestion(q, ans[i]).correct).length; const qd = qs.map((q, i) => ({ oi: q._oi!, ok: ans[i] !== undefined && scoreQuestion(q, ans[i]).correct, tp: q._topic, stp: q._subtopic })); finish({ su: sid, tp: tid || undefined, co: cc, to: tot, sc: tot ? Math.round(cc / tot * 100) : 0, dt: new Date().toLocaleDateString("ru-RU"), tm: timerSec, qd, _leaderboard: buildLeaderboardData() }); }, [fin]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (!fin || !autoFinished.current || !qs) return; autoFinished.current = false; const tot = qs.length; const timerSec = tid ? Math.max(5 * 60, Math.round(baseTime * (tot / sub.cnt))) : baseTime; const cc = qs.filter((q, i) => ans[i] !== undefined && scoreQuestion(q, ans[i]).correct).length; const qd = qs.map((q, i) => ({ oi: q._oi!, ok: ans[i] !== undefined && scoreQuestion(q, ans[i]).correct, tp: q._topic, stp: q._subtopic, picked: ans[i] ?? null })); finish({ su: sid, tp: tid || undefined, co: cc, to: tot, sc: tot ? Math.round(cc / tot * 100) : 0, dt: new Date().toLocaleDateString("ru-RU"), tm: timerSec, qd, _leaderboard: buildLeaderboardData() }); }, [fin]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!fin || dailyMarkedRef.current || customQs || !qs) return;
     const tot = qs.length;
@@ -318,10 +319,77 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
       </div>
       <div style={{ fontSize: 12, fontWeight: 600, color: scoreColor(pct > challenge.score ? 70 : pct === challenge.score ? 50 : 0) }}>{pct > challenge.score ? t.test.youWon : pct === challenge.score ? t.test.tie : t.test.friendWon}</div>
     </div>)}
-    <button onClick={() => setShowShare(true)} style={{ width: "100%", padding: "15px", marginTop: 14, background: `linear-gradient(135deg,${COLORS.teal},${COLORS.tealLight})`, color: "#fff", border: "none", borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 20px rgba(26,154,140,0.25)", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+    {/* After-test flow: error retry → next test → share → home */}
+    {tot - cc > 0 && (
+      <button
+        onClick={() => {
+          const errorQs = qs.filter((_, i) => ans[i] !== undefined && !scoreQuestion(qs[i], ans[i]).correct);
+          if (errorQs.length > 0) {
+            const qd = qs.map((qq, i) => ({ oi: qq._oi!, ok: ans[i] !== undefined && scoreQuestion(qq, ans[i]).correct, tp: qq._topic, stp: qq._subtopic, picked: ans[i] ?? null }));
+            finish({ su: sid, tp: tid || undefined, co: cc, to: tot, sc: pct, dt: new Date().toLocaleDateString("ru-RU"), tm: timerSec - tl, qd, _leaderboard: buildLeaderboardData() });
+            setTimeout(() => navToErrorTest(errorQs), 50);
+          }
+        }}
+        style={{
+          width: "100%", padding: "15px", marginTop: 14,
+          background: COLORS.red, color: "#fff", border: "none", borderRadius: 14,
+          fontSize: 14, fontWeight: 700, cursor: "pointer",
+          boxShadow: "0 4px 20px rgba(239,68,68,0.25)",
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+        }}
+      >
+        <RotateCcw size={16} />Повторить ошибки ({tot - cc})
+      </button>
+    )}
+    <button
+      onClick={() => {
+        const qd = qs.map((qq, i) => ({ oi: qq._oi!, ok: ans[i] !== undefined && scoreQuestion(qq, ans[i]).correct, tp: qq._topic, stp: qq._subtopic, picked: ans[i] ?? null }));
+        const result = { su: sid, tp: tid || undefined, co: cc, to: tot, sc: pct, dt: new Date().toLocaleDateString("ru-RU"), tm: timerSec - tl, qd, _leaderboard: buildLeaderboardData() };
+        finish(result);
+        const profileSubjects = [...['math', 'reading', 'history'], ...prof];
+        const rec = getRecommendation([...hist, result], profileSubjects);
+        setTimeout(() => {
+          if (rec.type === 'error_review') navFn('errors');
+          else if (rec.type === 'full_ent') navFn('fullent');
+          else navFn('test', rec.subject || profileSubjects[0], rec.topic);
+        }, 50);
+      }}
+      style={{
+        width: "100%", padding: "15px", marginTop: 8,
+        background: COLORS.accent, color: "#fff", border: "none", borderRadius: 14,
+        fontSize: 14, fontWeight: 700, cursor: "pointer",
+        boxShadow: "0 4px 20px rgba(255,107,53,0.25)",
+        display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+      }}
+    >
+      <ArrowRight size={16} />Следующий тест
+    </button>
+    <button
+      onClick={() => setShowShare(true)}
+      style={{
+        width: "100%", padding: "15px", marginTop: 8,
+        background: COLORS.teal, color: "#fff", border: "none", borderRadius: 14,
+        fontSize: 14, fontWeight: 700, cursor: "pointer",
+        boxShadow: "0 4px 20px rgba(26,154,140,0.25)",
+        display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+      }}
+    >
       <Share2 size={16} />{t.test.share}
     </button>
-    <button onClick={() => { if (challenge) sessionStorage.removeItem("entprep_challenge"); const qd = qs.map((qq, i) => ({ oi: qq._oi!, ok: ans[i] !== undefined && scoreQuestion(qq, ans[i]).correct, tp: qq._topic, stp: qq._subtopic })); finish({ su: sid, tp: tid || undefined, co: cc, to: tot, sc: pct, dt: new Date().toLocaleDateString("ru-RU"), tm: timerSec - tl, qd, _leaderboard: buildLeaderboardData() }); }} style={{ width: "100%", padding: "15px", marginTop: 8, background: sub.color, color: "#fff", border: "none", borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{t.test.goHome}</button>
+    <button
+      onClick={() => {
+        if (challenge) sessionStorage.removeItem("entprep_challenge");
+        const qd = qs.map((qq, i) => ({ oi: qq._oi!, ok: ans[i] !== undefined && scoreQuestion(qq, ans[i]).correct, tp: qq._topic, stp: qq._subtopic, picked: ans[i] ?? null }));
+        finish({ su: sid, tp: tid || undefined, co: cc, to: tot, sc: pct, dt: new Date().toLocaleDateString("ru-RU"), tm: timerSec - tl, qd, _leaderboard: buildLeaderboardData() });
+        goHome();
+      }}
+      style={{
+        width: "100%", padding: "15px", marginTop: 8,
+        background: "none", color: "var(--text-secondary)",
+        border: "1px solid var(--border-light)", borderRadius: 14,
+        fontSize: 14, fontWeight: 600, cursor: "pointer",
+      }}
+    >{t.test.goHome}</button>
     <ShareModal visible={showShare} onClose={() => setShowShare(false)} type="test" data={{ subjectName: (t.subjects as Record<string, string>)[sid] || sub.name, subjectEmoji: sub.icon, topicName: tid || null, subjectId: sid, topicId: tid, score: cc, total: tot, pct }} />
     <ReportSheet visible={reportIdx !== null} questionText={reportIdx !== null ? qs[reportIdx]?.q : undefined} comment={reportComment} loading={reportLoading} onClose={() => { setReportIdx(null); setReportComment(''); }} onCommentChange={setReportComment} onReport={reason => reportQuestion(reportIdx!, reason)} />
   </div>);

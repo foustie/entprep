@@ -54,13 +54,36 @@ export async function cloudSave(userId: string, { hist, prof, st, srCards }: Clo
 export function mergeData(local: CloudData | null, cloud: CloudData | null): CloudData {
   if (!cloud) return local!;
   if (!local) return cloud;
-  const allHist = [...(cloud.hist || []), ...(local.hist || [])];
-  const seen = new Set<string>();
+
+  // LOCAL first — local data is fresher and takes priority on dedup collisions
+  const allHist = [...(local.hist || []), ...(cloud.hist || [])];
+
+  // Dedup with COUNTER — same key can appear multiple times legitimately
+  // (user takes same subject twice with same score on same day)
+  const keyCount = new Map<string, number>();
   const hist = allHist.filter(h => {
-    const key = `${h.dt}_${h.su}_${h.sc}_${h.tm ?? ''}_${h.tp ?? ''}_${h.co ?? ''}_${h.to ?? ''}`;
-    if (seen.has(key)) return false;
-    seen.add(key); return true;
+    // Include index-like uniqueness: use qd length or tm (time taken) for extra differentiation
+    const qdLen = Array.isArray(h.qd) ? h.qd.length : 0;
+    const key = `${h.dt}_${h.su}_${h.sc}_${h.tm ?? ''}_${h.tp ?? ''}_${h.co ?? ''}_${h.to ?? ''}_${qdLen}`;
+    const count = keyCount.get(key) || 0;
+    // Allow up to 10 tests with identical keys per day (generous limit)
+    if (count >= 10) return false;
+    keyCount.set(key, count + 1);
+    return true;
   });
+
+  // Safety: NEVER lose local data. If merge somehow produced fewer entries, keep local.
+  const localHist = local.hist || [];
+  if (hist.length < localHist.length) {
+    // Merge lost data — fallback to local + any cloud-only entries
+    const localKeys = new Set(localHist.map(h => JSON.stringify({ dt: h.dt, su: h.su, sc: h.sc, co: h.co, to: h.to, tm: h.tm })));
+    const cloudOnly = (cloud.hist || []).filter(h =>
+      !localKeys.has(JSON.stringify({ dt: h.dt, su: h.su, sc: h.sc, co: h.co, to: h.to, tm: h.tm }))
+    );
+    captureError(new Error(`mergeData lost entries: local=${localHist.length} merged=${hist.length}`), { context: 'mergeData.safety' });
+    return { hist: [...localHist, ...cloudOnly], prof: local.prof || cloud.prof || [], st: { ...(cloud.st || {}), ...(local.st || {}) } as Settings, srCards: mergeSrCards(local.srCards || [], cloud.srCards || []) };
+  }
+
   const prof = (cloud.prof?.length > 0) ? cloud.prof : (local.prof || []);
   const st = { ...(cloud.st || {}), ...(local.st || {}) } as Settings;
   if (!st.exp && st.exp !== false) st.exp = true;

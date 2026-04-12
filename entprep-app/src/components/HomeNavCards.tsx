@@ -3,14 +3,10 @@ import { UNIS } from '../data/universities';
 import { CARD_COMPACT, COLORS, SECTION_LABEL, TINT, hoverGlow } from '../constants/styles';
 import { useT } from '../locales';
 import { useNav } from '../contexts/NavigationContext';
-import { GraduationCap, ChevronRight, Calculator, Trophy, Crown, Users, Swords } from 'lucide-react';
+import { GraduationCap, ChevronRight, Calculator, Trophy, Users, Swords } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
-interface Props {
-  isPremium: boolean;
-}
-
-export default function HomeNavCards({ isPremium }: Props) {
+export default function HomeNavCards() {
   const { nav, openPaywall } = useNav();
   const t = useT();
 
@@ -39,9 +35,8 @@ export default function HomeNavCards({ isPremium }: Props) {
           <GraduationCap size={22} color={COLORS.teal} />
         </div>
         <div style={{ marginLeft: 12, flex: 1 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>
             {t.home.fullEnt}
-            {!isPremium && <span style={{ fontSize: 9, fontWeight: 700, color: COLORS.accent, background: TINT.accent.bg, padding: '2px 6px', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 3 }}><Crown size={10} />{t.home.premium}</span>}
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{t.home.fullEntDesc}</div>
         </div>

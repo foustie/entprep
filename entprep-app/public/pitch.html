@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ENTprep — Pitch Deck</title>
+<style>
+  @page {
+    size: A4 landscape;
+    margin: 0;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  :root {
+    --bg: #0f0f1a;
+    --bg-card: #161625;
+    --orange: #FF6B35;
+    --teal: #1A9A8C;
+    --white: #f0f0f5;
+    --gray: #8888a0;
+    --gray-light: #b0b0c0;
+    --border: #2a2a3d;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, sans-serif;
+    background: var(--bg);
+    color: var(--white);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .slide {
+    width: 297mm;
+    height: 210mm;
+    padding: 48px 64px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: var(--bg);
+    page-break-after: always;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .slide:last-child {
+    page-break-after: avoid;
+  }
+
+  .slide-number {
+    position: absolute;
+    bottom: 24px;
+    right: 48px;
+    font-size: 13px;
+    color: var(--gray);
+    letter-spacing: 0.5px;
+  }
+
+  .logo-watermark {
+    position: absolute;
+    top: 32px;
+    left: 64px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  .logo-watermark .ent { color: var(--orange); }
+  .logo-watermark .prep { color: var(--teal); }
+
+  /* Slide 1 — Cover */
+  .cover {
+    align-items: center;
+    text-align: center;
+    gap: 24px;
+  }
+
+  .cover .logo {
+    font-size: 72px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+
+  .cover .logo .ent { color: var(--orange); }
+  .cover .logo .prep { color: var(--teal); }
+
+  .cover .tagline {
+    font-size: 24px;
+    color: var(--gray-light);
+    font-weight: 400;
+    max-width: 600px;
+    line-height: 1.4;
+  }
+
+  .cover .url {
+    font-size: 16px;
+    color: var(--teal);
+    margin-top: 8px;
+    letter-spacing: 0.5px;
+  }
+
+  .cover .meta {
+    font-size: 14px;
+    color: var(--gray);
+    margin-top: 24px;
+  }
+
+  /* General */
+  h2 {
+    font-size: 42px;
+    font-weight: 800;
+    margin-bottom: 32px;
+    line-height: 1.1;
+  }
+
+  h2 .accent-orange { color: var(--orange); }
+  h2 .accent-teal { color: var(--teal); }
+
+  .subtitle {
+    font-size: 18px;
+    color: var(--gray-light);
+    margin-bottom: 40px;
+    line-height: 1.5;
+    max-width: 700px;
+  }
+
+  /* Stats row */
+  .stats {
+    display: flex;
+    gap: 48px;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .stat .number {
+    font-size: 52px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .stat .number.orange { color: var(--orange); }
+  .stat .number.teal { color: var(--teal); }
+
+  .stat .label {
+    font-size: 14px;
+    color: var(--gray);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* Bullets */
+  .bullets {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    list-style: none;
+  }
+
+  .bullets li {
+    font-size: 20px;
+    color: var(--gray-light);
+    padding-left: 20px;
+    position: relative;
+    line-height: 1.5;
+  }
+
+  .bullets li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 10px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--orange);
+  }
+
+  .bullets li strong {
+    color: var(--white);
+    font-weight: 600;
+  }
+
+  /* Grid layout */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: start;
+  }
+
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 24px;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+  }
+
+  .card h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--white);
+  }
+
+  .card p {
+    font-size: 14px;
+    color: var(--gray);
+    line-height: 1.6;
+  }
+
+  .card.highlight {
+    border-color: var(--orange);
+  }
+
+  .card.highlight h3 {
+    color: var(--orange);
+  }
+
+  /* Table */
+  .comp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 15px;
+  }
+
+  .comp-table th {
+    text-align: left;
+    padding: 12px 16px;
+    color: var(--gray);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .comp-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--gray-light);
+  }
+
+  .comp-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .comp-table .col-entprep {
+    background: rgba(255, 107, 53, 0.06);
+  }
+
+  .comp-table .col-entprep td,
+  .comp-table .col-entprep th {
+    color: var(--white);
+    font-weight: 600;
+  }
+
+  .check { color: var(--teal); font-weight: 700; }
+  .cross { color: #ff4466; font-weight: 700; }
+
+  /* Timeline / Steps */
+  .steps {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+
+  .step {
+    flex: 1;
+    text-align: center;
+  }
+
+  .step .step-label {
+    font-size: 13px;
+    color: var(--gray);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+
+  .step .step-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .step .step-desc {
+    font-size: 13px;
+    color: var(--gray);
+    line-height: 1.5;
+  }
+
+  .arrow {
+    color: var(--gray);
+    font-size: 28px;
+    margin-top: 20px;
+    flex-shrink: 0;
+  }
+
+  /* Founder */
+  .founder-section {
+    display: flex;
+    gap: 48px;
+    align-items: center;
+  }
+
+  .founder-info {
+    flex: 1;
+  }
+
+  .founder-name {
+    font-size: 36px;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+
+  .founder-title {
+    font-size: 16px;
+    color: var(--orange);
+    margin-bottom: 20px;
+    font-weight: 600;
+  }
+
+  .founder-facts {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .founder-facts .fact {
+    font-size: 17px;
+    color: var(--gray-light);
+    line-height: 1.4;
+    padding-left: 16px;
+    border-left: 3px solid var(--border);
+  }
+
+  .founder-facts .fact strong {
+    color: var(--white);
+  }
+
+  /* Ask slide */
+  .ask-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 24px;
+    margin-top: 8px;
+  }
+
+  .ask-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    text-align: center;
+  }
+
+  .ask-item .amount {
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--orange);
+    margin-bottom: 8px;
+  }
+
+  .ask-item .purpose {
+    font-size: 15px;
+    color: var(--gray);
+    line-height: 1.4;
+  }
+
+  .targets {
+    display: flex;
+    gap: 48px;
+    margin-top: 40px;
+  }
+
+  .target .target-value {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--teal);
+  }
+
+  .target .target-label {
+    font-size: 14px;
+    color: var(--gray);
+    margin-top: 4px;
+  }
+
+  /* Print */
+  @media print {
+    body { background: var(--bg); }
+    .slide {
+      width: 100vw;
+      height: 100vh;
+      padding: 40px 56px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1: Cover -->
+<div class="slide cover">
+  <div class="logo"><span class="ent">ENT</span><span class="prep">prep</span></div>
+  <div class="tagline">Free AI Tutor for Kazakhstan's National Exam</div>
+  <div class="url">entprep.org</div>
+  <div class="meta">Pre-Seed &middot; April 2026 &middot; Almaty, Kazakhstan</div>
+  <div class="slide-number">01</div>
+</div>
+
+<!-- SLIDE 2: Problem -->
+<div class="slide">
+  <div class="logo-watermark"><span class="ent">ENT</span><span class="prep">prep</span></div>
+  <h2>The <span class="accent-orange">Problem</span></h2>
+  <div class="subtitle">Every year, 228,000 students take the ЕНТ. Their score determines free university education or $3,000+/year tuition. The system is broken.</div>
+  <div class="stats" style="margin-bottom: 40px;">
+    <div class="stat">
+      <div class="number orange">228K</div>
+      <div class="label">Students per year</div>
+    </div>
+    <div class="stat">
+      <div class="number orange">$50/hr</div>
+      <div class="label">Private tutor cost</div>
+    </div>
+    <div class="stat">
+      <div class="number orange">0</div>
+      <div class="label">AI tools available</div>
+    </div>
+  </div>
+  <ul class="bullets">
+    <li><strong>Rich students</strong> afford private tutors. Rural students get nothing.</li>
+    <li>Current tools are <strong>static question banks</strong> with no AI, no social features, outdated UI.</li>
+    <li>Score gap directly maps to <strong>income inequality</strong> — wrong score = no grant = no degree.</li>
+  </ul>
+  <div class="slide-number">02</div>
+</div>
+
+<!-- SLIDE 3: Solution -->
+<div class="slide">
+  <div class="logo-watermark"><span class="ent">ENT</span><span class="prep">prep</span></div>
+  <h2>The <span class="accent-teal">Solution</span></h2>
+  <div class="subtitle">A free AI tutor that gives every student access to world-class exam preparation. Available 24/7 on any phone.</div>
+  <div class="grid-3">
+    <div class="card">
+      <h3>28,000+ Questions</h3>
+      <p>13 subjects. Bilingual: Russian and Kazakh. Full ЕНТ coverage with real exam format.</p>
+    </div>
+    <div class="card">
+      <h3>AI Explanations</h3>
+      <p>Powered by Claude. Every wrong answer gets a personalized explanation. Adaptive difficulty.</p>
+    </div>
+    <div class="card">
+      <h3>Real-Time Duels</h3>
+      <p>Challenge friends. Compete with classmates. Social features that make studying addictive.</p>
+    </div>
+    <div class="card">
+      <h3>Adaptive Learning</h3>
+      <p>Tracks weak areas. Prioritizes what you need most. Smarter than any textbook.</p>
+    </div>
+    <div class="card">
+      <h3>Mobile-First</h3>
+      <p>Works on any phone. No app download required. PWA with offline support.</p>
+    </div>
+    <div class="card">
+      <h3>100% Free</h3>
+      <p>No paywall. No ads. No premium tier for students. Education should be free.</p>
+    </div>
+  </div>
+  <div class="slide-number">03</div>
+</div>
+
+<!-- SLIDE 4: Traction -->
+<div class="slide">
+  <div class="logo-watermark"><span class="ent">ENT</span><span class="prep">prep</span></div>
+  <h2>Early <span class="accent-orange">Traction</span></h2>
+  <div class="subtitle">Launched 3 days ago. Zero marketing spend. TikTok video hit 10K views. Pure organic.</div>
+  <div class="stats" style="margin-bottom: 48px;">
+    <div class="stat">
+      <div class="number orange">500+</div>
+      <div class="label">Users in 3 days</div>
+    </div>
+    <div class="stat">
+      <div class="number orange">$0</div>
+      <div class="label">Ad spend</div>
+    </div>
+    <div class="stat">
+      <div class="number teal">$10K</div>
+      <div class="label">Emergent Ventures grant</div>
+    </div>
+  </div>
+  <ul class="bullets">
+    <li>Multiple schools in <strong>Almaty</strong> sharing among students organically</li>
+    <li><strong>$10K Emergent Ventures</strong> grant from Tyler Cowen — validation from a world-class economist</li>
+    <li><strong>PostHog analytics</strong> live — tracking retention, engagement, feature usage</li>
+    <li>Applied to <strong>YC S26</strong></li>
+  </ul>
+  <div class="slide-number">04</div>
+</div>
+
+<!-- SLIDE 5: Market -->
+<div class="slide">
+  <div class="logo-watermark"><span class="ent">ENT</span><span class="prep">prep</span></div>
+  <h2><span class="accent-teal">Market</span> Opportunity</h2>
+  <div class="grid-2">
+    <div>
+      <div class="stats" style="flex-direction: column; gap: 32px; margin-bottom: 40px;">
+        <div class="stat">
+          <div class="number teal">$75-150M</div>
+          <div class="label">TAM — Kazakhstan ENT prep</div>
+        </div>
+        <div class="stat">
+          <div class="number orange">228K</div>
+          <div class="label">Students per year</div>
+        </div>
+        <div class="stat">
+          <div class="number orange">$300-600</div>
+          <div class="label">Average spend per student</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <ul class="bullets">
+        <li>EdTech in Kazakhstan growing <strong>20%/year</strong></li>
+        <li><strong>Zero B2C AI competitors</strong> in the market</li>
+        <li>Government pushing for <strong>digitalization of education</strong></li>
+        <li>High smartphone penetration — <strong>80%+ of students</strong> have phones</li>
+        <li>Adjacent markets: SAT, IELTS, university admissions in Central Asia</li>
+      </ul>
+    </div>
+  </div>
+  <div class="slide-number">05</div>
+</div>
+
+<!-- SLIDE 6: Competition -->
+<div class="slide">
+  <div class="logo-watermark"><span class="ent">ENT</span><span class="prep">prep</span></div>
+  <h2><span class="accent-orange">Competition</span></h2>
+  <div class="subtitle">ENTprep is the only app students actually want to open.</div>
+  <table class="comp-table">
+    <thead>
+      <tr>
+        <th style="width: 22%;">Feature</th>
+        <th style="width: 22%;">Testter.kz</th>
+        <th style="width: 22%;">iTest</th>
+        <th style="width: 22%;" class="col-entprep">ENTprep</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Users</td>
+        <td>1.5M (B2B forced)</td>
+        <td>~100K</td>
+        <td class="col-entprep">500+ (3 days, organic)</td>
+      </tr>
+      <tr>
+        <td>Questions</td>
+        <td>~20K</td>
+        <td>60K</td>
+        <td class="col-entprep">28K+</td>
+      </tr>
+      <tr>
+        <td>AI Explanations</td>
+        <td><span class="cross">No</span></td>
+        <td><span class="cross">No</span></td>
+        <td class="col-entprep"><span class="check">Yes (Claude)</span></td>
+      </tr>
+      <tr>
+        <td>Social / Duels</td>
+        <td><span class="cross">No</span></td>
+        <td><span class="cross">No</span></td>
+        <td class="col-entprep"><span class="check">Real-time duels</span></td>
+      </tr>
+      <tr>
+        <td>Price</td>
+        <td>B2B only</td>
+        <td>Paid</td>
+        <td class="col-entprep"><span class="check">Free forever</span></td>
+      </tr>
+      <tr>
+        <td>UX / Design</td>
+        <td>Outdated</td>
+        <td>Basic</td>
+        <td class="col-entprep"><span class="check">Modern, mobile-first</span></td>
+      </tr>
+      <tr>
+        <td>Adaptive Learning</td>
+        <td><span class="cross">No</span></td>
+        <td><span class="cross">No</span></td>
+        <td class="col-entprep"><span class="check">Yes</span></td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="slide-number">06</div>
+</div>
+
+<!-- SLIDE 7: Business Model -->
+<div class="slide">
+  <div class="logo-watermark"><span class="ent">ENT</span><span class="prep">prep</span></div>
+  <h2>Business <span class="accent-teal">Model</span></h2>
+  <div class="subtitle">Free for students. Monetize institutions. The Duolingo playbook for exam prep.</div>
+  <div class="steps" style="margin-bottom: 40px;">
+    <div class="step">
+      <div class="step-label">Phase 1</div>
+      <div class="step-title" style="color: var(--orange);">Free for Students</div>
+      <div class="step-desc">Build massive user base. Word-of-mouth growth. Zero CAC.</div>
+    </div>
+    <div class="arrow">&rarr;</div>
+    <div class="step">
+      <div class="step-label">Phase 2</div>
+      <div class="step-title" style="color: var(--orange);">Schools Adopt</div>
+      <div class="step-desc">Teachers use for score tracking and homework. Organic B2B pull.</div>
+    </div>
+    <div class="arrow">&rarr;</div>
+    <div class="step">
+      <div class="step-label">Phase 3</div>
+      <div class="step-title" style="color: var(--orange);">Monetize B2B</div>
+      <div class="step-desc">School dashboards, analytics, admin tools. Per-student pricing.</div>
+    </div>
+    <div class="arrow">&rarr;</div>
+    <div class="step">
+      <div class="step-label">Phase 4</div>
+      <div class="step-title" style="color: var(--orange);">Expand</div>
+      <div class="step-desc">New exams, new countries. Same playbook.</div>
+    </div>
+  </div>
+  <div class="card" style="max-width: 600px;">
+    <h3>Revenue Potential</h3>
+    <p>7,500 schools in KZ &times; $500/year = <strong style="color: var(--teal);">$3.75M ARR</strong> at 100% penetration. 10% penetration = $375K ARR.</p>
+  </div>
+  <div class="slide-number">07</div>
+</div>
+
+<!-- SLIDE 8: Vision -->
+<div class="slide">
+  <div class="logo-watermark"><span class="ent">ENT</span><span class="prep">prep</span></div>
+  <h2>The <span class="accent-orange">Vision</span></h2>
+  <div class="subtitle">A separate AI app for every standardized exam worldwide. Start local, go global.</div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-label">Now</div>
+      <div class="step-title" style="color: var(--teal);">ENTprep</div>
+      <div class="step-desc">Kazakhstan's ЕНТ<br>228K students/year</div>
+    </div>
+    <div class="arrow">&rarr;</div>
+    <div class="step">
+      <div class="step-label">2026</div>
+      <div class="step-title" style="color: var(--teal);">AbroadPrep</div>
+      <div class="step-desc">SAT + IELTS<br>International exams</div>
+    </div>
+    <div class="arrow">&rarr;</div>
+    <div class="step">
+      <div class="step-label">2027</div>
+      <div class="step-title" style="color: var(--teal);">Central Asia</div>
+      <div class="step-desc">Uzbekistan, Kyrgyzstan, Russia<br>5M+ students</div>
+    </div>
+    <div class="arrow">&rarr;</div>
+    <div class="step">
+      <div class="step-label">2028+</div>
+      <div class="step-title" style="color: var(--teal);">Global</div>
+      <div class="step-desc">Every standardized exam<br>Hundreds of millions</div>
+    </div>
+  </div>
+  <div style="margin-top: 48px;">
+    <div class="card" style="max-width: 700px;">
+      <h3>Why This Works</h3>
+      <p>Each exam has unique questions, scoring, and culture. A generic "AI tutor" fails. We build <strong style="color: var(--orange);">purpose-built apps</strong> per exam — same infra, different content. Each app dominates its niche.</p>
+    </div>
+  </div>
+  <div class="slide-number">08</div>
+</div>
+
+<!-- SLIDE 9: Team -->
+<div class="slide">
+  <div class="logo-watermark"><span class="ent">ENT</span><span class="prep">prep</span></div>
+  <h2><span class="accent-teal">Founder</span></h2>
+  <div class="founder-section">
+    <div class="founder-info">
+      <div class="founder-name">Diyar Zhakpelov</div>
+      <div class="founder-title">Solo Founder &middot; 17 years old &middot; Almaty, Kazakhstan</div>
+      <div class="founder-facts">
+        <div class="fact"><strong>Built 5 software products</strong> — shipping since 15</div>
+        <div class="fact"><strong>Scored 96/140 on ЕНТ without prep.</strong> IS the target user. Knows the pain firsthand.</div>
+        <div class="fact"><strong>Lives alone, self-supporting.</strong> Runs a web agency (DR Agency) generating revenue.</div>
+        <div class="fact"><strong>Tyler Cowen bet $10K on him</strong> through Emergent Ventures — the same program that funded Vitalik Buterin's early work.</div>
+        <div class="fact"><strong>Full-stack builder.</strong> Designed, coded, and shipped ENTprep solo in weeks.</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">09</div>
+</div>
+
+<!-- SLIDE 10: Ask -->
+<div class="slide">
+  <div class="logo-watermark"><span class="ent">ENT</span><span class="prep">prep</span></div>
+  <h2>The <span class="accent-orange">Ask</span></h2>
+  <div class="stats" style="margin-bottom: 40px;">
+    <div class="stat">
+      <div class="number orange">$50K</div>
+      <div class="label">Pre-seed round</div>
+    </div>
+  </div>
+  <div class="ask-grid">
+    <div class="ask-item">
+      <div class="amount">$30K</div>
+      <div class="purpose">Growth Marketing<br><span style="font-size: 12px; color: var(--gray);">School partnerships, TikTok, campus ambassadors</span></div>
+    </div>
+    <div class="ask-item">
+      <div class="amount">$10K</div>
+      <div class="purpose">Infrastructure<br><span style="font-size: 12px; color: var(--gray);">Servers, AI API costs, analytics tooling</span></div>
+    </div>
+    <div class="ask-item">
+      <div class="amount">$10K</div>
+      <div class="purpose">6-Month Runway<br><span style="font-size: 12px; color: var(--gray);">Full-time focus on ENTprep</span></div>
+    </div>
+  </div>
+  <div class="targets">
+    <div class="target">
+      <div class="target-value">5,000 users</div>
+      <div class="target-label">Target by June 2026</div>
+    </div>
+    <div class="target">
+      <div class="target-value">YC S26</div>
+      <div class="target-label">Acceptance target</div>
+    </div>
+    <div class="target">
+      <div class="target-value">entprep.org</div>
+      <div class="target-label">Live now</div>
+    </div>
+  </div>
+  <div style="margin-top: 40px; font-size: 16px; color: var(--gray);">
+    Contact: dzakpelov@gmail.com
+  </div>
+  <div class="slide-number">10</div>
+</div>
+
+</body>
+</html>

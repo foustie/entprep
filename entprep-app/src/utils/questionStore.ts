@@ -106,9 +106,10 @@ function saveCounts(counts: Record<string, number>): void {
 
 function getDefaultCounts(): Record<string, number> {
   return {
-    math:2172, reading:2025, history:2562, geography:2139, english:2036,
-    math_profile:2180, physics:2100, biology:2054, chemistry:2053,
-    world_history:2566, informatics:2048, law:2106, literature:2552,
+    math:2171, reading:2025, history:2546, geography:2124, english:2019,
+    math_profile:2165, physics:2085, biology:2038, chemistry:2038,
+    world_history:2551, informatics:2032, law:2091,
+    literature_russian:2298, literature_kazakh:236,
   };
 }
 
@@ -231,7 +232,43 @@ async function getPool(sid: string, lang?: Lang): Promise<Question[]> {
 
   pending[sid] = (async () => {
     try {
-      // 2. Supabase
+      // 1. CDN JSON files (fastest — served from Netlify edge, ~100ms)
+      const cdnSid = sid === 'literature' ? 'literature_russian' : sid;
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 5000);
+        const resp = await fetch(`/data/${cdnSid}.json`, { signal: controller.signal });
+        clearTimeout(timeout);
+        if (resp.ok) {
+          const rawRows = await resp.json();
+          // CDN JSON uses _topic/_subtopic (dump script format), normalize to Supabase column names
+          const rows: SupabaseRow[] = rawRows.map((r: Record<string, unknown>) => ({
+            ...r,
+            topic: r.topic || r._topic || '',
+            subtopic: r.subtopic || r._subtopic || '',
+          }));
+          if (rows.length > 0) {
+            if (sid === 'reading') {
+              const passages = buildPassagesFromRows(rows);
+              passageCache.data = passages;
+              const flat: Question[] = [];
+              passages.forEach((p, pi) => {
+                p.qs.forEach((q, qi) => flat.push(deepFreezeQuestion({ ...q, _oi: pi * 5 + qi, pt: p.t, px: p.tx })));
+              });
+              memCache[sid] = flat;
+              passages.forEach(p => p.qs.forEach(q => { if (q.o) Object.freeze(q.o); Object.freeze(q); }));
+            } else {
+              memCache[sid] = rows.map((r, i) => deepFreezeQuestion({ ...supabaseRowToQuestion(r), _oi: i }));
+            }
+            const counts = loadCounts();
+            counts[sid] = sid === 'reading' ? memCache[sid].length : rows.length;
+            saveCounts(counts);
+            return memCache[sid];
+          }
+        }
+      } catch { /* CDN failed, fall through to Supabase */ }
+
+      // 2. Supabase (fallback if CDN fails)
       const result = await fetchFromSupabase(sid);
       if (result && result.rows.length > 0) {
         const rows = result.rows;
@@ -248,8 +285,6 @@ async function getPool(sid: string, lang?: Lang): Promise<Question[]> {
           memCache[sid] = rows.map((r, i) => deepFreezeQuestion({ ...supabaseRowToQuestion(r), _oi: i }));
         }
         if (result.complete) {
-          // Only persist count + cache when we got ALL rows — partial fetches
-          // would corrupt the cached count (e.g. 1000 instead of 2100)
           const counts = loadCounts();
           counts[sid] = sid === 'reading' ? memCache[sid].length : rows.length;
           saveCounts(counts);
@@ -276,7 +311,7 @@ async function getPool(sid: string, lang?: Lang): Promise<Question[]> {
         return memCache[sid];
       }
 
-      // 4. Static fallback (dynamic import)
+      // 4. Static fallback (dynamic import — bundled JS, last resort)
       const loader = STATIC_FILES[sid];
       if (!loader) return [];
       const staticData = await loader();

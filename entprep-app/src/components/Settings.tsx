@@ -127,80 +127,9 @@ export default function Settings() {
           </div>
         )}
 
-        {/* Premium status */}
-        {isPremium ? (
-          <div style={{ ...ROW, background: 'linear-gradient(135deg, rgba(255,107,53,0.06), rgba(234,179,8,0.06))' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: `linear-gradient(135deg, ${COLORS.accent}, ${COLORS.accentDark})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <Crown size={18} color="#fff" />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.accent, display: 'flex', alignItems: 'center', gap: 5 }}>
-                  Premium <Sparkles size={13} />
-                </div>
-                <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>
-                  {user?.user_metadata?.premium_until
-                    ? `${t.settings.premiumUntil} ${new Date(user.user_metadata.premium_until as string).toLocaleDateString(lang === 'kk' ? 'kk-KZ' : 'ru-RU')}`
-                    : t.settings.premiumActive}
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : null /* Premium upgrade hidden — all features free */}
+        {/* Premium UI removed — all features free for students. Revenue from B2B (schools/government). */}
 
-        {/* Promo code */}
-        {user && !isPremium && (
-          <div style={ROW}>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', width: '100%' }}>
-              <Gift size={15} color={COLORS.teal} style={{ flexShrink: 0 }} />
-              <input
-                value={promoInput}
-                onChange={e => { setPromoInput(e.target.value.toUpperCase()); setPromoMsg(null); }}
-                placeholder={t.settings.promoPlaceholder || 'Промокод'}
-                maxLength={30}
-                style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border-md)', background: 'var(--bg-subtle)', color: 'var(--text)', fontSize: 13, outline: 'none' }}
-              />
-              <button
-                onClick={async () => {
-                  if (!promoInput.trim() || !supabase) return;
-                  setPromoLoading(true);
-                  setPromoMsg(null);
-                  try {
-                    const token = (await supabase.auth.getSession()).data.session?.access_token;
-                    const res = await fetch(`${API_BASE}/api/promo`, {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                      body: JSON.stringify({ code: promoInput.trim() }),
-                    });
-                    const data = await res.json();
-                    if (res.ok && data.ok) {
-                      setPromoMsg({ ok: true, text: `${t.settings.promoSuccess || 'Premium активирован!'} ${data.days} ${t.days}` });
-                      setPromoInput('');
-                    } else {
-                      const msgs: Record<string, string> = {
-                        'Code not found': t.settings.promoNotFound || 'Промокод не найден',
-                        'Code expired': t.settings.promoExpired || 'Промокод истёк',
-                        'Code fully redeemed': t.settings.promoExpired || 'Промокод исчерпан',
-                        'Already redeemed': t.settings.promoUsed || 'Вы уже использовали этот промокод',
-                      };
-                      setPromoMsg({ ok: false, text: msgs[data.error] || data.error || t.error });
-                    }
-                  } catch { setPromoMsg({ ok: false, text: t.error }); }
-                  finally { setPromoLoading(false); }
-                }}
-                disabled={promoLoading || !promoInput.trim()}
-                style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: COLORS.teal, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', opacity: promoLoading || !promoInput.trim() ? 0.5 : 1, whiteSpace: 'nowrap' }}
-              >
-                {promoLoading ? '...' : (t.settings.promoApply || 'Применить')}
-              </button>
-            </div>
-            {promoMsg && (
-              <div style={{ fontSize: 11, color: promoMsg.ok ? COLORS.teal : '#ef4444', marginTop: 6, paddingLeft: 23 }}>
-                {promoMsg.text}
-              </div>
-            )}
-          </div>
-        )}
+        {/* Promo code removed — all features free */}
 
         {/* Invite friend (referral) */}
         {user && profile && !profile.nickname.startsWith('user_') && (

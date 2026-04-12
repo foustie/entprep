@@ -11,7 +11,8 @@ import { PROFILE_BLOCKS } from '../config/ent';
 import { useT } from '../locales';
 import BackButton from './ui/BackButton';
 import SkeletonCard from './ui/SkeletonCard';
-import { ChevronRight, ChevronDown, Play, GraduationCap } from 'lucide-react';
+import { ChevronRight, ChevronDown, Play, GraduationCap, BookOpen } from 'lucide-react';
+import TheorySummary from './TheorySummary';
 import SubjectIcon from './ui/SubjectIcon';
 import type { ProfileSubject, Question } from '../types';
 import { captureError } from '../config/sentry';
@@ -39,6 +40,7 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
   const [hasSubtopics, setHasSubtopics] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [poolLoading, setPoolLoading] = useState(true);
+  const [showTheory, setShowTheory] = useState(false);
 
   useEffect(() => {
     if (!topics) return;
@@ -138,6 +140,24 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
           </div>
           <ChevronRight size={18} color={COLORS.teal} />
         </button>
+      )}
+
+      {/* Theory / Конспекты button */}
+      <button onClick={() => setShowTheory(s => !s)} style={{ ...CARD_COMPACT, display: "flex", alignItems: "center", width: "100%", background: "rgba(139,92,246,0.08)", border: "1px solid rgba(139,92,246,0.2)", padding: "16px 14px", marginBottom: 18, cursor: "pointer", textAlign: "left", transition: "all 0.2s" }}>
+        <div style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(139,92,246,0.18)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <BookOpen size={18} color="#8b5cf6" />
+        </div>
+        <div style={{ marginLeft: 12, flex: 1 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>{isKk ? 'Конспект' : 'Теория'}</div>
+          <div style={{ fontSize: 11, color: "var(--text-secondary)" }}>{isKk ? 'Қысқаша түсіндірме' : 'Краткие конспекты по темам'}</div>
+        </div>
+        <ChevronDown size={18} color="#8b5cf6" style={{ transition: "transform 0.2s", transform: showTheory ? "rotate(180deg)" : "rotate(0deg)" }} />
+      </button>
+
+      {showTheory && (
+        <div style={{ marginBottom: 18, animation: "fadeIn 0.3s ease" }}>
+          <TheorySummary sid={sid} topicId="_all" />
+        </div>
       )}
 
       {/* Topics / Sections */}

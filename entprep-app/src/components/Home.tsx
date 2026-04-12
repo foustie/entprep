@@ -206,7 +206,7 @@ export default function Home() {
 
       {/* 5. Full ENT + Social + Tools */}
       <Stagger index={4}>
-        <HomeNavCards isPremium={isPremium} />
+        <HomeNavCards />
       </Stagger>
 
       {/* 6. Conditional banners at bottom */}

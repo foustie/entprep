@@ -134,19 +134,20 @@ export default function Landing({ onStart, totalQ }: Props) {
         <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 24, maxWidth: 320, margin: '0 auto 24px' }}>
           Панель учителя: следите за прогрессом класса, находите слабые предметы, мотивируйте учеников.
         </p>
-        <a
-          href="https://wa.me/77473564629?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5!%20%D0%A5%D0%BE%D1%87%D1%83%20%D0%BF%D0%BE%D0%B4%D0%BA%D0%BB%D1%8E%D1%87%D0%B8%D1%82%D1%8C%20%D1%88%D0%BA%D0%BE%D0%BB%D1%83%20%D0%BA%20ENTprep"
-          target="_blank"
-          rel="noopener"
+        <button
+          onClick={onStart}
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
             padding: '14px 28px', borderRadius: 14,
             background: COLORS.teal, color: '#fff',
-            fontSize: 15, fontWeight: 700, textDecoration: 'none',
+            fontSize: 15, fontWeight: 700, border: 'none', cursor: 'pointer',
           }}
         >
-          <Users size={18} /> Подключить школу
-        </a>
+          <Users size={18} /> Создать класс бесплатно
+        </button>
+        <div style={{ marginTop: 12, fontSize: 12, color: 'var(--text-muted)' }}>
+          Нужна помощь? <a href="https://wa.me/77473564629?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5!%20%D0%A5%D0%BE%D1%87%D1%83%20%D0%BF%D0%BE%D0%B4%D0%BA%D0%BB%D1%8E%D1%87%D0%B8%D1%82%D1%8C%20%D1%88%D0%BA%D0%BE%D0%BB%D1%83%20%D0%BA%20ENTprep" target="_blank" rel="noopener" style={{ color: COLORS.teal, textDecoration: 'underline' }}>Напишите в WhatsApp</a>
+        </div>
       </section>
 
       {/* Footer */}

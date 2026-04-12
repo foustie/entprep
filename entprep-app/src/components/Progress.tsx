@@ -17,6 +17,7 @@ import { calcTotalXP, getLevel, LEVELS } from '../utils/xpHelpers';
 import ProgressBar from './ui/ProgressBar';
 import { useT } from '../locales';
 import Chip from './ui/Chip';
+import GrowthStats from './ui/GrowthStats';
 import type { TestResult } from '../types';
 
 function ActivityHeatmap({ hist }: { hist: TestResult[] }) {
@@ -442,6 +443,7 @@ export default function Progress() {
     {hist.length === 0 ? <EmptyState icon={FileText} description={t.progress.firstTestHint} />
       : <>
         <StatsOverview hist={hist} bp={bp} />
+        <GrowthStats hist={hist} />
         <ActivityHeatmap hist={hist} />
         <XPSection hist={hist} />
         <Badges hist={hist} subjects={subjects} />

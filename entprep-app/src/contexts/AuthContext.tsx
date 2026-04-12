@@ -75,6 +75,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!supabase) return;
+    // Force-refresh session when tab regains focus — getSession() only reads stale localStorage,
+    // refreshSession() actually exchanges refresh_token for new JWT on the server.
+    // This is the fix for "users getting kicked out after backgrounding tab".
+    const handleFocus = () => {
+      supabase!.auth.refreshSession().then(({ data: { session: s } }) => {
+        if (s?.user) setUser(s.user as AuthUser);
+      }).catch(() => {
+        // Refresh truly failed (refresh_token expired or revoked) — read whatever is left
+        supabase!.auth.getSession().then(({ data: { session: s } }) => {
+          setUser((s?.user as AuthUser) ?? null);
+        }).catch(() => {});
+      });
+    };
+    window.addEventListener('focus', handleFocus);
+
+    // Periodic heartbeat: refresh token every 30 min even if tab stays active.
+    // Supabase JWT defaults to 1h — refresh at 30min gives buffer.
+    const heartbeat = setInterval(() => {
+      supabase!.auth.refreshSession().then(({ data: { session: s } }) => {
+        // If refresh returned no session, user was logged out server-side
+        if (!s) setUser(null);
+      }).catch(() => {
+        // Network error or token truly dead — don't force logout (might be offline)
+      });
+    }, 30 * 60 * 1000);
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       let u = (session?.user as AuthUser) ?? null;
       // Fetch fresh user_metadata from server (session JWT may have stale metadata)
@@ -106,7 +132,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       if (event === 'SIGNED_IN') trackEvent('Login');
     });
-    return () => subscription.unsubscribe();
+    return () => { subscription.unsubscribe(); window.removeEventListener('focus', handleFocus); clearInterval(heartbeat); };
   }, [refreshProfile, checkSubscription]);
 
   const isAdmin = useMemo(() => !!user?.email && ADMIN_EMAILS.includes(user.email), [user]);

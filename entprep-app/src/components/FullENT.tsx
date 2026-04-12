@@ -233,6 +233,10 @@ export default function FullENT({ finish }: FullENTProps) {
     };
     return (
       <div style={{ padding: `0 var(--content-padding) ${isDesktop ? 40 : 100}px` }}>
+        {/* Loading message */}
+        <div style={{ textAlign: 'center', padding: '24px 0 16px', fontSize: 14, color: 'var(--text-secondary)', fontWeight: 600 }}>
+          Загружаем 120 вопросов...
+        </div>
         {/* Hero skeleton */}
         <div style={{ ...shimmerStyle, borderRadius: 22, height: 140, marginBottom: 20 }} />
         {/* Section card skeletons */}

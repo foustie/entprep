@@ -125,6 +125,12 @@ export default function Leaderboard() {
   }, [period, filter, scope, friendIds]);
 
   const ranked = useMemo<AggregatedUser[]>(() => {
+    // Server now returns pre-aggregated data with avgScore + testCount
+    // But handle both formats for backwards compatibility
+    if (rows.length > 0 && 'avgScore' in rows[0]) {
+      return (rows as unknown as AggregatedUser[]).slice(0, 50);
+    }
+    // Legacy: aggregate on client
     const map = new Map<string, { user_name: string; nickname?: string; avatar_url?: string; total: number; sum: number }>();
     for (const r of rows) {
       const entry = map.get(r.user_id);
@@ -140,7 +146,7 @@ export default function Leaderboard() {
         testCount: v.total,
         avgScore: Math.round(v.sum / v.total),
       }))
-      .sort((a, b) => b.testCount - a.testCount || b.avgScore - a.avgScore)
+      .sort((a, b) => b.avgScore - a.avgScore || b.testCount - a.testCount)
       .slice(0, 50);
   }, [rows]);
 

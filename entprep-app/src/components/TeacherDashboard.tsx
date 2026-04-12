@@ -4,7 +4,7 @@ import { SUBJECT_META } from '../config/subjects';
 import { useAuth } from '../contexts/AuthContext';
 import { API_BASE } from '../config/app';
 import { supabase } from '../config/supabase';
-import { ArrowLeft, Users, Copy, Check, BookOpen, TrendingUp, Clock, AlertTriangle, ChevronDown, Flame } from 'lucide-react';
+import { ArrowLeft, Users, Copy, Check, BookOpen, TrendingUp, Clock, AlertTriangle, ChevronDown, Flame, ArrowUp } from 'lucide-react';
 import Button from './ui/Button';
 
 interface StudentData {
@@ -20,7 +20,8 @@ interface StudentData {
   totalQuestions: number;
   avgScore: number;
   lastActive: string | null;
-  bySubject: Record<string, { tests: number; correct: number; total: number; avgScore: number }>;
+  bySubject: Record<string, { tests: number; correct: number; total: number; avgScore: number; firstAvg?: number; latestAvg?: number; growth?: number }>;
+  growth: number | null;
 }
 
 interface ClassData {
@@ -277,6 +278,39 @@ export default function TeacherDashboard({ onBack }: Props) {
         </div>
       </div>
 
+      {/* Class growth */}
+      {(() => {
+        const withGrowth = students.filter(s => s.growth !== null && s.totalTests >= 3);
+        if (withGrowth.length === 0) return null;
+        const improved = withGrowth.filter(s => s.growth! > 0);
+        const avgGrowth = Math.round(withGrowth.reduce((s, st) => s + (st.growth || 0), 0) / withGrowth.length);
+        return (
+          <div style={{ ...CARD_COMPACT, marginBottom: 16, padding: '14px 14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+              <TrendingUp size={14} color={avgGrowth > 0 ? '#58CC02' : COLORS.amber} />
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>Рост класса</span>
+            </div>
+            <div style={{ display: 'flex', gap: 16, marginBottom: 8 }}>
+              <div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: avgGrowth > 0 ? '#58CC02' : 'var(--text-muted)' }}>
+                  {avgGrowth > 0 ? '+' : ''}{avgGrowth}%
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>средний рост</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: '#58CC02' }}>
+                  {improved.length}/{withGrowth.length}
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>улучшили балл</div>
+              </div>
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
+              Сравнение первых 3 тестов с последними 3
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Weak subjects */}
       {weakSubjects.length > 0 && (
         <div style={{ ...CARD_COMPACT, marginBottom: 16, padding: '14px 14px' }}>
@@ -358,13 +392,20 @@ export default function TeacherDashboard({ onBack }: Props) {
                   </div>
                 </div>
 
-                {/* Score */}
+                {/* Score + growth */}
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
                   <div style={{ fontSize: 18, fontWeight: 800, color: tests > 0 ? scoreColor(score) : 'var(--text-muted)' }}>
                     {tests > 0 ? `${score}%` : '—'}
                   </div>
-                  {st.streak > 0 && (
-                    <div style={{ fontSize: 10, color: COLORS.amber, display: 'flex', alignItems: 'center', gap: 2, justifyContent: 'flex-end' }}><Flame size={10} /> {st.streak}</div>
+                  {st.growth !== null && st.growth !== 0 && (
+                    <div style={{
+                      fontSize: 10, fontWeight: 600,
+                      color: st.growth > 0 ? '#58CC02' : 'var(--text-muted)',
+                      display: 'flex', alignItems: 'center', gap: 2, justifyContent: 'flex-end',
+                    }}>
+                      {st.growth > 0 && <ArrowUp size={10} />}
+                      {st.growth > 0 ? `+${st.growth}%` : `${st.growth}%`}
+                    </div>
                   )}
                 </div>
               </div>

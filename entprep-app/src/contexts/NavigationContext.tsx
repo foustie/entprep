@@ -79,6 +79,10 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
       setScreen(SCREENS.REVIEW);
     } else if (target === 'teacher') {
       setScreen(SCREENS.TEACHER);
+    } else if (target === 'settings' || target === 'set') {
+      setScreen(SCREENS.SETTINGS);
+    } else if (target === 'prog' || target === 'progress') {
+      setScreen(SCREENS.PROGRESS);
     } else {
       setScreen(SCREENS.HOME);
     }
@@ -102,7 +106,8 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
 
   const changeTab = useCallback((t: string) => {
     setTab(t);
-    if (t === 'prog') setScreen(SCREENS.PROGRESS);
+    if (t === 'profile_tab') setScreen('profile_tab');
+    else if (t === 'prog') setScreen(SCREENS.PROGRESS);
     else if (t === 'set') setScreen(SCREENS.SETTINGS);
     else if (t === 'adaptive') setScreen(SCREENS.ADAPTIVE);
     else setScreen(SCREENS.HOME);

@@ -68,6 +68,7 @@ export interface QuestionDetail {
   _su?: string;
   tp?: string;  // topic (section) ID from question._topic
   stp?: string; // subtopic ID from question._subtopic
+  picked?: number | number[] | Record<number, number> | null; // which answer(s) the user selected — gold data for AI
 }
 
 export interface TestResult {

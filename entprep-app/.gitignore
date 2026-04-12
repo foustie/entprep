@@ -49,3 +49,18 @@ translations/
 
 # Vercel (legacy)
 .vercel
+
+# Large binary files (textbooks ~300MB)
+scripts/golden/textbooks/*.epub
+scripts/golden/textbooks/*.pdf
+scripts/golden/textbooks/algebra_11/
+scripts/golden/textbooks/fizika_11_atamura/
+ent-2026-specification.pdf
+
+# Supabase temp
+supabase/.temp/
+
+# Transient notes
+scraped-ent-questions.md
+test-summary-paleolith.md
+PLAN.md

@@ -35,7 +35,7 @@ export const DARK: ThemePalette = {
   'skeleton-bg': 'rgba(255,255,255,0.06)',
   'shadow-sm': '0 2px 8px rgba(0,0,0,0.25)',
   'shadow-md': '0 4px 16px rgba(0,0,0,0.3)',
-  'shadow-glow': '0 4px 16px rgba(255,107,53,0.12)',
+  'shadow-glow': '0 4px 16px rgba(196,100,60,0.12)',
   'color-scheme': 'dark',
   'theme-color': '#0C0C14',
 };
@@ -75,7 +75,7 @@ export const LIGHT: ThemePalette = {
   'skeleton-bg': 'rgba(0,0,0,0.06)',
   'shadow-sm': '0 2px 8px rgba(0,0,0,0.04)',
   'shadow-md': '0 4px 16px rgba(0,0,0,0.06)',
-  'shadow-glow': '0 4px 16px rgba(255,107,53,0.06)',
+  'shadow-glow': '0 4px 16px rgba(196,100,60,0.06)',
   'color-scheme': 'light',
   'theme-color': '#FAFAF8',
 };

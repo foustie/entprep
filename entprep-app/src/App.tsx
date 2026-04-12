@@ -1,6 +1,6 @@
 import React, { Suspense, useEffect, useRef, useState } from "react";
 import { TOTAL_Q } from './config/questionPools';
-import { prefetchCounts, getTotalQ } from './utils/questionStore';
+import { prefetchCounts, getTotalQ, prefetchSubjects } from './utils/questionStore';
 import { GLOBAL_STYLES, LAYOUT, COLORS } from './constants/styles';
 import { DARK, LIGHT, themeToCss } from './constants/themes';
 import { SCREENS } from './constants/screens';
@@ -12,13 +12,15 @@ import { ToastProvider, useToast } from './contexts/ToastContext';
 import { useT } from './locales';
 import ErrorBoundary from './components/ErrorBoundary';
 import LoadingSpinner from './components/ui/LoadingSpinner';
-import { Home as HomeIcon, Brain, BarChart3, Settings as SettingsIcon, MessageCircle } from 'lucide-react';
+import { Home as HomeIcon, User } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import ProfileSelect from './components/ProfileSelect';
-import Home from './components/Home';
+import CoachHome from './components/CoachHome';
+import ProfileTab from './components/ProfileTab';
 import Progress from './components/Progress';
 import Settings from './components/Settings';
 import Adaptive from './components/Adaptive';
+import ArenaFab from './components/ArenaFab';
 import SubjectDetail from './components/SubjectDetail';
 import Challenge from './components/Challenge';
 import InstallPrompt from './components/InstallPrompt';
@@ -69,15 +71,13 @@ const TeacherDashboard = React.lazy(() => import('./components/TeacherDashboard'
 
 interface NavItem {
   id: string;
-  key: 'home' | 'adaptive' | 'progress' | 'settings';
+  key: 'home' | 'profile';
   Icon: LucideIcon;
 }
 
 const NAV_ITEMS: NavItem[] = [
   { id: "home", key: "home", Icon: HomeIcon },
-  { id: "adaptive", key: "adaptive", Icon: Brain },
-  { id: "prog", key: "progress", Icon: BarChart3 },
-  { id: "set", key: "settings", Icon: SettingsIcon },
+  { id: "profile_tab", key: "profile", Icon: User },
 ];
 
 function AppContent() {
@@ -100,7 +100,15 @@ function AppContent() {
   }, []);
 
   const [totalQ, setTotalQ] = useState(TOTAL_Q);
-  useEffect(() => { prefetchCounts().then(ok => { if (ok) setTotalQ(getTotalQ()); }); }, []);
+  useEffect(() => {
+    prefetchCounts().then(ok => { if (ok) setTotalQ(getTotalQ()); });
+    // Background prefetch all ENT subjects so Full ENT loads instantly
+    setTimeout(() => prefetchSubjects(['math', 'reading', 'history']), 1000);
+    setTimeout(() => {
+      const profileSubs = JSON.parse(localStorage.getItem('entprep_profile') || '[]');
+      if (profileSubs.length > 0) prefetchSubjects(profileSubs);
+    }, 3000);
+  }, []);
 
   // Persist ?ref= and UTM params for users who haven't signed in yet
   useEffect(() => {
@@ -128,9 +136,13 @@ function AppContent() {
   }, []);
 
   const prevSyncError = useRef<string | null>(null);
+  const mountTime = useRef(Date.now());
   useEffect(() => {
     if (syncError && syncError !== prevSyncError.current) {
-      toast.warning(tr.auth.syncFailed);
+      // Suppress sync error toast in first 5s — auth token may not be restored yet
+      if (Date.now() - mountTime.current > 5000) {
+        toast.warning(tr.auth.syncFailed);
+      }
     }
     prevSyncError.current = syncError;
   }, [syncError]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -157,7 +169,7 @@ function AppContent() {
     }
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleFinish = (result: TestResult) => { addHist(result); addSrFromResult(result); if (user) { submitLeaderboard(result); } goHome(); };
+  const handleFinish = (result: TestResult) => { addHist(result); addSrFromResult(result); if (user) { submitLeaderboard(result); } };
   const handleReviewFinish = (updated: SRCard[]) => {
     setSrCards(prev => {
       const map = new Map(prev.map(c => [`${c.sid}:${c.oi}`, c]));
@@ -169,13 +181,8 @@ function AppContent() {
   const handleConfirmProfile = (sel: string[], goal?: import('./types/index').GoalSettings) => {
     const isFirstTime = hist.length === 0;
     confirmProfile(sel, goal);
-    if (isFirstTime) {
-      // First-time users: auto-navigate to a short reading test
-      nav('test', 'reading');
-      setTimeout(() => toast.success((tr.onboarding as Record<string, string>).tryFirst || 'Попробуй свой первый тест!'), 500);
-    } else {
-      goHome();
-    }
+    // Always go home — Andy will invite user to first test via speech bubble
+    goHome();
   };
   const handleResetProfile = () => { resetProfile(); setScreen(SCREENS.PROFILE); setTab(SCREENS.HOME); };
 
@@ -209,7 +216,8 @@ function AppContent() {
       <main role="main" key={screen} style={{ paddingTop: 10, paddingBottom: !isDesktop && showNav ? 80 : 0, animation: "screenIn 0.35s cubic-bezier(0.16,1,0.3,1)", willChange: "opacity,transform" }}>
         {needProfile && <ProfileSelect onConfirm={handleConfirmProfile} />}
         {!needProfile && screen === SCREENS.PROFILE && <ProfileSelect onConfirm={handleConfirmProfile} />}
-        {!needProfile && screen === SCREENS.HOME && <Home />}
+        {!needProfile && screen === SCREENS.HOME && <CoachHome />}
+        {!needProfile && screen === 'profile_tab' && <ProfileTab />}
         {!needProfile && screen === SCREENS.SUBJECT && curSub && (
           <ErrorBoundary key="subject" title={tr.errors.subjectTitle} message={tr.errors.subjectMessage} onRecover={goHome}>
             <SubjectDetail sid={curSub} />
@@ -336,7 +344,6 @@ function AppContent() {
               <div style={{ fontSize: 15, fontWeight: 800, fontFamily: "'Unbounded',sans-serif" }}>
                 <span style={{ color: COLORS.accent }}>ENT</span>
                 <span style={{ color: COLORS.teal }}>prep</span>
-                <span style={{ fontSize: 9, color: "var(--text-muted)", marginLeft: 6 }}>{Math.floor(totalQ / 1000)}K+</span>
               </div>
             </header>
             {mainContent}
@@ -348,7 +355,6 @@ function AppContent() {
             <div style={{ fontSize: 15, fontWeight: 800, fontFamily: "'Unbounded',sans-serif" }}>
               <span style={{ color: COLORS.accent }}>ENT</span>
               <span style={{ color: COLORS.teal }}>prep</span>
-              <span style={{ fontSize: 9, color: "var(--text-muted)", marginLeft: 6 }}>{Math.floor(totalQ / 1000)}K+</span>
             </div>
           </header>
           {mainContent}
@@ -359,25 +365,8 @@ function AppContent() {
       <UpdatePrompt />
       <PushPrompt />
       <PaywallModal open={paywallReason !== null} reason={paywallReason} onClose={closePaywall} />
-      {/* WhatsApp floating button — mobile only */}
-      {bp === 'mobile' && (
-        <a
-          href="https://wa.me/77473564629?text=%D0%9F%D1%80%D0%B8%D0%B2%D0%B5%D1%82!%20%D0%A5%D0%BE%D1%87%D1%83%20%D1%83%D0%B7%D0%BD%D0%B0%D1%82%D1%8C%20%D0%BF%D1%80%D0%BE%20ENTprep"
-          target="_blank"
-          rel="noopener"
-          aria-label="WhatsApp"
-          style={{
-            position: 'fixed', bottom: showNav ? 82 : 20, right: 16, zIndex: 90,
-            width: 48, height: 48, borderRadius: 14,
-            background: '#25D366', border: 'none',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 4px 16px rgba(37,211,102,0.3)',
-            textDecoration: 'none',
-          }}
-        >
-          <MessageCircle size={22} color="#fff" fill="#fff" />
-        </a>
-      )}
+      {/* Arena/Duel FAB */}
+      {showNav && <ArenaFab bottom={showNav ? 82 : 20} />}
     </div>
   );
 }

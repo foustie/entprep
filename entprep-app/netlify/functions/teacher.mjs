@@ -111,11 +111,29 @@ export default async function handler(req) {
             bySubject[h.su].total += h.to || 0;
             bySubject[h.su].scores.push(h.sc || 0);
           }
-          // Average scores per subject
+          // Average scores per subject + growth (first 3 vs latest 3)
           for (const sid of Object.keys(bySubject)) {
             const s = bySubject[sid];
             s.avgScore = Math.round(s.scores.reduce((a, b) => a + b, 0) / s.scores.length);
+            if (s.scores.length >= 3) {
+              const first3 = s.scores.slice(0, 3);
+              const latest3 = s.scores.slice(-3);
+              s.firstAvg = Math.round(first3.reduce((a, b) => a + b, 0) / first3.length);
+              s.latestAvg = Math.round(latest3.reduce((a, b) => a + b, 0) / latest3.length);
+              s.growth = s.latestAvg - s.firstAvg;
+            }
             delete s.scores;
+          }
+
+          // Overall growth: first 3 tests avg vs latest 3
+          let growth = null;
+          if (hist.length >= 3) {
+            const sorted = [...hist].sort((a, b) => (a.dt || '').localeCompare(b.dt || ''));
+            const first3 = sorted.slice(0, 3);
+            const latest3 = sorted.slice(-3);
+            const firstAvg = Math.round(first3.reduce((s, h) => s + (h.sc || 0), 0) / first3.length);
+            const latestAvg = Math.round(latest3.reduce((s, h) => s + (h.sc || 0), 0) / latest3.length);
+            growth = latestAvg - firstAvg;
           }
 
           return {
@@ -132,6 +150,7 @@ export default async function handler(req) {
             avgScore,
             lastActive,
             bySubject,
+            growth,
           };
         });
 

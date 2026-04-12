@@ -42,7 +42,7 @@ export default async function handler(req) {
     // Check if request is authenticated (for user_id stripping)
     const authUser = await verifyAuth(req).catch(() => null);
 
-    let query = "select=id,user_id,user_name,subject,score,created_at&order=created_at.desc&limit=500";
+    let query = "select=id,user_id,user_name,subject,score,created_at&order=created_at.desc&limit=5000";
 
     if (period !== "all") {
       const d = new Date();
@@ -72,8 +72,20 @@ export default async function handler(req) {
       }
       const data = await res.json();
 
+      // Aggregate per user on server (prevents one user flooding the list)
+      const userMap = new Map();
+      for (const r of data) {
+        const entry = userMap.get(r.user_id);
+        if (entry) { entry.total++; entry.sum += r.score; }
+        else userMap.set(r.user_id, { user_id: r.user_id, user_name: r.user_name, total: 1, sum: r.score });
+      }
+      const aggregated = Array.from(userMap.values())
+        .map(u => ({ ...u, avgScore: Math.round(u.sum / u.total), testCount: u.total }))
+        .sort((a, b) => b.avgScore - a.avgScore || b.testCount - a.testCount)
+        .slice(0, 50);
+
       // Enrich with nicknames from profiles table
-      const uids = [...new Set(data.map(r => r.user_id))];
+      const uids = aggregated.map(r => r.user_id);
       if (uids.length > 0) {
         try {
           const pRes = await fetch(
@@ -83,7 +95,7 @@ export default async function handler(req) {
           if (pRes.ok) {
             const profiles = await pRes.json();
             const pm = new Map(profiles.map(p => [p.id, p]));
-            for (const row of data) {
+            for (const row of aggregated) {
               const p = pm.get(row.user_id);
               if (p) {
                 row.nickname = p.nickname;
@@ -98,12 +110,12 @@ export default async function handler(req) {
 
       // Strip user_id from unauthenticated responses
       if (!authUser) {
-        for (const row of data) {
+        for (const row of aggregated) {
           delete row.user_id;
         }
       }
 
-      return Response.json(data, { headers: CORS_HEADERS });
+      return Response.json(aggregated, { headers: CORS_HEADERS });
     } catch (err) {
       console.error("LB GET fetch error:", err);
       return Response.json({ error: "Internal server error" }, { status: 500, headers: CORS_HEADERS });
