@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { SUBS, ALL_PROFILES } from '../config/questionPools';
 import { TOPIC_MAP } from '../config/topics';
 import { CARD_COMPACT, TYPE, COLORS } from '../constants/styles';
@@ -121,8 +121,9 @@ export default function TheorySummary({ sid, topicId }: Props) {
                 onClick={() => nav('test', sid, selectedTopic)}
                 style={{
                   flex: 1, padding: '14px', borderRadius: 12,
-                  background: `linear-gradient(135deg,${sub?.color || COLORS.teal},${sub?.color || COLORS.teal}dd)`,
-                  color: '#fff', border: 'none', fontSize: 13, fontWeight: 700,
+                  background: sub?.color || COLORS.streak,
+                  color: '#fff', border: '2px solid #0F0F10', borderBottom: '4px solid #0F0F10',
+                  fontSize: 13, fontWeight: 700,
                   cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 }}
               >
@@ -131,7 +132,7 @@ export default function TheorySummary({ sid, topicId }: Props) {
               </button>
               <a
                 href={`https://wa.me/77473564629?text=${encodeURIComponent(`Конспект: ${name}. Предложение: `)}`}
-                target="_blank" rel="noopener"
+                target="_blank" rel="noopener noreferrer"
                 style={{
                   padding: '14px 18px', borderRadius: 12,
                   background: 'var(--bg-card)', border: '1px solid var(--border-light)',

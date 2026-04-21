@@ -1,4 +1,3 @@
-import React from 'react';
 import { COLORS, scoreColor } from '../../constants/styles';
 
 interface ChartDataPoint {

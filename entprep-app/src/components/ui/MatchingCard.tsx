@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { Check, X } from 'lucide-react';
 import { COLORS } from '../../constants/styles';
 import { shuffleArray } from '../../utils/questionHelpers';
@@ -26,7 +26,7 @@ export default function MatchingCard({
   // Shuffled right-side indices (memoized so they don't change on re-render)
   const shuffledRightIndices = useMemo(
     () => shuffleArray(Array.from({ length: pairs.length }, (_, i) => i)),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
     [pairs.length],
   );
 
@@ -56,15 +56,20 @@ export default function MatchingCard({
       }
       return;
     }
-    onConfirm(mapping);
+    // Convert shuffled indices to real (original) indices for correct scoring
+    const realMapping: Record<number, number> = {};
+    for (const key of Object.keys(mapping)) {
+      const leftIdx = Number(key);
+      realMapping[leftIdx] = shuffledRightIndices[mapping[leftIdx]];
+    }
+    onConfirm(realMapping);
   };
 
-  // For results: check each pair
+  // For results: check each pair (userAnswer now contains real indices)
   const getResultForPair = (leftIdx: number) => {
     if (!showResult || !userAnswer) return null;
-    const pickedShuffledIdx = userAnswer[leftIdx];
-    if (pickedShuffledIdx === undefined) return false;
-    const pickedRealIdx = shuffledRightIndices[pickedShuffledIdx];
+    const pickedRealIdx = userAnswer[leftIdx];
+    if (pickedRealIdx === undefined) return false;
     return pickedRealIdx === leftIdx;
   };
 
@@ -80,7 +85,7 @@ export default function MatchingCard({
       }}>
         <span style={{
           padding: '3px 8px', borderRadius: 8,
-          background: 'rgba(26,154,140,0.1)', color: COLORS.teal,
+          background: 'rgba(255,90,54,0.1)', color: COLORS.teal,
           fontWeight: 600, fontSize: 10,
         }}>
           {t.test.matching}
@@ -123,7 +128,7 @@ export default function MatchingCard({
                 border: showResult
                   ? `1px solid ${pairCorrect ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`
                   : isMissing ? '1px solid rgba(245,158,11,0.4)'
-                  : isFilled ? '1px solid rgba(26,154,140,0.2)'
+                  : isFilled ? '1px solid rgba(255,90,54,0.2)'
                   : '1px solid var(--border)',
                 borderRadius: 12,
                 transition: 'all 0.2s',
@@ -138,7 +143,7 @@ export default function MatchingCard({
                 <span style={{
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                   width: 22, height: 22, borderRadius: 6,
-                  background: isMissing ? 'rgba(245,158,11,0.15)' : 'rgba(26,154,140,0.1)',
+                  background: isMissing ? 'rgba(245,158,11,0.15)' : 'rgba(255,90,54,0.1)',
                   color: isMissing ? COLORS.amber : COLORS.teal,
                   fontSize: 10, fontWeight: 700, marginRight: 8,
                   flexShrink: 0,
@@ -171,7 +176,7 @@ export default function MatchingCard({
                       fontWeight: 500,
                     }}>
                       {currentVal !== undefined
-                        ? pairs[shuffledRightIndices[currentVal]]?.[1]
+                        ? pairs[currentVal]?.[1]
                         : '—'}
                     </span>
                     {!pairCorrect && (
@@ -190,7 +195,7 @@ export default function MatchingCard({
                       width: '100%', padding: '9px 10px',
                       background: isMissing ? 'rgba(245,158,11,0.08)' : 'var(--bg-subtle)',
                       border: isMissing ? '1px solid rgba(245,158,11,0.5)'
-                        : isFilled ? '1px solid rgba(26,154,140,0.25)'
+                        : isFilled ? '1px solid rgba(255,90,54,0.25)'
                         : '1px solid var(--border)',
                       borderRadius: 8,
                       color: isFilled ? 'var(--text)' : 'var(--text-muted)',
@@ -225,7 +230,7 @@ export default function MatchingCard({
             border: 'none', borderRadius: 13,
             fontSize: 14, fontWeight: 700,
             cursor: 'pointer',
-            boxShadow: allFilled ? '0 4px 20px rgba(26,154,140,0.25)' : 'none',
+            boxShadow: allFilled ? '0 4px 20px rgba(255,90,54,0.25)' : 'none',
             transition: 'all 0.2s',
           }}
         >

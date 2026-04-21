@@ -38,6 +38,16 @@ registerRoute(
   })
 );
 
+// CDN question/summary JSON — network-first so deploys with fixed answers reach users fast
+registerRoute(
+  ({ url }) => url.origin === self.location.origin && url.pathname.startsWith('/data/') && url.pathname.endsWith('.json'),
+  new NetworkFirst({
+    cacheName: 'cdn-data',
+    networkTimeoutSeconds: 3,
+    plugins: [new ExpirationPlugin({ maxEntries: 30, maxAgeSeconds: 86400 })],
+  })
+);
+
 // ── Push notification handler ────────────────────────────────────────────
 self.addEventListener('push', (event) => {
   if (!event.data) return;

@@ -1,11 +1,13 @@
 // Fast question endpoint: returns N random questions for a subject
 // Used as fallback when client cache is empty (first visit, slow internet)
 
-import { CORS_HEADERS, corsResponse } from "./utils/shared.mjs";
+import { CORS_HEADERS, corsResponse, verifyAuth, createRateLimiter, rateLimitResponse } from "./utils/shared.mjs";
 import { VALID_SUBJECTS } from "./utils/constants.mjs";
 
 const SB_URL = process.env.VITE_SUPABASE_URL;
 const SB_KEY = process.env.SUPABASE_SERVICE_KEY;
+
+const rateLimit = createRateLimiter("questions", { max: 60, windowSec: 60 });
 
 export default async function handler(req) {
   if (req.method === "OPTIONS") return corsResponse();
@@ -15,6 +17,13 @@ export default async function handler(req) {
   if (!SB_URL || !SB_KEY) {
     return Response.json({ error: "Server misconfigured" }, { status: 500, headers: CORS_HEADERS });
   }
+
+  // Auth required — prevent answer scraping
+  const user = await verifyAuth(req);
+  if (!user) return Response.json({ error: "Unauthorized" }, { status: 401, headers: CORS_HEADERS });
+
+  const wait = rateLimit(user.id);
+  if (wait) return rateLimitResponse(wait);
 
   const url = new URL(req.url, `https://${req.headers.get("host") || "localhost"}`);
   const subject = url.searchParams.get("subject");

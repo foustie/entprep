@@ -43,7 +43,8 @@ async function fetchSummary(sid, topicId, lang) {
 
 function buildSystemPrompt(profile, summary, lang, mode) {
   const isKk = lang === 'kk';
-  const weakList = (profile?.weakTopics || []).slice(0, 5).map(w => `${w.name} (${w.pct}%)`).join(', ');
+  const sanitize = (s) => String(s || '').replace(/[\n\r`]/g, ' ').slice(0, 100);
+  const weakList = (profile?.weakTopics || []).slice(0, 5).map(w => `${sanitize(w.name)} (${Math.round(w.pct || 0)}%)`).join(', ');
 
   const modeInstructions = {
     chat: 'Веди свободную беседу.',
@@ -58,7 +59,7 @@ function buildSystemPrompt(profile, summary, lang, mode) {
 
 СТИЛЬ: Тёплый, терпеливый. Сократовский метод — СПРАШИВАЙ, не давай готовых ответов.
 ${weakList ? `Слабые темы ученика: ${weakList}` : ''}
-${profile?.prediction ? `Прогноз: ${profile.prediction}/140` : ''}
+${profile?.prediction ? `Прогноз: ${Math.round(Number(profile.prediction) || 0)}/140` : ''}
 ${summary ? `\nКОНСПЕКТ:\n${summary}` : ''}
 
 ${modeInstructions[mode] || modeInstructions.chat}

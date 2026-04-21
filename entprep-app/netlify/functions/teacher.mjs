@@ -95,12 +95,47 @@ export default async function handler(req) {
           const hist = data?.hist || [];
           const member = members.find(m => m.student_id === sid);
 
-          // Compute stats from history
-          const totalTests = hist.length;
+          // Compute stats from history (exclude fullent simulations)
+          const totalTests = hist.filter(h => h.type !== 'fullent').length;
           const totalCorrect = hist.reduce((s, h) => s + (h.co || 0), 0);
           const totalQuestions = hist.reduce((s, h) => s + (h.to || 0), 0);
           const avgScore = totalTests > 0 ? Math.round(hist.reduce((s, h) => s + (h.sc || 0), 0) / totalTests) : 0;
-          const lastActive = hist.length > 0 ? hist.reduce((latest, h) => h.dt > latest ? h.dt : latest, hist[0].dt) : null;
+          const lastActive = hist.length > 0 ? hist.reduce((latest, h) => (h.dt || '') > (latest || '') ? h.dt : latest, hist[0]?.dt || null) : null;
+
+          // Sort hist chronologically for correct slicing
+          const sortedHist = [...hist].sort((a, b) => (a.dt || '').localeCompare(b.dt || ''));
+
+          // Predicted ENT score (weighted average of last 15 tests → ×1.4)
+          const regular = sortedHist.filter(t => t.type !== 'fullent' && t.sc != null);
+          let predictedScore = null;
+          if (regular.length >= 3) {
+            const recent = regular.slice(-15);
+            let wSum = 0, wTot = 0;
+            for (let i = 0; i < recent.length; i++) {
+              const w = 1 + (i / recent.length);
+              wSum += (recent[i].sc || 0) * w;
+              wTot += w;
+            }
+            predictedScore = Math.round((wSum / wTot) * 1.4);
+          }
+
+          // Topic-level weak spots (from last 20 tests with qd, sorted)
+          const topicMap = {};
+          const recentWithQd = sortedHist.filter(h => h.qd?.length).slice(-20);
+          for (const h of recentWithQd) {
+            for (const q of h.qd) {
+              if (!q.tp) continue;
+              if (!topicMap[q.tp]) topicMap[q.tp] = { correct: 0, total: 0 };
+              topicMap[q.tp].total++;
+              if (q.ok) topicMap[q.tp].correct++;
+            }
+          }
+          // Bottom 5 weakest topics (min 3 questions attempted)
+          const weakTopics = Object.entries(topicMap)
+            .filter(([, v]) => v.total >= 3)
+            .map(([tp, v]) => ({ tp, correct: v.correct, total: v.total, pct: Math.round((v.correct / v.total) * 100) }))
+            .sort((a, b) => a.pct - b.pct)
+            .slice(0, 5);
 
           // Per-subject breakdown
           const bySubject = {};
@@ -112,8 +147,8 @@ export default async function handler(req) {
             bySubject[h.su].scores.push(h.sc || 0);
           }
           // Average scores per subject + growth (first 3 vs latest 3)
-          for (const sid of Object.keys(bySubject)) {
-            const s = bySubject[sid];
+          for (const subKey of Object.keys(bySubject)) {
+            const s = bySubject[subKey];
             s.avgScore = Math.round(s.scores.reduce((a, b) => a + b, 0) / s.scores.length);
             if (s.scores.length >= 3) {
               const first3 = s.scores.slice(0, 3);
@@ -151,6 +186,8 @@ export default async function handler(req) {
             lastActive,
             bySubject,
             growth,
+            predictedScore,
+            weakTopics,
           };
         });
 

@@ -9,16 +9,17 @@ import MultipleAnswerCard from './ui/MultipleAnswerCard';
 import MatchingCard from './ui/MatchingCard';
 import BlockIndicator from './ui/BlockIndicator';
 import PointsBadge from './ui/PointsBadge';
-import { CARD, CARD_COMPACT, TYPE, COLORS } from '../constants/styles';
+import { CARD, CARD_COMPACT, TYPE, COLORS, FF } from '../constants/styles';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useApp } from '../contexts/AppContext';
 import { useNav } from '../contexts/NavigationContext';
 import { formatTimeHMS } from '../utils/formatters';
-import TestSkeleton from './ui/TestSkeleton';
 import BackButton from './ui/BackButton';
 import ProgressBar from './ui/ProgressBar';
-import { GraduationCap, AlertTriangle, Share2, Check, X, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Lightbulb, Grid3X3, Play, Flag, Pause, BookOpen, Crown, WifiOff } from 'lucide-react';
-import ShareModal from './ShareModal';
+import { GraduationCap, AlertTriangle, Share2, Check, X, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Lightbulb, Grid3X3, Play, Flag, Pause, BookOpen, WifiOff } from 'lucide-react';
+import SubjectIcon from './ui/SubjectIcon';
+import { SUBJECT_META } from '../config/subjects';
+// ShareModal removed — dead feature
 import ReportSheet from './ui/ReportSheet';
 import { supabase } from '../config/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -29,7 +30,7 @@ import { getSingleCorrect, getQType } from '../types';
 import { calcTestXP } from '../utils/xpHelpers';
 import ScoreRing from './ui/ScoreRing';
 import { useT } from '../locales';
-import { canUseFreeFullEnt, useFreeFullEnt } from '../utils/aiLimits';
+// FullENT is free unlimited — no AI limits needed
 
 interface FullENTProps {
   finish: (result: TestResult) => void;
@@ -82,10 +83,11 @@ export default function FullENT({ finish }: FullENTProps) {
       { sid: prof[0], label: (t.subjects as Record<string, string>)[prof[0]] || p1?.name || prof[0], icon: p1?.icon || "\uD83D\uDD2C", cnt: ENT_CONFIG.profileCnt, maxPts: calcMaxPts(prof0Qs), threshold: ENT_CONFIG.profileThreshold, ptsPerQ: ENT_CONFIG.profilePtsPerQ, qs: prof0Qs },
       { sid: prof[1], label: (t.subjects as Record<string, string>)[prof[1]] || p2?.name || prof[1], icon: p2?.icon || "\uD83D\uDCBB", cnt: ENT_CONFIG.profileCnt, maxPts: calcMaxPts(prof1Qs), threshold: ENT_CONFIG.profileThreshold, ptsPerQ: ENT_CONFIG.profilePtsPerQ, qs: prof1Qs },
     ];
+    if (secs.some(s => s.qs.length === 0)) { toast.error('Недостаточно вопросов для выбранного профиля'); goHome(); return; }
     setSections(secs);
     } catch (err) { console.error('FullENT load error:', err); toast.error('Не удалось загрузить вопросы. Попробуйте позже.'); goHome(); }
     finally { setSectionsLoading(false); }
-  })(); return () => { cancelled = true } }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  })(); return () => { cancelled = true; if (paywallTimerRef.current) clearTimeout(paywallTimerRef.current); } }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [curSec, setCurSec] = useState(0);
   const [curQ, setCurQ] = useState(0);
@@ -101,23 +103,27 @@ export default function FullENT({ finish }: FullENTProps) {
   const [offline, setOffline] = useState(false);
   const [passageOpen, setPassageOpen] = useState(true);
   const [focused, setFocused] = useState(-1);
+  const [showFinishConfirm, setShowFinishConfirm] = useState(false);
   // Reset passage to open when navigating to a new question
   useEffect(() => { setPassageOpen(true); }, [curSec, curQ]);
   // Reset focus when question changes
   useEffect(() => { setFocused(-1); }, [curSec, curQ]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const paywallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (phase !== "test" || paused || offline) { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; } return; }
-    timerRef.current = setInterval(() => setTimeLeft(p => { if (p <= 1) { clearInterval(timerRef.current!); setPhase("results"); return 0; } return p - 1; }), 1000);
+    // Always clear previous interval first to prevent double-tick
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    if (phase !== "test" || paused || offline) return;
+    timerRef.current = setInterval(() => setTimeLeft(p => { if (p <= 1) { clearInterval(timerRef.current!); timerRef.current = null; finishENT(); return 0; } return p - 1; }), 1000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [phase, paused, offline]);
 
   // Pause timer when offline
   useEffect(() => {
     if (phase !== "test") return;
-    const goOffline = () => { setOffline(true); toast.warning((t.test as Record<string, string>).connectionLost); };
-    const goOnline = () => { setOffline(false); toast.success((t.test as Record<string, string>).connectionRestored); };
+    const goOffline = () => { setOffline(true); toast.warning((t.test as unknown as Record<string, string>).connectionLost); };
+    const goOnline = () => { setOffline(false); toast.success((t.test as unknown as Record<string, string>).connectionRestored); };
     window.addEventListener('offline', goOffline);
     window.addEventListener('online', goOnline);
     return () => { window.removeEventListener('offline', goOffline); window.removeEventListener('online', goOnline); };
@@ -154,12 +160,10 @@ export default function FullENT({ finish }: FullENTProps) {
   const sec = sections?.[curSec];
   const q = sec?.qs[curQ];
   const secAnswers = answers[curSec] || {};
-  const answered = Object.keys(secAnswers).length;
 
   const sel = (idx: number) => { if (getQType(q!) !== 'single') return; setAnswers(p => ({ ...p, [curSec]: { ...(p[curSec] || {}), [curQ]: idx } })); };
   const confirmMulti = (selected: number[]) => { setAnswers(p => ({ ...p, [curSec]: { ...(p[curSec] || {}), [curQ]: selected } })); };
   const confirmMatch = (mapping: Record<number, number>) => { setAnswers(p => ({ ...p, [curSec]: { ...(p[curSec] || {}), [curQ]: mapping } })); };
-  const clearAnswer = () => { setAnswers(p => { const copy = { ...p, [curSec]: { ...(p[curSec] || {}) } }; delete copy[curSec][curQ]; return copy; }); };
   const [secPos, setSecPos] = useState<Record<number, number>>({}); // remember last question per section
   const navigateTo = (s: number, qi: number) => { setSecPos(p => ({ ...p, [curSec]: curQ })); setCurSec(s); setCurQ(qi); setShowGrid(false); };
   const nxt = () => { if (curQ < sec!.qs.length - 1) navigateTo(curSec, curQ + 1); else if (curSec < sections!.length - 1) navigateTo(curSec + 1, secPos[curSec + 1] || 0); else finishENT(); };
@@ -167,7 +171,17 @@ export default function FullENT({ finish }: FullENTProps) {
   const goSec = (i: number) => { navigateTo(i, secPos[i] || 0); };
   const goQ = (i: number) => { navigateTo(curSec, i); };
 
-  const finishENT = () => { if (timerRef.current) clearInterval(timerRef.current); setPhase("results"); const r = calcResults(); trackEvent('FullENT Completed', { totalScore: Math.round(r.reduce((s, x) => s + x.pts, 0) * 10) / 10 }); };
+  const finishENT = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    setPhase("results");
+    const r = calcResults();
+    const totalPtsVal = Math.round(r.reduce((s, x) => s + x.pts, 0) * 10) / 10;
+    trackEvent('FullENT Completed', { totalScore: totalPtsVal });
+    // Save results to history immediately (don't wait for "Go Home" click)
+    finish({ type: "fullent", su: "fullent", sc: 0, dt: new Date().toLocaleDateString("ru-RU"), tm: ENT_CONFIG.totalTime - timeLeft, sections: r.map(sr => ({ sid: sr.sid, label: sr.label, icon: sr.icon, pts: sr.pts, maxPts: sr.maxPts, passed: sr.passed, correct: sr.correct, total: sr.total })) as unknown as TestResult['sections'] } as TestResult);
+    // Show paywall after 3s delay for free users (let them see their score first)
+    if (!isPremium) paywallTimerRef.current = setTimeout(() => openPaywall('fullent'), 3000);
+  };
 
   const calcResults = (): SectionResult[] => {
     return sections!.map((s, si) => {
@@ -261,33 +275,170 @@ export default function FullENT({ finish }: FullENTProps) {
   if (phase === "intro") return (
     <div style={{ padding: `0 var(--content-padding) ${isDesktop ? 40 : 100}px` }}>
       <BackButton onClick={goHome} style={{ marginBottom: 14 }} />
-      <div style={{ background: COLORS.teal, borderRadius: 22, padding: "32px 20px", textAlign: "center", marginBottom: 20 }}>
-        <GraduationCap size={44} color="#fff" style={{ marginBottom: 10 }} />
-        <h1 style={{ ...TYPE.h1, fontSize: 22, marginBottom: 8, color: "#fff" }}>{t.fullent.title}</h1>
-        <p style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", margin: 0 }}>{t.fullent.subtitle}</p>
+
+      {/* v2 hero — xp splash with decorative dots */}
+      <div style={{
+        position: 'relative',
+        background: COLORS.xpSoft,
+        border: '2px solid #0F0F10',
+        borderRadius: 22,
+        padding: "28px 20px 22px",
+        textAlign: "center",
+        marginBottom: 18,
+        boxShadow: '0 6px 0 0 #0F0F10',
+        overflow: 'hidden',
+        animation: 'heroEnter 0.55s cubic-bezier(0.16,1,0.3,1) both',
+      }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'radial-gradient(#0F0F10 1px, transparent 1px)',
+          backgroundSize: '22px 22px',
+          opacity: 0.045,
+          pointerEvents: 'none',
+        }} />
+        <div style={{ position: 'relative' }}>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            width: 56, height: 56, borderRadius: 16,
+            background: '#0F0F10', color: COLORS.xp,
+            border: '2px solid #0F0F10',
+            boxShadow: '0 4px 0 0 #FF5A36',
+            marginBottom: 14,
+          }}>
+            <GraduationCap size={28} strokeWidth={2.2} />
+          </div>
+          <h1 style={{
+            ...TYPE.h1, fontSize: 26, marginBottom: 6, color: '#0F0F10',
+            fontFamily: FF.display, fontWeight: 900,
+            letterSpacing: '-0.035em',
+          }}>{t.fullent.title}</h1>
+          <p style={{
+            fontFamily: "'Nunito',sans-serif", fontSize: 13.5, fontWeight: 700,
+            color: '#0F0F10', opacity: 0.65, margin: 0, lineHeight: 1.45,
+          }}>{t.fullent.subtitle}</p>
+
+          {/* Spec chips row */}
+          <div style={{
+            display: 'flex', justifyContent: 'center', gap: 6,
+            flexWrap: 'wrap', marginTop: 16,
+          }}>
+            {[
+              { n: '120', l: 'вопросов' },
+              { n: '5', l: 'предметов' },
+              { n: '4 ч', l: 'лимит' },
+              { n: '140', l: 'макс' },
+            ].map((s, i) => (
+              <div key={i} style={{
+                display: 'inline-flex', alignItems: 'baseline', gap: 4,
+                padding: '5px 10px', borderRadius: 999,
+                background: 'rgba(255,255,255,0.7)',
+                border: '1.5px solid #0F0F10',
+                fontFamily: FF.display,
+              }}>
+                <span style={{ fontSize: 12, fontWeight: 900, color: '#0F0F10', fontVariantNumeric: 'tabular-nums' }}>{s.n}</span>
+                <span style={{
+                  fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 700,
+                  letterSpacing: '0.08em', textTransform: 'uppercase',
+                  color: '#0F0F10', opacity: 0.55,
+                }}>{s.l}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: bp === 'mobile' ? '1fr' : 'repeat(2, 1fr)', gap: 6, marginBottom: 18 }}>
+
+      {/* Sections grid */}
+      <div style={{
+        fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
+        letterSpacing: '0.16em', textTransform: 'uppercase',
+        color: 'var(--text-muted)', marginBottom: 8, padding: '0 4px',
+      }}>разделы</div>
+      <div style={{ display: "grid", gridTemplateColumns: bp === 'mobile' ? '1fr' : 'repeat(2, 1fr)', gap: 8, marginBottom: 18 }}>
         {sections.map((s, i) => {
           const isProfile = s.cnt === ENT_CONFIG.profileCnt;
+          const subColor = SUBJECT_META[s.sid]?.color || '#0F0F10';
           return (
-          <div key={i} style={{ ...CARD_COMPACT, padding: "14px", display: "flex", alignItems: "center" }}>
-            <div style={{ fontSize: 24, marginRight: 11 }}>{s.icon}</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{subName(s.sid)}</div>
-              <div style={{ fontSize: 11, color: "var(--text-secondary)" }}>{s.cnt} {t.fullent.sectionInfo} {s.maxPts} {t.fullent.sectionInfoSuffix} {s.threshold} {t.home.pointsShort}</div>
-              {isProfile && <div style={{ fontSize: 9, color: "var(--text-muted)", marginTop: 3 }}>{t.fullent.profileBlocksDesc}</div>}
+          <div key={i} style={{
+            display: 'flex', alignItems: 'center', gap: 12,
+            padding: '12px 14px',
+            background: 'var(--bg-card)',
+            border: '2px solid #0F0F10',
+            borderRadius: 14,
+            boxShadow: '0 3px 0 0 #0F0F10',
+          }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: 10,
+              background: `${subColor}14`,
+              border: `1.5px solid ${subColor}4D`,
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <SubjectIcon sid={s.sid} size={20} color={subColor} strokeWidth={2.2} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{
+                fontFamily: "'Nunito',sans-serif", fontSize: 14, fontWeight: 800,
+                color: "var(--text)",
+              }}>{subName(s.sid)}</div>
+              <div style={{
+                fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 700,
+                letterSpacing: '0.04em',
+                color: "var(--text-muted)", marginTop: 2,
+              }}>{s.cnt} {t.fullent.sectionInfo} {s.maxPts} {t.fullent.sectionInfoSuffix} {s.threshold} {t.home.pointsShort}</div>
+              {isProfile && <div style={{
+                fontFamily: "'Nunito',sans-serif", fontSize: 10, fontWeight: 700,
+                color: COLORS.streak, marginTop: 3,
+              }}>{t.fullent.profileBlocksDesc}</div>}
             </div>
           </div>
         ); })}
       </div>
-      <div style={{ ...CARD_COMPACT, background: "rgba(234,179,8,0.06)", border: "1px solid rgba(234,179,8,0.15)", padding: "12px 14px", marginBottom: 18 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: COLORS.yellow, fontWeight: 600, marginBottom: 4 }}>
-          <AlertTriangle size={14} />{t.fullent.important}
+
+      {/* Warning card */}
+      <div style={{
+        background: COLORS.streakSoft,
+        border: '2px solid #0F0F10',
+        borderRadius: 14,
+        padding: "12px 14px",
+        marginBottom: 18,
+        boxShadow: '0 3px 0 0 #0F0F10',
+      }}>
+        <div style={{
+          display: "flex", alignItems: "center", gap: 6,
+          fontFamily: FF.display, fontSize: 11, fontWeight: 900,
+          letterSpacing: '0.06em', textTransform: 'uppercase',
+          color: COLORS.streak, marginBottom: 4,
+        }}>
+          <AlertTriangle size={14} strokeWidth={2.5} />{t.fullent.important}
         </div>
-        <div style={{ fontSize: 11, color: "var(--text-secondary)", lineHeight: 1.7 }}>{t.fullent.importantDesc}</div>
+        <div style={{
+          fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 600,
+          color: "var(--text)", lineHeight: 1.55,
+        }}>{t.fullent.importantDesc}</div>
       </div>
-      <button onClick={() => setPhase("test")} style={{ width: "100%", padding: "16px", background: COLORS.teal, color: "#fff", border: "none", borderRadius: 14, fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 24px rgba(26,154,140,0.25)", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-        <Play size={18} />{t.fullent.startEnt}
+
+      {/* Start CTA */}
+      <button onClick={() => {
+        if (!isPremium) {
+          const lastFull = localStorage.getItem('entprep_last_fullent');
+          const today = new Date().toDateString();
+          if (lastFull === today) { openPaywall('fullent'); return; }
+          localStorage.setItem('entprep_last_fullent', today);
+        }
+        setPhase("test");
+      }} style={{
+        width: "100%", padding: "16px",
+        background: COLORS.streak,
+        color: "#fff",
+        border: "2px solid #0F0F10",
+        borderBottom: "5px solid #0F0F10",
+        borderRadius: 14,
+        fontFamily: FF.display,
+        fontSize: 14, fontWeight: 900, letterSpacing: '0.05em', textTransform: 'uppercase',
+        cursor: "pointer",
+        display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+      }}>
+        <Play size={18} strokeWidth={3} fill="#fff" />{t.fullent.startEnt}
       </button>
     </div>
   );
@@ -301,24 +452,63 @@ export default function FullENT({ finish }: FullENTProps) {
     const elapsed = ENT_CONFIG.totalTime - timeLeft;
     return (
       <div style={{ padding: `0 var(--content-padding) ${isDesktop ? 40 : 100}px` }}>
-        <div style={{ ...CARD, background: "linear-gradient(135deg,rgba(26,26,50,0.8),rgba(22,33,62,0.8),rgba(15,52,96,0.6))", borderRadius: 22, padding: "32px 20px 28px", textAlign: "center", marginBottom: 18, border: `1px solid ${allPassed ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)"}`, animation: "slideUp 0.5s cubic-bezier(0.16,1,0.3,1)" }}>
-          <ScoreRing value={totalPts} max={140} label={`${totalPts}`} sublabel={`${t.test.resultOf} 140 ${t.score}`} size={150} color={allPassed ? COLORS.green : COLORS.red} />
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 16 }}>
-            <div style={{ background: "var(--bg-subtle)", borderRadius: 10, padding: "10px 8px" }}>
-              <div style={{ fontSize: 10, color: "var(--text-muted)", marginBottom: 2 }}>{t.correct}</div>
-              <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace", color: "var(--text)" }}>{totalCorrect}/120</div>
+        <div style={{
+          position: 'relative',
+          background: totalPts >= 122 ? '#B8ECC8' : totalPts >= 85 ? COLORS.xpSoft : COLORS.streakSoft,
+          border: '2px solid #0F0F10',
+          borderRadius: 22,
+          padding: "28px 20px 22px",
+          textAlign: "center",
+          marginBottom: 18,
+          boxShadow: '0 6px 0 0 #0F0F10',
+          overflow: 'hidden',
+          animation: 'heroEnter 0.55s cubic-bezier(0.16,1,0.3,1) both',
+        }}>
+          <div style={{
+            position: 'absolute', inset: 0,
+            backgroundImage: 'radial-gradient(#0F0F10 1px, transparent 1px)',
+            backgroundSize: '22px 22px',
+            opacity: 0.045,
+            pointerEvents: 'none',
+          }} />
+          <div style={{ position: 'relative' }}>
+            <ScoreRing value={totalPts} max={140} label={`${totalPts}`} sublabel={`${t.test.resultOf} 140 ${t.score}`} size={150} color={allPassed ? COLORS.win : COLORS.streak} />
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 16 }}>
+              <div style={{
+                background: 'rgba(255,255,255,0.6)',
+                border: '1.5px solid #0F0F10',
+                borderRadius: 12, padding: "10px 8px",
+              }}>
+                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#0F0F10', opacity: 0.55, marginBottom: 3 }}>{t.correct}</div>
+                <div style={{ fontFamily: FF.display, fontSize: 14, fontWeight: 900, color: '#0F0F10', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.025em' }}>{totalCorrect}/120</div>
+              </div>
+              <div style={{
+                background: 'rgba(255,255,255,0.6)',
+                border: '1.5px solid #0F0F10',
+                borderRadius: 12, padding: "10px 8px",
+              }}>
+                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#0F0F10', opacity: 0.55, marginBottom: 3 }}>{t.test.timeLabel}</div>
+                <div style={{ fontFamily: FF.display, fontSize: 14, fontWeight: 900, color: '#0F0F10', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.025em' }}>{fm(elapsed)}</div>
+              </div>
+              <div style={{
+                background: 'rgba(255,255,255,0.6)',
+                border: '1.5px solid #0F0F10',
+                borderRadius: 12, padding: "10px 8px",
+              }}>
+                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#0F0F10', opacity: 0.55, marginBottom: 3 }}>XP</div>
+                <div style={{ fontFamily: FF.display, fontSize: 14, fontWeight: 900, color: '#C77D00', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.025em' }}>+{calcTestXP({ type: 'fullent', su: 'fullent', sc: 0, dt: '', sections: res.map(r => ({ pts: r.pts })) as unknown as TestResult['sections'] })}</div>
+              </div>
             </div>
-            <div style={{ background: "var(--bg-subtle)", borderRadius: 10, padding: "10px 8px" }}>
-              <div style={{ fontSize: 10, color: "var(--text-muted)", marginBottom: 2 }}>{t.test.timeLabel}</div>
-              <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace", color: "var(--text)" }}>{fm(elapsed)}</div>
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              marginTop: 14,
+              padding: '6px 12px', borderRadius: 999,
+              background: '#0F0F10', color: '#fff',
+              fontFamily: FF.display, fontSize: 10.5, fontWeight: 900,
+              letterSpacing: '0.08em', textTransform: 'uppercase',
+            }}>
+              {allPassed ? <><Check size={13} strokeWidth={3} />{t.fullent.allThresholdsPassed}</> : <><X size={13} strokeWidth={3} />{t.fullent.someThresholdsFailed}</>}
             </div>
-            <div style={{ background: "var(--bg-subtle)", borderRadius: 10, padding: "10px 8px" }}>
-              <div style={{ fontSize: 10, color: "var(--text-muted)", marginBottom: 2 }}>XP</div>
-              <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace", color: COLORS.amber }}>+{calcTestXP({ type: 'fullent', su: 'fullent', sc: 0, dt: '', sections: res.map(r => ({ pts: r.pts })) as unknown as TestResult['sections'] })}</div>
-            </div>
-          </div>
-          <div style={{ fontSize: 12, color: allPassed ? COLORS.green : COLORS.red, marginTop: 12, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4 }}>
-            {allPassed ? <><Check size={14} />{t.fullent.allThresholdsPassed}</> : <><X size={14} />{t.fullent.someThresholdsFailed}</>}
           </div>
         </div>
         <h3 style={{ ...TYPE.h3, margin: "0 0 12px" }}>{t.fullent.subjectResults}</h3>
@@ -327,7 +517,14 @@ export default function FullENT({ finish }: FullENTProps) {
           <div key={i} style={{ ...CARD_COMPACT, padding: "14px", border: `1px solid ${r.passed ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)"}`, borderLeft: `3px solid ${r.passed ? COLORS.green : COLORS.red}` }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-                <span style={{ fontSize: 20 }}>{r.icon}</span>
+                <div style={{
+                  width: 32, height: 32, borderRadius: 9,
+                  background: `${SUBJECT_META[r.sid]?.color || '#0F0F10'}14`,
+                  border: `1.5px solid ${SUBJECT_META[r.sid]?.color || '#0F0F10'}4D`,
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                }}>
+                  <SubjectIcon sid={r.sid} size={17} color={SUBJECT_META[r.sid]?.color} strokeWidth={2.2} />
+                </div>
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text)" }}>{subName(r.sid)}</div>
                   <div style={{ fontSize: 10, color: "var(--text-muted)" }}>{r.correct}/{r.total} {t.fullent.correctOf}</div>
@@ -347,7 +544,9 @@ export default function FullENT({ finish }: FullENTProps) {
           <summary style={{ fontSize: 13, fontWeight: 600, color: COLORS.teal, cursor: "pointer", marginBottom: 10 }}>{t.fullent.reviewAll}</summary>
           {sections.map((s, si) => (
             <div key={si} style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text)", marginBottom: 8 }}>{s.icon} {subName(s.sid)}</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text)", marginBottom: 8, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <SubjectIcon sid={s.sid} size={14} color={SUBJECT_META[s.sid]?.color} strokeWidth={2.2} /> {subName(s.sid)}
+              </div>
               {s.qs.map((qq, qi) => { const ua = (answers[si] || {})[qi]; const qt = getQType(qq); const sr = ua !== undefined ? scoreQuestion(qq, ua) : null; const ok = sr?.correct ?? false; const borderColor = ok ? COLORS.green : sr?.partial ? COLORS.yellow : ua !== undefined ? COLORS.red : "var(--text-muted)"; return (
                 <div key={qi} style={{ ...CARD_COMPACT, padding: "10px 12px", marginBottom: 4, borderLeft: `3px solid ${borderColor}` }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -373,7 +572,7 @@ export default function FullENT({ finish }: FullENTProps) {
                       </div>;
                     }) : <div style={{ color: "var(--text-muted)" }}>{t.test.skipped}</div>}
                   </div>)}
-                  <div style={{ fontSize: 9, color: "var(--text-secondary)", marginTop: 3, lineHeight: 1.6, background: "rgba(26,154,140,0.04)", padding: "5px 7px", borderRadius: 6, display: "flex", gap: 4 }}>
+                  <div style={{ fontSize: 9, color: "var(--text-secondary)", marginTop: 3, lineHeight: 1.6, background: "rgba(255,90,54,0.04)", padding: "5px 7px", borderRadius: 6, display: "flex", gap: 4 }}>
                     <Lightbulb size={11} color={COLORS.teal} style={{ flexShrink: 0, marginTop: 1 }} /><span>{qq.e}</span>
                   </div>
                   {user && (reportSent[`${si}-${qi}`]
@@ -385,12 +584,8 @@ export default function FullENT({ finish }: FullENTProps) {
             </div>
           ))}
         </details>
-        <button onClick={() => setShowShare(true)} style={{ width: "100%", padding: "15px", marginTop: 14, background: `linear-gradient(135deg,${COLORS.teal},${COLORS.tealLight})`, color: "#fff", border: "none", borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 20px rgba(26,154,140,0.25)", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-          <Share2 size={16} />{t.test.share}
-        </button>
-        <button onClick={() => { const res2 = calcResults(); const totalPts2 = Math.round(res2.reduce((s, r) => s + r.pts, 0) * 10) / 10; finish({ type: "fullent", su: "fullent", sc: 0, dt: new Date().toLocaleDateString("ru-RU"), tm: ENT_CONFIG.totalTime - timeLeft, sections: res2.map(r => ({ sid: r.sid, label: r.label, icon: r.icon, pts: r.pts, maxPts: r.maxPts, passed: r.passed, correct: r.correct, total: r.total })) as unknown as TestResult['sections'] } as TestResult & { score: number }); }} style={{ width: "100%", padding: "15px", marginTop: 8, background: COLORS.teal, color: "#fff", border: "none", borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{t.test.goHome}</button>
-        <ShareModal visible={showShare} onClose={() => setShowShare(false)} type="fullent" data={{ totalPts, maxPts: 140, results: res }} />
-        <ReportSheet visible={reportIdx !== null} questionText={reportIdx !== null && sections ? (() => { const [si, qi] = reportIdx.split('-').map(Number); return sections[si]?.qs[qi]?.q; })() : undefined} comment={reportComment} loading={reportLoading} onClose={() => { setReportIdx(null); setReportComment(''); }} onCommentChange={setReportComment} onReport={reason => reportQuestion(reportIdx!, reason)} />
+        <button onClick={goHome} style={{ width: "100%", padding: "15px", marginTop: 8, background: COLORS.teal, color: "#fff", border: "none", borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{t.test.goHome}</button>
+        <ReportSheet visible={reportIdx !== null} questionText={reportIdx !== null && sections ? (() => { const [si, qi] = reportIdx.split('-').map(Number); return sections[si]?.qs[qi]?.q; })() : undefined} options={reportIdx !== null && sections ? (() => { const [si, qi] = reportIdx.split('-').map(Number); return sections[si]?.qs[qi]?.o; })() : undefined} comment={reportComment} loading={reportLoading} onClose={() => { setReportIdx(null); setReportComment(''); }} onCommentChange={setReportComment} onReport={reason => reportQuestion(reportIdx!, reason)} />
       </div>
     );
   }
@@ -407,43 +602,45 @@ export default function FullENT({ finish }: FullENTProps) {
         </button>
         <div style={{ ...CARD_COMPACT, background: timeLeft < 600 ? "rgba(239,68,68,0.12)" : "var(--bg-card)", border: `1px solid ${timeLeft < 600 ? "rgba(239,68,68,0.25)" : "var(--border)"}`, padding: "7px 11px", fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color: timeLeft < 600 ? COLORS.red : "var(--text)" }}>{fm(timeLeft)}</div>
       </div>
-      {paused && !offline && <div style={{ ...CARD, background: "linear-gradient(135deg,rgba(26,26,50,0.95),rgba(22,33,62,0.95))", borderRadius: 18, padding: "48px 20px", textAlign: "center", marginBottom: 16, animation: "slideUp 0.3s cubic-bezier(0.16,1,0.3,1)" }}>
-        <Pause size={40} color={COLORS.yellow} style={{ marginBottom: 12 }} />
-        <div style={{ fontSize: 18, fontWeight: 700, color: COLORS.yellow, marginBottom: 8 }}>{t.fullent.paused}</div>
+      {paused && !offline && <div style={{ ...CARD, background: COLORS.xpSofter, padding: "48px 20px", textAlign: "center", marginBottom: 16, animation: "slideUp 0.3s cubic-bezier(0.16,1,0.3,1)" }}>
+        <Pause size={40} color="#0F0F10" style={{ marginBottom: 12 }} />
+        <div style={{ fontSize: 18, fontWeight: 700, color: "#0F0F10", marginBottom: 8 }}>{t.fullent.paused}</div>
         <div style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 16 }}>{t.fullent.pauseDesc}</div>
         <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 20 }}>{t.fullent.pauseStats} {totalAnswered}/120 {t.fullent.pauseRemaining} {fm(timeLeft)}</div>
-        <button onClick={() => setPaused(false)} style={{ padding: "14px 32px", background: `linear-gradient(135deg,${COLORS.teal},${COLORS.tealDark})`, color: "#fff", border: "none", borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 20px rgba(26,154,140,0.25)" }}>
+        <button onClick={() => setPaused(false)} style={{ padding: "14px 32px", background: COLORS.streak, color: "#fff", border: "2px solid #0F0F10", borderBottom: "4px solid #0F0F10", borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
           <Play size={16} style={{ verticalAlign: "-3px", marginRight: 6 }} />{t.fullent.resume}
         </button>
       </div>}
-      {offline && <div style={{ ...CARD, background: "linear-gradient(135deg,rgba(26,26,50,0.95),rgba(22,33,62,0.95))", borderRadius: 18, padding: "48px 20px", textAlign: "center", marginBottom: 16, animation: "slideUp 0.3s cubic-bezier(0.16,1,0.3,1)" }}>
+      {offline && <div style={{ ...CARD, background: COLORS.streakSoft, padding: "48px 20px", textAlign: "center", marginBottom: 16, animation: "slideUp 0.3s cubic-bezier(0.16,1,0.3,1)" }}>
         <WifiOff size={40} color={COLORS.red} style={{ marginBottom: 12 }} />
-        <div style={{ fontSize: 18, fontWeight: 700, color: COLORS.red, marginBottom: 8 }}>{(t.test as Record<string, string>).connectionLost}</div>
-        <div style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 16 }}>{(t.test as Record<string, string>).timerPaused}</div>
+        <div style={{ fontSize: 18, fontWeight: 700, color: COLORS.red, marginBottom: 8 }}>{(t.test as unknown as Record<string, string>).connectionLost}</div>
+        <div style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 16 }}>{(t.test as unknown as Record<string, string>).timerPaused}</div>
         <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{t.fullent.pauseStats} {totalAnswered}/120 {t.fullent.pauseRemaining} {fm(timeLeft)}</div>
       </div>}
       {!paused && !offline && <><div style={{ display: "flex", gap: 4, marginBottom: 12, overflowX: "auto" }}>
         {sections.map((s, i) => { const sa = answers[i] || {}; const cnt = Object.keys(sa).length; const active = i === curSec; return (
-          <button key={i} onClick={() => goSec(i)} style={{ display: "flex", flexDirection: "column", alignItems: "center", background: active ? "rgba(26,154,140,0.12)" : "var(--bg-card)", border: active ? "1px solid rgba(26,154,140,0.3)" : "1px solid var(--border)", borderRadius: 10, padding: "7px 9px", cursor: "pointer", minWidth: 56, flexShrink: 0 }}>
-            <span style={{ fontSize: 15 }}>{s.icon}</span>
+          <button key={i} onClick={() => goSec(i)} style={{ display: "flex", flexDirection: "column", alignItems: "center", background: active ? "rgba(255,90,54,0.12)" : "var(--bg-card)", border: active ? "1px solid rgba(255,90,54,0.3)" : "1px solid var(--border)", borderRadius: 10, padding: "7px 9px", cursor: "pointer", minWidth: 56, flexShrink: 0 }}>
+            <SubjectIcon sid={s.sid} size={16} color={active ? COLORS.teal : (SUBJECT_META[s.sid]?.color || 'var(--text-muted)')} strokeWidth={2.2} />
             <span style={{ fontSize: 9, color: active ? COLORS.teal : "var(--text-muted)", fontWeight: 600, marginTop: 3 }}>{cnt}/{s.cnt}</span>
           </button>
         ); })}
       </div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-        <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text)" }}>{sec!.icon} {subName(sec!.sid)}</span>
+        <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text)", display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <SubjectIcon sid={sec!.sid} size={14} color={SUBJECT_META[sec!.sid]?.color} strokeWidth={2.2} /> {subName(sec!.sid)}
+        </span>
         <button onClick={() => setShowGrid(!showGrid)} style={{ ...CARD_COMPACT, background: "var(--bg-card)", padding: "5px 10px", cursor: "pointer", color: "var(--text-secondary)", fontSize: 10, display: "inline-flex", alignItems: "center", gap: 4 }}>
           <Grid3X3 size={13} />#{curQ + 1}/{sec!.cnt}
         </button>
       </div>
       {showGrid && <div style={{ display: "grid", gridTemplateColumns: "repeat(10,1fr)", gap: 4, marginBottom: 12 }}>
         {sec!.qs.map((_qq, i) => { const a = (answers[curSec] || {})[i]; const hasAnswer = a !== undefined; return (
-          <button key={i} onClick={() => goQ(i)} style={{ background: i === curQ ? "rgba(26,154,140,0.15)" : hasAnswer ? "rgba(26,154,140,0.08)" : "var(--bg-card)", border: `1px solid ${i === curQ ? "rgba(26,154,140,0.35)" : "var(--border-light)"}`, borderRadius: 6, padding: "5px 0", cursor: "pointer", fontSize: 10, color: i === curQ ? COLORS.teal : hasAnswer ? COLORS.teal : "var(--text-muted)", fontWeight: 600 }}>{i + 1}</button>
+          <button key={i} onClick={() => goQ(i)} style={{ background: i === curQ ? "rgba(255,90,54,0.15)" : hasAnswer ? "rgba(255,90,54,0.08)" : "var(--bg-card)", border: `1px solid ${i === curQ ? "rgba(255,90,54,0.35)" : "var(--border-light)"}`, borderRadius: 6, padding: "5px 0", cursor: "pointer", fontSize: 10, color: i === curQ ? COLORS.teal : hasAnswer ? COLORS.teal : "var(--text-muted)", fontWeight: 600 }}>{i + 1}</button>
         ); })}
       </div>}
       <ProgressBar value={curQ + 1} max={sec!.qs.length} gradient={`linear-gradient(90deg,${COLORS.accent},${COLORS.amber})`} style={{ marginBottom: 12 }} />
       <div key={`qblock-${curSec}-${curQ}`}>
-      {isR && <div style={{ ...CARD_COMPACT, background: "rgba(26,154,140,0.06)", border: "1px solid rgba(26,154,140,0.18)", padding: passageOpen ? "12px 14px" : "8px 14px", marginBottom: 12, position: "sticky", top: 0, zIndex: 10, maxHeight: passageOpen ? "40vh" : "auto", overflowY: passageOpen ? "auto" : "hidden", transition: "all 0.2s" }}>
+      {isR && <div style={{ ...CARD_COMPACT, background: "rgba(255,90,54,0.06)", border: "1px solid rgba(255,90,54,0.18)", padding: passageOpen ? "12px 14px" : "8px 14px", marginBottom: 12, position: "sticky", top: 0, zIndex: 10, maxHeight: passageOpen ? "40vh" : "auto", overflowY: passageOpen ? "auto" : "hidden", transition: "all 0.2s" }}>
         <button onClick={() => setPassageOpen(p => !p)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer" }}>
           <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.teal, display: "flex", alignItems: "center", gap: 4 }}><BookOpen size={12} />{q!.pt}</div>
           {passageOpen ? <ChevronUp size={14} color={COLORS.teal} /> : <ChevronDown size={14} color={COLORS.teal} />}
@@ -473,10 +670,10 @@ export default function FullENT({ finish }: FullENTProps) {
           const picked = secAnswers[curQ] === idx;
           const locked = secAnswers[curQ] !== undefined;
           let bg = "var(--bg-card)", bd = "1px solid var(--border)", tc = "var(--text-body)";
-          if (picked) { bg = "rgba(26,154,140,0.1)"; bd = "1px solid rgba(26,154,140,0.35)"; tc = COLORS.teal; }
+          if (picked) { bg = "rgba(255,90,54,0.1)"; bd = "1px solid rgba(255,90,54,0.35)"; tc = COLORS.teal; }
           const isFocused = focused === idx && !locked;
-          if (isFocused && !picked) { bd = "1px solid rgba(26,154,140,0.5)"; bg = "rgba(26,154,140,0.08)"; }
-          return (<button key={idx} onClick={() => sel(idx)} role="radio" aria-checked={picked} aria-label={`${t.test.option} ${String.fromCharCode(65 + idx)}: ${opt}`} style={{ display: "flex", alignItems: "center", background: bg, border: bd, borderRadius: 12, padding: "12px 13px", cursor: locked ? "default" : "pointer", textAlign: "left", transition: "all 0.2s", outline: isFocused ? "2px solid rgba(26,154,140,0.4)" : "none", outlineOffset: 1 }}>
+          if (isFocused && !picked) { bd = "1px solid rgba(255,90,54,0.5)"; bg = "rgba(255,90,54,0.08)"; }
+          return (<button key={idx} onClick={() => sel(idx)} role="radio" aria-checked={picked} aria-label={`${t.test.option} ${String.fromCharCode(65 + idx)}: ${opt}`} style={{ display: "flex", alignItems: "center", background: bg, border: bd, borderRadius: 12, padding: "12px 13px", cursor: locked ? "default" : "pointer", textAlign: "left", transition: "all 0.2s", outline: isFocused ? "2px solid rgba(255,90,54,0.4)" : "none", outlineOffset: 1 }}>
             <div style={{ width: 24, height: 24, borderRadius: 12, border: `2px solid ${tc}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: tc, flexShrink: 0, marginRight: 10 }}>
               {picked ? <Check size={12} /> : String.fromCharCode(65 + idx)}
             </div>
@@ -489,13 +686,24 @@ export default function FullENT({ finish }: FullENTProps) {
         {curQ > 0 && <button onClick={prev} style={{ flex: 1, padding: "13px", background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 12, color: "var(--text)", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
           <ChevronLeft size={16} />{t.fullent.prev}
         </button>}
-        {secAnswers[curQ] !== undefined ? <button onClick={nxt} style={{ flex: 2, padding: "13px", background: `linear-gradient(135deg,${COLORS.teal},${COLORS.tealDark})`, color: "#fff", border: "none", borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 20px rgba(26,154,140,0.25)", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
+        {secAnswers[curQ] !== undefined ? <button onClick={nxt} style={{ flex: 2, padding: "13px", background: COLORS.streak, color: "#fff", border: "2px solid #0F0F10", borderBottom: "4px solid #0F0F10", borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
           {curQ < sec!.qs.length - 1 ? t.fullent.nextQ : curSec < sections.length - 1 ? t.fullent.nextSubject : t.fullent.finish}<ChevronRight size={16} />
         </button> : <button onClick={() => { if (curQ < sec!.qs.length - 1) navigateTo(curSec, curQ + 1); else if (curSec < sections.length - 1) navigateTo(curSec + 1, secPos[curSec + 1] || 0); }} style={{ flex: 2, padding: "13px", background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 12, color: "var(--text-secondary)", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
           {t.fullent.skipQuestion}<ChevronRight size={16} />
         </button>}
       </div>
-      <button onClick={() => { if (window.confirm(t.fullent.finishEarlyConfirm)) finishENT(); }} style={{ width: "100%", padding: "13px", marginTop: 10, background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)", borderRadius: 12, color: COLORS.red, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>{t.fullent.finishEarly}</button>
+      <button onClick={() => setShowFinishConfirm(true)} style={{ width: "100%", padding: "13px", marginTop: 10, background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)", borderRadius: 12, color: COLORS.red, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>{t.fullent.finishEarly}</button>
+      {showFinishConfirm && <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => setShowFinishConfirm(false)}>
+        <div style={{ background: "var(--bg-card)", borderRadius: 18, padding: 24, maxWidth: 320, width: "100%", textAlign: "center" }} onClick={e => e.stopPropagation()}>
+          <Flag size={28} color={COLORS.red} style={{ marginBottom: 10 }} />
+          <p style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", marginBottom: 6 }}>{t.fullent.finishEarlyConfirm}</p>
+          <p style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 18 }}>{totalAnswered}/120 отвечено</p>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={() => setShowFinishConfirm(false)} style={{ flex: 1, padding: 12, background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: "pointer", color: "var(--text)" }}>{t.fullent.resume}</button>
+            <button onClick={() => { setShowFinishConfirm(false); finishENT(); }} style={{ flex: 1, padding: 12, background: COLORS.red, border: "none", borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#fff" }}>{t.fullent.finishEarly}</button>
+          </div>
+        </div>
+      </div>}
       </div>
       </>}
       <ReportSheet visible={reportIdx !== null} questionText={reportIdx !== null && sections ? (() => { const [si, qi] = reportIdx.split('-').map(Number); return sections[si]?.qs[qi]?.q; })() : undefined} comment={reportComment} loading={reportLoading} onClose={() => { setReportIdx(null); setReportComment(''); }} onCommentChange={setReportComment} onReport={reason => reportQuestion(reportIdx!, reason)} />

@@ -1,9 +1,10 @@
 // Analytics API: aggregate growth stats across all users
 // Used for: minister pitch, B2B sales, internal metrics
-import { CORS_HEADERS, corsResponse } from "./utils/shared.mjs";
+import { CORS_HEADERS, corsResponse, verifyAuth } from "./utils/shared.mjs";
 
 const SB_URL = process.env.VITE_SUPABASE_URL;
 const SB_KEY = process.env.SUPABASE_SERVICE_KEY;
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase()).filter(Boolean);
 
 const sbHeaders = {
   apikey: SB_KEY,
@@ -13,13 +14,40 @@ const sbHeaders = {
 
 // Cache for 1 hour — heavy query, no need to recalculate every request
 let cache = { data: null, ts: 0 };
+let regionalCache = { data: null, ts: 0 };
 const CACHE_TTL = 3600_000;
+
+// Fetch all rows from a Supabase table (handles 1000-row default limit)
+async function sbFetchAll(table, query) {
+  const PAGE = 1000;
+  const MAX_ROWS = 50000;
+  let all = [], offset = 0;
+  while (offset < MAX_ROWS) {
+    const res = await fetch(
+      `${SB_URL}/rest/v1/${table}?${query}&limit=${PAGE}&offset=${offset}`,
+      { headers: sbHeaders }
+    );
+    if (!res.ok) throw new Error(await res.text());
+    const rows = await res.json();
+    all = all.concat(rows);
+    if (rows.length < PAGE) break;
+    offset += PAGE;
+  }
+  return all;
+}
 
 export default async function handler(req) {
   if (req.method === "OPTIONS") return corsResponse();
 
   const url = new URL(req.url, "https://entprep.org");
   const action = url.searchParams.get("action");
+
+  // Auth + admin required for all analytics actions
+  const user = await verifyAuth(req);
+  if (!user) return Response.json({ error: "Unauthorized" }, { status: 401, headers: CORS_HEADERS });
+  if (!ADMIN_EMAILS.includes((user.email || '').toLowerCase())) {
+    return Response.json({ error: "Forbidden" }, { status: 403, headers: CORS_HEADERS });
+  }
 
   try {
     switch (action) {
@@ -29,20 +57,72 @@ export default async function handler(req) {
           return Response.json(cache.data, { headers: CORS_HEADERS });
         }
 
-        // Fetch all user histories from Supabase
-        // Only select id and hist to minimize data transfer
-        const res = await fetch(
-          `${SB_URL}/rest/v1/user_data?select=id,hist&hist=not.is.null`,
-          { headers: sbHeaders }
-        );
-        if (!res.ok) throw new Error(await res.text());
-        const users = await res.json();
+        const users = await sbFetchAll("user_data", "select=id,hist&hist=not.is.null");
 
         // Process growth stats
         const stats = calculateGrowthStats(users);
         cache = { data: stats, ts: Date.now() };
 
         return Response.json(stats, { headers: CORS_HEADERS });
+      }
+
+      case "regional": {
+        if (regionalCache.data && Date.now() - regionalCache.ts < CACHE_TTL) {
+          return Response.json(regionalCache.data, { headers: CORS_HEADERS });
+        }
+
+        const [profiles, histData] = await Promise.all([
+          sbFetchAll("profiles", "select=id,region&region=not.is.null"),
+          sbFetchAll("user_data", "select=id,hist&hist=not.is.null"),
+        ]);
+
+        const histById = {};
+        for (const u of histData) histById[u.id] = u.hist;
+
+        const regionMap = {};
+        for (const p of profiles) {
+          if (!p.region) continue;
+          if (!regionMap[p.region]) regionMap[p.region] = { users: 0, scores: [], subjectScores: {} };
+          regionMap[p.region].users++;
+
+          const hist = histById[p.id];
+          if (!hist || !Array.isArray(hist)) continue;
+
+          const tests = hist.filter(h => h.type !== 'fullent' && h.sc != null);
+          for (const t of tests) {
+            regionMap[p.region].scores.push(t.sc);
+            if (!regionMap[p.region].subjectScores[t.su]) regionMap[p.region].subjectScores[t.su] = [];
+            regionMap[p.region].subjectScores[t.su].push(t.sc);
+          }
+        }
+
+        const regions = {};
+        for (const [rid, data] of Object.entries(regionMap)) {
+          const avgScore = data.scores.length > 0
+            ? Math.round(data.scores.reduce((a, b) => a + b, 0) / data.scores.length)
+            : null;
+
+          // Find weakest subject
+          let weakestSubject = null;
+          let weakestAvg = 101;
+          for (const [sid, scores] of Object.entries(data.subjectScores)) {
+            if (scores.length < 3) continue;
+            const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+            if (avg < weakestAvg) { weakestAvg = avg; weakestSubject = sid; }
+          }
+
+          regions[rid] = {
+            users: data.users,
+            testsTotal: data.scores.length,
+            avgScore,
+            weakestSubject,
+            weakestSubjectAvg: weakestSubject ? Math.round(weakestAvg) : null,
+          };
+        }
+
+        const result = { regions, totalRegions: Object.keys(regions).length, generatedAt: new Date().toISOString() };
+        regionalCache = { data: result, ts: Date.now() };
+        return Response.json(result, { headers: CORS_HEADERS });
       }
 
       default:
@@ -69,8 +149,10 @@ function calculateGrowthStats(users) {
     const hist = user.hist;
     if (!hist || !Array.isArray(hist) || hist.length < 2) continue;
 
-    // Only count regular tests, not fullent
-    const tests = hist.filter(h => h.type !== 'fullent' && h.su && h.sc != null);
+    // Only count regular tests, not fullent — sorted chronologically
+    const tests = hist
+      .filter(h => h.type !== 'fullent' && h.su && h.sc != null)
+      .sort((a, b) => (a.dt || '').localeCompare(b.dt || ''));
     if (tests.length < 2) continue;
 
     activeUsers++;

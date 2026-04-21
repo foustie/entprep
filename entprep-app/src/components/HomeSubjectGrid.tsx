@@ -1,10 +1,13 @@
-import React from 'react';
-import { CARD_COMPACT, COLORS, SECTION_LABEL, hoverGlow, scoreColor } from '../constants/styles';
+import { useState } from 'react';
+import type { CSSProperties } from 'react';
+import { COLORS, FF, FW, SP, scoreColor } from '../constants/styles';
 import { useT } from '../locales';
 import { useNav } from '../contexts/NavigationContext';
 import { Trophy } from 'lucide-react';
 import SubjectIcon from './ui/SubjectIcon';
 import type { SubjectConfig, TestResult } from '../types';
+
+const INK = '#0F0F10';
 
 interface Props {
   mandatory: SubjectConfig[];
@@ -28,156 +31,180 @@ export default function HomeSubjectGrid({ mandatory, profile, hist, poolSizes, b
     return { tests, lastScore, pb, pool };
   };
 
-  /** Full-width horizontal strip for mandatory subjects */
-  const SubjectStrip = ({ s }: { s: SubjectConfig }) => {
-    const { lastScore, pb, pool } = getStats(s);
-    return (
-      <button
-        onClick={() => nav(s.id === 'reading' ? 'test' : 'topics', s.id)}
-        aria-label={subName(s.id)}
-        style={{
-          ...CARD_COMPACT,
-          padding: 0,
-          overflow: 'hidden',
-          cursor: 'pointer',
-          textAlign: 'left',
-          transition: 'all 0.2s',
-          display: 'flex',
-          alignItems: 'center',
-        }}
-        {...hoverGlow(s.color)}
-      >
-        {/* Color strip on left */}
-        <div style={{ width: 4, alignSelf: 'stretch', background: s.color, borderRadius: '16px 0 0 16px', flexShrink: 0 }} />
-
-        <div style={{ padding: '10px 14px', flex: 1, display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-          <SubjectIcon sid={s.id} size={20} color={s.color} />
-          <span style={{
-            fontSize: 13, fontWeight: 600, color: 'var(--text)',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            flex: 1,
-          }}>
-            {subName(s.id)}
-          </span>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingRight: 14, flexShrink: 0 }}>
-          {lastScore !== null ? (
-            <span style={{
-              fontSize: 15, fontWeight: 700,
-              fontFamily: "'JetBrains Mono',monospace",
-              color: scoreColor(lastScore),
-            }}>
-              {lastScore}%
-            </span>
-          ) : (
-            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>—</span>
-          )}
-          {pb && pb.best > (lastScore || 0) && (
-            <span style={{
-              fontSize: 9, color: COLORS.amber, fontWeight: 600,
-              display: 'flex', alignItems: 'center', gap: 1,
-            }}>
-              <Trophy size={9} />{pb.best}%
-            </span>
-          )}
-          <span style={{
-            fontSize: 10, color: 'var(--text-muted)',
-            fontFamily: "'JetBrains Mono',monospace",
-          }}>
-            {pool}q
-          </span>
-        </div>
-      </button>
-    );
-  };
-
-  /** Compact square cell for profile subjects (2-col grid) */
-  const SubjectCell = ({ s }: { s: SubjectConfig }) => {
-    const { lastScore, pb, pool } = getStats(s);
-    return (
-      <button
-        onClick={() => nav('topics', s.id)}
-        aria-label={subName(s.id)}
-        style={{
-          ...CARD_COMPACT,
-          padding: 0,
-          overflow: 'hidden',
-          cursor: 'pointer',
-          textAlign: 'left',
-          transition: 'all 0.2s',
-          display: 'flex',
-          flexDirection: 'column',
-          position: 'relative',
-        }}
-        {...hoverGlow(s.color)}
-      >
-        {/* Color strip at top */}
-        <div style={{ height: 4, background: s.color, borderRadius: '16px 16px 0 0' }} />
-
-        <div style={{ padding: '12px 12px 10px', flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <SubjectIcon sid={s.id} size={18} color={s.color} />
-            <span style={{
-              fontSize: 13, fontWeight: 600, color: 'var(--text)',
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              flex: 1,
-            }}>
-              {subName(s.id)}
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              {lastScore !== null ? (
-                <span style={{
-                  fontSize: 16, fontWeight: 700,
-                  fontFamily: "'JetBrains Mono',monospace",
-                  color: scoreColor(lastScore),
-                }}>
-                  {lastScore}%
-                </span>
-              ) : (
-                <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>—</span>
-              )}
-              {pb && pb.best > (lastScore || 0) && (
-                <span style={{
-                  fontSize: 9, color: COLORS.amber, fontWeight: 600,
-                  display: 'flex', alignItems: 'center', gap: 1,
-                }}>
-                  <Trophy size={9} />{pb.best}%
-                </span>
-              )}
-            </div>
-            <span style={{
-              fontSize: 10, color: 'var(--text-muted)',
-              fontFamily: "'JetBrains Mono',monospace",
-            }}>
-              {pool}q
-            </span>
-          </div>
-        </div>
-      </button>
-    );
-  };
-
   return (
-    <div style={{ marginBottom: 28 }}>
-      {/* Mandatory subjects — full-width strips */}
-      <div style={SECTION_LABEL}>{t.home.mandatory}</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
-        {mandatory.map(s => <SubjectStrip key={s.id} s={s} />)}
+    <div style={{ marginBottom: 24 }}>
+      {/* Mandatory subjects */}
+      <SectionEyebrow label={t.home.mandatory} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: SP.xl }}>
+        {mandatory.map(s => (
+          <SubjectRow
+            key={s.id}
+            subject={s}
+            name={subName(s.id)}
+            stats={getStats(s)}
+            onClick={() => nav(s.id === 'reading' ? 'test' : 'topics', s.id)}
+          />
+        ))}
       </div>
 
-      {/* Profile subjects — 2-col grid */}
+      {/* Profile subjects */}
       {profile.length > 0 && (
         <>
-          <div style={SECTION_LABEL}>{t.home.profile}</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
-            {profile.map(s => <SubjectCell key={s.id} s={s} />)}
+          <SectionEyebrow label={t.home.profile} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {profile.map(s => (
+              <SubjectRow
+                key={s.id}
+                subject={s}
+                name={subName(s.id)}
+                stats={getStats(s)}
+                onClick={() => nav('topics', s.id)}
+              />
+            ))}
           </div>
         </>
       )}
     </div>
+  );
+}
+
+// ── Section eyebrow ─────────────────────────────────────────────────────
+function SectionEyebrow({ label }: { label: string }) {
+  return (
+    <div style={{
+      fontFamily: FF.mono, fontSize: 10, fontWeight: 800,
+      letterSpacing: '0.16em', textTransform: 'uppercase',
+      color: COLORS.textMuted,
+      padding: '2px 4px',
+      marginBottom: 8,
+    }}>
+      {label}
+    </div>
+  );
+}
+
+// ── Subject row — unified v2 horizontal card ────────────────────────────
+function SubjectRow({
+  subject: s,
+  name,
+  stats,
+  onClick,
+}: {
+  subject: SubjectConfig;
+  name: string;
+  stats: { lastScore: number | null; pb: { best: number } | undefined; pool: number };
+  onClick: () => void;
+}) {
+  const [pressed, setPressed] = useState(false);
+  const { lastScore, pb, pool } = stats;
+  const displayScore = lastScore !== null ? lastScore : null;
+  const sColor = scoreColor(displayScore ?? 0);
+
+  const style: CSSProperties = {
+    width: '100%',
+    display: 'flex', alignItems: 'center', gap: 0,
+    background: 'var(--bg-card)',
+    border: `2px solid ${INK}`,
+    borderRadius: 14,
+    cursor: 'pointer',
+    textAlign: 'left',
+    overflow: 'hidden',
+    transition: 'transform 80ms, box-shadow 80ms',
+    boxShadow: pressed ? `0 1px 0 0 ${INK}` : `0 3px 0 0 ${INK}`,
+    transform: pressed ? 'translateY(2px)' : 'none',
+    padding: 0,
+  };
+
+  return (
+    <button
+      onClick={onClick}
+      onMouseDown={() => setPressed(true)}
+      onMouseUp={() => setPressed(false)}
+      onMouseLeave={() => setPressed(false)}
+      onTouchStart={() => setPressed(true)}
+      onTouchEnd={() => setPressed(false)}
+      style={style}
+    >
+      {/* Subject-colored thin accent stripe */}
+      <div style={{
+        width: 4, alignSelf: 'stretch',
+        background: s.color,
+      }} />
+
+      {/* Icon chip — neutral ink frame, subject color only in icon */}
+      <div style={{
+        flexShrink: 0,
+        width: 36, height: 36, borderRadius: 10,
+        background: 'var(--bg-subtle)',
+        border: `1.5px solid rgba(15,15,16,0.12)`,
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        marginLeft: 12,
+      }}>
+        <SubjectIcon sid={s.id} size={20} color={s.color} />
+      </div>
+
+      {/* Name */}
+      <div style={{
+        flex: 1, minWidth: 0,
+        display: 'flex', flexDirection: 'column', justifyContent: 'center',
+        padding: '10px 12px',
+      }}>
+        <span style={{
+          fontFamily: FF.body,
+          fontSize: 14, fontWeight: 800,
+          lineHeight: 1.2,
+          color: COLORS.text,
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        }}>
+          {name}
+        </span>
+        <span style={{
+          fontFamily: FF.mono,
+          fontSize: 9.5, fontWeight: 700,
+          letterSpacing: '0.06em',
+          color: COLORS.textMuted,
+          marginTop: 2,
+        }}>
+          {pool} вопросов
+        </span>
+      </div>
+
+      {/* Score column */}
+      <div style={{
+        flexShrink: 0,
+        display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2,
+        paddingRight: 14, paddingLeft: 8,
+      }}>
+        {displayScore !== null ? (
+          <span style={{
+            fontFamily: FF.display,
+            fontSize: 18, fontWeight: 900,
+            letterSpacing: '-0.03em',
+            lineHeight: 1,
+            color: sColor,
+            fontVariantNumeric: 'tabular-nums',
+          }}>
+            {displayScore}<span style={{ fontSize: 11, opacity: 0.7, fontWeight: 800 }}>%</span>
+          </span>
+        ) : (
+          <span style={{
+            fontFamily: FF.mono, fontSize: 11, fontWeight: 700,
+            color: COLORS.textMuted, letterSpacing: '0.1em',
+          }}>
+            —
+          </span>
+        )}
+        {pb && pb.best > (lastScore || 0) && (
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: 2,
+            fontFamily: FF.mono, fontSize: 9, fontWeight: 800,
+            color: COLORS.xp, letterSpacing: '0.05em',
+          }}>
+            <Trophy size={9} strokeWidth={2.8} fill={COLORS.xp} />
+            {pb.best}%
+          </span>
+        )}
+      </div>
+    </button>
   );
 }

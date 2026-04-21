@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
+import { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { CARD_COMPACT, TYPE, COLORS } from '../constants/styles';
 import { SUBJECT_META } from '../config/subjects';
 import { ALL_PROFILES, SUBS } from '../config/questionPools';
@@ -8,7 +8,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { useApp } from '../contexts/AppContext';
 import { useToast } from '../contexts/ToastContext';
 import { useT } from '../locales';
-import { calcTestXP } from '../utils/xpHelpers';
 import { shareToWhatsApp, shareToTelegram, copyText } from '../utils/shareHelpers';
 import {
   createDuel, joinDuel, submitAnswer, getDuel, forfeitDuel,
@@ -19,8 +18,8 @@ import { trackEvent } from '../utils/analytics';
 import BackButton from './ui/BackButton';
 import LoadingSpinner from './ui/LoadingSpinner';
 import {
-  Swords, Copy, MessageCircle, Send, ArrowRight,
-  ChevronRight, Crown, Clock, Check, X, Zap, Trophy, RotateCcw,
+  Swords, Copy, MessageCircle, Send,
+  ChevronRight, Crown, Clock, Check, X, Zap, RotateCcw,
 } from 'lucide-react';
 import type { DuelQuestion, DuelState, Profile, TestResult } from '../types/index';
 
@@ -552,7 +551,7 @@ export default function Duel() {
             <button onClick={() => shareToWhatsApp(inviteText)} style={{ flex: 1, padding: '10px', background: 'rgba(37,211,102,0.1)', border: '1px solid rgba(37,211,102,0.2)', borderRadius: 10, color: '#25D366', fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
               <MessageCircle size={15} />WhatsApp
             </button>
-            <button onClick={() => shareToTelegram(inviteText)} style={{ flex: 1, padding: '10px', background: 'rgba(26,154,140,0.1)', border: '1px solid rgba(26,154,140,0.2)', borderRadius: 10, color: COLORS.teal, fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <button onClick={() => shareToTelegram(inviteText)} style={{ flex: 1, padding: '10px', background: 'rgba(255,90,54,0.1)', border: '1px solid rgba(255,90,54,0.2)', borderRadius: 10, color: COLORS.teal, fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
               <Send size={15} />Telegram
             </button>
             <button onClick={async () => { const ok = await copyText(inviteUrl); toast.success(ok ? t.errors.copied : t.error); }} style={{ flex: 1, padding: '10px', background: 'rgba(255,107,53,0.1)', border: '1px solid rgba(255,107,53,0.2)', borderRadius: 10, color: COLORS.accent, fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
@@ -725,7 +724,7 @@ export default function Duel() {
                 color = COLORS.red;
               }
             } else if (i === selectedAnswer) {
-              bg = 'rgba(26,154,140,0.1)';
+              bg = 'rgba(255,90,54,0.1)';
               border = `1.5px solid ${COLORS.teal}`;
             }
 

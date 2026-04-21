@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { SUBS, ALL_PROFILES } from '../config/questionPools';
 import { TOPIC_MAP, getTopicCount } from '../config/topics';
-import { CARD_COMPACT, TYPE, COLORS, scoreColor } from '../constants/styles';
+import { CARD_COMPACT, TYPE, COLORS, scoreColor, FF } from '../constants/styles';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useNav } from '../contexts/NavigationContext';
 import { useApp } from '../contexts/AppContext';
@@ -101,58 +101,75 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
   return (
     <div style={{ padding: `0 var(--content-padding) ${isDesktop ? 40 : 100}px` }}>
       <BackButton onClick={goHome} style={{ marginBottom: 14 }} />
-      <div style={{ display: "flex", alignItems: "center", marginBottom: 18 }}>
-        <div style={{ width: 50, height: 50, borderRadius: 15, background: sub.color + "15", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><SubjectIcon sid={sub.id} size={24} color={sub.color} /></div>
-        <div style={{ marginLeft: 14 }}>
-          <div style={{ ...TYPE.h2, fontSize: 18 }}>{(t.subjects as Record<string, string>)[sid] || sub.name}</div>
-          <div style={{ ...TYPE.bodySmall }}>
-            {poolSize} {t.questions} • {topics.length} {t.subjectDetail.sections}
-            {hasSubtopics && totalSubtopics > topics.length && ` • ${totalSubtopics} ${t.subjectDetail.topics}`}
+
+      {/* Subject header — neutral ink chip + Unbounded title + mono stats */}
+      <div style={{ display: "flex", alignItems: "center", marginBottom: 20, gap: 14 }}>
+        <div style={{
+          width: 56, height: 56, borderRadius: 14,
+          background: 'var(--bg-card)',
+          border: `2px solid #0F0F10`,
+          boxShadow: `0 3px 0 0 ${sub.color}`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          flexShrink: 0,
+        }}>
+          <SubjectIcon sid={sub.id} size={28} color={sub.color} />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            fontFamily: FF.display,
+            fontSize: 22, fontWeight: 900,
+            letterSpacing: '-0.03em',
+            color: 'var(--text)',
+            lineHeight: 1.1,
+          }}>{(t.subjects as Record<string, string>)[sid] || sub.name}</div>
+          <div style={{
+            fontFamily: "'JetBrains Mono',monospace",
+            fontSize: 10, fontWeight: 700,
+            letterSpacing: '0.08em',
+            color: 'var(--text-muted)',
+            marginTop: 4,
+          }}>
+            {poolSize} {t.questions} · {topics.length} {t.subjectDetail.sections}
+            {hasSubtopics && totalSubtopics > topics.length && ` · ${totalSubtopics} ${t.subjectDetail.topics}`}
           </div>
         </div>
       </div>
 
-      {/* Full test button */}
-      <button onClick={() => nav("test", sid, null)} style={{ ...CARD_COMPACT, display: "flex", alignItems: "center", width: "100%", background: `linear-gradient(135deg,${sub.color}18,${sub.color}0a)`, border: `1px solid ${sub.color}33`, padding: "16px 14px", marginBottom: 18, cursor: "pointer", textAlign: "left", transition: "all 0.2s" }} onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = `0 4px 20px ${sub.color}18` }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = "none" }}>
-        <div style={{ width: 40, height: 40, borderRadius: 12, background: sub.color + "22", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <Play size={18} color={sub.color} />
-        </div>
-        <div style={{ marginLeft: 12, flex: 1 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>{t.subjectDetail.fullTest}</div>
-          <div style={{ fontSize: 11, color: "var(--text-secondary)" }}>{poolSize} {t.subjectDetail.randomFromAll}</div>
-        </div>
-        {lastFullSc !== null && <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace", color: scoreColor(lastFullSc), marginRight: 8 }}>{lastFullSc}%</div>}
-        <ChevronRight size={18} color={sub.color} />
-      </button>
+      {/* Action cards — unified v2 ink-bordered */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+        {/* Full test */}
+        <ActionRow
+          icon={<Play size={18} color="#fff" strokeWidth={2.5} fill="#fff" />}
+          iconBg={COLORS.streak}
+          title={t.subjectDetail.fullTest}
+          desc={`${poolSize} ${t.subjectDetail.randomFromAll}`}
+          score={lastFullSc}
+          onClick={() => nav("test", sid, null)}
+        />
 
-      {/* Exam mode button */}
-      {hasExamMode && (
-        <button onClick={startExam} disabled={examLoading} style={{ ...CARD_COMPACT, display: "flex", alignItems: "center", width: "100%", background: "rgba(26,154,140,0.08)", border: "1px solid rgba(26,154,140,0.2)", padding: "16px 14px", marginBottom: 18, cursor: examLoading ? "wait" : "pointer", textAlign: "left", transition: "all 0.2s" }} onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 20px rgba(26,154,140,0.15)" }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = "none" }}>
-          <div style={{ width: 40, height: 40, borderRadius: 12, background: COLORS.teal, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <GraduationCap size={18} color="#fff" />
-          </div>
-          <div style={{ marginLeft: 12, flex: 1 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>{t.subjectDetail.examTitle}</div>
-            <div style={{ fontSize: 11, color: "var(--text-secondary)" }}>{t.subjectDetail.examDesc}</div>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2, marginRight: 4 }}>
-            <span style={{ fontSize: 9, color: COLORS.teal, fontWeight: 600 }}>25+5+5+5</span>
-          </div>
-          <ChevronRight size={18} color={COLORS.teal} />
-        </button>
-      )}
+        {/* Exam mode */}
+        {hasExamMode && (
+          <ActionRow
+            icon={<GraduationCap size={18} color="#fff" strokeWidth={2.3} />}
+            iconBg={COLORS.win}
+            title={t.subjectDetail.examTitle}
+            desc={t.subjectDetail.examDesc}
+            badgeText="25+5+5+5"
+            onClick={startExam}
+            disabled={examLoading}
+          />
+        )}
 
-      {/* Theory / Конспекты button */}
-      <button onClick={() => setShowTheory(s => !s)} style={{ ...CARD_COMPACT, display: "flex", alignItems: "center", width: "100%", background: "rgba(139,92,246,0.08)", border: "1px solid rgba(139,92,246,0.2)", padding: "16px 14px", marginBottom: 18, cursor: "pointer", textAlign: "left", transition: "all 0.2s" }}>
-        <div style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(139,92,246,0.18)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <BookOpen size={18} color="#8b5cf6" />
-        </div>
-        <div style={{ marginLeft: 12, flex: 1 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>{isKk ? 'Конспект' : 'Теория'}</div>
-          <div style={{ fontSize: 11, color: "var(--text-secondary)" }}>{isKk ? 'Қысқаша түсіндірме' : 'Краткие конспекты по темам'}</div>
-        </div>
-        <ChevronDown size={18} color="#8b5cf6" style={{ transition: "transform 0.2s", transform: showTheory ? "rotate(180deg)" : "rotate(0deg)" }} />
-      </button>
+        {/* Theory toggle */}
+        <ActionRow
+          icon={<BookOpen size={18} color="#fff" strokeWidth={2.3} />}
+          iconBg="#7A5AF8"
+          title={isKk ? 'Конспект' : 'Теория'}
+          desc={isKk ? 'Қысқаша түсіндірме' : 'Краткие конспекты по темам'}
+          chevron={<ChevronDown size={16} color="var(--text-muted)" strokeWidth={2.4} style={{ transition: "transform 0.2s", transform: showTheory ? "rotate(180deg)" : "rotate(0deg)" }} />}
+          onClick={() => setShowTheory(s => !s)}
+        />
+      </div>
 
       {showTheory && (
         <div style={{ marginBottom: 18, animation: "fadeIn 0.3s ease" }}>
@@ -161,15 +178,17 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
       )}
 
       {/* Topics / Sections */}
-      <h3 style={{ ...TYPE.h3, margin: "0 0 12px" }}>
-        {hasSubtopics ? t.subjectDetail.sectionsTitle : t.subjectDetail.topicsTitle}
-      </h3>
-      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <div style={{
+        fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
+        letterSpacing: '0.16em', textTransform: 'uppercase',
+        color: 'var(--text-muted)', marginBottom: 8, padding: '0 4px',
+      }}>{hasSubtopics ? t.subjectDetail.sectionsTitle : t.subjectDetail.topicsTitle}</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {poolLoading ? (
           <>
             {[0, 1, 2, 3, 4].map(i => <SkeletonCard key={i} style={{ animationDelay: `${i * 0.08}s` }} />)}
           </>
-        ) : topics.map(tp => {
+        ) : topics.map((tp, tpIdx) => {
           const cnt = topicCounts[tp.id] ?? getTopicCount(tp.ranges);
           const tpHist = subHist.filter(t => t.tp === tp.id);
           const lastSc = tpHist.length ? tpHist[tpHist.length - 1].sc : null;
@@ -177,82 +196,166 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
           const isSingleSub = subs.length <= 1;
           const isExpanded = expanded === tp.id;
           const canExpand = hasSubtopics && !isSingleSub;
+          const sectionNum = String(tpIdx + 1).padStart(2, '0');
 
           return (
-            <div key={tp.id} style={{ animation: "slideUp 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
-              {/* Section row */}
-              <div style={{ ...CARD_COMPACT, display: "flex", alignItems: "center", width: "100%", borderLeft: `3px solid ${sub.color}`, padding: "14px 14px", textAlign: "left", transition: "all 0.2s" }}>
-                {/* Expand/collapse or icon area */}
+            <div key={tp.id}>
+              {/* Section row — ink-bordered v2 card */}
+              <div style={{
+                display: "flex", alignItems: "stretch",
+                width: "100%",
+                background: 'var(--bg-card)',
+                border: `2px solid #0F0F10`,
+                borderRadius: 14,
+                boxShadow: '0 3px 0 0 #0F0F10',
+                overflow: 'hidden',
+              }}>
+                {/* Subject-colored side stripe */}
+                <div style={{ width: 4, background: sub.color, flexShrink: 0 }} />
+
+                {/* Main clickable area */}
                 <div
                   onClick={canExpand ? () => toggleSection(tp.id) : () => nav("test", sid, tp.id)}
-                  style={{ display: "flex", alignItems: "center", flex: 1, cursor: "pointer", gap: 11 }}
+                  style={{ display: "flex", alignItems: "center", flex: 1, cursor: "pointer", gap: 11, padding: '11px 12px', minWidth: 0 }}
                 >
-                  <div style={{ width: 40, height: 40, borderRadius: 11, background: sub.color + "15", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>
-                    {tp.icon}
+                  <div style={{
+                    width: 38, height: 38, borderRadius: 10,
+                    background: 'var(--bg-subtle)',
+                    border: '1.5px solid rgba(15,15,16,0.12)',
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    flexShrink: 0,
+                    fontFamily: "'JetBrains Mono',monospace",
+                    fontSize: 13, fontWeight: 800,
+                    letterSpacing: '-0.02em',
+                    color: sub.color,
+                  }}>
+                    {sectionNum}
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{isKk && tp.name_kk ? tp.name_kk : tp.name}</div>
-                    <div style={{ fontSize: 11, color: "var(--text-secondary)" }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      fontFamily: "'Nunito',sans-serif",
+                      fontSize: 13.5, fontWeight: 800,
+                      color: "var(--text)",
+                      lineHeight: 1.2,
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    }}>{isKk && tp.name_kk ? tp.name_kk : tp.name}</div>
+                    <div style={{
+                      fontFamily: "'JetBrains Mono',monospace",
+                      fontSize: 10, fontWeight: 700,
+                      color: "var(--text-muted)", marginTop: 2,
+                      letterSpacing: '0.04em',
+                    }}>
                       {cnt} {t.questions}
-                      {canExpand && ` • ${subs.length} ${t.subjectDetail.topics}`}
-                      {lastSc !== null && <span style={{ color: scoreColor(lastSc), fontWeight: 600 }}> • {t.subjectDetail.last} {lastSc}%</span>}
+                      {canExpand && ` · ${subs.length} ${t.subjectDetail.topics}`}
                     </div>
                   </div>
+                  {lastSc !== null && (
+                    <span style={{
+                      flexShrink: 0, marginRight: 4,
+                      fontFamily: FF.display,
+                      fontSize: 15, fontWeight: 900,
+                      letterSpacing: '-0.025em',
+                      color: scoreColor(lastSc),
+                      fontVariantNumeric: 'tabular-nums',
+                    }}>{lastSc}<span style={{ fontSize: 10, opacity: 0.7 }}>%</span></span>
+                  )}
                 </div>
-                {/* Play button for section test */}
+
+                {/* Play quick-start (expandable sections only) */}
                 {canExpand && (
                   <button
                     onClick={e => { e.stopPropagation(); nav("test", sid, tp.id); }}
                     aria-label={t.subjectDetail.fullTest}
-                    style={{ width: 44, height: 44, borderRadius: 8, background: sub.color + "18", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, marginRight: 6, transition: "background 0.2s" }}
+                    style={{
+                      width: 44, alignSelf: 'stretch',
+                      background: `${sub.color}18`,
+                      borderLeft: `1.5px solid rgba(15,15,16,0.1)`,
+                      border: 'none',
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      cursor: "pointer", flexShrink: 0,
+                      transition: "background 0.15s",
+                    }}
                     title={isKk && tp.name_kk ? tp.name_kk : tp.name}
                   >
-                    <Play size={14} color={sub.color} />
+                    <Play size={14} color={sub.color} strokeWidth={2.5} fill={sub.color} />
                   </button>
                 )}
-                {/* Arrow */}
+
+                {/* Expand chevron */}
                 <div
                   onClick={canExpand ? () => toggleSection(tp.id) : () => nav("test", sid, tp.id)}
-                  style={{ cursor: "pointer", display: "flex", alignItems: "center", flexShrink: 0 }}
+                  style={{
+                    cursor: "pointer", display: "flex", alignItems: "center", justifyContent: 'center',
+                    flexShrink: 0,
+                    width: 38, alignSelf: 'stretch',
+                    borderLeft: canExpand ? '1.5px solid rgba(15,15,16,0.1)' : 'none',
+                  }}
                 >
                   {canExpand
-                    ? <ChevronDown size={18} color={sub.color} style={{ transition: "transform 0.2s", transform: isExpanded ? "rotate(0deg)" : "rotate(-90deg)" }} />
-                    : <ChevronRight size={16} color={sub.color} />
+                    ? <ChevronDown size={16} color={sub.color} strokeWidth={2.6} style={{ transition: "transform 0.2s", transform: isExpanded ? "rotate(0deg)" : "rotate(-90deg)" }} />
+                    : <ChevronRight size={16} color={sub.color} strokeWidth={2.6} />
                   }
                 </div>
               </div>
 
               {/* Subtopic rows (expanded) */}
               {canExpand && isExpanded && (
-                <div style={{ marginLeft: 22, borderLeft: `2px solid ${sub.color}22`, marginTop: 2 }}>
-                  {subs.map((st, idx) => {
+                <div style={{ marginLeft: 18, marginTop: 4, marginBottom: 2 }}>
+                  {subs.map((st) => {
                     const stCnt = subtopicCounts[st.id] || 0;
                     const stHist = subHist.filter(t => t.tp === st.id);
                     const stLastSc = stHist.length ? stHist[stHist.length - 1].sc : null;
-                    const isLast = idx === subs.length - 1;
                     return (
                       <button
                         key={st.id}
                         onClick={() => nav("test", sid, st.id)}
-                        style={{
-                          display: "flex", alignItems: "center", width: "100%", padding: "10px 12px",
-                          background: "var(--card-bg)", border: "none", borderBottom: isLast ? "none" : "1px solid var(--border)",
-                          cursor: stCnt > 0 ? "pointer" : "default", textAlign: "left", transition: "background 0.15s",
-                          opacity: stCnt > 0 ? 1 : 0.5, borderRadius: isLast ? "0 0 10px 10px" : 0,
-                        }}
                         disabled={stCnt === 0}
-                        onMouseEnter={e => { if (stCnt > 0) (e.currentTarget as HTMLElement).style.background = sub.color + "08"; }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "var(--card-bg)"; }}
+                        style={{
+                          display: "flex", alignItems: "center", width: "100%",
+                          padding: "9px 12px 9px 14px",
+                          marginTop: 4,
+                          background: 'var(--bg-card)',
+                          border: '1.5px solid rgba(15,15,16,0.12)',
+                          borderRadius: 10,
+                          cursor: stCnt > 0 ? "pointer" : "default",
+                          textAlign: "left",
+                          opacity: stCnt > 0 ? 1 : 0.45,
+                          transition: 'border-color 0.15s',
+                        }}
+                        onMouseEnter={e => { if (stCnt > 0) (e.currentTarget as HTMLElement).style.borderColor = sub.color; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(15,15,16,0.12)'; }}
                       >
-                        <div style={{ width: 6, height: 6, borderRadius: 3, background: sub.color + "55", marginRight: 10, flexShrink: 0 }} />
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 12, fontWeight: 500, color: "var(--text)" }}>{isKk && st.name_kk ? st.name_kk : st.name}</div>
-                          <div style={{ fontSize: 10, color: "var(--text-secondary)" }}>
+                        <div style={{
+                          width: 8, height: 8, borderRadius: 4,
+                          background: sub.color,
+                          marginRight: 12, flexShrink: 0,
+                        }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{
+                            fontFamily: "'Nunito',sans-serif",
+                            fontSize: 12.5, fontWeight: 700,
+                            color: "var(--text)",
+                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          }}>{isKk && st.name_kk ? st.name_kk : st.name}</div>
+                          <div style={{
+                            fontFamily: "'JetBrains Mono',monospace",
+                            fontSize: 9.5, fontWeight: 700,
+                            color: "var(--text-muted)", marginTop: 2,
+                            letterSpacing: '0.04em',
+                          }}>
                             {stCnt > 0 ? `${stCnt} ${t.questions}` : t.subjectDetail.noQuestions}
-                            {stLastSc !== null && <span style={{ color: scoreColor(stLastSc), fontWeight: 600 }}> • {stLastSc}%</span>}
                           </div>
                         </div>
-                        {stCnt > 0 && <ChevronRight size={14} color={sub.color + "88"} />}
+                        {stLastSc !== null && (
+                          <span style={{
+                            flexShrink: 0, marginRight: 6,
+                            fontFamily: FF.display,
+                            fontSize: 12, fontWeight: 900,
+                            color: scoreColor(stLastSc),
+                            fontVariantNumeric: 'tabular-nums',
+                          }}>{stLastSc}<span style={{ fontSize: 9, opacity: 0.7 }}>%</span></span>
+                        )}
+                        {stCnt > 0 && <ChevronRight size={13} color="var(--text-muted)" strokeWidth={2.4} />}
                       </button>
                     );
                   })}
@@ -263,6 +366,90 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
         })}
       </div>
     </div>
+  );
+}
+
+// ── ActionRow — unified ink-bordered v2 card with press depth ──────────
+function ActionRow({
+  icon, iconBg, title, desc, score, badgeText, chevron, onClick, disabled,
+}: {
+  icon: React.ReactNode;
+  iconBg: string;
+  title: string;
+  desc: string;
+  score?: number | null;
+  badgeText?: string;
+  chevron?: React.ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
+  const [pressed, setPressed] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      onMouseDown={() => !disabled && setPressed(true)}
+      onMouseUp={() => setPressed(false)}
+      onMouseLeave={() => setPressed(false)}
+      onTouchStart={() => !disabled && setPressed(true)}
+      onTouchEnd={() => setPressed(false)}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 12,
+        padding: '12px 14px',
+        background: 'var(--bg-card)',
+        border: '2px solid #0F0F10',
+        borderRadius: 14,
+        cursor: disabled ? 'wait' : 'pointer',
+        textAlign: 'left',
+        width: '100%',
+        transition: 'transform 80ms, box-shadow 80ms',
+        boxShadow: pressed ? '0 1px 0 0 #0F0F10' : '0 4px 0 0 #0F0F10',
+        transform: pressed ? 'translateY(3px)' : 'none',
+        opacity: disabled ? 0.6 : 1,
+      }}
+    >
+      <div style={{
+        flexShrink: 0,
+        width: 42, height: 42, borderRadius: 12,
+        background: iconBg,
+        border: `2px solid #0F0F10`,
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        {icon}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{
+          fontFamily: "'Nunito',sans-serif",
+          fontSize: 14, fontWeight: 800,
+          color: 'var(--text)', lineHeight: 1.2,
+        }}>{title}</div>
+        <div style={{
+          fontFamily: "'Nunito',sans-serif",
+          fontSize: 11.5, fontWeight: 600,
+          color: 'var(--text-secondary)', marginTop: 2,
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        }}>{desc}</div>
+      </div>
+      {score !== null && score !== undefined && (
+        <span style={{
+          fontFamily: FF.display,
+          fontSize: 15, fontWeight: 900,
+          letterSpacing: '-0.025em',
+          color: scoreColor(score),
+          fontVariantNumeric: 'tabular-nums',
+        }}>{score}<span style={{ fontSize: 10, opacity: 0.7 }}>%</span></span>
+      )}
+      {badgeText && (
+        <span style={{
+          flexShrink: 0,
+          fontFamily: "'JetBrains Mono',monospace",
+          fontSize: 9, fontWeight: 800,
+          letterSpacing: '0.08em',
+          color: 'var(--text-muted)',
+        }}>{badgeText}</span>
+      )}
+      {chevron ?? <ChevronRight size={16} color="var(--text-muted)" strokeWidth={2.4} />}
+    </button>
   );
 }
 

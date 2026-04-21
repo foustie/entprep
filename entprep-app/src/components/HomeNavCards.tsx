@@ -1,4 +1,3 @@
-import React from 'react';
 import { UNIS } from '../data/universities';
 import { CARD_COMPACT, COLORS, SECTION_LABEL, TINT, hoverGlow } from '../constants/styles';
 import { useT } from '../locales';
@@ -13,7 +12,6 @@ export default function HomeNavCards() {
   const socialItems: { id: string; label: string; screen: string; Icon: LucideIcon; color: string; tint: string }[] = [
     { id: 'lb',  label: t.home.leaderboard, screen: 'leaderboard', Icon: Trophy, color: COLORS.green, tint: TINT.green.bg },
     { id: 'fr',  label: t.home.friends,     screen: 'friends',     Icon: Users,  color: COLORS.teal,  tint: TINT.teal.bg },
-    { id: 'du',  label: t.home.duel,        screen: 'duel',        Icon: Swords, color: COLORS.red,   tint: TINT.red.bg },
   ];
 
   return (
@@ -66,16 +64,18 @@ export default function HomeNavCards() {
       <button onClick={() => nav("calc")} aria-label={t.home.grantCalc} style={{
         ...CARD_COMPACT,
         display: 'flex', alignItems: 'center', width: '100%',
-        background: `linear-gradient(135deg,${COLORS.accent},${COLORS.accentDark})`,
-        border: 'none', padding: '14px 14px',
+        background: COLORS.streak,
+        border: '2px solid #0F0F10',
+        borderBottom: '4px solid #0F0F10',
+        padding: '14px 14px',
         cursor: 'pointer', textAlign: 'left',
       }}>
-        <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <Calculator size={20} color="#fff" />
+        <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(255,255,255,0.22)', border: '1.5px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Calculator size={20} color="#fff" strokeWidth={2.25} />
         </div>
         <div style={{ marginLeft: 12, flex: 1 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{t.home.grantCalc}</div>
-          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.75)' }}>{UNIS.length} {t.home.grantCalcDesc}</div>
+          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.85)' }}>{UNIS.length} {t.home.grantCalcDesc}</div>
         </div>
         <ChevronRight size={18} color="#fff" />
       </button>

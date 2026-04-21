@@ -1,4 +1,3 @@
-import React from 'react';
 import { COLORS } from '../../constants/styles';
 import type { ProfileBlock } from '../../types';
 import { useT } from '../../locales';

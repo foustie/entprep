@@ -17,18 +17,13 @@ if (VAPID_PUBLIC && VAPID_PRIVATE) {
   );
 }
 
-// Kazakhstan is UTC+5 (Almaty/Astana) — all times in KZ
-const KZ_OFFSET = 5;
-
+// Kazakhstan timezone — use Intl for accuracy regardless of server TZ
 function getKZHour() {
-  return (new Date().getUTCHours() + KZ_OFFSET) % 24;
+  return parseInt(new Date().toLocaleString('en-US', { timeZone: 'Asia/Almaty', hour: 'numeric', hour12: false }));
 }
 
 function isKZSunday() {
-  const now = new Date();
-  // Shift to KZ time before checking day
-  const kzTime = new Date(now.getTime() + KZ_OFFSET * 3600000);
-  return kzTime.getUTCDay() === 0;
+  return new Date().toLocaleString('en-US', { timeZone: 'Asia/Almaty', weekday: 'short' }) === 'Sun';
 }
 
 // ── Supabase helpers ──────────────────────────────────────────────────────

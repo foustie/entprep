@@ -1,183 +1,342 @@
-import React from 'react';
-import { COLORS, TINT, R } from '../constants/styles';
-import { BookOpen, Brain, Zap, Users, ArrowRight, GraduationCap, CheckCircle2, ChevronDown } from 'lucide-react';
+import { CARD, CARD_HERO, BUTTON, COLORS, TYPE, FF, SP } from '../constants/styles';
+import { BookOpen, Brain, Zap, Users, ArrowRight, GraduationCap, CheckCircle2, ChevronDown, Flame, Instagram, Send, AtSign } from 'lucide-react';
+import { useT } from '../locales';
+import { useApp } from '../contexts/AppContext';
 
 interface Props {
   onStart: () => void;
   totalQ: number;
 }
 
+const INK = '#0F0F10';
+const LANGS = ['ru', 'kk'] as const;
+
 export default function Landing({ onStart, totalQ }: Props) {
+  const t = useT();
+  const tl = t.landing;
+  const { st, updSt } = useApp();
+  const lang = st.lang || 'ru';
   const qLabel = `${Math.floor(totalQ / 1000)} 000+`;
 
+  const primaryBtn: React.CSSProperties = {
+    ...BUTTON.primary,
+    width: '100%',
+    maxWidth: 340,
+    padding: '18px 28px',
+    fontSize: 15,
+    borderRadius: 14,
+    justifyContent: 'center',
+  };
+
   return (
-    <div style={{ minHeight: '100dvh', background: 'var(--bg)', color: 'var(--text)', fontFamily: "'Segoe UI',-apple-system,sans-serif", paddingBottom: 80 }}>
+    <div style={{ minHeight: '100dvh', background: 'var(--bg)', color: 'var(--text)', fontFamily: FF.body, paddingBottom: 96 }}>
 
-      {/* Hero */}
-      <section style={{ padding: '16px 24px 20px', textAlign: 'center', maxWidth: 440, margin: '0 auto' }}>
-        <div style={{ fontSize: 18, fontWeight: 800, fontFamily: "'Unbounded',sans-serif", marginBottom: 20 }}>
-          <span style={{ color: COLORS.accent }}>ENT</span><span style={{ color: COLORS.teal }}>prep</span>
-        </div>
-
-        <h1 style={{
-          fontSize: 32, fontWeight: 800, fontFamily: "'Unbounded',sans-serif",
-          lineHeight: 1.2, marginBottom: 16, color: 'var(--text)',
-        }}>
-          Бесплатная подготовка к&nbsp;ЕНТ
-        </h1>
-
-        <p style={{ fontSize: 16, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 24, maxWidth: 340, margin: '0 auto 24px' }}>
-          {qLabel} вопросов · 13 предметов · AI объясняет каждую ошибку
-        </p>
-
-        <button onClick={onStart} style={{
-          width: '100%', maxWidth: 320, padding: '18px 24px',
-          background: `linear-gradient(135deg,${COLORS.accent},${COLORS.accentDark})`,
-          border: 'none', borderRadius: 16, color: '#fff',
-          fontSize: 17, fontWeight: 700, cursor: 'pointer',
-          boxShadow: '0 6px 24px rgba(255,107,53,0.3)',
-          display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-        }}>
-          Начать бесплатно <ArrowRight size={20} />
-        </button>
-
-        <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 12 }}>
-          Без регистрации · без оплаты · сразу к вопросам
-        </p>
-
-        {/* Social proof bar */}
-        <div style={{
-          display: 'flex', justifyContent: 'center', gap: 16, marginTop: 24,
-          flexWrap: 'wrap',
-        }}>
-          {[
-            { value: qLabel, label: 'вопросов' },
-            { value: '13', label: 'предметов' },
-            { value: 'AI', label: 'объяснения' },
-          ].map((s, i) => (
-            <div key={i} style={{ textAlign: 'center', minWidth: 70 }}>
-              <div style={{ fontSize: 18, fontWeight: 800, fontFamily: "'Unbounded',sans-serif", color: i === 2 ? COLORS.accent : COLORS.teal }}>{s.value}</div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>{s.label}</div>
+      {/* Hero — yellow splash block with ink logo + ink-shadow CTA */}
+      <section style={{
+        background: COLORS.xpSoft,
+        borderBottom: `2px solid ${INK}`,
+        padding: '20px 20px 36px',
+        position: 'relative',
+      }}>
+        <div style={{ maxWidth: 440, margin: '0 auto', textAlign: 'center' }}>
+          {/* Header row: logo left, lang toggle right */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+            {/* Logo */}
+            <div style={{
+              fontSize: 18, fontWeight: 800, fontFamily: FF.display,
+              letterSpacing: '-0.01em',
+            }}>
+              <span style={{ color: INK }}>ENT</span><span style={{ color: COLORS.streak }}>prep</span>
             </div>
-          ))}
-        </div>
 
-        <div style={{ marginTop: 20, display: 'flex', justifyContent: 'center' }}>
-          <ChevronDown size={24} color="var(--text-muted)" style={{ opacity: 0.5, animation: 'bounce 2s infinite' }} />
+            {/* Lang toggle */}
+            <div
+              role="group"
+              aria-label="Language"
+              style={{
+                display: 'inline-flex',
+                borderRadius: 10,
+                border: `2px solid ${INK}`,
+                boxShadow: `0 2px 0 0 ${INK}`,
+                overflow: 'hidden',
+                background: '#FFF',
+              }}
+            >
+              {LANGS.map((l, i) => {
+                const active = lang === l;
+                return (
+                  <button
+                    key={l}
+                    type="button"
+                    onClick={() => updSt({ ...st, lang: l })}
+                    aria-pressed={active}
+                    style={{
+                      padding: '6px 12px',
+                      border: 'none',
+                      borderLeft: i === 0 ? 'none' : `2px solid ${INK}`,
+                      background: active ? COLORS.streak : 'transparent',
+                      color: active ? '#FFF' : INK,
+                      fontFamily: FF.mono,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      letterSpacing: '0.06em',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {l === 'ru' ? 'РУС' : 'ҚАЗ'}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Eyebrow */}
+          <div style={{ ...TYPE.eyebrow, marginBottom: 12, color: INK }}>
+            {tl.heroEyebrow}
+          </div>
+
+          <h1 style={{
+            ...TYPE.h1,
+            fontSize: 34,
+            marginBottom: 14,
+            color: INK,
+            textWrap: 'balance' as const,
+          }}>
+            {tl.title}
+          </h1>
+
+          <p style={{
+            ...TYPE.body,
+            fontSize: 15,
+            color: INK,
+            opacity: 0.75,
+            marginBottom: 24,
+            maxWidth: 320,
+            margin: '0 auto 24px',
+          }}>
+            {qLabel} {tl.subtitle}
+          </p>
+
+          <button onClick={onStart} style={primaryBtn}>
+            {tl.startFree} <ArrowRight size={18} />
+          </button>
+
+          <p style={{ ...TYPE.caption, marginTop: 10, color: INK, opacity: 0.65 }}>
+            {tl.noReg}
+          </p>
+
+          {/* Stat row — ink-bordered mini cards */}
+          <div style={{
+            display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
+            gap: 8, marginTop: 24,
+          }}>
+            {[
+              { v: qLabel, label: tl.questionsLabel, color: COLORS.streak },
+              { v: '13', label: tl.subjectsLabel, color: COLORS.win },
+              { v: 'AI', label: tl.aiLabel, color: INK },
+            ].map((s, i) => (
+              <div key={i} style={{
+                background: '#FFF',
+                border: `2px solid ${INK}`,
+                borderRadius: 12,
+                boxShadow: `0 2px 0 0 ${INK}`,
+                padding: '10px 4px',
+                textAlign: 'center',
+              }}>
+                <div style={{
+                  ...TYPE.statSmall,
+                  fontSize: 16,
+                  color: s.color,
+                }}>{s.v}</div>
+                <div style={{ ...TYPE.statLabel, marginTop: 3, color: INK, opacity: 0.6 }}>
+                  {s.label}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ marginTop: 22, display: 'flex', justifyContent: 'center' }}>
+            <ChevronDown size={22} color={INK} style={{ opacity: 0.4, animation: 'bounce 2s infinite' }} />
+          </div>
+          <style>{`@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}@media(prefers-reduced-motion:reduce){*{animation:none!important}}`}</style>
         </div>
-        <style>{`@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}`}</style>
       </section>
 
-      {/* Features */}
-      <section style={{ padding: '40px 24px', maxWidth: 440, margin: '0 auto' }}>
+      {/* Features — ink cards with coloured icon chips */}
+      <section style={{ padding: '28px 20px 12px', maxWidth: 440, margin: '0 auto' }}>
+        <div style={{ ...TYPE.eyebrow, marginBottom: SP.md }}>
+          {tl.featuresEyebrow}
+        </div>
         {[
-          { icon: BookOpen, color: COLORS.teal, title: `${qLabel} вопросов`, desc: 'Все 13 предметов ЕНТ с объяснениями. Обычные, множественные и на соответствие.' },
-          { icon: Brain, color: COLORS.accent, title: 'AI разбирает ошибки', desc: 'Claude Sonnet объясняет почему ты ошибся и как решить правильно.' },
-          { icon: Zap, color: COLORS.amber, title: 'Полная симуляция ЕНТ', desc: '120 вопросов, 5 предметов, 4 часа — точный формат экзамена.' },
+          { icon: BookOpen, color: COLORS.streak, soft: COLORS.streakSoft, title: `${qLabel} ${tl.questionsTitle}`, desc: tl.questionsDesc },
+          { icon: Brain, color: INK, soft: COLORS.xpSofter, title: tl.aiTitle, desc: tl.aiDesc },
+          { icon: Zap, color: COLORS.win, soft: COLORS.winSoft, title: tl.simTitle, desc: tl.simDesc },
         ].map((f, i) => (
           <div key={i} style={{
-            display: 'flex', gap: 16, marginBottom: 28, alignItems: 'flex-start',
+            ...CARD,
+            display: 'flex',
+            gap: 14,
+            marginBottom: 12,
+            alignItems: 'flex-start',
           }}>
             <div style={{
-              width: 48, height: 48, borderRadius: 14,
-              background: `${f.color}15`, border: `1px solid ${f.color}25`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              width: 44, height: 44, borderRadius: 12,
+              background: f.soft,
+              border: `2px solid ${INK}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
             }}>
-              <f.icon size={22} color={f.color} />
+              <f.icon size={20} color={f.color} strokeWidth={2.25} />
             </div>
-            <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{f.title}</div>
-              <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>{f.desc}</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ ...TYPE.h3, fontSize: 15, marginBottom: 4 }}>{f.title}</div>
+              <div style={{ ...TYPE.bodySmall, lineHeight: 1.55 }}>{f.desc}</div>
             </div>
           </div>
         ))}
       </section>
 
-      {/* What's included */}
-      <section style={{
-        padding: '32px 24px', maxWidth: 440, margin: '0 auto',
-        background: 'var(--bg-card)', borderRadius: 20,
-        border: '1px solid var(--border-light)',
-        marginLeft: 16, marginRight: 16,
-      }}>
-        <h2 style={{ fontSize: 18, fontWeight: 700, fontFamily: "'Unbounded',sans-serif", marginBottom: 20, color: 'var(--text)' }}>
-          Всё бесплатно
-        </h2>
-        {[
-          '13 предметов ЕНТ',
-          `${qLabel} вопросов с ответами`,
-          'Объяснение каждой ошибки',
-          'Статистика и прогресс',
-          'Дуэли с друзьями',
-          'Калькулятор грантов',
-          'Работает офлайн',
-        ].map((item, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-            <CheckCircle2 size={16} color={COLORS.green} style={{ flexShrink: 0 }} />
-            <span style={{ fontSize: 14, color: 'var(--text-body)' }}>{item}</span>
-          </div>
-        ))}
-      </section>
-
-      {/* For Schools */}
-      <section style={{ padding: '48px 24px', maxWidth: 440, margin: '0 auto', textAlign: 'center' }}>
+      {/* What's included — ink card with streak checks */}
+      <section style={{ padding: '12px 20px', maxWidth: 440, margin: '0 auto' }}>
         <div style={{
-          width: 56, height: 56, borderRadius: 16, margin: '0 auto 16px',
-          background: TINT.teal.bg, border: `1px solid ${TINT.teal.border}`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          ...CARD_HERO,
+          background: COLORS.winSoft,
         }}>
-          <GraduationCap size={28} color={COLORS.teal} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+            <Flame size={18} color={COLORS.streak} strokeWidth={2.5} fill={COLORS.streak} />
+            <h2 style={{ ...TYPE.h2, color: INK }}>
+              {tl.allFree}
+            </h2>
+          </div>
+          <div style={{ display: 'grid', gap: 10 }}>
+            {[
+              tl.feat1,
+              `${qLabel} ${tl.feat2}`,
+              tl.feat3,
+              tl.feat4,
+              tl.feat5,
+              tl.feat6,
+              tl.feat7,
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <CheckCircle2 size={16} color={INK} strokeWidth={2.5} style={{ flexShrink: 0 }} />
+                <span style={{ ...TYPE.body, fontSize: 14, color: INK }}>{item}</span>
+              </div>
+            ))}
+          </div>
         </div>
-        <h2 style={{ fontSize: 18, fontWeight: 700, fontFamily: "'Unbounded',sans-serif", marginBottom: 8, color: 'var(--text)' }}>
-          Для школ и учителей
-        </h2>
-        <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 24, maxWidth: 320, margin: '0 auto 24px' }}>
-          Панель учителя: следите за прогрессом класса, находите слабые предметы, мотивируйте учеников.
-        </p>
+      </section>
+
+      {/* For Schools — ink card */}
+      <section style={{ padding: '20px 20px 12px', maxWidth: 440, margin: '0 auto' }}>
+        <div style={{ ...CARD, textAlign: 'center', padding: '24px 18px' }}>
+          <div style={{
+            width: 52, height: 52, borderRadius: 14, margin: '0 auto 14px',
+            background: COLORS.streakSoft,
+            border: `2px solid ${INK}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <GraduationCap size={24} color={INK} strokeWidth={2.25} />
+          </div>
+          <h2 style={{ ...TYPE.h2, marginBottom: 8 }}>
+            {tl.forSchools}
+          </h2>
+          <p style={{ ...TYPE.bodySmall, marginBottom: 16, maxWidth: 320, margin: '0 auto 16px' }}>
+            {tl.schoolsDesc}
+          </p>
+          <a
+            href={`https://wa.me/77473564629?text=${encodeURIComponent('Здравствуйте, Дияр! Хочу создать класс в ENTprep для учителя — подскажите как.')}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              ...BUTTON.secondary,
+              borderColor: INK,
+              borderBottomColor: INK,
+              padding: '12px 20px',
+              fontSize: 13,
+              textDecoration: 'none',
+            }}
+          >
+            <Users size={16} /> {tl.createClassFree}
+          </a>
+          <div style={{ ...TYPE.caption, marginTop: 12 }}>
+            {tl.needHelp}{' '}
+            <a
+              href={`https://wa.me/77473564629?text=${encodeURIComponent('Здравствуйте! Хочу подключить школу к ENTprep')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: COLORS.streak, textDecoration: 'underline', fontWeight: 700 }}
+            >
+              {tl.whatsapp}
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer — author + socials */}
+      <section style={{ padding: '24px 20px 16px', textAlign: 'center', maxWidth: 440, margin: '0 auto' }}>
+        <div style={{ ...TYPE.caption, marginBottom: 14 }}>
+          <span style={{ fontFamily: FF.display, fontWeight: 800 }}>
+            <span style={{ color: INK }}>ENT</span><span style={{ color: COLORS.streak }}>prep</span>
+          </span>
+          {' '}· {tl.format}
+        </div>
+        <div style={{ ...TYPE.caption, marginBottom: 10, fontWeight: 600, color: INK, opacity: 0.75 }}>
+          {tl.madeBy}
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
+          {[
+            { icon: Send, href: 'https://t.me/foustie', label: 'Telegram' },
+            { icon: Instagram, href: 'https://instagram.com/diyarbuilds', label: 'Instagram' },
+            { icon: AtSign, href: 'https://tiktok.com/@diyarbuilds', label: 'TikTok' },
+          ].map(s => (
+            <a
+              key={s.label}
+              href={s.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={s.label}
+              style={{
+                width: 36, height: 36, borderRadius: 10,
+                background: '#FFF',
+                border: `2px solid ${INK}`,
+                boxShadow: `0 2px 0 0 ${INK}`,
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                color: INK,
+                textDecoration: 'none',
+              }}
+            >
+              <s.icon size={16} strokeWidth={2.25} />
+            </a>
+          ))}
+        </div>
+      </section>
+
+      {/* Sticky CTA — ink-shadow, no gradient */}
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
+        padding: '10px 16px',
+        paddingBottom: 'max(10px, env(safe-area-inset-bottom))',
+        background: 'rgba(255,255,255,0.92)',
+        borderTop: `2px solid ${INK}`,
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+      }}>
         <button
           onClick={onStart}
           style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            padding: '14px 28px', borderRadius: 14,
-            background: COLORS.teal, color: '#fff',
-            fontSize: 15, fontWeight: 700, border: 'none', cursor: 'pointer',
+            ...BUTTON.primary,
+            width: '100%',
+            maxWidth: 440,
+            padding: '15px 24px',
+            fontSize: 15,
+            borderRadius: 14,
+            justifyContent: 'center',
+            margin: '0 auto',
+            display: 'flex',
           }}
         >
-          <Users size={18} /> Создать класс бесплатно
-        </button>
-        <div style={{ marginTop: 12, fontSize: 12, color: 'var(--text-muted)' }}>
-          Нужна помощь? <a href="https://wa.me/77473564629?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5!%20%D0%A5%D0%BE%D1%87%D1%83%20%D0%BF%D0%BE%D0%B4%D0%BA%D0%BB%D1%8E%D1%87%D0%B8%D1%82%D1%8C%20%D1%88%D0%BA%D0%BE%D0%BB%D1%83%20%D0%BA%20ENTprep" target="_blank" rel="noopener" style={{ color: COLORS.teal, textDecoration: 'underline' }}>Напишите в WhatsApp</a>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <section style={{ padding: '32px 24px 20px', textAlign: 'center', maxWidth: 440, margin: '0 auto' }}>
-        <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>
-          <span style={{ fontFamily: "'Unbounded',sans-serif", fontWeight: 800 }}>
-            <span style={{ color: COLORS.accent }}>ENT</span><span style={{ color: COLORS.teal }}>prep</span>
-          </span>
-          {' '}· Формат ЕНТ 2026
-        </div>
-      </section>
-
-      {/* Sticky CTA — mobile */}
-      <div style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
-        padding: '12px 20px', paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
-        background: 'var(--bg-footer)',
-        borderTop: '1px solid var(--border-light)',
-        backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-      }}>
-        <button onClick={onStart} style={{
-          width: '100%', maxWidth: 440, padding: '16px 24px',
-          background: `linear-gradient(135deg,${COLORS.accent},${COLORS.accentDark})`,
-          border: 'none', borderRadius: 14, color: '#fff',
-          fontSize: 16, fontWeight: 700, cursor: 'pointer',
-          boxShadow: '0 4px 20px rgba(255,107,53,0.3)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          margin: '0 auto',
-        }}>
-          Начать бесплатно <ArrowRight size={18} />
+          {tl.startFree} <ArrowRight size={18} />
         </button>
       </div>
     </div>

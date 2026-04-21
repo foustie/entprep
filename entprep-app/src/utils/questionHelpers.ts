@@ -82,6 +82,60 @@ function assembleRegularMix(source: Question[], n: number, shuffle: boolean): Qu
   return shuffle ? result.map(shuffleOptions) : result.map(copyQuestion);
 }
 
+/**
+ * Sample questions balanced by topic and difficulty.
+ * ENT spec: 50% easy, 30% medium, 20% hard. Even across topics.
+ */
+function balancedSample(source: Question[], n: number, shuffle: boolean): Question[] {
+  // Group by topic
+  const byTopic: Record<string, Question[]> = {};
+  for (const q of source) (byTopic[q._topic || '_'] ||= []).push(q);
+  const topicKeys = Object.keys(byTopic);
+
+  // If only 1 topic or very few questions, just shuffle
+  if (topicKeys.length <= 1 || source.length <= n) {
+    return shuffle ? shuffleArray(source).slice(0, n) : source.slice(0, n);
+  }
+
+  const perTopic = Math.max(1, Math.floor(n / topicKeys.length));
+  const result: Question[] = [];
+
+  for (const k of topicKeys) {
+    let topicQs = shuffle ? shuffleArray(byTopic[k]) : byTopic[k];
+    // Within topic, try to match difficulty distribution: 50/30/20
+    const easy = topicQs.filter(q => q.difficulty === 'easy');
+    const medium = topicQs.filter(q => q.difficulty === 'medium');
+    const hard = topicQs.filter(q => q.difficulty === 'hard');
+    const untagged = topicQs.filter(q => !q.difficulty);
+
+    const easyTarget = Math.round(perTopic * 0.5);
+    const medTarget = Math.round(perTopic * 0.3);
+    const hardTarget = perTopic - easyTarget - medTarget;
+
+    const picked = [
+      ...easy.slice(0, easyTarget),
+      ...medium.slice(0, medTarget),
+      ...hard.slice(0, hardTarget),
+    ];
+    // Fill shortfall from untagged, then any
+    if (picked.length < perTopic) {
+      const used = new Set(picked.map(q => q._oi));
+      const fill = [...untagged, ...topicQs].filter(q => !used.has(q._oi));
+      picked.push(...fill.slice(0, perTopic - picked.length));
+    }
+    result.push(...picked);
+  }
+
+  // Fill remaining
+  if (result.length < n) {
+    const used = new Set(result.map(q => q._oi));
+    const rest = source.filter(q => !used.has(q._oi));
+    result.push(...(shuffle ? shuffleArray(rest) : rest).slice(0, n - result.length));
+  }
+
+  return shuffle ? shuffleArray(result).slice(0, n) : result.slice(0, n);
+}
+
 async function getQs(sid: string, n: number, shuffle: boolean = true, topicId: string | null = null, lang?: 'ru' | 'kk'): Promise<Question[]> {
   if (sid === "reading") {
     const passages: Passage[] = await getPassages(lang);
@@ -91,7 +145,7 @@ async function getQs(sid: string, n: number, shuffle: boolean = true, topicId: s
     const r: Question[] = [];
     ps.forEach(p => {
       const pi = passages.indexOf(p);
-      p.qs.forEach((q, qi) => r.push({ ...q, _oi: pi * 5 + qi, pt: p.t, px: p.tx }));
+      p.qs.forEach((q, qi) => r.push({ ...q, _oi: pi * 5 + qi, pt: lang === 'kk' && q.pt_kk ? q.pt_kk : p.t, px: lang === 'kk' && q.px_kk ? q.px_kk : p.tx }));
     });
     return shuffle ? r.slice(0, n).map(shuffleOptions) : r.slice(0, n).map(copyQuestion);
   }
@@ -125,10 +179,10 @@ async function getQs(sid: string, n: number, shuffle: boolean = true, topicId: s
     return assembleRegularMix(source, Math.min(n, source.length), shuffle);
   }
 
-  // Mandatory subjects: all single-choice
+  // Mandatory subjects: topic + difficulty balanced single-choice
   const take = Math.min(n, source.length);
-  const arr = shuffle ? shuffleArray(source) : [...source];
-  return shuffle ? arr.slice(0, take).map(shuffleOptions) : arr.slice(0, take).map(copyQuestion);
+  const balanced = balancedSample(source, take, shuffle);
+  return shuffle ? balanced.map(shuffleOptions) : balanced.map(copyQuestion);
 }
 
 export { shuffleOptions, getQs };

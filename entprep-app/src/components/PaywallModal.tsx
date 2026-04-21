@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import BottomSheet from './ui/BottomSheet';
 import { Crown, Sparkles, Bot, GraduationCap, BookOpen, RotateCcw, Loader2, LogIn } from 'lucide-react';
-import { COLORS } from '../constants/styles';
+import { COLORS, BUTTON, FF, TYPE } from '../constants/styles';
+
+const INK = '#0F0F10';
 import { useT } from '../locales';
 import { useAuth } from '../contexts/AuthContext';
 import { useNav } from '../contexts/NavigationContext';
@@ -22,7 +24,7 @@ interface PaywallModalProps {
 }
 
 const BENEFIT_ICONS = [Bot, Sparkles, GraduationCap, BookOpen];
-const BENEFIT_COLORS = [COLORS.teal, COLORS.cyan, COLORS.teal, COLORS.accent];
+const BENEFIT_COLORS = [COLORS.streak, COLORS.xp, COLORS.win, COLORS.purple];
 
 
 const STORE_LINKS = {
@@ -143,11 +145,13 @@ export default function PaywallModal({ open, reason, onClose }: PaywallModalProp
       <div style={{ textAlign: 'center', padding: '4px 0' }}>
         <div style={{
           width: 56, height: 56, borderRadius: 16,
-          background: `linear-gradient(135deg, ${COLORS.accent}, ${COLORS.accentDark})`,
+          background: COLORS.streak,
+          border: `2px solid ${INK}`,
+          boxShadow: `0 3px 0 0 ${INK}`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           margin: '0 auto 14px',
         }}>
-          <Crown size={28} color="#fff" />
+          <Crown size={26} color="#fff" strokeWidth={2.25} />
         </div>
 
         <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>
@@ -199,7 +203,7 @@ export default function PaywallModal({ open, reason, onClose }: PaywallModalProp
               <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 {t.paywall.monthlyLabel}
               </div>
-              <div style={{ fontSize: 18, fontWeight: 800, color: plan === 'monthly' ? COLORS.accent : 'var(--text)', fontFamily: "'Unbounded', sans-serif" }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: plan === 'monthly' ? COLORS.accent : 'var(--text)', fontFamily: FF.display }}>
                 {monthlyPrice}
               </div>
             </button>
@@ -215,16 +219,18 @@ export default function PaywallModal({ open, reason, onClose }: PaywallModalProp
             >
               <div style={{
                 position: 'absolute', top: -8, right: 10,
-                background: `linear-gradient(135deg, ${COLORS.accent}, ${COLORS.accentDark})`,
+                background: COLORS.streak,
+                border: `2px solid ${INK}`,
                 color: '#fff', fontSize: 9, fontWeight: 700,
                 padding: '2px 8px', borderRadius: 6,
+                fontFamily: FF.mono, letterSpacing: '0.06em',
               }}>
                 {t.paywall.yearlyBadge}
               </div>
               <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 {t.paywall.yearlyLabel}
               </div>
-              <div style={{ fontSize: 18, fontWeight: 800, color: plan === 'yearly' ? COLORS.accent : 'var(--text)', fontFamily: "'Unbounded', sans-serif" }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: plan === 'yearly' ? COLORS.accent : 'var(--text)', fontFamily: FF.display }}>
                 {yearlyPrice}
               </div>
             </button>
@@ -243,12 +249,12 @@ export default function PaywallModal({ open, reason, onClose }: PaywallModalProp
             <button
               onClick={() => { onClose(); nav('settings'); }}
               style={{
-                width: '100%', padding: '15px',
-                background: `linear-gradient(135deg, ${COLORS.teal}, ${COLORS.cyan})`,
-                color: '#fff', border: 'none', borderRadius: 14,
-                fontSize: 15, fontWeight: 700, cursor: 'pointer',
-                boxShadow: '0 4px 20px rgba(26,154,140,0.3)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                ...BUTTON.primary,
+                width: '100%',
+                padding: '15px',
+                fontSize: 14,
+                borderRadius: 14,
+                justifyContent: 'center',
               }}
             >
               <LogIn size={18} />{t.paywall.loginToSubscribe || 'Войдите, чтобы подписаться'}
@@ -263,12 +269,15 @@ export default function PaywallModal({ open, reason, onClose }: PaywallModalProp
               onClick={handlePay}
               disabled={purchasing}
               style={{
-                width: '100%', padding: '15px',
-                background: purchasing ? 'var(--bg-muted)' : `linear-gradient(135deg, ${COLORS.accent}, ${COLORS.accentDark})`,
-                color: '#fff', border: 'none', borderRadius: 14,
-                fontSize: 15, fontWeight: 700, cursor: purchasing ? 'default' : 'pointer',
-                boxShadow: purchasing ? 'none' : '0 4px 20px rgba(255,107,53,0.3)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                ...BUTTON.primary,
+                width: '100%',
+                padding: '15px',
+                fontSize: 14,
+                borderRadius: 14,
+                justifyContent: 'center',
+                background: purchasing ? 'var(--bg-muted)' : COLORS.streak,
+                borderBottomColor: purchasing ? 'transparent' : '#C94524',
+                cursor: purchasing ? 'default' : 'pointer',
                 opacity: purchasing ? 0.7 : 1,
               }}
             >
@@ -287,7 +296,9 @@ export default function PaywallModal({ open, reason, onClose }: PaywallModalProp
                 background: 'transparent',
                 border: '1px solid var(--border)',
                 borderRadius: 12, color: 'var(--text-secondary)',
-                fontSize: 12, fontWeight: 500, cursor: 'pointer',
+                fontSize: 12, fontWeight: 500,
+                cursor: purchasing ? 'default' : 'pointer',
+                opacity: purchasing ? 0.5 : 1,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
               }}
             >
@@ -300,9 +311,9 @@ export default function PaywallModal({ open, reason, onClose }: PaywallModalProp
         {/* Legal links (Apple requirement) */}
         <div style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 14, lineHeight: 1.6, textAlign: 'center' }}>
           Оформляя подписку, вы соглашаетесь с{' '}
-          <a href="https://entprep.org/terms.html" target="_blank" rel="noopener" style={{ color: 'var(--text-muted)', textDecoration: 'underline' }}>Условиями использования</a>
+          <a href="https://entprep.org/terms.html" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-muted)', textDecoration: 'underline' }}>Условиями использования</a>
           {' '}и{' '}
-          <a href="https://entprep.org/privacy.html" target="_blank" rel="noopener" style={{ color: 'var(--text-muted)', textDecoration: 'underline' }}>Политикой конфиденциальности</a>
+          <a href="https://entprep.org/privacy.html" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-muted)', textDecoration: 'underline' }}>Политикой конфиденциальности</a>
         </div>
       </div>
     </BottomSheet>

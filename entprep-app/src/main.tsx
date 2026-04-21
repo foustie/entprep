@@ -6,7 +6,20 @@ import { Capacitor } from '@capacitor/core'
 
 initSentry();
 
-// Web OAuth: implicit flow — Supabase detects #access_token automatically
+// Clean up old PKCE-era storage key (v1 → v2 migration, Apr 15)
+try { localStorage.removeItem('entprep-auth'); } catch { /* ignore */ }
+
+// Web OAuth: implicit flow — Supabase detects #access_token automatically.
+// Log when the redirect lands so we can debug silent failures.
+if (!Capacitor.isNativePlatform() && window.location.hash) {
+  const hashParams = new URLSearchParams(window.location.hash.substring(1));
+  const errorDesc = hashParams.get('error_description') || hashParams.get('error');
+  if (errorDesc) {
+    console.error('OAuth redirect error:', errorDesc);
+  } else if (hashParams.get('access_token')) {
+    console.log('OAuth redirect: access_token detected, Supabase will pick it up');
+  }
+}
 
 // Handle OAuth deep links in native app
 if (Capacitor.isNativePlatform()) {

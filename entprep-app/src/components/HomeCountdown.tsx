@@ -1,5 +1,4 @@
-import React from 'react';
-import { CARD_COMPACT, COLORS, TINT } from '../constants/styles';
+import { COLORS, TINT } from '../constants/styles';
 import { useT } from '../locales';
 import { Trophy, Clock } from 'lucide-react';
 import type { EntCountdown } from '../config/ent';

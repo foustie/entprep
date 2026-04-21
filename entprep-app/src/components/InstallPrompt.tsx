@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Download } from 'lucide-react';
-import { COLORS } from '../constants/styles';
+import { COLORS, BUTTON } from '../constants/styles';
 import { useT } from '../locales';
 import { Capacitor } from '@capacitor/core';
 
@@ -82,8 +82,8 @@ export default function InstallPrompt() {
       willChange: 'opacity,transform',
     }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-        <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(255,107,53,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <Download size={20} color={COLORS.accent} />
+        <div style={{ width: 40, height: 40, borderRadius: 12, background: COLORS.streakSoft, border: '2px solid #0F0F10', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Download size={20} color="#0F0F10" strokeWidth={2.25} />
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>
@@ -102,10 +102,10 @@ export default function InstallPrompt() {
         }}>{t.pwa.later}</button>
         {!isIOS && (
           <button onClick={handleInstall} style={{
-            background: `linear-gradient(135deg, ${COLORS.accent}, ${COLORS.accentHover})`,
-            border: 'none', color: '#fff', borderRadius: 12,
-            padding: '9px 22px', fontSize: 12, fontWeight: 700, cursor: 'pointer',
-            display: 'flex', alignItems: 'center', gap: 6,
+            ...BUTTON.primary,
+            padding: '9px 22px',
+            fontSize: 12,
+            borderRadius: 12,
           }}>
             <Download size={14} />{t.pwa.install}
           </button>

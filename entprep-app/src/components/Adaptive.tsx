@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { getRecommendations, calcTopicStats, calcSubtopicStats, getWrongQuestions, calcStreak } from '../utils/adaptiveHelpers';
 import { supabase } from '../config/supabase';
 import { usePlan as usePlanLimit, canGeneratePlan } from '../utils/aiLimits';
-import { CARD_COMPACT, CARD_HERO, TYPE, COLORS, scoreColor } from '../constants/styles';
+import { CARD_COMPACT, CARD_HERO, TYPE, COLORS, scoreColor, FF } from '../constants/styles';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useNav } from '../contexts/NavigationContext';
 import { useApp } from '../contexts/AppContext';
@@ -280,26 +280,26 @@ export default function Adaptive() {
               <Sparkles size={16} color={COLORS.cyan} />
               <h2 style={{ ...TYPE.h3, margin: 0 }}>{t.adaptive.aiPlan7Days}</h2>
             </div>
-            <button onClick={generatePlan} disabled={planLoading} style={{ background: "none", border: "1px solid rgba(26,154,140,0.2)", borderRadius: 8, padding: "5px 10px", color: COLORS.cyan, fontSize: 11, cursor: planLoading ? "wait" : "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+            <button onClick={generatePlan} disabled={planLoading} style={{ background: "none", border: "1px solid rgba(255,90,54,0.2)", borderRadius: 8, padding: "5px 10px", color: COLORS.cyan, fontSize: 11, cursor: planLoading ? "wait" : "pointer", display: "flex", alignItems: "center", gap: 4 }}>
               <RefreshCw size={12} /> {t.adaptive.refresh}
             </button>
           </div>
-          <div style={{ ...CARD_COMPACT, background: "var(--bg-elevated)", border: "1px solid rgba(26,154,140,0.18)", padding: "14px 16px", marginBottom: 10 }}>
+          <div style={{ ...CARD_COMPACT, background: "var(--bg-elevated)", border: "1px solid rgba(255,90,54,0.18)", padding: "14px 16px", marginBottom: 10 }}>
             <div style={{ fontSize: 13, color: "var(--text-body)", lineHeight: 1.5 }}>{plan.summary}</div>
           </div>
           <div style={{ display: "flex", gap: 6, marginBottom: 10, overflowX: "auto", paddingBottom: 4 }}>
             {(plan.days || []).map((d, i) => (
-              <button key={i} onClick={() => setOpenDay(openDay === i ? null : i)} style={{ background: openDay === i ? "rgba(26,154,140,0.18)" : "var(--bg-subtle)", border: openDay === i ? "1px solid rgba(26,154,140,0.35)" : "1px solid var(--border)", borderRadius: 10, padding: "8px 14px", color: openDay === i ? COLORS.cyan : "var(--text-secondary)", fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s", flexShrink: 0 }}>
+              <button key={i} onClick={() => setOpenDay(openDay === i ? null : i)} style={{ background: openDay === i ? "rgba(255,90,54,0.18)" : "var(--bg-subtle)", border: openDay === i ? "1px solid rgba(255,90,54,0.35)" : "1px solid var(--border)", borderRadius: 10, padding: "8px 14px", color: openDay === i ? COLORS.cyan : "var(--text-secondary)", fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s", flexShrink: 0 }}>
                 <Calendar size={12} style={{ marginRight: 4, verticalAlign: -2 }} />
                 {(t.progress.dayNames as string[])[i] || `${t.adaptive.dayN} ${d.day}`}
               </button>
             ))}
           </div>
           {openDay !== null && plan.days[openDay] && (
-            <div style={{ ...CARD_COMPACT, border: "1px solid rgba(26,154,140,0.12)", padding: "14px 14px", animation: "slideUp 0.3s ease" }}>
+            <div style={{ ...CARD_COMPACT, border: "1px solid rgba(255,90,54,0.12)", padding: "14px 14px", animation: "slideUp 0.3s ease" }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", marginBottom: 12 }}>{plan.days[openDay].title}</div>
               {(plan.days[openDay].tasks || []).map((task, ti) => (
-                <div key={ti} role={task.type === "test" ? "button" : undefined} tabIndex={task.type === "test" ? 0 : undefined} onClick={() => { if (task.type === "test" && task.subject) nav("test", task.subject, task.topic || null); }} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 12px", marginBottom: 6, borderRadius: 10, background: task.type === "test" ? "rgba(26,154,140,0.06)" : task.type === "review" ? "rgba(26,154,140,0.06)" : "rgba(234,179,8,0.06)", border: `1px solid ${task.type === "test" ? "rgba(26,154,140,0.12)" : task.type === "review" ? "rgba(26,154,140,0.12)" : "rgba(234,179,8,0.12)"}`, cursor: task.type === "test" ? "pointer" : "default", transition: "all 0.2s" }} onMouseEnter={e => { if (task.type === "test") (e.currentTarget as HTMLElement).style.borderColor = "rgba(26,154,140,0.3)"; }} onMouseLeave={e => { if (task.type === "test") (e.currentTarget as HTMLElement).style.borderColor = "rgba(26,154,140,0.12)"; }}>
+                <div key={ti} role={task.type === "test" ? "button" : undefined} tabIndex={task.type === "test" ? 0 : undefined} onClick={() => { if (task.type === "test" && task.subject) nav("test", task.subject, task.topic || null); }} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 12px", marginBottom: 6, borderRadius: 10, background: task.type === "test" ? "rgba(255,90,54,0.06)" : task.type === "review" ? "rgba(255,90,54,0.06)" : "rgba(234,179,8,0.06)", border: `1px solid ${task.type === "test" ? "rgba(255,90,54,0.12)" : task.type === "review" ? "rgba(255,90,54,0.12)" : "rgba(234,179,8,0.12)"}`, cursor: task.type === "test" ? "pointer" : "default", transition: "all 0.2s" }} onMouseEnter={e => { if (task.type === "test") (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,90,54,0.3)"; }} onMouseLeave={e => { if (task.type === "test") (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,90,54,0.12)"; }}>
                   <div style={{ marginTop: 2, flexShrink: 0 }}>{taskIcon(task.type)}</div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, color: "var(--text-body)", lineHeight: 1.4 }}>{task.text}</div>
@@ -317,7 +317,7 @@ export default function Adaptive() {
       );
     }
     return (
-      <div style={{ ...CARD_COMPACT, background: "var(--bg-elevated)", border: "1px solid rgba(26,154,140,0.18)", padding: "20px 16px", marginBottom: 28, textAlign: "center" }}>
+      <div style={{ ...CARD_COMPACT, background: "var(--bg-elevated)", border: "1px solid rgba(255,90,54,0.18)", padding: "20px 16px", marginBottom: 28, textAlign: "center" }}>
         <Sparkles size={28} color={COLORS.cyan} style={{ marginBottom: 10 }} />
         <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text)", marginBottom: 6 }}>
           {planIsOld ? t.adaptive.planOutdated : t.adaptive.aiPlan}
@@ -326,7 +326,7 @@ export default function Adaptive() {
           {planIsOld ? t.adaptive.planOutdatedDesc : t.adaptive.planDesc}
         </div>
         {planError && <div style={{ fontSize: 12, color: COLORS.red, marginBottom: 10 }}>{planError}</div>}
-        <button onClick={generatePlan} disabled={planLoading} style={{ background: planLoading ? "rgba(26,154,140,0.15)" : `linear-gradient(135deg,${COLORS.teal},${COLORS.tealDark})`, border: "none", borderRadius: 12, padding: "12px 24px", color: "#fff", fontSize: 13, fontWeight: 700, cursor: planLoading ? "wait" : "pointer", display: "inline-flex", alignItems: "center", gap: 8, transition: "all 0.2s" }}>
+        <button onClick={generatePlan} disabled={planLoading} style={{ background: planLoading ? "rgba(255,90,54,0.15)" : COLORS.streak, border: "2px solid #0F0F10", borderBottom: planLoading ? "2px solid #0F0F10" : "4px solid #0F0F10", borderRadius: 12, padding: "12px 24px", color: "#fff", fontSize: 13, fontWeight: 700, cursor: planLoading ? "wait" : "pointer", display: "inline-flex", alignItems: "center", gap: 8, transition: "all 0.2s" }}>
           {planLoading ? <><Loader size={16} style={{ animation: "spin 1s linear infinite" }} /> {t.adaptive.generating}</> : <><Sparkles size={16} />{' '}{planIsOld ? t.adaptive.refreshPlan : t.adaptive.createPlan}</>}
         </button>
         {planLoading && (() => {
@@ -357,11 +357,11 @@ export default function Adaptive() {
           <h1 style={{ ...TYPE.h1, fontSize: 22, margin: "6px 0 10px" }}>{t.adaptive.subtitle}</h1>
           <div style={{ display: "flex", gap: 20 }}>
             <div>
-              <div style={{ fontSize: 24, fontWeight: 800, color: totalTests > 0 ? COLORS.accent : "var(--text-muted)", fontFamily: "'Unbounded',sans-serif" }}>{totalTests > 0 ? overall + "%" : "\u2014"}</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: totalTests > 0 ? COLORS.accent : "var(--text-muted)", fontFamily: FF.display }}>{totalTests > 0 ? overall + "%" : "\u2014"}</div>
               <div style={{ fontSize: 10, color: "var(--text-secondary)" }}>{t.adaptive.avgScore}</div>
             </div>
             <div>
-              <div style={{ fontSize: 24, fontWeight: 800, color: COLORS.teal, fontFamily: "'Unbounded',sans-serif" }}>{totalTests}</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: COLORS.teal, fontFamily: FF.display }}>{totalTests}</div>
               <div style={{ fontSize: 10, color: "var(--text-secondary)" }}>{t.adaptive.testsLabel}</div>
             </div>
           </div>

@@ -1,4 +1,3 @@
-import React from 'react';
 import { CARD_COMPACT, COLORS, TINT } from '../constants/styles';
 import { useT } from '../locales';
 import { useNav } from '../contexts/NavigationContext';

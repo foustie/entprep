@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { CARD_COMPACT, TYPE, COLORS } from '../constants/styles';
 import { SUBJECT_META } from '../config/subjects';
 import { ALL_PROFILES, SUBS } from '../config/questionPools';
@@ -7,20 +7,22 @@ import { useNav } from '../contexts/NavigationContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { useT } from '../locales';
+import { useApp } from '../contexts/AppContext';
 import { shareToWhatsApp, shareToTelegram, copyText } from '../utils/shareHelpers';
 import {
   createArena, joinArena, startArena, submitArenaAnswer,
   checkAdvance, getArenaState, subscribeToArena,
   buildArenaInviteUrl, parseArenaInviteParam,
 } from '../utils/arenaHelpers';
-import type { ArenaPlayer, DuelQuestion } from '../types/index';
+import type { ArenaPlayer } from '../utils/arenaHelpers';
+import type { DuelQuestion } from '../types/index';
 import { trackEvent } from '../utils/analytics';
 import BackButton from './ui/BackButton';
 import LoadingSpinner from './ui/LoadingSpinner';
 import SubjectIcon from './ui/SubjectIcon';
 import {
   Users, Copy, MessageCircle, Send, ChevronRight,
-  Crown, Clock, Check, X, Zap, Trophy, Play, RotateCcw,
+  Crown, Clock, Zap, Trophy, Play, RotateCcw,
 } from 'lucide-react';
 
 type Phase = 'menu' | 'lobby' | 'countdown' | 'playing' | 'leaderboard' | 'results';
@@ -39,6 +41,7 @@ export default function Arena() {
   const { user } = useAuth();
   const toast = useToast();
   const t = useT();
+  const { st } = useApp();
   const bp = useBreakpoint();
   const isKk = st.lang === 'kk';
 

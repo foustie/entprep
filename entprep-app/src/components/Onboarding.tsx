@@ -1,20 +1,31 @@
-import React, { useState } from 'react';
-import { BookOpen, Brain, Trophy, ChevronRight, ChevronLeft } from 'lucide-react';
-import { CARD_HERO, TYPE, COLORS } from '../constants/styles';
+import { useState } from 'react';
+import type { CSSProperties, ComponentType } from 'react';
+import { Sparkles, Bot, Trophy, ArrowRight, ArrowLeft } from 'lucide-react';
+import { COLORS, FF, FW, SP } from '../constants/styles';
 import { useT } from '../locales';
 import { TOTAL_Q } from '../config/questionPools';
-import type { LucideIcon } from 'lucide-react';
 
-interface SlideConfig {
-  Icon: LucideIcon;
-  color: string;
+const INK = '#0F0F10';
+
+interface SlideSpec {
+  Icon: ComponentType<{ size?: number; strokeWidth?: number; color?: string }>;
+  // hero accent: drives splash bg + icon chip color
+  tone: 'xp' | 'streak' | 'win';
+  // eyebrow label (mono caps)
+  eyebrow: string;
 }
 
-const SLIDE_CONFIGS: SlideConfig[] = [
-  { Icon: BookOpen, color: COLORS.teal },
-  { Icon: Brain, color: COLORS.teal },
-  { Icon: Trophy, color: COLORS.accent },
+const SLIDES: SlideSpec[] = [
+  { Icon: Sparkles, tone: 'xp',     eyebrow: 'банк вопросов' },
+  { Icon: Bot,      tone: 'streak', eyebrow: 'ии-репетитор' },
+  { Icon: Trophy,   tone: 'win',    eyebrow: 'симулятор ент' },
 ];
+
+const TONE: Record<SlideSpec['tone'], { splash: string; chip: string; textOnSplash: string }> = {
+  xp:     { splash: COLORS.xpSoft,    chip: COLORS.xp,     textOnSplash: INK },
+  streak: { splash: COLORS.streakSoft, chip: COLORS.streak, textOnSplash: INK },
+  win:    { splash: COLORS.winSoft,    chip: COLORS.win,    textOnSplash: INK },
+};
 
 interface OnboardingProps {
   onFinish: () => void;
@@ -23,76 +34,234 @@ interface OnboardingProps {
 export default function Onboarding({ onFinish }: OnboardingProps) {
   const t = useT();
   const [idx, setIdx] = useState(0);
-  const cfg = SLIDE_CONFIGS[idx];
-  const isLast = idx === SLIDE_CONFIGS.length - 1;
+  const cfg = SLIDES[idx];
+  const tone = TONE[cfg.tone];
+  const isLast = idx === SLIDES.length - 1;
 
   const qCount = `${Math.floor(TOTAL_Q / 1000)} 000+`;
-  const titles = [t.onboarding.slide1Title.replace(/[\d\s]+000\+/, qCount), t.onboarding.slide2Title, t.onboarding.slide3Title];
-  const descs = [t.onboarding.slide1Desc, t.onboarding.slide2Desc, t.onboarding.slide3Desc];
+  const titles = [
+    t.onboarding.slide1Title.replace(/[\d\s]+000\+/, qCount),
+    t.onboarding.slide2Title,
+    t.onboarding.slide3Title,
+  ];
+  const descs = [
+    t.onboarding.slide1Desc,
+    t.onboarding.slide2Desc,
+    t.onboarding.slide3Desc,
+  ];
 
   return (
-    <div style={{ padding: '0 20px', minHeight: '100dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-      <div style={{ textAlign: 'center', marginBottom: 8 }}>
-        <div style={{ fontSize: 15, fontWeight: 800, fontFamily: "'Unbounded',sans-serif", marginBottom: 40 }}>
-          <span style={{ color: COLORS.accent }}>ENT</span><span style={{ color: COLORS.teal }}>prep</span>
-        </div>
-      </div>
-
-      <div key={idx} style={{ ...CARD_HERO, textAlign: 'center', padding: '48px 28px', marginBottom: 36, animation: 'screenIn 0.4s cubic-bezier(0.16,1,0.3,1)' }}>
+    <div style={{
+      padding: '32px 20px 24px',
+      minHeight: '100dvh',
+      display: 'flex', flexDirection: 'column',
+      background: 'var(--bg)',
+    }}>
+      {/* Top: brand + skip */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        marginBottom: 28,
+      }}>
         <div style={{
-          width: 80, height: 80, borderRadius: 24, margin: '0 auto 28px',
-          background: `${cfg.color}18`,
-          border: `2px solid ${cfg.color}33`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontFamily: FF.display,
+          fontSize: 16, fontWeight: 900,
+          letterSpacing: '-0.03em',
         }}>
-          <cfg.Icon size={38} color={cfg.color} strokeWidth={1.8} />
+          <span style={{ color: COLORS.text }}>ENT</span>
+          <span style={{ color: COLORS.streak }}>prep.</span>
         </div>
-        <h2 style={{ ...TYPE.h1, fontSize: 26, marginBottom: 14 }}>{titles[idx]}</h2>
-        <p style={{ ...TYPE.bodySmall, fontSize: 14, maxWidth: 300, margin: '0 auto', lineHeight: 1.65 }}>{descs[idx]}</p>
+        <button
+          onClick={onFinish}
+          style={{
+            background: 'none', border: 'none',
+            fontFamily: FF.body, fontSize: 13, fontWeight: FW.bold,
+            color: COLORS.textMuted, cursor: 'pointer',
+            padding: 4,
+          }}
+        >
+          {t.skip} →
+        </button>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 32 }}>
-        {SLIDE_CONFIGS.map((_, i) => (
+      {/* Progress dots */}
+      <div style={{
+        display: 'flex', gap: 6, marginBottom: 24,
+      }}>
+        {SLIDES.map((_, i) => (
           <div key={i} style={{
-            width: i === idx ? 24 : 8, height: 8, borderRadius: 4,
-            background: i === idx ? cfg.color : 'var(--border-strong)',
-            transition: 'all 0.3s',
+            flex: i === idx ? 3 : 1,
+            height: 6,
+            background: i === idx ? COLORS.text : COLORS.cardBorder,
+            borderRadius: 3,
+            transition: 'flex 0.35s cubic-bezier(0.34,1.56,0.64,1)',
           }} />
         ))}
       </div>
 
-      <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-        {idx > 0 && (
-          <button onClick={() => setIdx(idx - 1)} aria-label={t.back} style={{
-            width: 48, height: 48, borderRadius: 14,
-            background: 'var(--bg-subtle-2)', border: '1px solid var(--border-md)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', flexShrink: 0,
-          }}>
-            <ChevronLeft size={20} color="var(--text-secondary)" />
-          </button>
-        )}
-        <button onClick={() => isLast ? onFinish() : setIdx(idx + 1)} aria-label={isLast ? t.onboarding.startPrep : t.onboarding.nextSlide} style={{
-          flex: 1, padding: '15px 20px',
-          background: isLast ? `linear-gradient(135deg,${COLORS.accent},${COLORS.accentDark})` : COLORS.teal,
-          border: 'none',
-          borderRadius: 14, color: '#fff', fontSize: 15, fontWeight: 700,
-          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          boxShadow: isLast ? '0 4px 20px rgba(255,107,53,0.3)' : 'none',
-          transition: 'all 0.3s',
+      {/* Hero slide — splash card */}
+      <div
+        key={idx}
+        style={{
+          flex: 1,
+          display: 'flex', flexDirection: 'column',
+          background: tone.splash,
+          border: `2px solid ${INK}`,
+          borderRadius: 24,
+          boxShadow: `0 6px 0 0 ${INK}`,
+          padding: '32px 24px',
+          marginBottom: 24,
+          animation: 'slideHero 0.42s cubic-bezier(0.16,1,0.3,1)',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Decorative dotted grid — subtle */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: `radial-gradient(${INK} 1px, transparent 1px)`,
+          backgroundSize: '24px 24px',
+          opacity: 0.05,
+          pointerEvents: 'none',
+        }} />
+
+        {/* Eyebrow */}
+        <div style={{
+          fontFamily: FF.mono,
+          fontSize: 10, fontWeight: 800,
+          letterSpacing: '0.16em', textTransform: 'uppercase',
+          color: tone.textOnSplash, opacity: 0.6,
+          marginBottom: 20,
+          position: 'relative',
         }}>
-          {isLast ? t.onboarding.start : t.next}
-          <ChevronRight size={18} />
-        </button>
+          {cfg.eyebrow} · {idx + 1}/{SLIDES.length}
+        </div>
+
+        {/* Icon chip */}
+        <div style={{
+          width: 68, height: 68, borderRadius: 18,
+          background: tone.chip,
+          border: `2.5px solid ${INK}`,
+          boxShadow: `0 4px 0 0 ${INK}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          marginBottom: 28,
+          color: '#fff',
+          position: 'relative',
+        }}>
+          <cfg.Icon size={34} strokeWidth={2.2} />
+        </div>
+
+        {/* Title */}
+        <h1 style={{
+          margin: 0, marginBottom: 12,
+          fontFamily: FF.display,
+          fontSize: idx === 0 ? 40 : 30,
+          fontWeight: 900,
+          letterSpacing: '-0.035em', lineHeight: 1.05,
+          color: tone.textOnSplash,
+          position: 'relative',
+          textWrap: 'balance' as 'balance',
+        }}>
+          {titles[idx]}
+        </h1>
+
+        {/* Description */}
+        <p style={{
+          margin: 0,
+          fontFamily: FF.body,
+          fontSize: 14.5, fontWeight: FW.semibold,
+          lineHeight: 1.5,
+          color: tone.textOnSplash, opacity: 0.75,
+          position: 'relative',
+          textWrap: 'balance' as 'balance',
+        }}>
+          {descs[idx]}
+        </p>
       </div>
 
-      <button onClick={onFinish} style={{
-        background: 'none', border: 'none', color: 'var(--text-muted)',
-        fontSize: 12, cursor: 'pointer', marginTop: 20, padding: 8,
-        alignSelf: 'center',
-      }}>
-        {t.skip}
-      </button>
+      {/* Bottom nav row */}
+      <div style={{ display: 'flex', gap: 10 }}>
+        {idx > 0 && (
+          <BackBtn onClick={() => setIdx(idx - 1)} label={t.back} />
+        )}
+        <NextBtn
+          label={isLast ? t.onboarding.start : t.next}
+          onClick={() => isLast ? onFinish() : setIdx(idx + 1)}
+        />
+      </div>
+
+      <style>{`
+        @keyframes slideHero {
+          0% { opacity: 0; transform: translateY(12px) scale(0.97); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+      `}</style>
     </div>
+  );
+}
+
+function NextBtn({ label, onClick }: { label: string; onClick: () => void }) {
+  const [pressed, setPressed] = useState(false);
+  const style: CSSProperties = {
+    flex: 1,
+    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+    padding: '16px 24px',
+    background: `linear-gradient(180deg, #FF6A47 0%, ${COLORS.streak} 100%)`,
+    color: '#fff',
+    border: `2px solid ${INK}`,
+    borderRadius: 14,
+    fontFamily: FF.display,
+    fontSize: 14, fontWeight: 900,
+    letterSpacing: '0.05em', textTransform: 'uppercase',
+    cursor: 'pointer',
+    transition: 'transform 90ms cubic-bezier(0.4,0,0.2,1), box-shadow 90ms',
+    boxShadow: pressed
+      ? `0 1px 0 0 ${INK}, 0 0 16px rgba(255,90,54,0.2)`
+      : `0 6px 0 0 ${INK}, 0 0 32px rgba(255,90,54,0.3)`,
+    transform: pressed ? 'translateY(5px)' : 'none',
+  };
+  return (
+    <button
+      onClick={onClick}
+      onMouseDown={() => setPressed(true)}
+      onMouseUp={() => setPressed(false)}
+      onMouseLeave={() => setPressed(false)}
+      onTouchStart={() => setPressed(true)}
+      onTouchEnd={() => setPressed(false)}
+      style={style}
+    >
+      {label}
+      <ArrowRight size={18} strokeWidth={3} />
+    </button>
+  );
+}
+
+function BackBtn({ label, onClick }: { label: string; onClick: () => void }) {
+  const [pressed, setPressed] = useState(false);
+  const style: CSSProperties = {
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    width: 56, height: 56,
+    background: 'var(--bg-card)',
+    color: COLORS.text,
+    border: `2px solid ${INK}`,
+    borderRadius: 14,
+    cursor: 'pointer',
+    flexShrink: 0,
+    transition: 'transform 90ms, box-shadow 90ms',
+    boxShadow: pressed ? `0 1px 0 0 ${INK}` : `0 6px 0 0 ${INK}`,
+    transform: pressed ? 'translateY(5px)' : 'none',
+  };
+  return (
+    <button
+      aria-label={label}
+      onClick={onClick}
+      onMouseDown={() => setPressed(true)}
+      onMouseUp={() => setPressed(false)}
+      onMouseLeave={() => setPressed(false)}
+      onTouchStart={() => setPressed(true)}
+      onTouchEnd={() => setPressed(false)}
+      style={style}
+    >
+      <ArrowLeft size={20} strokeWidth={2.5} />
+    </button>
   );
 }

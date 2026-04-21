@@ -1,14 +1,16 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { SUBS, ALL_PROFILES } from '../config/questionPools';
 import { resolveQuestion } from '../utils/questionStore';
 import { getWrongQuestions } from '../utils/adaptiveHelpers';
 import { shuffleOptions } from '../utils/questionHelpers';
-import { CARD_COMPACT, CARD_HERO, TYPE, COLORS } from '../constants/styles';
+import { CARD_COMPACT, CARD_HERO, TYPE, COLORS, FF } from '../constants/styles';
 import { useApp } from '../contexts/AppContext';
 import { useNav } from '../contexts/NavigationContext';
 import SkeletonCard from './ui/SkeletonCard';
 import BackButton from './ui/BackButton';
-import { ChevronDown, Check, Lightbulb, RotateCcw, ArrowUpDown } from 'lucide-react';
+import { ChevronDown, Check, Lightbulb, RotateCcw, ArrowUpDown, AlertTriangle } from 'lucide-react';
+import SubjectIcon from './ui/SubjectIcon';
+import { SUBJECT_META } from '../config/subjects';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useT } from '../locales';
 import Chip from './ui/Chip';
@@ -122,10 +124,32 @@ export default function ErrorReview() {
     <div style={{ padding: `0 var(--content-padding) ${isDesktop ? 40 : 100}px` }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
         <BackButton onClick={handleBack} />
-        <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{totalErrors} {errPlural(totalErrors)}</span>
+        <div style={{
+          padding: '5px 10px', borderRadius: 999,
+          background: COLORS.streakSoft, border: `1.5px solid ${COLORS.streak}`,
+          fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
+          letterSpacing: '0.08em', textTransform: 'uppercase',
+          color: COLORS.streak, display: 'inline-flex', alignItems: 'center', gap: 4,
+        }}>
+          <AlertTriangle size={11} strokeWidth={2.6} />{totalErrors} {errPlural(totalErrors)}
+        </div>
       </div>
 
-      <h1 style={{ ...TYPE.h1, fontSize: 20, margin: "0 0 12px" }}>{t.errorReview.title}</h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '4px 0 18px' }}>
+        <div style={{
+          width: 40, height: 40, borderRadius: 11,
+          background: '#0F0F10', border: '2px solid #0F0F10',
+          boxShadow: '0 3px 0 0 ' + COLORS.streak,
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          color: '#fff', flexShrink: 0,
+        }}>
+          <AlertTriangle size={20} strokeWidth={2.4} />
+        </div>
+        <h1 style={{
+          fontFamily: FF.display, fontSize: 22, fontWeight: 900,
+          letterSpacing: '-0.035em', color: 'var(--text)', margin: 0, lineHeight: 1.1,
+        }}>{t.errorReview.title}</h1>
+      </div>
 
       <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
         <Chip active={sortErrors === "count"} onClick={() => setSortErrors("count")} mode="subtle">
@@ -142,31 +166,77 @@ export default function ErrorReview() {
           <div key={g.su} style={{ ...CARD_COMPACT, padding: 0, marginBottom: 10, overflow: "hidden" }}>
             <div
               onClick={() => toggle(g.su)}
-              style={{ display: "flex", alignItems: "center", padding: "14px 14px", cursor: "pointer" }}
+              style={{ display: "flex", alignItems: "center", gap: 11, padding: "12px 14px", cursor: "pointer" }}
             >
-              <span style={{ fontSize: 20, marginRight: 11 }}>{g.meta.icon}</span>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>{subjectName(g.su)}</div>
-                <div style={{ fontSize: 12, color: COLORS.red }}>{g.items.length} {errPlural(g.items.length)}</div>
+              <div style={{
+                width: 36, height: 36, borderRadius: 9,
+                background: `${SUBJECT_META[g.su]?.color || '#0F0F10'}18`,
+                border: `1.5px solid ${SUBJECT_META[g.su]?.color || '#0F0F10'}`,
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <SubjectIcon sid={g.su} size={18} color={SUBJECT_META[g.su]?.color} strokeWidth={2.2} />
               </div>
-              <ChevronDown size={16} color="var(--text-muted)" style={{ transition: "transform 0.2s", transform: isOpen ? "rotate(180deg)" : "rotate(0)" }} />
+              <div style={{ flex: 1 }}>
+                <div style={{
+                  fontFamily: "'Nunito',sans-serif", fontSize: 14, fontWeight: 800,
+                  color: 'var(--text)',
+                }}>{subjectName(g.su)}</div>
+                <div style={{
+                  fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 700,
+                  letterSpacing: '0.04em', color: COLORS.streak, marginTop: 2,
+                }}>{g.items.length} {errPlural(g.items.length)}</div>
+              </div>
+              <ChevronDown size={16} color="var(--text-muted)" strokeWidth={2.4} style={{ transition: "transform 0.2s", transform: isOpen ? "rotate(180deg)" : "rotate(0)" }} />
             </div>
             {isOpen && (
-              <div style={{ padding: "0 14px 14px" }}>
+              <div style={{ padding: '0 12px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {g.items.map((w, i) => (
-                  <div key={i} style={{ background: "var(--bg-elevated)", borderRadius: 10, padding: "12px 12px", marginBottom: 6, borderLeft: `3px solid ${COLORS.red}` }}>
-                    <div style={{ fontSize: 12, color: "var(--text-body)", fontWeight: 500, marginBottom: 5 }}>{w.q.q}</div>
-                    <div style={{ fontSize: 11, color: COLORS.green, marginBottom: 4, display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
-                      <Check size={12} />
-                      {getQType(w.q) === 'matching' && w.q.pairs
+                  <div key={i} style={{
+                    position: 'relative',
+                    padding: '12px 12px 12px 16px',
+                    background: 'var(--bg-subtle)',
+                    border: `1.5px solid rgba(15,15,16,0.1)`,
+                    borderRadius: 10,
+                    overflow: 'hidden',
+                  }}>
+                    <div style={{
+                      position: 'absolute', top: 0, bottom: 0, left: 0, width: 4, background: COLORS.streak,
+                    }} />
+                    <div style={{
+                      fontFamily: "'Nunito',sans-serif", fontSize: 12.5, fontWeight: 700,
+                      color: 'var(--text)', lineHeight: 1.45, marginBottom: 8,
+                    }}>{w.q.q}</div>
+                    <div style={{
+                      display: 'flex', alignItems: 'flex-start', gap: 6,
+                      padding: '6px 9px', marginBottom: 6,
+                      background: COLORS.winSoft,
+                      border: `1px solid ${COLORS.win}`,
+                      borderRadius: 7,
+                      fontFamily: "'Nunito',sans-serif", fontSize: 11, fontWeight: 700,
+                      color: COLORS.win, lineHeight: 1.4,
+                    }}>
+                      <Check size={12} strokeWidth={2.6} style={{ flexShrink: 0, marginTop: 1 }} />
+                      <span>{getQType(w.q) === 'matching' && w.q.pairs
                         ? w.q.pairs.map(p => `${p[0]} → ${p[1]}`).join('; ')
                         : getQType(w.q) === 'multiple' && Array.isArray(w.q.c)
                           ? (w.q.c as number[]).map(idx => w.q.o[idx]).join(', ')
-                          : w.q.o[getSingleCorrect(w.q)]}
+                          : w.q.o[getSingleCorrect(w.q)]}</span>
                     </div>
-                    {w.q.e && <div style={{ fontSize: 10, color: "var(--text-secondary)", lineHeight: 1.7, background: "rgba(26,154,140,0.04)", padding: "6px 8px", borderRadius: 7, display: "flex", gap: 5 }}>
-                      <Lightbulb size={12} color={COLORS.teal} style={{ flexShrink: 0, marginTop: 2 }} /><span>{w.q.e}</span>
-                    </div>}
+                    {w.q.e && (
+                      <div style={{
+                        display: 'flex', gap: 6,
+                        padding: '8px 10px',
+                        background: 'var(--bg-card)',
+                        border: '1.5px solid rgba(15,15,16,0.12)',
+                        borderRadius: 8,
+                        fontFamily: "'Nunito',sans-serif", fontSize: 11, fontWeight: 600,
+                        color: 'var(--text-secondary)', lineHeight: 1.55,
+                      }}>
+                        <Lightbulb size={12} color={COLORS.streak} strokeWidth={2.4} style={{ flexShrink: 0, marginTop: 2 }} />
+                        <span>{w.q.e}</span>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

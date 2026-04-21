@@ -1,5 +1,5 @@
 import React from 'react';
-import { CARD_COMPACT } from '../../constants/styles';
+import { CARD_COMPACT, FF } from '../../constants/styles';
 
 interface StatBadgeProps {
   value: React.ReactNode;
@@ -11,23 +11,28 @@ interface StatBadgeProps {
 
 export default function StatBadge({ value, label, color, Icon, style }: StatBadgeProps) {
   return (
-    <div style={{ ...CARD_COMPACT, padding: '14px 10px', textAlign: 'center', ...style }}>
+    <div style={{ ...CARD_COMPACT, padding: '12px 8px', textAlign: 'center', ...style }}>
       <div
         style={{
-          fontSize: 20,
-          fontWeight: 800,
+          fontFamily: FF.display,
+          fontSize: 20, fontWeight: 900,
           color,
-          fontFamily: "'Unbounded',sans-serif",
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          letterSpacing: '-0.03em', lineHeight: 1,
+          fontVariantNumeric: 'tabular-nums',
+          display: 'inline-flex',
+          alignItems: 'center', justifyContent: 'center',
           gap: 4,
         }}
       >
-        {Icon && <Icon size={18} color={color} />}
+        {Icon && <Icon size={17} color={color} />}
         {value}
       </div>
-      <div style={{ fontSize: 10, color: 'var(--text-secondary)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</div>
+      <div style={{
+        fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 800,
+        letterSpacing: '0.1em', textTransform: 'uppercase',
+        color: 'var(--text-muted)', marginTop: 5,
+        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+      }}>{label}</div>
     </div>
   );
 }

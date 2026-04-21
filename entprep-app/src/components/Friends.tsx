@@ -263,7 +263,7 @@ export default function Friends() {
         </div>
         <button
           onClick={() => setShowShare(!showShare)}
-          style={{ width: 38, height: 38, borderRadius: 12, background: 'rgba(26,154,140,0.1)', border: '1px solid rgba(26,154,140,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
+          style={{ width: 38, height: 38, borderRadius: 12, background: 'rgba(255,90,54,0.1)', border: '1px solid rgba(255,90,54,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
         >
           <Share2 size={18} color={COLORS.teal} />
         </button>
@@ -277,7 +277,7 @@ export default function Friends() {
             <button onClick={() => { shareToWhatsApp(inviteText); }} style={{ flex: 1, padding: '10px', background: 'rgba(37,211,102,0.1)', border: '1px solid rgba(37,211,102,0.2)', borderRadius: 10, color: '#25D366', fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
               <MessageCircle size={15} />{t.friends.whatsapp}
             </button>
-            <button onClick={() => { shareToTelegram(inviteText); }} style={{ flex: 1, padding: '10px', background: 'rgba(26,154,140,0.1)', border: '1px solid rgba(26,154,140,0.2)', borderRadius: 10, color: COLORS.teal, fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <button onClick={() => { shareToTelegram(inviteText); }} style={{ flex: 1, padding: '10px', background: 'rgba(255,90,54,0.1)', border: '1px solid rgba(255,90,54,0.2)', borderRadius: 10, color: COLORS.teal, fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
               <Send size={15} />{t.friends.telegram}
             </button>
             <button onClick={async () => { const ok = await copyText(inviteUrl); toast.success(ok ? t.friends.linkCopied : t.friends.linkCopyFailed); }} style={{ flex: 1, padding: '10px', background: 'rgba(255,107,53,0.1)', border: '1px solid rgba(255,107,53,0.2)', borderRadius: 10, color: COLORS.accent, fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>

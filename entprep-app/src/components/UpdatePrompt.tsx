@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { RefreshCw } from 'lucide-react';
-import { COLORS } from '../constants/styles';
+import { COLORS, FF } from '../constants/styles';
 import { useT } from '../locales';
 
 export default function UpdatePrompt() {
@@ -35,39 +35,55 @@ export default function UpdatePrompt() {
     <div role="alert" aria-label={t.pwa.updateAvailable} style={{
       position: 'fixed', bottom: 74, left: 16, right: 16,
       maxWidth: 448, margin: '0 auto', zIndex: 9998,
-      background: 'var(--bg-prompt)',
-      border: '1px solid rgba(26,154,140,0.25)',
-      borderRadius: 18, padding: '18px 20px',
-      boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
+      background: 'var(--bg-card)',
+      border: '2px solid #0F0F10',
+      borderRadius: 14, padding: '16px 18px',
+      boxShadow: `0 5px 0 0 ${COLORS.streak}`,
       animation: 'slideUp 0.45s cubic-bezier(0.16,1,0.3,1)',
       willChange: 'opacity,transform',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-        <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(26,154,140,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <RefreshCw size={20} color={COLORS.teal} />
+        <div style={{
+          width: 38, height: 38, borderRadius: 10,
+          background: COLORS.streak,
+          border: '2px solid #0F0F10',
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          color: '#fff', flexShrink: 0,
+        }}>
+          <RefreshCw size={18} strokeWidth={2.4} />
         </div>
-        <div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 3 }}>
-            {t.pwa.updateAvailable}
-          </div>
-          <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-            {t.pwa.newVersion}
-          </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            fontFamily: FF.display, fontSize: 14, fontWeight: 900,
+            color: 'var(--text)', letterSpacing: '-0.02em', lineHeight: 1.15,
+          }}>{t.pwa.updateAvailable}</div>
+          <div style={{
+            fontFamily: "'Nunito',sans-serif", fontSize: 11.5, fontWeight: 700,
+            color: 'var(--text-muted)', marginTop: 2,
+          }}>{t.pwa.newVersion}</div>
         </div>
       </div>
       <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
         <button onClick={() => setShow(false)} style={{
-          background: 'none', border: '1px solid var(--border-md)',
-          color: 'var(--text-secondary)', borderRadius: 12, padding: '9px 18px',
-          fontSize: 12, fontWeight: 600, cursor: 'pointer'
+          background: 'var(--bg-subtle)',
+          border: '1.5px solid rgba(15,15,16,0.14)',
+          color: 'var(--text-muted)',
+          borderRadius: 10, padding: '9px 16px',
+          fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 800,
+          cursor: 'pointer',
         }}>{t.pwa.later}</button>
         <button onClick={handleUpdate} style={{
-          background: `linear-gradient(135deg, ${COLORS.teal}, ${COLORS.tealLight})`,
-          border: 'none', color: '#fff', borderRadius: 12,
-          padding: '9px 22px', fontSize: 12, fontWeight: 700, cursor: 'pointer',
-          display: 'flex', alignItems: 'center', gap: 6,
+          background: '#0F0F10',
+          border: '2px solid #0F0F10',
+          boxShadow: '0 2px 0 0 ' + COLORS.streak,
+          color: '#fff',
+          borderRadius: 10, padding: '8px 18px',
+          fontFamily: FF.display, fontSize: 11, fontWeight: 900,
+          letterSpacing: '0.06em', textTransform: 'uppercase',
+          cursor: 'pointer',
+          display: 'inline-flex', alignItems: 'center', gap: 6,
         }}>
-          <RefreshCw size={14} />{t.pwa.update}
+          <RefreshCw size={13} strokeWidth={2.6} />{t.pwa.update}
         </button>
       </div>
     </div>

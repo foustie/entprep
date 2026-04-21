@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { SUBS, ALL_PROFILES } from '../config/questionPools';
 import { resolveQuestion } from '../utils/questionStore';
 import { reviewCard, getDueCards } from '../utils/srEngine';
@@ -291,7 +291,7 @@ export default function ReviewSession({ cards, onFinish }: ReviewSessionProps) {
           {/* Explanation */}
           <div style={{
             ...CARD_COMPACT, padding: '10px 12px', marginBottom: 10,
-            background: 'rgba(26,154,140,0.04)', border: '1px solid rgba(26,154,140,0.15)',
+            background: 'rgba(255,90,54,0.04)', border: '1px solid rgba(255,90,54,0.15)',
           }}>
             <div style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.7 }}>{q.e}</div>
           </div>

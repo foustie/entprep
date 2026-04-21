@@ -230,6 +230,11 @@ export function checkExplanationMismatch(q, options, correctIdx, explanation) {
     return `explanation mentions "${options[wrongOpt]}" but correct is marked as "${correctOption}"`;
   }
 
+  // If explanation is substantial but doesn't reference correct answer at all
+  if (correctCore.length >= 4 && expLower.length > 50 && mentionedOptions.length === 0) {
+    return `explanation does not reference correct answer "${correctOption}"`;
+  }
+
   return null;
 }
 

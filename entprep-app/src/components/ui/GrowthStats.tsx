@@ -1,4 +1,3 @@
-import React from 'react';
 import { SUBJECT_META } from '../../config/subjects';
 import { FF } from '../../constants/styles';
 import SubjectIcon from './SubjectIcon';

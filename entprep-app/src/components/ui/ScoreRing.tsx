@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { scoreColor } from '../../constants/styles';
+import { useState, useEffect, useRef } from 'react';
+import { scoreColor, FF } from '../../constants/styles';
 
 interface Props {
   /** Score percentage 0-100, or raw score for /140 mode */
@@ -124,7 +124,7 @@ export default function ScoreRing({
         <div style={{
           fontSize: size * 0.25,
           fontWeight: 800,
-          fontFamily: "'Unbounded',sans-serif",
+          fontFamily: FF.display,
           color: ringColor,
           lineHeight: 1,
         }}>

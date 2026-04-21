@@ -26,7 +26,7 @@ export const ALL_PROFILES_BASE: ProfileSubject[] = [
   {id:"world_history",name:"Всемирная история",icon:"📜",color:"#8B5CF6",cnt:20,available:true,examCnt:40},
   {id:"informatics",name:"Информатика",icon:"💾",color:"#06B6D4",cnt:20,available:true,examCnt:40},
   {id:"law",name:"Основы права",icon:"⚖️",color:"#D97706",cnt:20,available:true,examCnt:40},
-  {id:"literature",name:"Литература",icon:"📚",color:"#E11D48",cnt:20,available:true,examCnt:40},
+  {id:"literature",name:"Литература",icon:"📚",color:"#E11D48",cnt:20,available:false,examCnt:40},
 ];
 
 export const SUBS_BASE: Record<string, SubjectConfig> = {

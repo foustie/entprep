@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { CARD_COMPACT, COLORS, TYPE, scoreColor, SECTION_LABEL } from '../constants/styles';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useApp } from '../contexts/AppContext';
@@ -10,7 +10,6 @@ import EmptyState from './ui/EmptyState';
 import { formatTime } from '../utils/formatters';
 import { History, ChevronDown, ChevronUp, Check, X, Clock, Target, Filter } from 'lucide-react';
 import Chip from './ui/Chip';
-import type { TestResult } from '../types';
 
 export default function TestHistory() {
   const { hist, st } = useApp();
@@ -151,11 +150,6 @@ export default function TestHistory() {
                       ? <Check size={13} color={COLORS.green} strokeWidth={2.5} />
                       : <X size={13} color={COLORS.red} strokeWidth={2.5} />
                     }
-                    {q.ts != null && (
-                      <span style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: "'JetBrains Mono',monospace" }}>
-                        {formatTime(q.ts ?? 0)}
-                      </span>
-                    )}
                     {q.tp && (
                       <span style={{ fontSize: 9, color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {q.tp}

@@ -118,7 +118,7 @@ export async function sendTutorMessage(
   if (!token) {
     // Fallback: read directly from storage (workaround for Supabase session sync issues)
     try {
-      const raw = localStorage.getItem('entprep-auth');
+      const raw = localStorage.getItem('entprep-auth-v2') || localStorage.getItem('entprep-auth');
       if (raw) { const parsed = JSON.parse(raw); token = parsed.access_token || null; }
     } catch { /* ignore */ }
   }
@@ -148,55 +148,16 @@ export async function sendTutorMessage(
   });
 
   clearTimeout(timeout);
-  console.log('[AI Tutor] Response status:', res.status, 'ok:', res.ok);
-
   if (!res.ok) {
     const errBody = await res.text().catch(() => '');
-    console.error('[AI Tutor] Error response:', res.status, errBody.slice(0, 200));
+    const ua = navigator.userAgent.substring(0, 80);
+    console.error('[AI Tutor] Error response:', res.status, errBody.slice(0, 200), 'UA:', ua);
     if (res.status === 401) throw new Error('Сессия истекла. Перезайдите в аккаунт.');
     if (res.status === 429) throw new Error('Слишком много запросов. Подожди минутку.');
     try { const d = JSON.parse(errBody); throw new Error(d.error || 'AI временно недоступен'); } catch(e) { if (e instanceof SyntaxError) throw new Error('AI временно недоступен'); throw e; }
   }
 
-  // Streaming mode — parse SSE events
-  if (useStream && res.body) {
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let fullText = '';
-    let buffer = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
-
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        const data = line.slice(6);
-        if (data === '[DONE]') break;
-
-        try {
-          const parsed = JSON.parse(data);
-          if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
-            fullText += parsed.delta.text;
-            // Emit by sentence — when we hit '. ' or '? ' or '! ' or '\n'
-            if (/[.!?]\s|\n/.test(parsed.delta.text)) {
-              onChunk(fullText);
-            }
-          }
-        } catch { /* skip malformed events */ }
-      }
-    }
-
-    // Final emit with complete text
-    if (fullText) onChunk(fullText);
-    return { text: fullText, remaining: 19 };
-  }
-
-  // Non-streaming
+  // Non-streaming (streaming disabled — Netlify buffers SSE)
   const data = await res.json();
   return data as TutorResponse;
 }

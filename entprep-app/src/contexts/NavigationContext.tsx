@@ -75,6 +75,10 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
       setScreen(SCREENS.FRIENDS);
     } else if (target === 'duel') {
       setScreen(SCREENS.DUEL);
+    } else if (target === 'arena') {
+      setScreen('arena' as typeof screen);
+    } else if (target === 'tutor') {
+      setScreen('tutor' as typeof screen);
     } else if (target === 'review') {
       setScreen(SCREENS.REVIEW);
     } else if (target === 'teacher') {
@@ -107,6 +111,7 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
   const changeTab = useCallback((t: string) => {
     setTab(t);
     if (t === 'profile_tab') setScreen('profile_tab');
+    else if (t === 'arena') setScreen('arena');
     else if (t === 'prog') setScreen(SCREENS.PROGRESS);
     else if (t === 'set') setScreen(SCREENS.SETTINGS);
     else if (t === 'adaptive') setScreen(SCREENS.ADAPTIVE);

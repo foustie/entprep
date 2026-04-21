@@ -5,17 +5,18 @@ export const COLORS = {
   bg: "var(--bg)",
   card: "var(--bg-card)",
   cardBorder: "var(--border)",
-  accent: "#C4643C",
-  accentHover: "#D4704A",
-  accentDark: "#A8532F",
-  teal: "#1A9A8C",
-  tealDark: "#158578",
-  tealLight: "#2AB5A5",
-  green: "#22c55e",
-  yellow: "#eab308",
-  amber: "#f59e0b",
-  red: "#ef4444",
-  cyan: "#2dd4bf",
+  // Legacy aliases — remapped to v2 streak palette (no more teal/brown)
+  accent: "#FF5A36",
+  accentHover: "#FF6A47",
+  accentDark: "#E84D2C",
+  teal: "#FF5A36",
+  tealDark: "#E84D2C",
+  tealLight: "#FF6A47",
+  green: "#1EB854",
+  yellow: "#FFC233",
+  amber: "#FFC233",
+  red: "#EF4444",
+  cyan: "#FF6A47",
   blue: "#38bdf8",
   purple: "#8b5cf6",
   text: "var(--text)",
@@ -23,17 +24,30 @@ export const COLORS = {
   textSecondary: "var(--text-secondary)",
   textMuted: "var(--text-muted)",
   textDim: "var(--text-dim)",
+
+  // v2 Vibrant Game palette (Apr 20, 2026 redesign) — used in new screens
+  streak: "#FF5A36",      // primary action CTA, streak fire, "ты" highlight
+  streakSoft: "#FFC4AC",  // streak context bg
+  xp: "#FFC233",          // reward / XP / highlight
+  xpSoft: "#FFDF5E",      // hero splash fill
+  xpSofter: "#FFF1B8",    // subtle yellow rail
+  win: "#1EB854",         // progress bar / correct (semantic only)
+  winSoft: "#B8ECC8",     // progress fill light
 } as const;
 
 /** Subtle tinted backgrounds & borders for colored cards/badges */
 export const TINT = {
-  teal:   { bg: 'rgba(26,154,140,0.12)',  bgLight: 'rgba(26,154,140,0.06)', border: 'rgba(26,154,140,0.2)',  borderLight: 'rgba(26,154,140,0.15)' },
-  accent: { bg: 'rgba(196,100,60,0.12)',   bgLight: 'rgba(196,100,60,0.06)', border: 'rgba(196,100,60,0.2)',  borderLight: 'rgba(196,100,60,0.15)' },
+  teal:   { bg: 'rgba(255,90,54,0.12)',    bgLight: 'rgba(255,90,54,0.06)',  border: 'rgba(255,90,54,0.3)',   borderLight: 'rgba(255,90,54,0.2)' },
+  accent: { bg: 'rgba(255,90,54,0.12)',    bgLight: 'rgba(255,90,54,0.06)',  border: 'rgba(255,90,54,0.3)',   borderLight: 'rgba(255,90,54,0.2)' },
   green:  { bg: 'rgba(34,197,94,0.12)',    bgLight: 'rgba(34,197,94,0.06)', border: 'rgba(34,197,94,0.2)',   borderLight: 'rgba(34,197,94,0.15)' },
   red:    { bg: 'rgba(239,68,68,0.12)',    bgLight: 'rgba(239,68,68,0.06)', border: 'rgba(239,68,68,0.2)',   borderLight: 'rgba(239,68,68,0.15)' },
   amber:  { bg: 'rgba(245,158,11,0.12)',   bgLight: 'rgba(245,158,11,0.06)', border: 'rgba(245,158,11,0.2)', borderLight: 'rgba(245,158,11,0.15)' },
   blue:   { bg: 'rgba(56,189,248,0.12)',   bgLight: 'rgba(56,189,248,0.06)', border: 'rgba(56,189,248,0.2)', borderLight: 'rgba(56,189,248,0.15)' },
   purple: { bg: 'rgba(139,92,246,0.12)',   bgLight: 'rgba(139,92,246,0.06)', border: 'rgba(139,92,246,0.2)', borderLight: 'rgba(139,92,246,0.15)' },
+  // v2 Vibrant Game
+  streak: { bg: 'rgba(255,90,54,0.12)',    bgLight: 'rgba(255,90,54,0.06)',  border: 'rgba(255,90,54,0.3)',  borderLight: 'rgba(255,90,54,0.2)' },
+  xp:     { bg: 'rgba(255,194,51,0.14)',   bgLight: 'rgba(255,194,51,0.07)', border: 'rgba(255,194,51,0.35)', borderLight: 'rgba(255,194,51,0.25)' },
+  win:    { bg: 'rgba(30,184,84,0.12)',    bgLight: 'rgba(30,184,84,0.06)',  border: 'rgba(30,184,84,0.3)',  borderLight: 'rgba(30,184,84,0.2)' },
 } as const;
 
 /** Score-based color: green >= 70, yellow >= 50, red < 50 */
@@ -74,35 +88,35 @@ export const TR = {
 
 /** Colored shadow/glow presets */
 export const GLOW = {
-  accent: '0 4px 20px rgba(196,100,60,0.25)',
-  teal: '0 4px 20px rgba(26,154,140,0.25)',
-  success: '0 4px 16px rgba(34,197,94,0.15)',
-  error: '0 4px 16px rgba(239,68,68,0.15)',
+  accent: '0 4px 20px rgba(255,90,54,0.25)',
+  teal: '0 4px 20px rgba(255,90,54,0.25)',
+  success: '0 4px 16px rgba(30,184,84,0.15)',
+  error: '0 4px 16px rgba(255,90,54,0.15)',
 } as const;
 
-// ─ Legacy card presets (still used in some components) ────────────────────
+// ─ v2 ink-bordered card presets ──────────────────────────────────────────
 export const CARD: CSSProperties = {
   background: "var(--bg-card)",
-  borderRadius: 20,
-  border: "1px solid var(--border-light)",
-  boxShadow: "var(--shadow-sm)",
-  padding: "20px 18px",
+  borderRadius: 16,
+  border: "2px solid #0F0F10",
+  boxShadow: "0 3px 0 0 #0F0F10",
+  padding: "18px 16px",
 };
 
 export const CARD_COMPACT: CSSProperties = {
   background: "var(--bg-card)",
-  borderRadius: 16,
-  border: "1px solid var(--border-light)",
-  boxShadow: "var(--shadow-sm)",
-  padding: "16px 14px",
+  borderRadius: 12,
+  border: "2px solid #0F0F10",
+  boxShadow: "0 2px 0 0 #0F0F10",
+  padding: "14px 14px",
 };
 
 export const CARD_HERO: CSSProperties = {
-  background: "var(--bg-hero)",
-  borderRadius: 24,
-  border: "1px solid var(--border-md)",
-  boxShadow: "var(--shadow-glow)",
-  padding: "28px 20px",
+  background: "var(--bg-card)",
+  borderRadius: 18,
+  border: "2px solid #0F0F10",
+  boxShadow: "0 5px 0 0 #0F0F10",
+  padding: "24px 18px",
   position: "relative",
   overflow: "hidden",
 };
@@ -218,8 +232,8 @@ export const EASE_BOUNCE = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
 
 /** Andy mascot glow — adds signature color to transparent PNGs */
 export const ANDY_GLOW = {
-  default: 'drop-shadow(0 2px 12px rgba(26,154,140,0.25))',
-  excited: 'drop-shadow(0 2px 12px rgba(196,100,60,0.3))',
+  default: 'drop-shadow(0 2px 12px rgba(255,90,54,0.25))',
+  excited: 'drop-shadow(0 2px 12px rgba(255,90,54,0.3))',
   streak: 'drop-shadow(0 2px 12px rgba(255,150,0,0.3))',
   calm: 'drop-shadow(0 2px 12px rgba(139,92,246,0.2))',
 } as const;
@@ -264,9 +278,9 @@ export const BUTTON = {
   primary: {
     padding: '12px 24px',
     borderRadius: 12,
-    background: '#C4643C',
+    background: '#FF5A36',
     border: '2px solid transparent',
-    borderBottom: '4px solid #A8532F',
+    borderBottom: '4px solid #E84D2C',
     color: '#fff',
     fontSize: 14,
     fontWeight: 700,
@@ -280,7 +294,7 @@ export const BUTTON = {
     transition: 'transform 80ms, border-bottom 80ms',
   } as CSSProperties,
   primaryActive: {
-    borderBottom: '1px solid #A8532F',
+    borderBottom: '1px solid #E84D2C',
     transform: 'translateY(3px)',
   } as CSSProperties,
   secondary: {
@@ -304,9 +318,9 @@ export const BUTTON = {
   teal: {
     padding: '12px 24px',
     borderRadius: 12,
-    background: '#1A9A8C',
+    background: '#FF5A36',
     border: '2px solid transparent',
-    borderBottom: '4px solid #147A6E',
+    borderBottom: '4px solid #E84D2C',
     color: '#fff',
     fontSize: 14,
     fontWeight: 700,
@@ -347,7 +361,7 @@ const EASE_STD = "cubic-bezier(0.4,0,0.2,1)";
 
 const RESPONSIVE_VARS = `:root{--content-max-width:480px;--content-padding:20px;--nav-height:70px;--sidebar-width:0px}@media(min-width:768px){:root{--content-max-width:720px;--content-padding:32px}}@media(min-width:1024px){:root{--content-max-width:960px;--content-padding:40px;--sidebar-width:220px}}`;
 
-export const GLOBAL_STYLES = `${RESPONSIVE_VARS}*{box-sizing:border-box;margin:0;padding:0;color-scheme:var(--color-scheme)}input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:#C4643C;cursor:pointer;border:3px solid var(--text);box-shadow:0 0 8px rgba(196,100,60,0.4)}input[type="range"]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#C4643C;cursor:pointer;border:3px solid var(--text)}button{font-family:inherit;transition:transform 0.15s ${EASE_STD}}button:active{transform:scale(0.97)!important}@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.03)}100%{transform:scale(1)}}@keyframes slideDown{from{opacity:0;transform:translateX(-50%) translateY(-100%)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes screenIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}@keyframes scaleIn{from{opacity:0;transform:scale(0.96)}to{opacity:1;transform:scale(1)}}@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}@keyframes overlayIn{from{opacity:0}to{opacity:1}}@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes sheetUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}@keyframes confetti{0%{transform:scale(0) rotate(0deg);opacity:0}50%{transform:scale(1.3) rotate(180deg);opacity:1}100%{transform:scale(1) rotate(360deg);opacity:1}}@keyframes firePulse{0%{box-shadow:0 0 0 0 rgba(245,158,11,0.3)}50%{box-shadow:0 0 12px 4px rgba(245,158,11,0.15)}100%{box-shadow:0 0 0 0 rgba(245,158,11,0)}}@keyframes streakPulse{0%{opacity:1}50%{opacity:0.7}100%{opacity:1}}@keyframes toastIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}@keyframes andyBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}:focus{outline:none}:focus-visible{outline:2px solid #C4643C;outline-offset:2px;border-radius:8px}::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--scroll-thumb);border-radius:2px}`;
+export const GLOBAL_STYLES = `${RESPONSIVE_VARS}*{box-sizing:border-box;margin:0;padding:0;color-scheme:var(--color-scheme)}input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:#FF5A36;cursor:pointer;border:3px solid var(--text);box-shadow:0 0 8px rgba(255,90,54,0.4)}input[type="range"]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#FF5A36;cursor:pointer;border:3px solid var(--text)}button{font-family:inherit;transition:transform 0.15s ${EASE_STD}}button:active{transform:scale(0.97)!important}@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.03)}100%{transform:scale(1)}}@keyframes slideDown{from{opacity:0;transform:translateX(-50%) translateY(-100%)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes screenIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}@keyframes scaleIn{from{opacity:0;transform:scale(0.96)}to{opacity:1;transform:scale(1)}}@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}@keyframes overlayIn{from{opacity:0}to{opacity:1}}@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes sheetUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}@keyframes confetti{0%{transform:scale(0) rotate(0deg);opacity:0}50%{transform:scale(1.3) rotate(180deg);opacity:1}100%{transform:scale(1) rotate(360deg);opacity:1}}@keyframes firePulse{0%{box-shadow:0 0 0 0 rgba(245,158,11,0.3)}50%{box-shadow:0 0 12px 4px rgba(245,158,11,0.15)}100%{box-shadow:0 0 0 0 rgba(245,158,11,0)}}@keyframes streakPulse{0%{opacity:1}50%{opacity:0.7}100%{opacity:1}}@keyframes toastIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}@keyframes andyBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}@keyframes heroEnter{0%{opacity:0;transform:translateY(14px) scale(0.96)}100%{opacity:1;transform:translateY(0) scale(1)}}@keyframes shineSweep{0%{transform:translateX(-120%) skewX(-18deg)}100%{transform:translateX(220%) skewX(-18deg)}}:focus{outline:none}:focus-visible{outline:2px solid #FF5A36;outline-offset:2px;border-radius:8px}::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--scroll-thumb);border-radius:2px}`;
 
 export const LAYOUT = {
   maxWidth: "var(--content-max-width)",

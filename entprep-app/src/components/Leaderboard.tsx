@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useMemo, memo } from 'react';
-import { CARD_COMPACT, TYPE, COLORS } from '../constants/styles';
+import { COLORS, FF } from '../constants/styles';
 import { SUBS, ALL_PROFILES } from '../config/questionPools';
-import { SUBJECT_META } from '../config/subjects';
-import { supabase } from '../config/supabase';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useNav } from '../contexts/NavigationContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -161,34 +159,38 @@ export default function Leaderboard() {
 
   const LeaderboardRow = useMemo(() => memo(function LeaderboardRow({ entry, rank, isMe }: { entry: AggregatedUser; rank: number; isMe: boolean }) {
     const medal = medalColor(rank);
+    const scoreColor = entry.avgScore >= 80 ? COLORS.win : entry.avgScore >= 60 ? COLORS.xp : COLORS.streak;
+    const scoreBg = entry.avgScore >= 80 ? COLORS.winSoft : entry.avgScore >= 60 ? COLORS.xpSoft : COLORS.streakSoft;
     return (
       <div
         style={{
-          ...CARD_COMPACT,
           display: 'flex',
           alignItems: 'center',
+          gap: 10,
           padding: '12px 14px',
-          border: isMe ? `1.5px solid ${COLORS.accent}` : '1px solid var(--border)',
-          background: isMe ? 'rgba(255,107,53,0.06)' : 'var(--bg-card)',
+          background: isMe ? COLORS.streakSoft : 'var(--bg-card)',
+          border: '2px solid #0F0F10',
+          borderRadius: 12,
+          boxShadow: isMe ? `0 3px 0 0 ${COLORS.streak}` : '0 2px 0 0 #0F0F10',
           animation: `fadeIn 0.3s ease ${Math.min((rank - 1) * 0.03, 0.5)}s both`,
         }}
       >
-        {/* Rank badge */}
+        {/* Rank badge — ink chip */}
         <div style={{
-          width: 32,
-          height: 32,
-          borderRadius: 10,
-          background: medal ? `${medal}20` : 'var(--bg-card)',
-          border: medal ? `1.5px solid ${medal}` : '1px solid var(--border)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          width: 34, height: 34, borderRadius: 9,
+          background: medal ? medal : '#0F0F10',
+          border: '2px solid #0F0F10',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
           flexShrink: 0,
+          color: '#fff',
         }}>
-          {medal ? (
-            <Medal size={16} color={medal} />
+          {rank <= 3 ? (
+            <Medal size={17} color={medal === '#FFD700' ? '#0F0F10' : '#fff'} strokeWidth={2.4} />
           ) : (
-            <span style={{ fontSize: 12, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace", color: 'var(--text-secondary)' }}>{rank}</span>
+            <span style={{
+              fontFamily: FF.display, fontSize: 13, fontWeight: 900,
+              letterSpacing: '-0.02em', color: '#fff',
+            }}>{rank}</span>
           )}
         </div>
 
@@ -197,33 +199,52 @@ export default function Leaderboard() {
           <img
             src={entry.avatar_url}
             alt=""
-            style={{ width: 28, height: 28, borderRadius: '50%', marginLeft: 10, flexShrink: 0, objectFit: 'cover' }}
+            style={{
+              width: 30, height: 30, borderRadius: 8,
+              border: '1.5px solid #0F0F10',
+              flexShrink: 0, objectFit: 'cover',
+            }}
           />
         )}
 
         {/* Name + "You" badge */}
-        <div style={{ marginLeft: entry.avatar_url ? 8 : 12, flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            fontFamily: "'Nunito',sans-serif", fontSize: 13.5, fontWeight: 800,
+            color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6,
+          }}>
             {entry.nickname && !entry.nickname.startsWith('user_') ? (
-              <span style={{ fontFamily: "'JetBrains Mono',monospace" }}>@{entry.nickname}</span>
+              <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 800 }}>@{entry.nickname}</span>
             ) : entry.user_name}
-            {isMe && <span style={{ fontSize: 9, fontWeight: 700, color: COLORS.accent, background: 'rgba(255,107,53,0.12)', padding: '1px 5px', borderRadius: 4 }}>{t.you}</span>}
+            {isMe && (
+              <span style={{
+                fontFamily: "'JetBrains Mono',monospace",
+                fontSize: 8.5, fontWeight: 800,
+                letterSpacing: '0.12em', textTransform: 'uppercase',
+                color: '#fff', background: COLORS.streak,
+                padding: '2px 6px', borderRadius: 5,
+              }}>{t.you}</span>
+            )}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
-            <Activity size={11} color="var(--text-muted)" />
-            <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>{pluralTests(entry.testCount, t.leaderboard.test1, t.leaderboard.test2, t.leaderboard.test5)}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
+            <Activity size={10} color="var(--text-muted)" strokeWidth={2.4} />
+            <span style={{
+              fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 700,
+              color: 'var(--text-muted)',
+            }}>{pluralTests(entry.testCount, t.leaderboard.test1, t.leaderboard.test2, t.leaderboard.test5)}</span>
           </div>
         </div>
 
-        {/* Avg score */}
+        {/* Avg score — tabular nums pill */}
         <div style={{
-          fontSize: 13,
-          fontWeight: 700,
-          fontFamily: "'JetBrains Mono',monospace",
-          color: entry.avgScore >= 80 ? COLORS.green : entry.avgScore >= 60 ? COLORS.yellow : COLORS.red,
-          background: entry.avgScore >= 80 ? 'rgba(34,197,94,0.1)' : entry.avgScore >= 60 ? 'rgba(234,179,8,0.1)' : 'rgba(239,68,68,0.1)',
-          padding: '4px 8px',
-          borderRadius: 8,
+          fontFamily: FF.display,
+          fontSize: 13, fontWeight: 900, letterSpacing: '-0.02em',
+          color: scoreColor, fontVariantNumeric: 'tabular-nums',
+          background: scoreBg,
+          border: `1.5px solid ${scoreColor}`,
+          padding: '5px 9px', borderRadius: 9,
+          flexShrink: 0,
         }}>
           {entry.avgScore}%
         </div>
@@ -234,13 +255,27 @@ export default function Leaderboard() {
   return (
     <div style={{ padding: `0 var(--content-padding) ${bp === 'desktop' ? 40 : 100}px` }}>
       <BackButton onClick={goHome} />
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
-        <div style={{ width: 44, height: 44, borderRadius: 14, background: `linear-gradient(135deg,${COLORS.green},#10B981)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <Trophy size={24} color="#fff" />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '8px 0 18px' }}>
+        <div style={{
+          width: 40, height: 40, borderRadius: 11,
+          background: COLORS.xp,
+          border: '2px solid #0F0F10',
+          boxShadow: '0 3px 0 0 #0F0F10',
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          flexShrink: 0,
+        }}>
+          <Trophy size={20} color="#0F0F10" strokeWidth={2.4} />
         </div>
-        <div>
-          <h1 style={{ ...TYPE.h2, margin: 0 }}>{t.leaderboard.title}</h1>
-          <p style={{ ...TYPE.caption, margin: '2px 0 0' }}>{t.leaderboard.subtitle}</p>
+        <div style={{ minWidth: 0 }}>
+          <div style={{
+            fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 800,
+            letterSpacing: '0.14em', textTransform: 'uppercase',
+            color: 'var(--text-muted)', marginBottom: 2,
+          }}>{t.leaderboard.subtitle}</div>
+          <h1 style={{
+            fontFamily: FF.display, fontSize: 20, fontWeight: 900,
+            letterSpacing: '-0.035em', color: 'var(--text)', margin: 0, lineHeight: 1,
+          }}>{t.leaderboard.title}</h1>
         </div>
       </div>
 

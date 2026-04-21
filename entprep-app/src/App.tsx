@@ -1,8 +1,8 @@
 import React, { Suspense, useEffect, useRef, useState } from "react";
 import { TOTAL_Q } from './config/questionPools';
 import { prefetchCounts, getTotalQ, prefetchSubjects } from './utils/questionStore';
-import { GLOBAL_STYLES, LAYOUT, COLORS } from './constants/styles';
-import { DARK, LIGHT, themeToCss } from './constants/themes';
+import { GLOBAL_STYLES, LAYOUT, COLORS, FF } from './constants/styles';
+import { LIGHT, themeToCss } from './constants/themes';
 import { SCREENS } from './constants/screens';
 import { useBreakpoint } from './hooks/useBreakpoint';
 import { AuthProvider } from './contexts/AuthContext';
@@ -17,24 +17,16 @@ import type { LucideIcon } from 'lucide-react';
 import ProfileSelect from './components/ProfileSelect';
 import CoachHome from './components/CoachHome';
 import ProfileTab from './components/ProfileTab';
-import Progress from './components/Progress';
-import Settings from './components/Settings';
-import Adaptive from './components/Adaptive';
-import ArenaFab from './components/ArenaFab';
+// ArenaFab removed — Arena is now a tab in bottom nav
 import SubjectDetail from './components/SubjectDetail';
 import Challenge from './components/Challenge';
 import InstallPrompt from './components/InstallPrompt';
 import OfflineBanner from './components/OfflineBanner';
 import UpdatePrompt from './components/UpdatePrompt';
-import PaywallModal from './components/PaywallModal';
-import Onboarding from './components/Onboarding';
-import AuthPrompt from './components/AuthPrompt';
-import Landing from './components/Landing';
 import { API_BASE } from './config/app';
-import PushPrompt from './components/PushPrompt';
 import { supabase } from './config/supabase';
 import { useAuth } from './contexts/AuthContext';
-import { parseReferralParam, claimReferral } from './utils/socialHelpers';
+// Referral removed — 9 uses total
 import { trackEvent } from './utils/analytics';
 import type { TestResult, SRCard } from './types';
 
@@ -68,6 +60,15 @@ const Friends = React.lazy(() => import('./components/Friends'));
 const Duel = React.lazy(() => import('./components/Duel'));
 const ReviewSession = React.lazy(() => import('./components/ReviewSession'));
 const TeacherDashboard = React.lazy(() => import('./components/TeacherDashboard'));
+const Progress = React.lazy(() => import('./components/Progress'));
+const Settings = React.lazy(() => import('./components/Settings'));
+const Adaptive = React.lazy(() => import('./components/Adaptive'));
+const Landing = React.lazy(() => import('./components/Landing'));
+const Onboarding = React.lazy(() => import('./components/Onboarding'));
+const AuthPrompt = React.lazy(() => import('./components/AuthPrompt'));
+const PaywallModal = React.lazy(() => import('./components/PaywallModal'));
+const PushPrompt = React.lazy(() => import('./components/PushPrompt'));
+const AiTutor = React.lazy(() => import('./components/AiTutor'));
 
 interface NavItem {
   id: string;
@@ -81,15 +82,14 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 function AppContent() {
-  const { screen, curSub, selTopic, customQs, tab, challengeData, paywallReason, nav, goHome, changeTab, setScreen, setTab, setCustomQs, setSelTopic, closePaywall } = useNav();
-  const { hist, prof, st, srCards, syncError, showOnboarding, showAuthPrompt, addHist, confirmProfile, resetProfile, finishOnboarding, finishAuthPrompt, updSt, clearHist, addSrFromResult, setSrCards } = useApp();
+  const { screen, curSub, selTopic, customQs, tab, challengeData, paywallReason, nav, goHome, changeTab, setScreen, setTab, closePaywall } = useNav();
+  const { hist, prof, st, srCards, syncError, showOnboarding, showAuthPrompt, addHist, confirmProfile, finishOnboarding, finishAuthPrompt, addSrFromResult, setSrCards } = useApp();
   const toast = useToast();
   const tr = useT();
   const bp = useBreakpoint();
   const isDesktop = bp === 'desktop';
 
-  const isDark = st.theme !== 'light';
-  const palette = isDark ? DARK : LIGHT;
+  const palette = LIGHT;
 
   useEffect(() => {
     const splash = document.getElementById('splash');
@@ -98,6 +98,40 @@ function AppContent() {
       setTimeout(() => splash.remove(), 400);
     }
   }, []);
+
+  // Dynamic document.title per screen
+  useEffect(() => {
+    const SCREEN_TITLES: Record<string, string> = {
+      [SCREENS.HOME]: tr.tabs.home,
+      [SCREENS.PROFILE]: tr.tabs.profile,
+      [SCREENS.SUBJECT]: tr.tabs.subjects,
+      [SCREENS.TEST]: tr.tabs.subjects,
+      [SCREENS.CHALLENGE]: tr.duel.title,
+      [SCREENS.FULL_ENT]: tr.fullent.title,
+      [SCREENS.CALC]: tr.calc.title,
+      [SCREENS.PROGRESS]: tr.progress.title,
+      [SCREENS.SETTINGS]: tr.settings.title,
+      [SCREENS.ADAPTIVE]: tr.adaptive.title,
+      [SCREENS.ERROR_REVIEW]: tr.errorReview.title,
+      [SCREENS.ADMIN]: 'Admin',
+      [SCREENS.LEADERBOARD]: tr.leaderboard.title,
+      [SCREENS.FRIENDS]: tr.friends.title,
+      [SCREENS.DUEL]: tr.duel.title,
+      [SCREENS.REVIEW]: tr.review.title,
+      [SCREENS.TEACHER]: tr.teacher.panel,
+      profile_tab: tr.tabs.profile,
+      // arena removed
+      tutor: 'AI Tutor',
+    };
+    const title = SCREEN_TITLES[screen];
+    document.title = title ? `${title} — ENTprep` : 'ENTprep — Бесплатная подготовка к ЕНТ';
+    if (screen) trackEvent('Screen View', { screen });
+  }, [screen, tr]);
+
+  // Sync html lang attribute with app language
+  useEffect(() => {
+    document.documentElement.lang = st.lang === 'kk' ? 'kk' : 'ru';
+  }, [st.lang]);
 
   const [totalQ, setTotalQ] = useState(TOTAL_Q);
   useEffect(() => {
@@ -110,13 +144,8 @@ function AppContent() {
     }, 3000);
   }, []);
 
-  // Persist ?ref= and UTM params for users who haven't signed in yet
+  // Persist UTM params for users who haven't signed in yet
   useEffect(() => {
-    const refNick = parseReferralParam();
-    if (refNick) {
-      sessionStorage.setItem('entprep_ref', refNick);
-    }
-    // Save UTM params (Plausible tracks these automatically, but store for user_data on signup)
     const params = new URLSearchParams(window.location.search);
     const utm: Record<string, string> = {};
     for (const key of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term']) {
@@ -126,10 +155,8 @@ function AppContent() {
     if (Object.keys(utm).length > 0) {
       sessionStorage.setItem('entprep_utm', JSON.stringify(utm));
     }
-    // Clean URL
-    if (refNick || Object.keys(utm).length > 0) {
+    if (Object.keys(utm).length > 0) {
       const url = new URL(window.location.href);
-      url.searchParams.delete('ref');
       ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'].forEach(k => url.searchParams.delete(k));
       window.history.replaceState({}, '', url.pathname + url.search);
     }
@@ -150,18 +177,22 @@ function AppContent() {
   const needProfile = prof.length === 0 && screen !== SCREENS.PROFILE;
   const showNav = !needProfile && screen !== SCREENS.TEST && screen !== SCREENS.FULL_ENT && screen !== SCREENS.PROFILE && screen !== SCREENS.SUBJECT && screen !== SCREENS.ERROR_REVIEW && screen !== SCREENS.ADMIN && screen !== SCREENS.CHALLENGE && screen !== SCREENS.LEADERBOARD && screen !== SCREENS.FRIENDS && screen !== SCREENS.DUEL && screen !== SCREENS.REVIEW && screen !== SCREENS.TEACHER && !showOnboarding && !showAuthPrompt;
 
-  const { user } = useAuth();
+  const { user, isPremium } = useAuth();
+
+  // PRO welcome toast — show once when user first becomes premium
+  useEffect(() => {
+    if (!isPremium) return;
+    const key = 'entprep_pro_welcomed';
+    if (localStorage.getItem(key)) return;
+    localStorage.setItem(key, '1');
+    toast.success('Спасибо за подписку! PRO активирован');
+  }, [isPremium, toast]);
 
   // Handle referral + UTM tracking after user signs in
   const refClaimedRef = useRef(false);
   useEffect(() => {
     if (!user || refClaimedRef.current) return;
     refClaimedRef.current = true;
-    const refNick = sessionStorage.getItem('entprep_ref');
-    if (refNick) {
-      sessionStorage.removeItem('entprep_ref');
-      claimReferral(refNick).then(ok => { if (ok) toast.success(tr.settings.referralSuccess); });
-    }
     const utmRaw = sessionStorage.getItem('entprep_utm');
     if (utmRaw) {
       try { trackEvent('Signup UTM', JSON.parse(utmRaw)); } catch { /* ignore */ }
@@ -179,45 +210,44 @@ function AppContent() {
     goHome();
   };
   const handleConfirmProfile = (sel: string[], goal?: import('./types/index').GoalSettings) => {
-    const isFirstTime = hist.length === 0;
     confirmProfile(sel, goal);
     // Always go home — Andy will invite user to first test via speech bubble
     goHome();
   };
-  const handleResetProfile = () => { resetProfile(); setScreen(SCREENS.PROFILE); setTab(SCREENS.HOME); };
-
   // Landing page for unauthenticated visitors with no test history
   const [landingDismissed, setLandingDismissed] = useState(() => !!localStorage.getItem('entprep_landing_seen'));
   const isNewVisitor = !user && hist.length === 0 && !landingDismissed;
 
   if (isNewVisitor && !landingDismissed) return (
-    <div style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: "'Segoe UI',-apple-system,sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: FF.body }}>
       <style>{`:root{${themeToCss(palette)}}${GLOBAL_STYLES}`}</style>
-      <Landing totalQ={totalQ} onStart={() => { localStorage.setItem('entprep_landing_seen', '1'); setLandingDismissed(true); }} />
+      <Suspense fallback={<LoadingSpinner />}><Landing totalQ={totalQ} onStart={() => { localStorage.setItem('entprep_landing_seen', '1'); setLandingDismissed(true); }} /></Suspense>
     </div>
   );
 
   if (showOnboarding) return (
-    <div style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: "'Segoe UI',-apple-system,sans-serif", maxWidth: LAYOUT.maxWidth, margin: "0 auto", position: "relative" }}>
+    <div style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: FF.body, maxWidth: LAYOUT.maxWidth, margin: "0 auto", position: "relative" }}>
       <style>{`:root{${themeToCss(palette)}}${GLOBAL_STYLES}`}</style>
-      <Onboarding onFinish={finishOnboarding} />
+      <Suspense fallback={<LoadingSpinner />}><Onboarding onFinish={finishOnboarding} /></Suspense>
     </div>
   );
 
   if (showAuthPrompt) return (
-    <div style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: "'Segoe UI',-apple-system,sans-serif", maxWidth: LAYOUT.maxWidth, margin: "0 auto", position: "relative" }}>
+    <div style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: FF.body, maxWidth: LAYOUT.maxWidth, margin: "0 auto", position: "relative" }}>
       <style>{`:root{${themeToCss(palette)}}${GLOBAL_STYLES}`}</style>
-      <AuthPrompt onFinish={finishAuthPrompt} />
+      <Suspense fallback={<LoadingSpinner />}><AuthPrompt onFinish={finishAuthPrompt} /></Suspense>
     </div>
   );
 
   const mainContent = (
     <>
-      <main role="main" key={screen} style={{ paddingTop: 10, paddingBottom: !isDesktop && showNav ? 80 : 0, animation: "screenIn 0.35s cubic-bezier(0.16,1,0.3,1)", willChange: "opacity,transform" }}>
+      <main role="main" key={screen} style={{ paddingTop: 10, paddingBottom: !isDesktop && showNav ? 80 : 0 }}>
         {needProfile && <ProfileSelect onConfirm={handleConfirmProfile} />}
         {!needProfile && screen === SCREENS.PROFILE && <ProfileSelect onConfirm={handleConfirmProfile} />}
         {!needProfile && screen === SCREENS.HOME && <CoachHome />}
         {!needProfile && screen === 'profile_tab' && <ProfileTab />}
+        {/* Arena removed — 61 uses total, dead feature */}
+        {!needProfile && screen === 'tutor' && <Suspense fallback={<LoadingSpinner />}><AiTutor /></Suspense>}
         {!needProfile && screen === SCREENS.SUBJECT && curSub && (
           <ErrorBoundary key="subject" title={tr.errors.subjectTitle} message={tr.errors.subjectMessage} onRecover={goHome}>
             <SubjectDetail sid={curSub} />
@@ -278,28 +308,30 @@ function AppContent() {
             <TeacherDashboard onBack={goHome} />
           )}
         </Suspense>
-        {!needProfile && screen === SCREENS.ADAPTIVE && (
-          <ErrorBoundary key="adaptive" title={tr.errors.adaptiveTitle} message={tr.errors.adaptiveMessage} onRecover={() => changeTab(SCREENS.HOME)}>
-            <Adaptive />
-          </ErrorBoundary>
-        )}
-        {!needProfile && screen === SCREENS.PROGRESS && (
-          <ErrorBoundary key="progress" title={tr.errors.progressTitle} message={tr.errors.progressMessage} onRecover={() => changeTab(SCREENS.HOME)}>
-            <Progress />
-          </ErrorBoundary>
-        )}
-        {!needProfile && screen === SCREENS.SETTINGS && (
-          <ErrorBoundary key="settings" title={tr.errors.settingsTitle} message={tr.errors.settingsMessage} onRecover={() => changeTab(SCREENS.HOME)}>
-            <Settings />
-          </ErrorBoundary>
-        )}
+        <Suspense fallback={<LoadingSpinner />}>
+          {!needProfile && screen === SCREENS.ADAPTIVE && (
+            <ErrorBoundary key="adaptive" title={tr.errors.adaptiveTitle} message={tr.errors.adaptiveMessage} onRecover={() => changeTab(SCREENS.HOME)}>
+              <Adaptive />
+            </ErrorBoundary>
+          )}
+          {!needProfile && screen === SCREENS.PROGRESS && (
+            <ErrorBoundary key="progress" title={tr.errors.progressTitle} message={tr.errors.progressMessage} onRecover={() => changeTab(SCREENS.HOME)}>
+              <Progress />
+            </ErrorBoundary>
+          )}
+          {!needProfile && screen === SCREENS.SETTINGS && (
+            <ErrorBoundary key="settings" title={tr.errors.settingsTitle} message={tr.errors.settingsMessage} onRecover={() => changeTab(SCREENS.HOME)}>
+              <Settings />
+            </ErrorBoundary>
+          )}
+        </Suspense>
       </main>
     </>
   );
 
   const sidebarNav = (
     <aside style={{ width: 220, flexShrink: 0, position: "sticky", top: 0, height: "100vh", background: "var(--bg-footer)", borderRight: "1px solid var(--border-light)", display: "flex", flexDirection: "column", padding: "20px 0" }}>
-      <div style={{ padding: "0 20px 24px", fontSize: 15, fontWeight: 800, fontFamily: "'Unbounded',sans-serif" }}>
+      <div style={{ padding: "0 20px 24px", fontSize: 15, fontWeight: 800, fontFamily: FF.display }}>
         <span style={{ color: COLORS.accent }}>ENT</span>
         <span style={{ color: COLORS.teal }}>prep</span>
       </div>
@@ -317,15 +349,15 @@ function AppContent() {
   );
 
   const bottomNav = (
-    <nav role="navigation" aria-label={tr.tabs.home} style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: LAYOUT.maxWidth, background: "var(--bg-footer)", borderTop: "1px solid var(--border-light)", padding: "8px 16px 14px", display: "flex", justifyContent: "space-around" }}>
+    <nav role="navigation" aria-label={tr.tabs.home} style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: LAYOUT.maxWidth, background: "var(--bg-footer)", borderTop: "2px solid #0F0F10", padding: "10px 16px 14px", display: "flex" }}>
       {NAV_ITEMS.map(ni => {
         const active = tab === ni.id;
         const label = tr.tabs[ni.key];
         return (
-          <button key={ni.id} onClick={() => changeTab(ni.id)} aria-label={label} aria-current={active ? "page" : undefined} style={{ display: "flex", flexDirection: "column", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: "6px 18px", borderRadius: 12, transition: "all 0.2s", position: "relative" }}>
-            <ni.Icon size={22} strokeWidth={active ? 2.2 : 1.8} color={active ? COLORS.accent : "var(--text-muted)"} style={{ transition: "color 0.2s" }} />
-            <span style={{ fontSize: 10, fontWeight: 600, color: active ? COLORS.accent : "var(--text-muted)", marginTop: 4, transition: "color 0.2s" }}>{label}</span>
-            {active && <div style={{ width: 16, height: 3, borderRadius: 2, background: COLORS.accent, marginTop: 3, animation: "scaleIn 0.2s ease" }} />}
+          <button key={ni.id} onClick={() => changeTab(ni.id)} aria-label={label} aria-current={active ? "page" : undefined} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: "4px 0 0", position: "relative" }}>
+            <ni.Icon size={22} strokeWidth={active ? 2.6 : 2} color={active ? COLORS.streak : "var(--text-muted)"} />
+            <span style={{ fontSize: 10, fontWeight: 800, fontFamily: "'Nunito',sans-serif", letterSpacing: '0.1em', textTransform: 'uppercase', color: active ? COLORS.streak : "var(--text-muted)", marginTop: 5, transition: 'color 0.15s' }}>{label}</span>
+            <div style={{ width: 22, height: 3, borderRadius: 2, background: active ? COLORS.streak : 'transparent', marginTop: 4, transition: 'background 0.15s' }} />
           </button>
         );
       })}
@@ -333,7 +365,7 @@ function AppContent() {
   );
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: "'Segoe UI',-apple-system,sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: FF.body }}>
       <style>{`:root{${themeToCss(palette)}}${GLOBAL_STYLES}`}</style>
       <OfflineBanner />
       {isDesktop && showNav ? (
@@ -341,7 +373,7 @@ function AppContent() {
           {sidebarNav}
           <div style={{ flex: 1, maxWidth: LAYOUT.maxWidth, margin: "0 auto", position: "relative" }}>
             <header role="banner" style={{ padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "center", borderBottom: "1px solid var(--border-light)", background: "var(--bg-header)",  }}>
-              <div style={{ fontSize: 15, fontWeight: 800, fontFamily: "'Unbounded',sans-serif" }}>
+              <div style={{ fontSize: 15, fontWeight: 800, fontFamily: FF.display }}>
                 <span style={{ color: COLORS.accent }}>ENT</span>
                 <span style={{ color: COLORS.teal }}>prep</span>
               </div>
@@ -351,10 +383,11 @@ function AppContent() {
         </div>
       ) : (
         <div style={{ maxWidth: LAYOUT.maxWidth, margin: "0 auto", position: "relative" }}>
-          <header role="banner" style={{ padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "center", borderBottom: "1px solid var(--border-light)", background: "var(--bg-header)",  }}>
-            <div style={{ fontSize: 15, fontWeight: 800, fontFamily: "'Unbounded',sans-serif" }}>
-              <span style={{ color: COLORS.accent }}>ENT</span>
-              <span style={{ color: COLORS.teal }}>prep</span>
+          {/* Mobile header — minimal v2: thin bar with wordmark left, no border */}
+          <header role="banner" style={{ padding: "12px 20px 6px", display: "flex", alignItems: "center", justifyContent: "flex-start" }}>
+            <div style={{ fontSize: 17, fontWeight: 900, fontFamily: FF.display, letterSpacing: '-0.03em' }}>
+              <span style={{ color: 'var(--text)' }}>ENT</span>
+              <span style={{ color: COLORS.streak }}>prep.</span>
             </div>
           </header>
           {mainContent}
@@ -363,10 +396,10 @@ function AppContent() {
       )}
       <InstallPrompt />
       <UpdatePrompt />
-      <PushPrompt />
-      <PaywallModal open={paywallReason !== null} reason={paywallReason} onClose={closePaywall} />
+      <Suspense fallback={null}><PushPrompt /></Suspense>
+      <Suspense fallback={null}><PaywallModal open={paywallReason !== null} reason={paywallReason} onClose={closePaywall} /></Suspense>
       {/* Arena/Duel FAB */}
-      {showNav && <ArenaFab bottom={showNav ? 82 : 20} />}
+      {/* ArenaFab removed — Arena is now a tab in bottom nav */}
     </div>
   );
 }

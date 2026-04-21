@@ -1,5 +1,4 @@
-import React from 'react';
-import { CARD_COMPACT, COLORS } from '../constants/styles';
+import { COLORS } from '../constants/styles';
 import { useT } from '../locales';
 import { Flame, Snowflake, Zap } from 'lucide-react';
 

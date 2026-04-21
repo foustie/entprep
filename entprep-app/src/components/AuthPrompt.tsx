@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Cloud, Swords, Trophy, Flame } from 'lucide-react';
 import { supabase } from '../config/supabase';
-import { CARD_HERO, TYPE, COLORS } from '../constants/styles';
+import { COLORS, FF } from '../constants/styles';
 import { useT } from '../locales';
+import { useToast } from '../contexts/ToastContext';
 import { Capacitor, registerPlugin } from '@capacitor/core';
 import type { LucideIcon } from 'lucide-react';
 
@@ -51,6 +52,7 @@ interface AuthPromptProps {
 
 export default function AuthPrompt({ onFinish }: AuthPromptProps) {
   const t = useT();
+  const toast = useToast();
   const [loading, setLoading] = useState<'google' | 'apple' | null>(null);
 
   const benefitTexts = [
@@ -94,16 +96,29 @@ export default function AuthPrompt({ onFinish }: AuthPromptProps) {
             skipBrowserRedirect: true,
           },
         });
-        if (error || !data.url) { setLoading(null); return; }
+        if (error) {
+          console.error('OAuth error (native):', error);
+          toast.error(error.message);
+          setLoading(null);
+          return;
+        }
+        if (!data.url) { setLoading(null); return; }
         const { Browser } = await import('@capacitor/browser');
         await Browser.open({ url: data.url, presentationStyle: 'popover' });
       } else {
-        await supabase.auth.signInWithOAuth({
+        const { error } = await supabase.auth.signInWithOAuth({
           provider,
           options: { redirectTo: window.location.origin },
         });
+        if (error) {
+          console.error('OAuth error:', error);
+          toast.error(error.message);
+          setLoading(null);
+        }
       }
-    } catch {
+    } catch (err) {
+      console.error('OAuth exception:', err);
+      toast.error(err instanceof Error ? err.message : 'Sign in failed');
       setLoading(null);
     }
   };
@@ -113,48 +128,87 @@ export default function AuthPrompt({ onFinish }: AuthPromptProps) {
       padding: '0 20px', minHeight: '100dvh',
       display: 'flex', flexDirection: 'column', justifyContent: 'center',
     }}>
-      <div style={{ textAlign: 'center', marginBottom: 8 }}>
-        <div style={{ fontSize: 15, fontWeight: 800, fontFamily: "'Unbounded',sans-serif", marginBottom: 40 }}>
-          <span style={{ color: COLORS.accent }}>ENT</span><span style={{ color: COLORS.teal }}>prep</span>
+      {/* Wordmark */}
+      <div style={{ textAlign: 'center', marginBottom: 22 }}>
+        <div style={{
+          fontSize: 22, fontWeight: 900, fontFamily: FF.display,
+          letterSpacing: '-0.04em',
+        }}>
+          <span style={{ color: '#0F0F10' }}>ENT</span><span style={{ color: COLORS.streak }}>prep.</span>
         </div>
       </div>
 
+      {/* Main card — ink-bordered with 3D shadow */}
       <div style={{
-        ...CARD_HERO, textAlign: 'center', padding: '36px 24px 32px',
-        marginBottom: 32, animation: 'screenIn 0.4s cubic-bezier(0.16,1,0.3,1)',
+        background: 'var(--bg-card)',
+        border: '2px solid #0F0F10',
+        borderRadius: 18,
+        boxShadow: '0 5px 0 0 #0F0F10',
+        padding: '28px 22px 26px',
+        marginBottom: 22,
+        animation: 'heroEnter 0.45s cubic-bezier(0.16,1,0.3,1) both',
       }}>
-        <h2 style={{ ...TYPE.h1, fontSize: 22, marginBottom: 6 }}>{t.authPrompt.createAccount}</h2>
-        <p style={{ ...TYPE.bodySmall, fontSize: 12, color: 'var(--text-secondary)', margin: '0 0 28px' }}>
+        {/* Eyebrow */}
+        <div style={{
+          fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
+          letterSpacing: '0.18em', textTransform: 'uppercase',
+          color: COLORS.streak, textAlign: 'center', marginBottom: 8,
+        }}>• 5 секунд •</div>
+
+        <h2 style={{
+          fontFamily: FF.display,
+          fontSize: 26, fontWeight: 900, letterSpacing: '-0.035em',
+          color: 'var(--text)', margin: '0 0 6px', textAlign: 'center', lineHeight: 1.1,
+        }}>{t.authPrompt.createAccount}</h2>
+        <p style={{
+          fontFamily: "'Nunito',sans-serif", fontSize: 13, fontWeight: 700,
+          color: 'var(--text-secondary)', margin: '0 0 22px', textAlign: 'center',
+        }}>
           {t.authPrompt.freeAndFast}
         </p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, textAlign: 'left', marginBottom: 28 }}>
+        {/* Benefits */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, textAlign: 'left', marginBottom: 22 }}>
           {BENEFIT_CONFIGS.map((cfg, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div key={i} style={{
+              display: 'flex', alignItems: 'center', gap: 11,
+              padding: '10px 12px',
+              background: 'var(--bg-subtle)',
+              border: '1.5px solid rgba(15,15,16,0.1)',
+              borderRadius: 12,
+            }}>
               <div style={{
-                width: 38, height: 38, borderRadius: 11,
-                background: `${cfg.color}15`, border: `1px solid ${cfg.color}25`,
+                width: 34, height: 34, borderRadius: 9,
+                background: `${cfg.color}18`,
+                border: `1.5px solid ${cfg.color}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
               }}>
-                <cfg.Icon size={18} color={cfg.color} />
+                <cfg.Icon size={17} color={cfg.color} strokeWidth={2.2} />
               </div>
-              <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>{benefitTexts[i]}</span>
+              <span style={{
+                fontFamily: "'Nunito',sans-serif", fontSize: 13, fontWeight: 700,
+                color: 'var(--text)', lineHeight: 1.35,
+              }}>{benefitTexts[i]}</span>
             </div>
           ))}
         </div>
 
+        {/* Google button — ink border + shadow */}
         <button
           onClick={() => signInWith('google')}
           disabled={!!loading}
           style={{
-            width: '100%', padding: '15px 20px',
-            background: '#fff', border: '1px solid #dadce0',
-            borderRadius: 14, cursor: loading ? 'wait' : 'pointer',
+            width: '100%', padding: '13px 18px',
+            background: '#fff',
+            border: '2px solid #0F0F10',
+            borderRadius: 12,
+            boxShadow: '0 3px 0 0 #0F0F10',
+            cursor: loading ? 'wait' : 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-            fontSize: 14, fontWeight: 600, color: '#3c4043',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-            transition: 'all 0.2s',
-            opacity: loading ? 0.7 : 1,
+            fontFamily: "'Nunito',sans-serif", fontSize: 14, fontWeight: 800,
+            color: '#0F0F10',
+            opacity: loading ? 0.6 : 1,
+            marginBottom: 10,
           }}
         >
           <svg width="18" height="18" viewBox="0 0 48 48">
@@ -166,22 +220,31 @@ export default function AuthPrompt({ onFinish }: AuthPromptProps) {
           {loading === 'google' ? t.authPrompt.connecting : t.auth.signInGoogle}
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '4px 0' }}>
-          <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-          <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>{t.or}</span>
-          <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+        {/* Divider */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '6px 0' }}>
+          <div style={{ flex: 1, height: 1.5, background: 'rgba(15,15,16,0.12)' }} />
+          <span style={{
+            fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 800,
+            letterSpacing: '0.14em', textTransform: 'uppercase',
+            color: 'var(--text-muted)',
+          }}>{t.or}</span>
+          <div style={{ flex: 1, height: 1.5, background: 'rgba(15,15,16,0.12)' }} />
         </div>
 
+        {/* Apple button — ink background */}
         <button
           onClick={() => signInWith('apple')}
           disabled={!!loading}
           style={{
-            width: '100%', padding: '15px 20px',
-            background: '#000', border: '1px solid #000',
-            borderRadius: 14, cursor: loading ? 'wait' : 'pointer',
+            width: '100%', padding: '13px 18px',
+            background: '#0F0F10',
+            border: '2px solid #0F0F10',
+            borderRadius: 12,
+            boxShadow: '0 3px 0 0 ' + COLORS.streak,
+            cursor: loading ? 'wait' : 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-            fontSize: 14, fontWeight: 600, color: '#fff',
-            transition: 'all 0.2s',
+            fontFamily: "'Nunito',sans-serif", fontSize: 14, fontWeight: 800,
+            color: '#fff',
             opacity: loading ? 0.7 : 1,
           }}
         >
@@ -192,13 +255,16 @@ export default function AuthPrompt({ onFinish }: AuthPromptProps) {
         </button>
       </div>
 
+      {/* Later button */}
       <button
         onClick={onFinish}
         style={{
           background: 'none', border: 'none',
-          color: 'var(--text-muted)', fontSize: 13,
+          color: 'var(--text-muted)',
+          fontFamily: "'Nunito',sans-serif", fontSize: 13, fontWeight: 700,
           cursor: 'pointer', padding: 10,
-          alignSelf: 'center', fontWeight: 500,
+          alignSelf: 'center',
+          letterSpacing: '0.02em',
         }}
       >
         {t.authPrompt.later}

@@ -34,10 +34,18 @@ export async function cloudSave(userId: string, { hist, prof, st, srCards }: Clo
   if (!supabase) return { ok: false, error: 'no supabase' };
   // Pack srCards into st field to avoid schema changes
   const stWithSr = srCards && srCards.length > 0 ? { ...st, srCards } : st;
-  const { error } = await supabase
-    .from('user_data')
-    .upsert({ id: userId, hist, prof, st: stWithSr, updated_at: new Date().toISOString() });
-  if (error) { captureError(error, { context: 'cloudSave' }); return { ok: false, error: error.message }; }
+  // Retry with backoff on transient failures
+  let lastError: string | undefined;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const { error } = await supabase
+      .from('user_data')
+      .upsert({ id: userId, hist, prof, st: stWithSr, updated_at: new Date().toISOString() });
+    if (!error) { lastError = undefined; break; }
+    lastError = error.message;
+    captureError(error, { context: 'cloudSave', attempt });
+    if (attempt < 2) await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+  }
+  if (lastError) return { ok: false, error: lastError };
 
   // Also sync XP/level/streak/avatar to profiles table (fire-and-forget)
   try {

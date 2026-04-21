@@ -20,28 +20,23 @@ describe('Chip', () => {
     expect(onClick).toHaveBeenCalledOnce();
   });
 
-  it('active chip has bold font weight', () => {
+  it('active chip has white text on ink background', () => {
     const { container } = render(<Chip active={true} onClick={() => {}}>Active</Chip>);
     const btn = container.querySelector('button')!;
-    expect(btn.style.fontWeight).toBe('700');
+    expect(btn.style.color).toBe('rgb(255, 255, 255)');
+    expect(btn.style.background).toBe('rgb(15, 15, 16)');
   });
 
-  it('inactive chip has lighter font weight', () => {
+  it('inactive chip uses card background', () => {
     const { container } = render(<Chip active={false} onClick={() => {}}>Inactive</Chip>);
     const btn = container.querySelector('button')!;
-    expect(btn.style.fontWeight).toBe('600');
+    expect(btn.style.background).toContain('--bg-card');
   });
 
-  it('gradient mode: active has white text', () => {
+  it('both modes render consistent v2 ink pill (legacy prop ignored)', () => {
     const { container } = render(<Chip active={true} onClick={() => {}} mode="gradient">G</Chip>);
     const btn = container.querySelector('button')!;
     expect(btn.style.color).toBe('rgb(255, 255, 255)');
-  });
-
-  it('subtle mode: inactive has transparent border', () => {
-    const { container } = render(<Chip active={false} onClick={() => {}} mode="subtle">S</Chip>);
-    const btn = container.querySelector('button')!;
-    expect(btn.style.border).toContain('transparent');
   });
 
   it('applies custom style', () => {

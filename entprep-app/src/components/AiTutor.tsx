@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { CARD_COMPACT, COLORS } from '../constants/styles';
+import React, { useState, useEffect, useRef } from 'react';
+import { CARD_COMPACT, COLORS, FF } from '../constants/styles';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useNav } from '../contexts/NavigationContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -13,13 +13,12 @@ import {
 } from '../utils/tutorHelpers';
 import type { TutorMessage, StudentProfile } from '../utils/tutorHelpers';
 import { trackEvent } from '../utils/analytics';
+import { useTutor as useTutorLimit, getTutorRemaining } from '../utils/aiLimits';
 import { API_BASE } from '../config/app';
 import BackButton from './ui/BackButton';
 import SubjectIcon from './ui/SubjectIcon';
-import {
-  Send, Mic, MicOff, BookOpen, ClipboardList, Brain,
-  Heart, AlertCircle, Sparkles, ChevronRight, Camera,
-} from 'lucide-react';
+import PaywallScreen from './ui/PaywallScreen';
+import { Send, Mic, MicOff, Heart, ChevronRight, Camera } from 'lucide-react';
 
 interface Props {
   initialSubject?: string;
@@ -32,7 +31,7 @@ const ACCENT = '#8b5cf6';
 
 export default function AiTutor({ initialSubject, initialTopicId, initialMode, initialMessage }: Props) {
   const { goHome, nav } = useNav();
-  const { user } = useAuth();
+  const { user, isPremium } = useAuth();
   const { hist, st } = useApp();
   const toast = useToast();
   const t = useT();
@@ -48,27 +47,93 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
   const [recording, setRecording] = useState(false);
   const [showSupport, setShowSupport] = useState(false);
   const [showSubjectPicker, setShowSubjectPicker] = useState(false);
+  const [pickerExpanded, setPickerExpanded] = useState<string | null>(null);
+  const [showPaywall, setShowPaywall] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const stopRecordingRef = useRef<(() => void) | null>(null);
   const profileRef = useRef<StudentProfile>(buildStudentProfile(hist, st.goal));
   const sendingRef = useRef(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const handleSendRef = useRef<(text?: string) => void>(() => {});
+
+  const handleCameraClick = () => {
+    if (!user) { toast.warning(isKk ? 'Кіру қажет' : 'Войдите в аккаунт'); return; }
+    if (!isPremium) { trackEvent('AI Tutor Camera Paywall'); setShowPaywall(true); return; }
+    fileInputRef.current?.click();
+  };
+
+  const handlePhotoPick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    const MAX_SIZE = 3 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      toast.warning(isKk ? 'Сурет тым үлкен (3 МБ-тан көп)' : 'Фото слишком большое (больше 3 МБ)');
+      return;
+    }
+    if (!/^image\/(jpeg|jpg|png|webp|heic|heif)$/i.test(file.type)) {
+      toast.warning(isKk ? 'JPG, PNG немесе WebP жүктеңіз' : 'Загрузите JPG, PNG или WebP');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = typeof reader.result === 'string' ? reader.result : '';
+      if (!dataUrl) return;
+      const caption = isKk ? 'Тапсырманы шеш' : 'Реши эту задачу';
+      const userMsg: TutorMessage = {
+        role: 'user',
+        content: caption + '\n\n![image](' + dataUrl + ')',
+        timestamp: Date.now(),
+      };
+      setMessages(prev => [...prev, userMsg, {
+        role: 'assistant',
+        content: isKk
+          ? 'Фото қабылдандым. Суреттен оқу жақын арада қосылады 💜'
+          : 'Фото получил. Разбор по изображению подключим скоро 💜',
+        timestamp: Date.now(),
+      }]);
+      trackEvent('AI Tutor Photo Sent', { size: file.size });
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Pre-warm the serverless function on mount (HEAD request, no auth needed)
   useEffect(() => {
     fetch(`${API_BASE}/api/ai-tutor`, { method: 'OPTIONS' }).catch(() => {});
-  }, []);
+    // Check if we have a question context from Test nudge
+    try {
+      const raw = sessionStorage.getItem('entprep_tutor_init');
+      if (raw) {
+        sessionStorage.removeItem('entprep_tutor_init');
+        const ctx = JSON.parse(raw);
+        if (ctx.subject) setSubject(ctx.subject);
+        if (ctx.message) {
+          // Auto-send — use ref to avoid stale closure over auth state
+          setTimeout(() => {
+            setInput(ctx.message);
+            setTimeout(() => handleSendRef.current(ctx.message), 100);
+          }, 300);
+        }
+      }
+    } catch { /* ignore */ }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keep handleSend ref fresh for deferred timers
+  useEffect(() => {
+    handleSendRef.current = handleSend;
+  });
 
   // Scroll to bottom on new message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Auto-send initial message
+  // Auto-send initial message — via ref to avoid stale auth closure
   useEffect(() => {
     if (initialMessage && messages.length === 0) {
-      handleSend(initialMessage);
+      handleSendRef.current(initialMessage);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -84,6 +149,12 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
     }
     sendingRef.current = true;
     if (!user) { toast.error(isKk ? 'Кіру қажет' : 'Войдите в аккаунт'); sendingRef.current = false; return; }
+    if (!isPremium && !useTutorLimit()) {
+      trackEvent('AI Tutor Limit Hit');
+      setShowPaywall(true);
+      sendingRef.current = false;
+      return;
+    }
 
     const userMsg: TutorMessage = { role: 'user', content: msg, timestamp: Date.now() };
     const newMessages = [...messages, userMsg];
@@ -142,7 +213,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
     }
     setRecording(true);
     stopRecordingRef.current = startVoiceInput(
-      st.lang,
+      st.lang ?? 'ru',
       (text) => { setInput(text); setRecording(false); },
       (err) => { toast.error(err); setRecording(false); },
     );
@@ -168,125 +239,188 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
   const padBottom = bp === 'desktop' ? 40 : 100;
 
   // ── Quick Actions (shown when no messages) ──
+  // PaywallScreen uses createPortal — render before early returns so it's always available
+  const paywallEl = showPaywall ? <PaywallScreen trigger="tutor_limit" onClose={() => setShowPaywall(false)} /> : null;
+
   if (messages.length === 0 && !showSubjectPicker) {
-    const actions = [
+    const suggestions: { label: string; onClick: () => void }[] = [
       {
-        icon: <BookOpen size={20} color={ACCENT} />,
-        title: isKk ? 'Тақырыпты түсіндір' : 'Объясни тему',
-        desc: isKk ? 'Конспект + Сократ әдісі' : 'Конспект + Сократовский метод',
+        label: isKk ? 'Тақырыпты түсіндір' : 'Объясни тему',
         onClick: () => setShowSubjectPicker(true),
       },
       {
-        icon: <ClipboardList size={20} color={COLORS.teal} />,
-        title: isKk ? 'Жоспар құр' : 'Составь план',
-        desc: isKk ? 'Жеке дайындық жоспары' : 'Персональный план подготовки',
+        label: isKk ? 'Жоспар құр' : 'Составь план',
         onClick: () => handleQuickAction('plan', '', '', isKk ? 'Маған ҰБТ-ға дайындық жоспарын құр' : 'Составь мне план подготовки к ЕНТ'),
       },
       {
-        icon: <Brain size={20} color={COLORS.amber} />,
-        title: isKk ? 'Мені тексер' : 'Проверь меня',
-        desc: isKk ? 'Әлсіз тақырыптар бойынша 5 сұрақ' : '5 вопросов по слабым темам',
-        onClick: () => handleQuickAction('quiz', '', '', isKk ? 'Менің әлсіз тақырыптарым бойынша тексер' : 'Проверь меня по моим слабым темам'),
-      },
-      {
-        icon: <AlertCircle size={20} color={COLORS.red} />,
-        title: isKk ? 'Қателерді талда' : 'Разбери ошибки',
-        desc: isKk ? 'Қателер заңдылығын анықта' : 'Найди паттерн в моих ошибках',
+        label: isKk ? 'Қателерді талда' : 'Разбери ошибки',
         onClick: () => handleQuickAction('errors', '', '', isKk ? 'Менің қателерімді талда' : 'Проанализируй мои ошибки и найди паттерн'),
       },
       {
-        icon: <Heart size={20} color="#ec4899" />,
-        title: isKk ? 'Мен қорқамын' : 'Мне страшно',
-        desc: isKk ? 'Қолдау + кеңестер' : 'Поддержка + практические советы',
+        label: isKk ? 'Мен қорқамын' : 'Мне страшно',
         onClick: () => handleQuickAction('support', '', '', isKk ? 'Мен ҰБТ-дан қорқамын' : 'Я боюсь ЕНТ. Мне нужна поддержка'),
       },
     ];
 
     return (
-      <div style={{ padding: `0 var(--content-padding) ${padBottom}px` }}>
-        <BackButton onClick={goHome} />
-
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+      <div style={{ padding: `0 var(--content-padding) ${padBottom + 140}px`, minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
+        {/* Compact chat header */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          marginBottom: 14, padding: '10px 0',
+          borderBottom: '1.5px solid rgba(15,15,16,0.1)',
+        }}>
+          <BackButton onClick={goHome} />
           <div style={{
-            width: 48, height: 48, borderRadius: 16,
-            background: `linear-gradient(135deg, ${ACCENT}, #a855f7)`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            position: 'relative',
+            width: 38, height: 38, borderRadius: 11,
+            background: COLORS.streak, border: `2px solid ${COLORS.xp}`,
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            color: '#fff', fontFamily: FF.display,
+            fontWeight: 900, fontSize: 16, letterSpacing: '-0.04em',
+            flexShrink: 0,
           }}>
-            <Sparkles size={24} color="#fff" />
+            Д
+            <span style={{
+              position: 'absolute', bottom: -2, right: -2,
+              width: 10, height: 10, borderRadius: '50%',
+              background: COLORS.win, border: '2px solid var(--bg)',
+            }} />
           </div>
-          <div>
-            <h1 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', margin: 0 }}>
-              AI {isKk ? 'Репетитор' : 'Репетитор'}
-            </h1>
-            <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '2px 0 0' }}>
-              {isKk ? 'Жеке тьютор. Сократ әдісімен.' : 'Персональный тьютор. Сократовский метод.'}
-            </p>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{
+              fontFamily: FF.display, fontSize: 13, fontWeight: 900,
+              color: 'var(--text)', letterSpacing: '-0.02em', lineHeight: 1.1,
+            }}>Дияр</div>
+            <div style={{
+              fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 800,
+              letterSpacing: '0.12em', textTransform: 'uppercase',
+              color: COLORS.win, marginTop: 1,
+            }}>онлайн · {isPremium ? 'PRO' : getTutorRemaining() + '/10'}</div>
           </div>
         </div>
 
-        {/* Quick actions */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {actions.map((a, i) => (
-            <button key={i} onClick={a.onClick} style={{
-              ...CARD_COMPACT, display: 'flex', alignItems: 'center', gap: 12,
-              padding: '14px 16px', cursor: 'pointer', textAlign: 'left',
-              width: '100%', transition: 'all 0.2s',
-            }}>
-              <div style={{
-                width: 40, height: 40, borderRadius: 12,
-                background: `${[ACCENT, COLORS.teal, COLORS.amber, COLORS.red, '#ec4899'][i]}12`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+        {/* Welcome assistant bubble */}
+        <div style={{
+          display: 'flex', alignItems: 'flex-end', gap: 6,
+          marginBottom: 12,
+          animation: 'slideUp 0.28s cubic-bezier(0.16,1,0.3,1) both',
+        }}>
+          <div style={{
+            width: 28, height: 28, borderRadius: 8,
+            background: COLORS.streak, border: '1.5px solid #0F0F10',
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            color: '#fff', fontFamily: FF.display,
+            fontWeight: 900, fontSize: 12, letterSpacing: '-0.04em',
+            flexShrink: 0, marginBottom: 2,
+          }}>Д</div>
+          <div style={{
+            maxWidth: '85%',
+            padding: '12px 14px',
+            borderRadius: 16, borderBottomLeftRadius: 6,
+            background: 'var(--bg-card)',
+            border: '2px solid #0F0F10',
+            boxShadow: '0 2px 0 0 #0F0F10',
+            fontFamily: "'Nunito',sans-serif", fontSize: 13.5, fontWeight: 600,
+            color: 'var(--text)', lineHeight: 1.55,
+          }}>
+            <div style={{ marginBottom: 8 }}>
+              {isKk
+                ? 'Сәлем! Мен — Дияр. ҰБТ сұрақтарын бірге талдаймыз, тапсырма шешемін, жоспар құрамын. Қысқасы — нағыз репетитор, тек тегін және 24/7.'
+                : 'Привет! Я Дияр — твой AI-репетитор. Разберу любую задачу по шагам, объясню тему простыми словами, составлю план подготовки. Можно скинуть фото задачи — решу. 24/7, бесплатно.'}
+            </div>
+            <div style={{
+              fontFamily: "'JetBrains Mono',monospace", fontSize: 9.5, fontWeight: 800,
+              letterSpacing: '0.1em', textTransform: 'uppercase',
+              color: 'var(--text-muted)',
+            }}>{isKk ? 'Пиши не стесняйся ↓' : 'Спроси что-нибудь ↓'}</div>
+          </div>
+        </div>
+
+        <div style={{ flex: 1 }} />
+
+        {/* Quick suggestion pills above input */}
+        <div style={{
+          position: 'fixed', bottom: bp === 'desktop' ? 88 : 148, left: 0, right: 0,
+          padding: '0 var(--content-padding)',
+          pointerEvents: 'none',
+        }}>
+          <div style={{
+            maxWidth: 'var(--content-max-width)', margin: '0 auto',
+            display: 'flex', gap: 6, overflowX: 'auto',
+            paddingBottom: 8, WebkitOverflowScrolling: 'touch' as never,
+            pointerEvents: 'auto',
+          }}>
+            {suggestions.map((s, i) => (
+              <button key={i} onClick={s.onClick} style={{
+                flexShrink: 0,
+                padding: '7px 12px', borderRadius: 999,
+                background: 'var(--bg-card)',
+                border: '1.5px solid #0F0F10',
+                boxShadow: '0 2px 0 0 rgba(15,15,16,0.15)',
+                fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 700,
+                color: 'var(--text)', cursor: 'pointer',
+                whiteSpace: 'nowrap',
               }}>
-                {a.icon}
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{a.title}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{a.desc}</div>
-              </div>
-              <ChevronRight size={16} color="var(--text-muted)" />
-            </button>
-          ))}
-        </div>
-
-        {/* Support heart */}
-        <div style={{ textAlign: 'center', marginTop: 24, padding: '12px', opacity: 0.6 }}>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-            💜 {isKk ? 'AI репетитор Дияр есебінен жұмыс істейді' : 'AI репетитор работает за счёт Дияра'}
+                {s.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Input for free-form */}
+        {/* Input bar */}
         <div style={{
           position: 'fixed', bottom: bp === 'desktop' ? 20 : 80, left: 0, right: 0,
-          padding: '8px var(--content-padding)',
-          background: 'var(--bg)', borderTop: '1px solid var(--border)',
+          padding: '8px var(--content-padding) 10px',
+          background: 'var(--bg)', borderTop: '2px solid #0F0F10',
         }}>
-          <div style={{ display: 'flex', gap: 8, maxWidth: 'var(--content-max-width)', margin: '0 auto' }}>
+          <div style={{ display: 'flex', gap: 6, maxWidth: 'var(--content-max-width)', margin: '0 auto', alignItems: 'flex-end' }}>
+            {'webkitSpeechRecognition' in window && (
+              <button onClick={handleVoice} style={iconBtnStyle(recording ? COLORS.streakSoft : 'var(--bg-card)', recording ? COLORS.streak : 'var(--text-muted)', recording)}>
+                {recording ? <MicOff size={17} strokeWidth={2.4} /> : <Mic size={17} strokeWidth={2.4} />}
+              </button>
+            )}
+            <button onClick={handleCameraClick} style={iconBtnStyle('var(--bg-card)', 'var(--text-muted)')} aria-label="camera">
+              <Camera size={17} strokeWidth={2.4} />
+              {!isPremium && <span style={proDotStyle} />}
+            </button>
             <textarea
               ref={inputRef}
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+              onBeforeInput={e => { if ((e as unknown as { inputType: string }).inputType === 'insertLineBreak') { e.preventDefault(); handleSend(); } }}
+              enterKeyHint="send"
+              inputMode="text"
               placeholder={isKk ? 'Кез келген сұрақ қой...' : 'Задай любой вопрос...'}
               rows={1}
               style={{
-                flex: 1, padding: '12px 14px', borderRadius: 14,
-                background: 'var(--bg-card)', border: '1px solid var(--border)',
-                color: 'var(--text)', fontSize: 14, resize: 'none',
-                fontFamily: 'inherit', lineHeight: 1.4,
+                flex: 1, padding: '11px 14px', borderRadius: 12,
+                background: 'var(--bg-card)',
+                border: '2px solid #0F0F10',
+                color: 'var(--text)',
+                fontFamily: "'Nunito',sans-serif",
+                fontSize: 14, fontWeight: 600, resize: 'none',
+                lineHeight: 1.4,
               }}
             />
             <button onClick={() => handleSend()} disabled={!input.trim()} style={{
-              width: 44, height: 44, borderRadius: 14,
-              background: input.trim() ? `linear-gradient(135deg, ${ACCENT}, #a855f7)` : 'var(--bg-card)',
-              border: 'none', color: '#fff', cursor: input.trim() ? 'pointer' : 'default',
+              width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+              background: input.trim()
+                ? `linear-gradient(180deg, #FF6A47 0%, ${COLORS.streak} 100%)`
+                : 'var(--bg-subtle)',
+              border: `2px solid ${input.trim() ? '#0F0F10' : 'rgba(15,15,16,0.12)'}`,
+              boxShadow: input.trim() ? '0 3px 0 0 #0F0F10' : 'none',
+              color: input.trim() ? '#fff' : 'var(--text-muted)',
+              cursor: input.trim() ? 'pointer' : 'default',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <Send size={18} />
+              <Send size={17} strokeWidth={2.6} />
             </button>
           </div>
         </div>
+        <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" capture="environment" onChange={handlePhotoPick} style={{ display: 'none' }} />
+        {paywallEl}
       </div>
     );
   }
@@ -297,58 +431,109 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
       ...Object.values(SUBS).map(s => ({ id: s.id, name: s.name, icon: s.icon, color: s.color })),
       ...ALL_PROFILES.map(p => ({ id: p.id, name: p.name, icon: p.icon, color: p.color })),
     ];
-
     return (
       <div style={{ padding: `0 var(--content-padding) ${padBottom}px` }}>
-        <BackButton onClick={() => setShowSubjectPicker(false)} />
-        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 12 }}>
-          {isKk ? 'Пәнді таңда' : 'Выбери предмет и тему'}
-        </div>
-        {allSubs.map(s => {
-          const topics = TOPIC_MAP[s.id];
-          if (!topics) return null;
-          return (
-            <details key={s.id} style={{ marginBottom: 6 }}>
-              <summary style={{
-                ...CARD_COMPACT, padding: '12px 14px', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', gap: 10,
-                listStyle: 'none',
+        <BackButton onClick={() => setShowSubjectPicker(false)} style={{ marginBottom: 14 }} />
+        <div style={{
+          fontFamily: FF.display, fontSize: 22, fontWeight: 900,
+          color: 'var(--text)', letterSpacing: '-0.035em', margin: '0 0 6px',
+          lineHeight: 1.1,
+        }}>{isKk ? 'Пәнді таңда' : 'Выбери тему'}</div>
+        <div style={{
+          fontFamily: "'Nunito',sans-serif", fontSize: 12.5, fontWeight: 700,
+          color: 'var(--text-secondary)', margin: '0 0 18px',
+        }}>{isKk ? 'Дияр объяснит по Сократу' : 'Дияр объяснит пошагово'}</div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {allSubs.map(s => {
+            const topics = TOPIC_MAP[s.id];
+            if (!topics) return null;
+            const isOpen = pickerExpanded === s.id;
+            const subName = (t.subjects as Record<string, string>)[s.id] || s.name;
+            return (
+              <div key={s.id} style={{
+                background: 'var(--bg-card)',
+                border: '2px solid #0F0F10',
+                borderRadius: 12,
+                boxShadow: '0 3px 0 0 #0F0F10',
+                overflow: 'hidden',
               }}>
-                <SubjectIcon sid={s.id} size={18} color={s.color} />
-                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', flex: 1 }}>
-                  {(t.subjects as Record<string, string>)[s.id] || s.name}
-                </span>
-                <ChevronRight size={14} color={s.color} />
-              </summary>
-              <div style={{ marginLeft: 20, paddingLeft: 10, marginTop: 4 }}>
-                {topics.map(tp => (
-                  <React.Fragment key={tp.id}>
-                    {(tp.subtopics || []).map(st => (
-                      <button key={st.id} onClick={() => handleTopicSelect(s.id, st.id)} style={{
-                        display: 'block', width: '100%', padding: '8px 10px',
-                        background: 'none', border: 'none', borderBottom: '1px solid var(--border)',
-                        textAlign: 'left', cursor: 'pointer', fontSize: 12,
-                        color: 'var(--text)', fontWeight: 500,
-                      }}>
-                        {isKk && st.name_kk ? st.name_kk : st.name}
-                      </button>
+                <button onClick={() => setPickerExpanded(isOpen ? null : s.id)} style={{
+                  width: '100%', padding: '12px 14px', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 11,
+                  background: 'transparent', border: 'none', textAlign: 'left',
+                }}>
+                  <div style={{
+                    width: 34, height: 34, borderRadius: 9,
+                    background: `${s.color}18`, border: `1.5px solid ${s.color}`,
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0,
+                  }}>
+                    <SubjectIcon sid={s.id} size={17} color={s.color} strokeWidth={2.2} />
+                  </div>
+                  <span style={{
+                    flex: 1,
+                    fontFamily: "'Nunito',sans-serif", fontSize: 13.5, fontWeight: 800,
+                    color: 'var(--text)',
+                  }}>{subName}</span>
+                  <ChevronRight size={15} color="var(--text-muted)" strokeWidth={2.4} style={{
+                    transition: 'transform 0.2s',
+                    transform: isOpen ? 'rotate(90deg)' : 'none',
+                  }} />
+                </button>
+                {isOpen && (
+                  <div style={{
+                    borderTop: '1.5px solid rgba(15,15,16,0.1)',
+                    background: 'var(--bg-subtle)',
+                    maxHeight: 320, overflowY: 'auto',
+                  }}>
+                    {topics.map(tp => (
+                      <React.Fragment key={tp.id}>
+                        {(tp.subtopics || []).map(st => (
+                          <button key={st.id} onClick={() => handleTopicSelect(s.id, st.id)} style={{
+                            display: 'flex', alignItems: 'center', gap: 8,
+                            width: '100%', padding: '11px 14px',
+                            background: 'transparent', border: 'none',
+                            borderBottom: '1px solid rgba(15,15,16,0.06)',
+                            textAlign: 'left', cursor: 'pointer',
+                            fontFamily: "'Nunito',sans-serif", fontSize: 12.5, fontWeight: 700,
+                            color: 'var(--text)',
+                          }}>
+                            <span style={{
+                              width: 5, height: 5, borderRadius: '50%',
+                              background: s.color, flexShrink: 0,
+                            }} />
+                            <span style={{ flex: 1 }}>{isKk && st.name_kk ? st.name_kk : st.name}</span>
+                            <ChevronRight size={13} color="var(--text-muted)" strokeWidth={2.2} />
+                          </button>
+                        ))}
+                        {(!tp.subtopics || tp.subtopics.length === 0) && (
+                          <button onClick={() => handleTopicSelect(s.id, tp.id)} style={{
+                            display: 'flex', alignItems: 'center', gap: 8,
+                            width: '100%', padding: '11px 14px',
+                            background: 'transparent', border: 'none',
+                            borderBottom: '1px solid rgba(15,15,16,0.06)',
+                            textAlign: 'left', cursor: 'pointer',
+                            fontFamily: "'Nunito',sans-serif", fontSize: 12.5, fontWeight: 700,
+                            color: 'var(--text)',
+                          }}>
+                            <span style={{
+                              width: 5, height: 5, borderRadius: '50%',
+                              background: s.color, flexShrink: 0,
+                            }} />
+                            <span style={{ flex: 1 }}>{isKk && tp.name_kk ? tp.name_kk : tp.name}</span>
+                            <ChevronRight size={13} color="var(--text-muted)" strokeWidth={2.2} />
+                          </button>
+                        )}
+                      </React.Fragment>
                     ))}
-                    {(!tp.subtopics || tp.subtopics.length === 0) && (
-                      <button onClick={() => handleTopicSelect(s.id, tp.id)} style={{
-                        display: 'block', width: '100%', padding: '8px 10px',
-                        background: 'none', border: 'none', borderBottom: '1px solid var(--border)',
-                        textAlign: 'left', cursor: 'pointer', fontSize: 12,
-                        color: 'var(--text)', fontWeight: 500,
-                      }}>
-                        {isKk && tp.name_kk ? tp.name_kk : tp.name}
-                      </button>
-                    )}
-                  </React.Fragment>
-                ))}
+                  </div>
+                )}
               </div>
-            </details>
-          );
-        })}
+            );
+          })}
+        </div>
+        {paywallEl}
       </div>
     );
   }
@@ -356,94 +541,171 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
   // ── Chat View ──
   return (
     <div style={{ padding: `0 var(--content-padding) ${padBottom + 70}px` }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+      {/* v2 Chat header — Д avatar + status + back + support toggle */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 10,
+        marginBottom: 14, padding: '10px 0',
+        borderBottom: '1.5px solid rgba(15,15,16,0.1)',
+      }}>
         <BackButton onClick={() => setMessages([])} />
-        <button onClick={() => setShowSupport(s => !s)} style={{
-          background: 'none', border: 'none', cursor: 'pointer',
-          padding: '8px', display: 'flex', alignItems: 'center', gap: 4,
-          color: showSupport ? '#ec4899' : 'var(--text-muted)',
-          fontSize: 11, fontWeight: 600,
+        <div style={{
+          position: 'relative',
+          width: 38, height: 38, borderRadius: 11,
+          background: COLORS.streak,
+          border: `2px solid ${COLORS.xp}`,
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          color: '#fff', fontFamily: FF.display,
+          fontWeight: 900, fontSize: 16, letterSpacing: '-0.04em',
+          flexShrink: 0,
         }}>
-          <Heart size={16} fill={showSupport ? '#ec4899' : 'none'} />
+          Д
+          <span style={{
+            position: 'absolute', bottom: -2, right: -2,
+            width: 10, height: 10, borderRadius: '50%',
+            background: COLORS.win,
+            border: '2px solid var(--bg)',
+          }} />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            fontFamily: FF.display, fontSize: 13, fontWeight: 900,
+            color: 'var(--text)', letterSpacing: '-0.02em', lineHeight: 1.1,
+          }}>Дияр</div>
+          <div style={{
+            fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 800,
+            letterSpacing: '0.12em', textTransform: 'uppercase',
+            color: COLORS.win, marginTop: 1,
+          }}>онлайн · {isPremium ? 'PRO' : getTutorRemaining() + '/' + 10}</div>
+        </div>
+        <button onClick={() => setShowSupport(s => !s)} style={{
+          width: 34, height: 34, borderRadius: 10,
+          background: showSupport ? 'rgba(236,72,153,0.12)' : 'transparent',
+          border: showSupport ? '1.5px solid rgba(236,72,153,0.35)' : '1.5px solid rgba(15,15,16,0.12)',
+          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: showSupport ? '#ec4899' : 'var(--text-muted)',
+          flexShrink: 0,
+        }}>
+          <Heart size={15} fill={showSupport ? '#ec4899' : 'none'} strokeWidth={2.2} />
         </button>
       </div>
 
-      {/* Support banner */}
+      {/* Support banner — v2 ink-bordered style */}
       {showSupport && (
         <div style={{
-          ...CARD_COMPACT, padding: '12px 14px', marginBottom: 12,
-          background: 'rgba(236,72,153,0.06)', border: '1px solid rgba(236,72,153,0.15)',
+          padding: '14px 14px', marginBottom: 14,
+          background: 'rgba(236,72,153,0.06)',
+          border: '2px solid #0F0F10',
+          borderRadius: 14,
+          boxShadow: '0 3px 0 0 #0F0F10',
           animation: 'slideUp 0.3s cubic-bezier(0.16,1,0.3,1)',
         }}>
-          <div style={{ fontSize: 12, color: 'var(--text)', marginBottom: 6, fontWeight: 600 }}>
-            💜 {isKk ? 'Бұл AI менің қалтамнан жұмыс істейді' : 'Этот AI работает из моего кармана'}
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 8, lineHeight: 1.5 }}>
+          <div style={{
+            fontFamily: FF.display, fontSize: 11, fontWeight: 900,
+            letterSpacing: '0.06em', textTransform: 'uppercase',
+            color: '#ec4899', marginBottom: 6,
+          }}>💜 поддержать</div>
+          <div style={{
+            fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 600,
+            color: 'var(--text-secondary)', marginBottom: 10, lineHeight: 1.5,
+          }}>
             {isKk
-              ? 'Мен, Дияр, 17 жастамын. Әр AI хабарлама маған ақша тұрады. Бірақ мен мұны жалғастырғым келеді — тегін. Егер көмек бергің келсе:'
-              : 'Я Дияр, мне 17. Каждое AI сообщение стоит мне денег. Но я хочу чтобы это оставалось бесплатным. Если хочешь поддержать:'}
+              ? 'Мен, Дияр, 17 жастамын. Әр AI хабарлама маған ақша тұрады. Бірақ мен мұны тегін қалдырғым келеді.'
+              : 'Я Дияр, мне 17. Каждое AI-сообщение стоит денег. Но я хочу, чтобы это было бесплатным.'}
           </div>
           <div style={{
             padding: '10px 14px', borderRadius: 10,
-            background: 'rgba(236,72,153,0.1)', border: '1px solid rgba(236,72,153,0.2)',
-            fontSize: 13, fontWeight: 700, color: '#ec4899', textAlign: 'center',
+            background: '#0F0F10',
+            fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 800,
+            color: '#fff', textAlign: 'center', letterSpacing: '0.04em',
           }}>
-            Kaspi: 8 747 356 4629
-          </div>
-          <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'center', marginTop: 6 }}>
-            {isKk ? 'Кез келген сома көмектеседі 🙏' : 'Любая сумма помогает 🙏'}
+            Kaspi · 8 747 356 4629
           </div>
         </div>
       )}
 
       {/* Messages */}
-      {messages.map((msg, i) => (
-        <div key={i} style={{
-          display: 'flex',
-          justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
-          marginBottom: 8,
-        }}>
-          <div style={{
-            maxWidth: '85%', padding: '10px 14px', borderRadius: 16,
-            background: msg.role === 'user'
-              ? `linear-gradient(135deg, ${ACCENT}, #a855f7)`
-              : 'var(--bg-card)',
-            border: msg.role === 'user' ? 'none' : '1px solid var(--border)',
-            color: msg.role === 'user' ? '#fff' : 'var(--text)',
-            fontSize: 13, lineHeight: 1.6, whiteSpace: 'pre-wrap',
-            borderBottomRightRadius: msg.role === 'user' ? 4 : 16,
-            borderBottomLeftRadius: msg.role === 'assistant' ? 4 : 16,
+      {messages.map((msg, i) => {
+        const isUser = msg.role === 'user';
+        const showAvatar = !isUser && (i === 0 || messages[i - 1]?.role !== 'assistant');
+        return (
+          <div key={i} style={{
+            display: 'flex',
+            justifyContent: isUser ? 'flex-end' : 'flex-start',
+            alignItems: 'flex-end',
+            gap: 6,
+            marginBottom: 10,
+            animation: 'slideUp 0.28s cubic-bezier(0.16,1,0.3,1) both',
           }}>
-            {msg.role === 'assistant' && msg.content === '⏳' ? (
-              <div style={{ display: 'flex', gap: 4, padding: '2px 0' }}>
-                {[0, 1, 2].map(i => (
-                  <div key={i} style={{
-                    width: 8, height: 8, borderRadius: 4,
-                    background: ACCENT,
-                    animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite`,
-                    opacity: 0.6,
-                  }} />
-                ))}
+            {!isUser && (
+              <div style={{
+                width: 28, height: 28, borderRadius: 8,
+                background: showAvatar ? COLORS.streak : 'transparent',
+                border: showAvatar ? '1.5px solid #0F0F10' : 'none',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                color: showAvatar ? '#fff' : 'transparent',
+                fontFamily: FF.display,
+                fontWeight: 900, fontSize: 12, letterSpacing: '-0.04em',
+                flexShrink: 0, marginBottom: 2,
+              }}>
+                {showAvatar ? 'Д' : ''}
               </div>
-            ) : msg.role === 'assistant' ? renderBold(msg.content) : msg.content}
+            )}
+            <div style={{
+              maxWidth: '80%',
+              padding: '10px 14px',
+              borderRadius: 16,
+              background: isUser
+                ? `linear-gradient(180deg, #FF6A47 0%, ${COLORS.streak} 100%)`
+                : 'var(--bg-card)',
+              border: '2px solid #0F0F10',
+              boxShadow: isUser ? '0 2px 0 0 #0F0F10' : '0 2px 0 0 #0F0F10',
+              color: isUser ? '#fff' : 'var(--text)',
+              fontFamily: "'Nunito',sans-serif",
+              fontSize: 13.5, lineHeight: 1.55, whiteSpace: 'pre-wrap', fontWeight: 600,
+              borderBottomRightRadius: isUser ? 6 : 16,
+              borderBottomLeftRadius: isUser ? 16 : 6,
+              wordBreak: 'break-word',
+            }}>
+              {msg.role === 'assistant' && msg.content === '⏳' ? (
+                <div style={{ display: 'flex', gap: 4, padding: '4px 2px', alignItems: 'center' }}>
+                  {[0, 1, 2].map(di => (
+                    <div key={di} style={{
+                      width: 7, height: 7, borderRadius: 4,
+                      background: COLORS.streak,
+                      animation: `pulse 1.2s ease-in-out ${di * 0.2}s infinite`,
+                      opacity: 0.7,
+                    }} />
+                  ))}
+                </div>
+              ) : msg.role === 'assistant' ? renderBold(msg.content) : renderUserContent(msg.content)}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
 
       {/* Loading indicator (hide if placeholder already showing) */}
       {loading && messages.length > 0 && messages[messages.length - 1]?.role !== 'assistant' && (
-        <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: 8 }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'flex-end', gap: 6, marginBottom: 10 }}>
           <div style={{
-            padding: '12px 18px', borderRadius: 16, borderBottomLeftRadius: 4,
-            background: 'var(--bg-card)', border: '1px solid var(--border)',
+            width: 28, height: 28, borderRadius: 8,
+            background: COLORS.streak, border: '1.5px solid #0F0F10',
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            color: '#fff', fontFamily: FF.display,
+            fontWeight: 900, fontSize: 12, letterSpacing: '-0.04em',
+            flexShrink: 0, marginBottom: 2,
+          }}>Д</div>
+          <div style={{
+            padding: '10px 14px', borderRadius: 16, borderBottomLeftRadius: 6,
+            background: 'var(--bg-card)', border: '2px solid #0F0F10',
+            boxShadow: '0 2px 0 0 #0F0F10',
           }}>
             <div style={{ display: 'flex', gap: 4 }}>
-              {[0, 1, 2].map(i => (
-                <div key={i} style={{
-                  width: 8, height: 8, borderRadius: 4,
-                  background: ACCENT,
-                  animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite`,
-                  opacity: 0.6,
+              {[0, 1, 2].map(di => (
+                <div key={di} style={{
+                  width: 7, height: 7, borderRadius: 4,
+                  background: COLORS.streak,
+                  animation: `pulse 1.2s ease-in-out ${di * 0.2}s infinite`,
+                  opacity: 0.7,
                 }} />
               ))}
             </div>
@@ -453,57 +715,107 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
 
       <div ref={messagesEndRef} />
 
-      {/* Input bar */}
+      {/* v2 Input bar — ink border, streak gradient send, mic with streak on active */}
       <div style={{
         position: 'fixed', bottom: bp === 'desktop' ? 20 : 70, left: 0, right: 0,
-        padding: '8px var(--content-padding)',
-        background: 'var(--bg)', borderTop: '1px solid var(--border)',
+        padding: '10px var(--content-padding) 12px',
+        background: 'var(--bg)',
+        borderTop: '2px solid #0F0F10',
       }}>
         <div style={{ display: 'flex', gap: 6, maxWidth: 'var(--content-max-width)', margin: '0 auto', alignItems: 'flex-end' }}>
           {/* Voice button */}
           {'webkitSpeechRecognition' in window && (
-            <button onClick={handleVoice} style={{
-              width: 42, height: 42, borderRadius: 12, flexShrink: 0,
-              background: recording ? 'rgba(239,68,68,0.12)' : 'var(--bg-card)',
-              border: recording ? `1.5px solid ${COLORS.red}` : '1px solid var(--border)',
-              color: recording ? COLORS.red : 'var(--text-muted)',
-              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              animation: recording ? 'pulse 1s ease-in-out infinite' : 'none',
-            }}>
-              {recording ? <MicOff size={18} /> : <Mic size={18} />}
+            <button onClick={handleVoice} style={iconBtnStyle(recording ? COLORS.streakSoft : 'var(--bg-card)', recording ? COLORS.streak : 'var(--text-muted)', recording)}>
+              {recording ? <MicOff size={17} strokeWidth={2.4} /> : <Mic size={17} strokeWidth={2.4} />}
             </button>
           )}
+
+          {/* Camera button (premium) */}
+          <button onClick={handleCameraClick} style={iconBtnStyle('var(--bg-card)', 'var(--text-muted)')} aria-label="camera">
+            <Camera size={17} strokeWidth={2.4} />
+            {!isPremium && <span style={proDotStyle} />}
+          </button>
 
           <textarea
             ref={inputRef}
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-            placeholder={isKk ? 'Сұрақ қой...' : 'Спроси что-нибудь...'}
+            onBeforeInput={e => { if ((e as unknown as { inputType: string }).inputType === 'insertLineBreak') { e.preventDefault(); handleSend(); } }}
+            enterKeyHint="send"
+            inputMode="text"
+            placeholder={isPremium ? (isKk ? 'Сұрақ қой...' : 'Спроси что-нибудь...') : (isKk ? `Сұрақ қой... (${getTutorRemaining()}/10)` : `Спроси что-нибудь... (${getTutorRemaining()}/10)`)}
             rows={1}
             style={{
-              flex: 1, padding: '10px 14px', borderRadius: 14,
-              background: 'var(--bg-card)', border: '1px solid var(--border)',
-              color: 'var(--text)', fontSize: 14, resize: 'none',
-              fontFamily: 'inherit', lineHeight: 1.4,
+              flex: 1, padding: '11px 14px', borderRadius: 12,
+              background: 'var(--bg-card)',
+              border: '2px solid #0F0F10',
+              color: 'var(--text)',
+              fontFamily: "'Nunito',sans-serif",
+              fontSize: 14, fontWeight: 600, resize: 'none',
+              lineHeight: 1.4,
               maxHeight: 100,
             }}
           />
 
           <button onClick={() => handleSend()} disabled={!input.trim() || loading} style={{
-            width: 42, height: 42, borderRadius: 12, flexShrink: 0,
-            background: input.trim() && !loading ? `linear-gradient(135deg, ${ACCENT}, #a855f7)` : 'var(--bg-card)',
-            border: input.trim() && !loading ? 'none' : '1px solid var(--border)',
+            width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+            background: input.trim() && !loading
+              ? `linear-gradient(180deg, #FF6A47 0%, ${COLORS.streak} 100%)`
+              : 'var(--bg-subtle)',
+            border: `2px solid ${input.trim() && !loading ? '#0F0F10' : 'rgba(15,15,16,0.12)'}`,
+            boxShadow: input.trim() && !loading ? '0 3px 0 0 #0F0F10' : 'none',
             color: input.trim() && !loading ? '#fff' : 'var(--text-muted)',
             cursor: input.trim() && !loading ? 'pointer' : 'default',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <Send size={18} />
+            <Send size={17} strokeWidth={2.6} />
           </button>
         </div>
       </div>
+      <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" capture="environment" onChange={handlePhotoPick} style={{ display: 'none' }} />
+      {paywallEl}
     </div>
   );
+}
+
+function iconBtnStyle(bg: string, color: string, pulsing = false): React.CSSProperties {
+  return {
+    position: 'relative',
+    width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+    background: bg,
+    border: '2px solid #0F0F10',
+    boxShadow: '0 2px 0 0 #0F0F10',
+    color,
+    cursor: 'pointer',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    animation: pulsing ? 'pulse 1s ease-in-out infinite' : 'none',
+  };
+}
+
+const proDotStyle: React.CSSProperties = {
+  position: 'absolute', top: 2, right: 2,
+  width: 10, height: 10, borderRadius: '50%',
+  background: '#FFC233',
+  border: '1.5px solid #0F0F10',
+};
+
+// Renders a user message — extracts inline `![image](data:...)` and shows thumbnail
+function renderUserContent(content: string): React.ReactNode {
+  const match = content.match(/^([\s\S]*?)\n\n!\[image\]\((data:image\/[^)]+)\)\s*$/);
+  if (match) {
+    const [, text, src] = match;
+    return (
+      <>
+        {text && <div style={{ marginBottom: 8 }}>{text}</div>}
+        <img src={src} alt="задача" style={{
+          display: 'block', maxWidth: '100%', borderRadius: 10,
+          border: '1.5px solid rgba(255,255,255,0.35)',
+        }} />
+      </>
+    );
+  }
+  return content;
 }
 
 // Simple bold text renderer for **text**
@@ -515,3 +827,4 @@ function renderBold(text: string): React.ReactNode {
       : <span key={i}>{part}</span>
   );
 }
+

@@ -7,62 +7,34 @@ interface ChipProps {
   active: boolean;
   onClick: () => void;
   children: React.ReactNode;
-  /** 'gradient' = solid gradient active (Calc, Leaderboard), 'subtle' = tinted active (ErrorReview, Progress) */
+  /** Legacy prop — both modes now render as v2 ink-bordered pill. */
   mode?: 'gradient' | 'subtle';
-  /** Gradient/tint color when active */
+  /** Kept for backward compat — now ignored, always streak accent. */
   activeColor?: ChipColor;
   style?: React.CSSProperties;
 }
-
-const COLOR_MAP: Record<ChipColor, { from: string; to: string; tint: string; border: string }> = {
-  teal:   { from: COLORS.teal, to: COLORS.tealDark, tint: 'rgba(26,154,140,0.15)', border: 'rgba(26,154,140,0.3)' },
-  accent: { from: COLORS.accent, to: COLORS.amber,  tint: 'rgba(255,107,53,0.15)', border: 'rgba(255,107,53,0.3)' },
-};
 
 export default function Chip({
   active,
   onClick,
   children,
-  mode = 'gradient',
-  activeColor = 'teal',
   style,
 }: ChipProps) {
-  const c = COLOR_MAP[activeColor];
-
   const base: React.CSSProperties = {
-    padding: '7px 12px',
-    borderRadius: 24,
-    fontSize: 11,
-    fontWeight: active ? 700 : 600,
+    padding: '7px 14px',
+    borderRadius: 999,
+    fontFamily: "'Nunito',sans-serif",
+    fontSize: 12,
+    fontWeight: 800,
     cursor: 'pointer',
-    transition: 'all 0.2s',
+    transition: 'transform 80ms, box-shadow 80ms',
     whiteSpace: 'nowrap',
     flexShrink: 0,
-    border: 'none',
+    border: '1.5px solid #0F0F10',
+    background: active ? '#0F0F10' : 'var(--bg-card)',
+    color: active ? '#fff' : 'var(--text)',
+    boxShadow: active ? `0 2px 0 0 ${COLORS.streak}` : '0 2px 0 0 rgba(15,15,16,0.18)',
   };
-
-  if (mode === 'gradient') {
-    if (active) {
-      base.background = `linear-gradient(135deg,${c.from},${c.to})`;
-      base.color = '#fff';
-    } else {
-      base.background = 'var(--bg-card)';
-      base.border = '1px solid var(--border)';
-      base.color = 'var(--text-secondary)';
-      // backdrop-filter removed for budget Android performance
-    }
-  } else {
-    // subtle mode
-    if (active) {
-      base.background = c.tint;
-      base.color = c.from;
-      base.border = `1px solid ${c.border}`;
-    } else {
-      base.background = 'var(--bg-subtle)';
-      base.color = 'var(--text-muted)';
-      base.border = '1px solid transparent';
-    }
-  }
 
   return (
     <button onClick={onClick} style={{ ...base, ...style }}>

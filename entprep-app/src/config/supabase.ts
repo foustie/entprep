@@ -10,7 +10,7 @@ export const supabase: SupabaseClient | null = (supabaseUrl && supabaseKey && !s
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
-        storageKey: 'entprep-auth',
+        storageKey: 'entprep-auth-v2', // v2: clean slate after PKCE→implicit migration broke old sessions
       },
     })
   : null;

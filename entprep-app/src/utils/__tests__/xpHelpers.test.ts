@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { calcTestXP, calcTotalXP, getTodayXP, getLevel, LEVELS } from '../xpHelpers';
 import type { TestResult } from '../../types/index';
 

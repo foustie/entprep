@@ -91,7 +91,12 @@ export default function Auth({ user, onSignOut }: AuthProps) {
           skipBrowserRedirect: true,
         },
       });
-      if (error || !data.url) return;
+      if (error) {
+        console.error('OAuth error (native):', error);
+        toast.error(error.message);
+        return;
+      }
+      if (!data.url) return;
       const { Browser } = await import('@capacitor/browser');
       await Browser.open({ url: data.url, presentationStyle: 'popover' });
     } else {
@@ -135,7 +140,7 @@ export default function Auth({ user, onSignOut }: AuthProps) {
             {avatar ? (
               <img src={avatar} alt={fullName || 'Avatar'} style={{ width: 44, height: 44, borderRadius: 22, border: `2px solid ${COLORS.accent}`, objectFit: 'cover' }} />
             ) : (
-              <div style={{ width: 44, height: 44, borderRadius: 22, border: `2px solid ${COLORS.accent}`, background: `linear-gradient(135deg,${COLORS.accent},#e55a2b)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff' }}>
+              <div style={{ width: 44, height: 44, borderRadius: 22, border: '2px solid #0F0F10', background: COLORS.streak, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff' }}>
                 {initials}
               </div>
             )}

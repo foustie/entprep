@@ -3,7 +3,7 @@ import { getPoolSize, getTotalQ } from '../utils/questionStore';
 import { UNIS } from '../data/universities';
 import { supabase } from '../config/supabase';
 import Auth from './Auth';
-import { CARD_COMPACT, COLORS, SECTION_LABEL, TINT } from '../constants/styles';
+import { COLORS, FF, BUTTON } from '../constants/styles';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useApp } from '../contexts/AppContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,23 +12,29 @@ import { API_BASE } from '../config/app';
 import { useToast } from '../contexts/ToastContext';
 import { useT } from '../locales';
 import { getGoalProgress } from '../utils/competitionHelpers';
-import { setNickname, buildReferralUrl } from '../utils/socialHelpers';
+import { setNickname } from '../utils/socialHelpers';
 import Toggle from './ui/Toggle';
 import ProgressBar from './ui/ProgressBar';
-import { Settings as SettingsIcon, BarChart2, Trash2, Target, Wrench, Trophy, Sun, Moon, Crown, Sparkles, AtSign, Check, Globe, User, BookOpen, Palette, Database, Info, Bell, Shield, Gift, Share2, Users, GraduationCap } from 'lucide-react';
-import { isPushSupported, getPushPermission, subscribeToPush, unsubscribeFromPush, isSubscribed, syncPushPrefs } from '../utils/pushHelpers';
+import { Settings as SettingsIcon, BarChart2, Trash2, Target, Wrench, Trophy, AtSign, Check, Globe, User, BookOpen, Palette, Database, Bell, Shield, Users, GraduationCap, Heart, ExternalLink, Instagram, MessageCircle, Send, Mail } from 'lucide-react';
+import { isPushSupported, getPushPermission, subscribeToPush, unsubscribeFromPush, syncPushPrefs } from '../utils/pushHelpers';
 
-/* ─── Section wrapper ─── */
+/* ─── Section wrapper — v2 ink-bordered card ─── */
 function Section({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
   return (
-    <div style={{ marginBottom: 28 }}>
-      <div style={{ ...SECTION_LABEL, display: 'flex', alignItems: 'center', gap: 6 }}>
+    <div style={{ marginBottom: 22 }}>
+      <div style={{
+        fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
+        letterSpacing: '0.16em', textTransform: 'uppercase',
+        color: 'var(--text-muted)', marginBottom: 8, padding: '0 4px',
+        display: 'flex', alignItems: 'center', gap: 6,
+      }}>
         {icon}{label}
       </div>
       <div style={{
         background: 'var(--bg-card)',
-        borderRadius: 16,
-        border: '1px solid var(--border-light)',
+        borderRadius: 14,
+        border: '2px solid #0F0F10',
+        boxShadow: '0 3px 0 0 #0F0F10',
         overflow: 'hidden',
       }}>
         {children}
@@ -40,7 +46,7 @@ function Section({ icon, label, children }: { icon: React.ReactNode; label: stri
 /* ─── Row inside a section ─── */
 const ROW: React.CSSProperties = {
   padding: '14px 16px',
-  borderBottom: '1px solid var(--border-light)',
+  borderBottom: '1.5px solid rgba(15,15,16,0.08)',
 };
 const ROW_LAST: React.CSSProperties = {
   padding: '14px 16px',
@@ -48,8 +54,8 @@ const ROW_LAST: React.CSSProperties = {
 
 export default function Settings() {
   const { st, updSt, hist, clearHist, resetProfile } = useApp();
-  const { user, isPremium, isAdmin, profile, needsNickname, refreshProfile } = useAuth();
-  const { nav, setScreen, setTab, openPaywall } = useNav();
+  const { user, isAdmin, profile, needsNickname, refreshProfile } = useAuth();
+  const { nav, setScreen, setTab } = useNav();
   const toast = useToast();
   const t = useT();
   const bp = useBreakpoint();
@@ -65,9 +71,6 @@ export default function Settings() {
   const [pushLoading, setPushLoading] = useState(false);
   const [cfDeleteAccount, setCfDeleteAccount] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
-  const [promoInput, setPromoInput] = useState('');
-  const [promoLoading, setPromoLoading] = useState(false);
-  const [promoMsg, setPromoMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [classCode, setClassCode] = useState('');
   const [classJoining, setClassJoining] = useState(false);
   const [classMsg, setClassMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -106,9 +109,20 @@ export default function Settings() {
   return (
     <div style={{ padding: `0 var(--content-padding) ${isDesktop ? 40 : 100}px` }}>
       {/* Title */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 0 24px' }}>
-        <SettingsIcon size={22} color="var(--text-secondary)" />
-        <h2 style={{ fontSize: 20, fontWeight: 800, fontFamily: "'Unbounded',sans-serif", color: 'var(--text)', margin: 0 }}>{t.settings.title}</h2>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0 22px' }}>
+        <div style={{
+          width: 36, height: 36, borderRadius: 10,
+          background: '#0F0F10', border: '2px solid #0F0F10',
+          boxShadow: '0 3px 0 0 ' + COLORS.streak,
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          color: '#fff', flexShrink: 0,
+        }}>
+          <SettingsIcon size={18} strokeWidth={2.4} />
+        </div>
+        <h2 style={{
+          fontSize: 26, fontWeight: 900, fontFamily: FF.display,
+          color: 'var(--text)', margin: 0, letterSpacing: '-0.035em', lineHeight: 1,
+        }}>{t.settings.title}</h2>
       </div>
 
       {/* ════════ ACCOUNT ════════ */}
@@ -131,32 +145,7 @@ export default function Settings() {
 
         {/* Promo code removed — all features free */}
 
-        {/* Invite friend (referral) */}
-        {user && profile && !profile.nickname.startsWith('user_') && (
-          <div style={ROW}>
-            <button
-              onClick={async () => {
-                const url = buildReferralUrl(profile.nickname);
-                const text = `${t.settings.inviteShareText}\n${url}`;
-                if (navigator.share) {
-                  try { await navigator.share({ text, url }); } catch { /* cancelled */ }
-                } else {
-                  try { await navigator.clipboard.writeText(text); toast.success(t.errors.copied); } catch { /* ignore */ }
-                }
-              }}
-              style={{ width: '100%', background: 'linear-gradient(135deg, rgba(255,107,53,0.08), rgba(26,154,140,0.08))', border: '1px solid rgba(255,107,53,0.15)', borderRadius: 12, padding: '14px 16px', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, transition: 'all 0.2s' }}
-            >
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg, rgba(255,107,53,0.15), rgba(26,154,140,0.15))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <Gift size={18} color={COLORS.accent} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{t.settings.inviteFriend}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>{t.settings.inviteFriendDesc}</div>
-              </div>
-              <Share2 size={16} color="var(--text-muted)" />
-            </button>
-          </div>
-        )}
+        {/* Referral removed — 9 uses total, not worth the complexity */}
 
         {/* Nickname */}
         {user && profile && (
@@ -213,7 +202,7 @@ export default function Settings() {
                       setNickSaving(false);
                     }}
                     disabled={nickSaving || nickInput.trim().length < 3}
-                    style={{ padding: '10px 16px', background: nickInput.trim().length >= 3 ? `linear-gradient(135deg,${COLORS.teal},${COLORS.tealDark})` : 'var(--bg-subtle-2)', border: 'none', borderRadius: 10, color: '#fff', fontSize: 12, fontWeight: 700, cursor: nickInput.trim().length >= 3 ? 'pointer' : 'default', opacity: nickSaving ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 4 }}
+                    style={{ padding: '10px 16px', background: nickInput.trim().length >= 3 ? COLORS.streak : 'var(--bg-subtle-2)', border: nickInput.trim().length >= 3 ? '2px solid #0F0F10' : 'none', borderBottom: nickInput.trim().length >= 3 ? '3px solid #0F0F10' : 'none', borderRadius: 10, color: '#fff', fontSize: 12, fontWeight: 700, cursor: nickInput.trim().length >= 3 ? 'pointer' : 'default', opacity: nickSaving ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 4 }}
                   >
                     <Check size={14} />{nickSaving ? '...' : 'OK'}
                   </button>
@@ -232,7 +221,7 @@ export default function Settings() {
       {/* ════════ APPEARANCE ════════ */}
       <Section icon={<Palette size={11} />} label={t.settings.sectionAppearance || 'Appearance'}>
         {/* Language */}
-        <div style={{ ...ROW, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ ...ROW_LAST, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Globe size={15} color={COLORS.teal} />
             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{t.settings.language}</div>
@@ -244,16 +233,6 @@ export default function Settings() {
               </button>
             ))}
           </div>
-        </div>
-        {/* Theme */}
-        <div style={{ ...ROW_LAST, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{t.settings.theme}</div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{st.theme === 'light' ? t.settings.lightTheme : t.settings.darkTheme}</div>
-          </div>
-          <button onClick={() => updSt({ ...st, theme: st.theme === 'light' ? 'dark' : 'light' })} style={{ width: 44, height: 26, borderRadius: 13, border: 'none', cursor: 'pointer', position: 'relative', transition: 'all 0.2s', background: st.theme === 'light' ? COLORS.teal : 'var(--toggle-off)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: st.theme === 'light' ? 'flex-end' : 'flex-start', padding: '0 4px' }}>
-            {st.theme === 'light' ? <Sun size={16} color="#fff" /> : <Moon size={16} color="var(--text-muted)" />}
-          </button>
         </div>
       </Section>
 
@@ -352,7 +331,7 @@ export default function Settings() {
                 <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 4 }}>{t.settings.entDate}</div>
                 <input type="date" value={goalDate} onChange={e => setGoalDate(e.target.value)} style={{ display: 'block', width: '100%', boxSizing: 'border-box', padding: '8px 10px', background: 'var(--bg-subtle-2)', border: '1px solid var(--border-stronger)', borderRadius: 8, color: 'var(--text)', fontSize: 13, fontFamily: 'inherit', colorScheme: 'var(--color-scheme)', margin: 0, WebkitAppearance: 'none', appearance: 'none' }} />
               </div>
-              <button onClick={() => { updSt({ ...st, goal: { target: goalTarget, date: goalDate } }); setEditGoal(false); }} disabled={!goalDate} style={{ width: '100%', padding: '10px', background: goalDate ? `linear-gradient(135deg,${COLORS.amber},#d97706)` : 'var(--bg-subtle-2)', border: 'none', borderRadius: 10, color: goalDate ? '#fff' : 'var(--text-muted)', fontSize: 12, fontWeight: 700, cursor: goalDate ? 'pointer' : 'default' }}>
+              <button onClick={() => { updSt({ ...st, goal: { target: goalTarget, date: goalDate } }); setEditGoal(false); }} disabled={!goalDate} style={{ width: '100%', padding: '10px', background: goalDate ? COLORS.xp : 'var(--bg-subtle-2)', border: goalDate ? '2px solid #0F0F10' : 'none', borderBottom: goalDate ? '3px solid #0F0F10' : 'none', borderRadius: 10, color: goalDate ? '#0F0F10' : 'var(--text-muted)', fontSize: 12, fontWeight: 700, cursor: goalDate ? 'pointer' : 'default' }}>
                 {t.settings.saveGoal}
               </button>
             </div>
@@ -405,14 +384,7 @@ export default function Settings() {
       {/* ════════ CLASS ════════ */}
       {user && (
         <Section icon={<GraduationCap size={11} />} label="Класс">
-          {/* Teacher dashboard button */}
-          <button onClick={() => nav('teacher')} style={{ ...ROW, width: '100%', background: 'none', border: 'none', borderBottom: '1px solid var(--border-light)', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Users size={16} color={COLORS.teal} />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Панель учителя</div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Создайте класс и следите за прогрессом</div>
-            </div>
-          </button>
+          {/* Teacher dashboard hidden — 7 classes, 1 member. Access via direct nav('teacher') */}
           {/* Join class with code */}
           <div style={ROW_LAST}>
             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -466,6 +438,62 @@ export default function Settings() {
           </div>
         </Section>
       )}
+
+      {/* ════════ AUTHOR / CONTACT ════════ */}
+      <Section icon={<Heart size={11} />} label={t.settings.sectionAbout}>
+        <div style={{ ...ROW, display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{
+            width: 42, height: 42, borderRadius: 12,
+            background: COLORS.streak, border: '2px solid #0F0F10',
+            boxShadow: '0 2px 0 0 #0F0F10',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#fff', fontWeight: 800, fontSize: 17, fontFamily: FF.display,
+            flexShrink: 0,
+          }}>Д</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>
+              {t.settings.authorName}
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
+              {t.settings.authorTagline}
+            </div>
+          </div>
+        </div>
+        {[
+          { icon: MessageCircle, color: '#25D366', label: 'WhatsApp', sub: '+7 747 356 4629', href: 'https://wa.me/77473564629?text=' + encodeURIComponent('Привет, Дияр! Пишу с ENTprep') },
+          { icon: Send, color: '#0088CC', label: 'Telegram', sub: '@foustie', href: 'https://t.me/foustie' },
+          { icon: Instagram, color: '#E1306C', label: 'Instagram', sub: '@diyarbuilds', href: 'https://instagram.com/diyarbuilds' },
+          { icon: AtSign, color: '#0F0F10', label: 'TikTok', sub: '@diyarbuilds', href: 'https://tiktok.com/@diyarbuilds' },
+          { icon: Mail, color: '#0F0F10', label: t.settings.contactEmail, sub: 'dzakpelov@gmail.com', href: 'mailto:dzakpelov@gmail.com', last: true },
+        ].map((item, i, arr) => (
+          <a
+            key={item.label}
+            href={item.href}
+            target={item.href.startsWith('mailto:') ? undefined : '_blank'}
+            rel="noopener noreferrer"
+            style={{
+              ...(i === arr.length - 1 ? ROW_LAST : ROW),
+              display: 'flex', alignItems: 'center', gap: 12,
+              textDecoration: 'none', color: 'inherit',
+            }}
+          >
+            <div style={{
+              width: 34, height: 34, borderRadius: 10,
+              background: `${item.color}12`,
+              border: `2px solid ${item.color}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <item.icon size={16} color={item.color} strokeWidth={2.25} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{item.label}</div>
+              <div style={{ fontSize: 11, color: 'var(--text-secondary)', fontFamily: FF.mono, marginTop: 2 }}>{item.sub}</div>
+            </div>
+            <ExternalLink size={14} color="var(--text-muted)" style={{ flexShrink: 0 }} />
+          </a>
+        ))}
+      </Section>
 
       {/* ════════ DATA ════════ */}
       <Section icon={<Database size={11} />} label={t.settings.sectionData || 'Data'}>
@@ -535,7 +563,7 @@ export default function Settings() {
 
       {/* ════════ ABOUT ════════ */}
       <div style={{ textAlign: 'center', marginTop: 8, marginBottom: 16 }}>
-        <div style={{ fontSize: 15, fontWeight: 800, fontFamily: "'Unbounded',sans-serif" }}>
+        <div style={{ fontSize: 15, fontWeight: 800, fontFamily: FF.display }}>
           <span style={{ color: COLORS.accent }}>ENT</span><span style={{ color: COLORS.teal }}>prep</span>
         </div>
         <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 3 }}>{t.settings.version} • {getTotalQ()} {t.settings.questionsCount} • {Math.floor(getPoolSize('reading') / 5)} {t.settings.textsCount}</div>

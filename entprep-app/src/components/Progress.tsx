@@ -1,13 +1,13 @@
-import React, { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { SUBJECT_META } from '../config/subjects';
-import Bar from './Bar';
 import MiniChart from './ui/MiniChart';
-import { CARD_COMPACT, TYPE, COLORS, scoreColor } from '../constants/styles';
+import SubjectIcon from './ui/SubjectIcon';
+import { CARD_COMPACT, TYPE, COLORS, scoreColor, FF } from '../constants/styles';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useApp } from '../contexts/AppContext';
 import { getScoreHistory, getPersonalBests } from '../utils/competitionHelpers';
 import EmptyState from './ui/EmptyState';
-import { BarChart3, GraduationCap, Calendar, FileText, Trophy, ArrowUpDown, Filter, Flame, Medal, Users, Zap, Snowflake, Target, Star, Sparkles, BookOpen, Building2, Rocket, TrendingUp, Timer, Palette, Hash } from 'lucide-react';
+import { BarChart3, GraduationCap, Calendar, FileText, Trophy, ArrowUpDown, Filter, Flame, Users, Zap, Snowflake, Target, Star, Sparkles, BookOpen, Building2, Rocket, TrendingUp, Timer, Palette, Hash } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { supabase } from '../config/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -316,7 +316,7 @@ function XPSection({ hist }: { hist: TestResult[] }) {
               border: l.level === lvl.level ? `1.5px solid ${l.color}` : reached ? `1px solid ${l.color}30` : "1px solid transparent",
               opacity: reached ? 1 : 0.4,
             }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: l.color, fontFamily: "'Unbounded',sans-serif" }}>{l.level}</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: l.color, fontFamily: FF.display }}>{l.level}</div>
               <div style={{ fontSize: 7, color: reached ? "var(--text-secondary)" : "var(--text-muted)", marginTop: 1, lineHeight: 1.2 }}>{(t.levels as Record<number, string>)[l.level] || l.name}</div>
               <div style={{ fontSize: 7, color: "var(--text-muted)", marginTop: 1 }}>{l.minXP}+</div>
             </div>
@@ -358,7 +358,7 @@ function Leaderboard({ subjects, names }: { subjects: string[]; names: Record<st
       </div>
       <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 8 }}>
         {subjects.map(s => (
-          <button key={s} onClick={() => setSub(s)} style={{ padding: "4px 8px", borderRadius: 12, fontSize: 9, fontWeight: 600, cursor: "pointer", background: sub === s ? "rgba(26,154,140,0.15)" : "var(--bg-subtle)", color: sub === s ? COLORS.teal : "var(--text-muted)", border: sub === s ? "1px solid rgba(26,154,140,0.3)" : "1px solid transparent" }}>
+          <button key={s} onClick={() => setSub(s)} style={{ padding: "4px 8px", borderRadius: 12, fontSize: 9, fontWeight: 600, cursor: "pointer", background: sub === s ? "rgba(255,90,54,0.15)" : "var(--bg-subtle)", color: sub === s ? COLORS.teal : "var(--text-muted)", border: sub === s ? "1px solid rgba(255,90,54,0.3)" : "1px solid transparent" }}>
             {names[s]}
           </button>
         ))}
@@ -368,7 +368,7 @@ function Leaderboard({ subjects, names }: { subjects: string[]; names: Record<st
         : rows.map((r, i) => {
           const isMe = user && r.user_name === (user.user_metadata?.full_name || user.email || '');
           return (
-            <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "5px 0", borderBottom: i < rows.length - 1 ? "1px solid var(--bg-subtle)" : "none", background: isMe ? "rgba(26,154,140,0.04)" : "transparent", borderRadius: isMe ? 6 : 0, paddingLeft: isMe ? 6 : 0, paddingRight: isMe ? 6 : 0 }}>
+            <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "5px 0", borderBottom: i < rows.length - 1 ? "1px solid var(--bg-subtle)" : "none", background: isMe ? "rgba(255,90,54,0.04)" : "transparent", borderRadius: isMe ? 6 : 0, paddingLeft: isMe ? 6 : 0, paddingRight: isMe ? 6 : 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <span style={{ fontSize: 12, width: 20, textAlign: "center" }}>{i < 3 ? medals[i] : <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{i + 1}</span>}</span>
                 <span style={{ fontSize: 11, color: isMe ? COLORS.teal : "var(--text-body)", fontWeight: isMe ? 600 : 400 }}>{r.user_name}{isMe && ` ${t.progress.youLabel}`}</span>
@@ -436,9 +436,21 @@ export default function Progress() {
   }, [hist, filterSub, sortBy]);
 
   return (<div style={{ padding: `0 var(--content-padding) ${isDesktop ? 40 : 100}px` }}>
-    <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "0 0 24px" }}>
-      <BarChart3 size={22} color={COLORS.teal} />
-      <h2 style={{ ...TYPE.h2 }}>{t.progress.title}</h2>
+    <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "4px 0 20px" }}>
+      <div style={{
+        width: 42, height: 42, borderRadius: 12,
+        background: COLORS.win,
+        border: '2px solid #0F0F10',
+        boxShadow: '0 3px 0 0 #0F0F10',
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        color: '#fff', flexShrink: 0,
+      }}>
+        <BarChart3 size={21} strokeWidth={2.4} />
+      </div>
+      <h2 style={{
+        fontFamily: FF.display, fontSize: 24, fontWeight: 900,
+        letterSpacing: '-0.035em', color: 'var(--text)', margin: 0, lineHeight: 1,
+      }}>{t.progress.title}</h2>
     </div>
     {hist.length === 0 ? <EmptyState icon={FileText} description={t.progress.firstTestHint} />
       : <>
@@ -448,83 +460,266 @@ export default function Progress() {
         <XPSection hist={hist} />
         <Badges hist={hist} subjects={subjects} />
         <Leaderboard subjects={subjects} names={names} />
+        <div style={{
+          fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
+          letterSpacing: '0.16em', textTransform: 'uppercase',
+          color: 'var(--text-muted)', marginBottom: 8, padding: '0 4px',
+        }}>по предметам</div>
         <div style={{ display: "grid", gridTemplateColumns: bp === 'mobile' ? '1fr' : bp === 'tablet' ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 8, marginBottom: 28 }}>
         {subjects.map(sid => {
           const tests = hist.filter(t => t.su === sid);
           if (tests.length === 0) return null;
           const scoreHist = getScoreHistory(hist, sid);
           const pb = bests[sid];
-          return (<div key={sid} style={{ ...CARD_COMPACT, padding: "14px" }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: colors[sid], marginBottom: 8 }}>{names[sid]}</div>
-            {scoreHist.length >= 2
-              ? <MiniChart data={scoreHist} color={colors[sid]} />
-              : <Bar data={tests.slice(-5).map((t, i) => ({ l: `#${tests.length - Math.min(tests.length, 5) + i + 1}`, v: t.sc }))} color={colors[sid]} mx={100} />
-            }
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
-              <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{t.progress.testsCount} {tests.length}</span>
-              <span style={{ fontSize: 10, color: "var(--text-secondary)" }}>{t.progress.avgScore} {Math.round(tests.reduce((s, t) => s + t.sc, 0) / tests.length)}%</span>
-              <span style={{ fontSize: 10, color: COLORS.green, display: "flex", alignItems: "center", gap: 2 }}>
-                <Trophy size={10} />{pb ? pb.best : Math.max(...tests.map(t => t.sc))}%
-              </span>
+          const avgSc = Math.round(tests.reduce((s, t) => s + t.sc, 0) / tests.length);
+          const bestSc = pb ? pb.best : Math.max(...tests.map(t => t.sc));
+          const clr = colors[sid];
+          return (
+            <div key={sid} style={{
+              position: 'relative',
+              padding: '14px 14px 12px 16px',
+              background: 'var(--bg-card)',
+              border: '2px solid #0F0F10',
+              borderRadius: 12,
+              boxShadow: '0 3px 0 0 #0F0F10',
+              overflow: 'hidden',
+            }}>
+              <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 4, background: clr }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                <div style={{
+                  width: 32, height: 32, borderRadius: 9,
+                  background: `${clr}18`, border: `1.5px solid ${clr}`,
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0,
+                }}>
+                  <SubjectIcon sid={sid} size={16} color={clr} strokeWidth={2.2} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{
+                    fontFamily: "'Nunito',sans-serif", fontSize: 13, fontWeight: 800,
+                    color: 'var(--text)', lineHeight: 1.15,
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  }}>{names[sid]}</div>
+                  <div style={{
+                    fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 700,
+                    letterSpacing: '0.1em', textTransform: 'uppercase',
+                    color: 'var(--text-muted)', marginTop: 2,
+                  }}>{tests.length} {tests.length === 1 ? 'тест' : tests.length < 5 ? 'теста' : 'тестов'}</div>
+                </div>
+              </div>
+              {scoreHist.length >= 2 ? (
+                <div style={{ height: 44, marginBottom: 10 }}>
+                  <MiniChart data={scoreHist} color={clr} />
+                </div>
+              ) : (
+                <div style={{
+                  height: 44, marginBottom: 10,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: 'var(--bg-subtle)',
+                  border: '1.5px dashed rgba(15,15,16,0.12)',
+                  borderRadius: 8,
+                  fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 700,
+                  letterSpacing: '0.08em', textTransform: 'uppercase',
+                  color: 'var(--text-muted)',
+                }}>
+                  нужен ещё тест для графика
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 6 }}>
+                <div style={{
+                  flex: 1, padding: '6px 8px',
+                  background: 'var(--bg-subtle)',
+                  border: '1.5px solid rgba(15,15,16,0.1)',
+                  borderRadius: 8, textAlign: 'center',
+                }}>
+                  <div style={{
+                    fontFamily: "'JetBrains Mono',monospace", fontSize: 8, fontWeight: 800,
+                    letterSpacing: '0.12em', textTransform: 'uppercase',
+                    color: 'var(--text-muted)', marginBottom: 2,
+                  }}>средний</div>
+                  <div style={{
+                    fontFamily: FF.display, fontSize: 13, fontWeight: 900,
+                    color: scoreColor(avgSc), fontVariantNumeric: 'tabular-nums',
+                    letterSpacing: '-0.02em',
+                  }}>{avgSc}%</div>
+                </div>
+                <div style={{
+                  flex: 1, padding: '6px 8px',
+                  background: COLORS.winSoft,
+                  border: `1.5px solid ${COLORS.win}`,
+                  borderRadius: 8, textAlign: 'center',
+                }}>
+                  <div style={{
+                    fontFamily: "'JetBrains Mono',monospace", fontSize: 8, fontWeight: 800,
+                    letterSpacing: '0.12em', textTransform: 'uppercase',
+                    color: COLORS.win, marginBottom: 2,
+                    display: 'inline-flex', alignItems: 'center', gap: 3,
+                  }}><Trophy size={9} strokeWidth={2.6} /> рекорд</div>
+                  <div style={{
+                    fontFamily: FF.display, fontSize: 13, fontWeight: 900,
+                    color: COLORS.win, fontVariantNumeric: 'tabular-nums',
+                    letterSpacing: '-0.02em',
+                  }}>{bestSc}%</div>
+                </div>
+              </div>
             </div>
-          </div>);
+          );
         })}
         </div>
         {hist.filter(t => t.type === "fullent").length > 0 && <>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase" as const, letterSpacing: 1.2, margin: "0 0 10px" }}>
-            <GraduationCap size={13} />{t.progress.fullEnt}
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 5,
+            fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
+            letterSpacing: '0.16em', textTransform: 'uppercase',
+            color: 'var(--text-muted)', margin: '0 0 10px', padding: '0 4px',
+          }}>
+            <GraduationCap size={12} strokeWidth={2.4} />{t.progress.fullEnt}
           </div>
           {hist.filter(t => t.type === "fullent").slice(-3).reverse().map((t: TestResult, i: number) => {
-            const fe = t as TestResult & { score?: number; sections?: Array<{ icon?: string; label: string; pts: number; maxPts: number; passed: boolean }> };
+            const fe = t as TestResult & { score?: number; sections?: Array<{ icon?: string; label: string; pts: number; maxPts: number; passed: boolean; sid?: string }> };
+            const sc = fe.score || 0;
+            const scColor = sc >= 100 ? COLORS.win : sc >= 70 ? COLORS.xp : COLORS.streak;
+            const scBg = sc >= 100 ? COLORS.winSoft : sc >= 70 ? COLORS.xpSoft : COLORS.streakSoft;
             return (
-            <div key={`fe${i}`} style={{ ...CARD_COMPACT, padding: "12px 14px", marginBottom: 6, border: "1px solid rgba(26,154,140,0.15)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                <span style={{ fontSize: 11, color: "var(--text-secondary)" }}>{t.dt}</span>
-                <span style={{ fontSize: 17, fontWeight: 800, fontFamily: "'Unbounded',sans-serif", color: (fe.score || 0) >= 100 ? COLORS.green : (fe.score || 0) >= 70 ? COLORS.yellow : COLORS.red }}>{fe.score}/140</span>
-              </div>
-              {fe.sections && fe.sections.map((s, j) => (
-                <div key={j} style={{ display: "flex", justifyContent: "space-between", padding: "3px 0", fontSize: 10 }}>
-                  <span style={{ color: "var(--text-secondary)" }}>{s.icon || ""} {s.label}</span>
-                  <span style={{ color: s.passed ? COLORS.green : COLORS.red, fontFamily: "'JetBrains Mono',monospace", fontWeight: 600 }}>{s.pts}/{s.maxPts} {s.passed ? "\u2713" : "\u2717"}</span>
+              <div key={`fe${i}`} style={{
+                padding: '14px 14px 12px',
+                background: 'var(--bg-card)',
+                border: '2px solid #0F0F10',
+                borderRadius: 12,
+                boxShadow: `0 3px 0 0 ${scColor}`,
+                marginBottom: 8,
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                  <div style={{
+                    fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 700,
+                    color: 'var(--text-muted)', letterSpacing: '0.04em',
+                  }}>{t.dt}</div>
+                  <div style={{
+                    padding: '4px 10px', borderRadius: 999,
+                    background: scBg, border: `1.5px solid ${scColor}`,
+                    fontFamily: FF.display, fontSize: 14, fontWeight: 900,
+                    color: scColor, letterSpacing: '-0.02em',
+                    fontVariantNumeric: 'tabular-nums',
+                  }}>{sc}/140</div>
                 </div>
-              ))}
-            </div>
-          ); })}
+                {fe.sections && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    {fe.sections.map((s, j) => (
+                      <div key={j} style={{
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        padding: '5px 0',
+                        borderBottom: j < fe.sections!.length - 1 ? '1px solid rgba(15,15,16,0.06)' : 'none',
+                      }}>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                          {s.sid && <SubjectIcon sid={s.sid} size={13} color={SUBJECT_META[s.sid]?.color} strokeWidth={2.2} />}
+                          <span style={{
+                            fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 700,
+                            color: 'var(--text)',
+                          }}>{s.label}</span>
+                        </div>
+                        <div style={{
+                          fontFamily: "'JetBrains Mono',monospace", fontSize: 11, fontWeight: 800,
+                          color: s.passed ? COLORS.win : COLORS.streak,
+                          fontVariantNumeric: 'tabular-nums',
+                          display: 'inline-flex', alignItems: 'center', gap: 4,
+                        }}>
+                          <span>{s.pts}/{s.maxPts}</span>
+                          <span>{s.passed ? '✓' : '✗'}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </>}
-        <div style={{ ...CARD_COMPACT, padding: "14px", marginTop: 28 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600, color: "var(--text)", marginBottom: 10 }}>
-            <Calendar size={15} />{t.progress.testHistory}
+        <div style={{ marginTop: 28 }}>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 5,
+            fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
+            letterSpacing: '0.16em', textTransform: 'uppercase',
+            color: 'var(--text-muted)', marginBottom: 10, padding: '0 4px',
+          }}>
+            <Calendar size={12} strokeWidth={2.4} />{t.progress.testHistory}
           </div>
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
-            <Chip active={filterSub === "all"} onClick={() => setFilterSub("all")} mode="subtle">
-              <Filter size={10} style={{ verticalAlign: "-1px", marginRight: 3 }} />{t.progress.allFilter}
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+            <Chip active={filterSub === 'all'} onClick={() => setFilterSub('all')}>
+              <Filter size={10} style={{ verticalAlign: '-1px', marginRight: 3 }} />{t.progress.allFilter}
             </Chip>
             {activeSubjects.map(s => (
-              <Chip key={s} active={filterSub === s} onClick={() => setFilterSub(s)} mode="subtle">
+              <Chip key={s} active={filterSub === s} onClick={() => setFilterSub(s)}>
                 {names[s]}
               </Chip>
             ))}
           </div>
-          <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
-            <Chip active={sortBy === "date"} onClick={() => setSortBy("date")} mode="subtle">
-              <ArrowUpDown size={10} style={{ verticalAlign: "-1px", marginRight: 3 }} />{t.progress.byDate}
+          <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+            <Chip active={sortBy === 'date'} onClick={() => setSortBy('date')}>
+              <ArrowUpDown size={10} style={{ verticalAlign: '-1px', marginRight: 3 }} />{t.progress.byDate}
             </Chip>
-            <Chip active={sortBy === "score"} onClick={() => setSortBy("score")} mode="subtle">
-              <ArrowUpDown size={10} style={{ verticalAlign: "-1px", marginRight: 3 }} />{t.progress.byScore}
+            <Chip active={sortBy === 'score'} onClick={() => setSortBy('score')}>
+              <ArrowUpDown size={10} style={{ verticalAlign: '-1px', marginRight: 3 }} />{t.progress.byScore}
             </Chip>
           </div>
           {filteredHist.length === 0
-            ? <div style={{ fontSize: 11, color: "var(--text-muted)", textAlign: "center", padding: "12px 0" }}>{t.progress.noResultsFound}</div>
-            : filteredHist.slice(0, 20).map((t, i) => (<div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderBottom: i < Math.min(filteredHist.length, 20) - 1 ? "1px solid var(--bg-subtle)" : "none" }}>
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <span style={{ fontSize: 11, color: "var(--text-body)" }}>{names[t.su] || t.su}</span>
-                <span style={{ fontSize: 9, color: "var(--text-muted)" }}>{t.dt}{t.tp ? ` • ${t.tp}` : ""}</span>
+            ? <div style={{
+                padding: '20px 16px', textAlign: 'center',
+                background: 'var(--bg-card)',
+                border: '2px dashed rgba(15,15,16,0.14)',
+                borderRadius: 12,
+                fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 700,
+                color: 'var(--text-muted)',
+              }}>{t.progress.noResultsFound}</div>
+            : <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {filteredHist.slice(0, 20).map((ti, i) => {
+                  const subColor = SUBJECT_META[ti.su]?.color || '#0F0F10';
+                  const scColor = scoreColor(ti.sc);
+                  return (
+                    <div key={i} style={{
+                      position: 'relative',
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      padding: '10px 12px 10px 16px',
+                      background: 'var(--bg-card)',
+                      border: '2px solid #0F0F10',
+                      borderRadius: 10,
+                      boxShadow: '0 2px 0 0 #0F0F10',
+                      overflow: 'hidden',
+                    }}>
+                      <div style={{
+                        position: 'absolute', top: 0, bottom: 0, left: 0, width: 4, background: subColor,
+                      }} />
+                      <div style={{
+                        width: 30, height: 30, borderRadius: 8,
+                        background: `${subColor}18`, border: `1.5px solid ${subColor}`,
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        flexShrink: 0,
+                      }}>
+                        <SubjectIcon sid={ti.su} size={15} color={subColor} strokeWidth={2.2} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{
+                          fontFamily: "'Nunito',sans-serif", fontSize: 13, fontWeight: 800,
+                          color: 'var(--text)', lineHeight: 1.15,
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        }}>{names[ti.su] || ti.su}</div>
+                        <div style={{
+                          fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 700,
+                          color: 'var(--text-muted)', marginTop: 2,
+                        }}>{ti.dt}{ti.tp ? ` · ${ti.tp}` : ''} · {ti.co}/{ti.to}</div>
+                      </div>
+                      <div style={{
+                        padding: '4px 9px', borderRadius: 8,
+                        background: scColor === COLORS.win ? COLORS.winSoft : scColor === COLORS.yellow ? COLORS.xpSoft : COLORS.streakSoft,
+                        border: `1.5px solid ${scColor}`,
+                        fontFamily: FF.display, fontSize: 12, fontWeight: 900,
+                        color: scColor, letterSpacing: '-0.02em',
+                        fontVariantNumeric: 'tabular-nums',
+                        flexShrink: 0,
+                      }}>{ti.sc}%</div>
+                    </div>
+                  );
+                })}
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 9, color: "var(--text-muted)", fontFamily: "'JetBrains Mono',monospace" }}>{t.co}/{t.to}</span>
-                <span style={{ fontSize: 12, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace", color: scoreColor(t.sc) }}>{t.sc}%</span>
-              </div>
-            </div>))
           }
         </div>
       </>}

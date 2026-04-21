@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { ALL_PROFILES, SUBS } from '../config/questionPools';
 import { getPersonalBests } from '../utils/competitionHelpers';
-import { prefetchCounts, getPoolSize, getTotalQ } from '../utils/questionStore';
+import { prefetchCounts, getPoolSize } from '../utils/questionStore';
 import { useApp } from '../contexts/AppContext';
 import { useT } from '../locales';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import HomeSubjectGrid from './HomeSubjectGrid';
 import HomeNavCards from './HomeNavCards';
+import { FF } from '../constants/styles';
 import type { SubjectConfig } from '../types';
 
 export default function Subjects() {
@@ -34,7 +35,7 @@ export default function Subjects() {
 
   return (
     <div style={{ padding: `0 var(--content-padding) ${bp === 'desktop' ? 40 : 100}px` }}>
-      <div style={{ padding: '8px 0 16px', fontSize: 18, fontWeight: 700, fontFamily: "'Unbounded',sans-serif", color: 'var(--text)' }}>
+      <div style={{ padding: '8px 0 16px', fontSize: 18, fontWeight: 700, fontFamily: FF.display, color: 'var(--text)' }}>
         {t.tabs.subjects}
       </div>
 

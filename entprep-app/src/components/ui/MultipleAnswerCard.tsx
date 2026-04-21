@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { CARD_COMPACT, COLORS } from '../../constants/styles';
+import { useState } from 'react';
+import { COLORS, FF } from '../../constants/styles';
 import { Check, X } from 'lucide-react';
 import type { Question } from '../../types';
 import { scoreQuestion } from '../../utils/scoringEngine';
@@ -49,22 +49,30 @@ export default function MultipleAnswerCard({
     <div>
       <div style={{
         display: 'flex', alignItems: 'center', gap: 8,
-        marginBottom: 8, fontSize: 11, color: 'var(--text-secondary)',
+        marginBottom: 10,
       }}>
         <span style={{
-          padding: '3px 8px', borderRadius: 8,
-          background: 'rgba(26,154,140,0.1)', color: COLORS.teal,
-          fontWeight: 600, fontSize: 10,
+          padding: '4px 10px', borderRadius: 999,
+          background: COLORS.streakSoft,
+          border: `1.5px solid ${COLORS.streak}`,
+          fontFamily: "'JetBrains Mono',monospace", fontSize: 9.5, fontWeight: 800,
+          letterSpacing: '0.1em', textTransform: 'uppercase',
+          color: COLORS.streak,
         }}>
           {t.test.multipleAnswers}
         </span>
         {!showResult && (
-          <span>{t.test.selected}: {selected.size}</span>
+          <span style={{
+            fontFamily: "'Nunito',sans-serif", fontSize: 11, fontWeight: 700,
+            color: 'var(--text-muted)',
+          }}>{t.test.selected}: {selected.size}</span>
         )}
         {result && (
           <span style={{
-            fontWeight: 700, fontSize: 12,
-            color: result.correct ? COLORS.green : result.partial ? COLORS.yellow : COLORS.red,
+            fontFamily: FF.display, fontSize: 11, fontWeight: 900,
+            letterSpacing: '-0.02em',
+            color: result.correct ? COLORS.win : result.partial ? COLORS.xp : COLORS.streak,
+            fontVariantNumeric: 'tabular-nums',
           }}>
             {result.pts}/{result.maxPts} {t.test.pointsShort}
           </span>
@@ -77,19 +85,20 @@ export default function MultipleAnswerCard({
           const isCorrect = correctSet.has(idx);
 
           let bg = 'var(--bg-card)';
-          let bd = '1px solid var(--border)';
-          let tc = 'var(--text-body)';
+          let bd = '2px solid #0F0F10';
+          let tc = 'var(--text)';
+          let boxShadow = '0 2px 0 0 #0F0F10';
 
           if (showResult) {
             if (isCorrect && isSelected) {
-              bg = 'rgba(34,197,94,0.1)'; bd = '1px solid rgba(34,197,94,0.35)'; tc = COLORS.green;
+              bg = COLORS.winSoft; tc = COLORS.win; boxShadow = '0 2px 0 0 ' + COLORS.win;
             } else if (isCorrect && !isSelected) {
-              bg = 'rgba(34,197,94,0.06)'; bd = '1px solid rgba(34,197,94,0.2)'; tc = COLORS.green;
+              bg = COLORS.winSoft; tc = COLORS.win; boxShadow = '0 2px 0 0 rgba(30,184,84,0.3)';
             } else if (!isCorrect && isSelected) {
-              bg = 'rgba(239,68,68,0.1)'; bd = '1px solid rgba(239,68,68,0.35)'; tc = COLORS.red;
+              bg = COLORS.streakSoft; tc = COLORS.streak; boxShadow = '0 2px 0 0 ' + COLORS.streak;
             }
           } else if (isSelected) {
-            bg = 'rgba(26,154,140,0.1)'; bd = '1px solid rgba(26,154,140,0.35)'; tc = COLORS.teal;
+            bg = COLORS.streakSoft; tc = COLORS.streak; boxShadow = '0 2px 0 0 ' + COLORS.streak;
           }
 
           return (
@@ -99,10 +108,11 @@ export default function MultipleAnswerCard({
               style={{
                 display: 'flex', alignItems: 'center',
                 background: bg,
-                border: bd, borderRadius: 13,
-                padding: '13px 14px',
+                border: bd, borderRadius: 12,
+                boxShadow,
+                padding: '12px 14px',
                 cursor: showResult ? 'default' : 'pointer',
-                textAlign: 'left', transition: 'all 0.2s',
+                textAlign: 'left',
               }}
             >
               <div style={{
@@ -132,16 +142,17 @@ export default function MultipleAnswerCard({
           onClick={handleConfirm}
           disabled={selected.size === 0}
           style={{
-            width: '100%', padding: '14px', marginTop: 10,
+            width: '100%', padding: '13px', marginTop: 12,
             background: selected.size > 0
-              ? `linear-gradient(135deg,${COLORS.teal},${COLORS.tealDark})`
+              ? `linear-gradient(180deg, #FF6A47 0%, ${COLORS.streak} 100%)`
               : 'var(--bg-subtle)',
             color: selected.size > 0 ? '#fff' : 'var(--text-muted)',
-            border: 'none', borderRadius: 13,
-            fontSize: 14, fontWeight: 700,
+            border: `2px solid ${selected.size > 0 ? '#0F0F10' : 'rgba(15,15,16,0.12)'}`,
+            borderRadius: 12,
+            boxShadow: selected.size > 0 ? '0 3px 0 0 #0F0F10' : 'none',
+            fontFamily: FF.display, fontSize: 13, fontWeight: 900,
+            letterSpacing: '0.05em', textTransform: 'uppercase',
             cursor: selected.size > 0 ? 'pointer' : 'default',
-            boxShadow: selected.size > 0 ? '0 4px 20px rgba(26,154,140,0.25)' : 'none',
-            transition: 'all 0.2s',
           }}
         >
           {t.test.confirmBtn} ({selected.size})

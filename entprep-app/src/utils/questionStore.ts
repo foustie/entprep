@@ -6,12 +6,36 @@ import { captureError } from '../config/sentry';
 const CACHE_KEY = 'entprep_qcache';
 const COUNTS_KEY = 'entprep_qcounts';
 const DATA_VERSION_KEY = 'entprep_qversion';
-const DATA_VERSION = 16; // bump this to invalidate localStorage question cache
+const DATA_VERSION = 17; // bump: quarantine filter + 11 answer fixes + 2 deleted questions
 
 // Memory caches
 const memCache: Record<string, Question[]> = {};
 const passageCache: { data: Passage[] | null } = { data: null };
 let countsCache: Record<string, number> | null = null;
+
+// Quarantine: questions with <10% user accuracy (auto-detected bad answers)
+let quarantineSet: Set<string> | null = null;
+
+async function loadQuarantine(): Promise<Set<string>> {
+  if (quarantineSet) return quarantineSet;
+  try {
+    const resp = await fetch('/data/quarantine.json');
+    if (resp.ok) {
+      const data: { s: string; i: number }[] = await resp.json();
+      quarantineSet = new Set(data.map(q => `${q.s}:${q.i}`));
+    } else {
+      quarantineSet = new Set();
+    }
+  } catch {
+    quarantineSet = new Set();
+  }
+  return quarantineSet;
+}
+
+function filterQuarantined(sid: string, questions: Question[]): Question[] {
+  if (!quarantineSet?.size) return questions;
+  return questions.filter(q => !quarantineSet!.has(`${sid}:${q._oi}`));
+}
 
 // Static file mapping for dynamic import fallback
 const STATIC_FILES: Record<string, () => Promise<Question[] | Passage[]>> = {
@@ -183,17 +207,24 @@ function supabaseRowToQuestion(row: SupabaseRow): Question {
 }
 
 // --- Reading passage reconstruction ---
-function buildPassagesFromRows(rows: SupabaseRow[]): Passage[] {
-  const groups: Record<number, Passage> = {};
+function buildPassagesFromRows(rows: SupabaseRow[]): (Passage & { t_kk?: string; tx_kk?: string })[] {
+  const groups: Record<number, Passage & { t_kk?: string; tx_kk?: string }> = {};
   for (const row of rows) {
     const g = row.passage_group ?? 0;
-    if (!groups[g]) groups[g] = { t: row.passage_title || '', tx: row.passage_text || '', qs: [] };
+    if (!groups[g]) groups[g] = {
+      t: row.passage_title || '', tx: row.passage_text || '',
+      t_kk: row.passage_title_kk || undefined, tx_kk: row.passage_text_kk || undefined,
+      qs: [],
+    };
     groups[g].qs.push({
       q: row.q,
       o: cleanOptions(row.o),
       c: row.c,
       e: row.e || '',
-    });
+      q_kk: row.q_kk || undefined,
+      o_kk: row.o_kk || undefined,
+      e_kk: row.e_kk || undefined,
+    } as Omit<Question, '_oi' | '_topic' | 'pt' | 'px'>);
   }
   return Object.keys(groups).sort((a, b) => +a - +b).map(k => groups[+k]);
 }
@@ -223,6 +254,7 @@ function clonePool(pool: Question[], lang?: Lang): Question[] {
 }
 
 async function getPool(sid: string, lang?: Lang): Promise<Question[]> {
+  await loadQuarantine();
   if (memCache[sid]) return clonePool(memCache[sid], lang);
 
   if (pending[sid]) {
@@ -253,7 +285,7 @@ async function getPool(sid: string, lang?: Lang): Promise<Question[]> {
               passageCache.data = passages;
               const flat: Question[] = [];
               passages.forEach((p, pi) => {
-                p.qs.forEach((q, qi) => flat.push(deepFreezeQuestion({ ...q, _oi: pi * 5 + qi, pt: p.t, px: p.tx })));
+                p.qs.forEach((q, qi) => flat.push(deepFreezeQuestion({ ...q, _oi: pi * 5 + qi, pt: p.t, px: p.tx, pt_kk: 't_kk' in p ? (p as { t_kk?: string }).t_kk : undefined, px_kk: 'tx_kk' in p ? (p as { tx_kk?: string }).tx_kk : undefined })));
               });
               memCache[sid] = flat;
               passages.forEach(p => p.qs.forEach(q => { if (q.o) Object.freeze(q.o); Object.freeze(q); }));
@@ -261,7 +293,8 @@ async function getPool(sid: string, lang?: Lang): Promise<Question[]> {
               memCache[sid] = rows.map((r, i) => deepFreezeQuestion({ ...supabaseRowToQuestion(r), _oi: i }));
             }
             const counts = loadCounts();
-            counts[sid] = sid === 'reading' ? memCache[sid].length : rows.length;
+            memCache[sid] = filterQuarantined(sid, memCache[sid]);
+            counts[sid] = memCache[sid].length;
             saveCounts(counts);
             return memCache[sid];
           }
@@ -277,16 +310,17 @@ async function getPool(sid: string, lang?: Lang): Promise<Question[]> {
           passageCache.data = passages;
           const flat: Question[] = [];
           passages.forEach((p, pi) => {
-            p.qs.forEach((q, qi) => flat.push(deepFreezeQuestion({ ...q, _oi: pi * 5 + qi, pt: p.t, px: p.tx })));
+            p.qs.forEach((q, qi) => flat.push(deepFreezeQuestion({ ...q, _oi: pi * 5 + qi, pt: p.t, px: p.tx, pt_kk: 't_kk' in p ? (p as { t_kk?: string }).t_kk : undefined, px_kk: 'tx_kk' in p ? (p as { tx_kk?: string }).tx_kk : undefined })));
           });
           memCache[sid] = flat;
           passages.forEach(p => p.qs.forEach(q => { if (q.o) Object.freeze(q.o); Object.freeze(q); }));
         } else {
           memCache[sid] = rows.map((r, i) => deepFreezeQuestion({ ...supabaseRowToQuestion(r), _oi: i }));
         }
+        memCache[sid] = filterQuarantined(sid, memCache[sid]);
         if (result.complete) {
           const counts = loadCounts();
-          counts[sid] = sid === 'reading' ? memCache[sid].length : rows.length;
+          counts[sid] = memCache[sid].length;
           saveCounts(counts);
           lsWrite(sid, rows);
         }
@@ -301,13 +335,14 @@ async function getPool(sid: string, lang?: Lang): Promise<Question[]> {
           passageCache.data = passages;
           const flat: Question[] = [];
           passages.forEach((p, pi) => {
-            p.qs.forEach((q, qi) => flat.push(deepFreezeQuestion({ ...q, _oi: pi * 5 + qi, pt: p.t, px: p.tx })));
+            p.qs.forEach((q, qi) => flat.push(deepFreezeQuestion({ ...q, _oi: pi * 5 + qi, pt: p.t, px: p.tx, pt_kk: 't_kk' in p ? (p as { t_kk?: string }).t_kk : undefined, px_kk: 'tx_kk' in p ? (p as { tx_kk?: string }).tx_kk : undefined })));
           });
           memCache[sid] = flat;
           passages.forEach(p => p.qs.forEach(q => { if (q.o) Object.freeze(q.o); Object.freeze(q); }));
         } else {
           memCache[sid] = lsData.map((r, i) => deepFreezeQuestion({ ...supabaseRowToQuestion(r), _oi: i }));
         }
+        memCache[sid] = filterQuarantined(sid, memCache[sid]);
         return memCache[sid];
       }
 
@@ -319,13 +354,14 @@ async function getPool(sid: string, lang?: Lang): Promise<Question[]> {
         passageCache.data = staticData as Passage[];
         const flat: Question[] = [];
         (staticData as Passage[]).forEach((p, pi) => {
-          p.qs.forEach((q, qi) => flat.push(deepFreezeQuestion({ ...q, _oi: pi * 5 + qi, pt: p.t, px: p.tx })));
+          p.qs.forEach((q, qi) => flat.push(deepFreezeQuestion({ ...q, _oi: pi * 5 + qi, pt: p.t, px: p.tx, pt_kk: 't_kk' in p ? (p as { t_kk?: string }).t_kk : undefined, px_kk: 'tx_kk' in p ? (p as { tx_kk?: string }).tx_kk : undefined })));
         });
         memCache[sid] = flat;
         (staticData as Passage[]).forEach(p => p.qs.forEach(q => { if (q.o) Object.freeze(q.o); Object.freeze(q); }));
       } else {
         memCache[sid] = (staticData as Question[]).map((q, i) => deepFreezeQuestion({ ...q, _oi: i }));
       }
+      memCache[sid] = filterQuarantined(sid, memCache[sid]);
       return memCache[sid];
     } finally {
       delete pending[sid];
@@ -359,7 +395,10 @@ function getTotalQ(): number {
 }
 
 /** Fast count-only fetch from Supabase (no question data). Returns true if counts were updated. */
+let _countsFetched = false;
 async function prefetchCounts(): Promise<boolean> {
+  if (_countsFetched) return false;
+  _countsFetched = true;
   if (!supabase) return false;
   try {
     const subjects = Object.keys(getDefaultCounts());
@@ -389,11 +428,8 @@ async function resolveQuestion(sid: string, idx: number, lang?: Lang): Promise<Q
     const found = pool.find(q => q._oi === idx);
     return found ? { ...found, o: [...found.o] } : null;
   }
-  if (idx < pool.length) {
-    const q = pool[idx];
-    return { ...q, o: [...q.o] };
-  }
-  return null;
+  const found = pool.find(q => q._oi === idx);
+  return found ? { ...found, o: [...found.o] } : null;
 }
 
 export { getPool, getPassages, getPoolSize, getTotalQ, prefetchCounts, prefetchSubjects, resolveQuestion };

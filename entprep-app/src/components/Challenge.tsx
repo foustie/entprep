@@ -1,9 +1,10 @@
-import React from 'react';
 import { SUBS, ALL_PROFILES } from '../config/questionPools';
-import { CARD, TYPE, COLORS } from '../constants/styles';
+import { SUBJECT_META } from '../config/subjects';
+import { COLORS, FF } from '../constants/styles';
 import { useNav } from '../contexts/NavigationContext';
 import BackButton from './ui/BackButton';
 import { Swords, Play } from 'lucide-react';
+import SubjectIcon from './ui/SubjectIcon';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useT } from '../locales';
 
@@ -24,8 +25,7 @@ export default function Challenge({ data }: ChallengeProps) {
   const { subjectId, score, topicId } = data;
   const sub = SUBS[subjectId] || ALL_PROFILES.find(p => p.id === subjectId);
   const subName = (t.subjects as Record<string, string>)[subjectId] || sub?.name || subjectId;
-  const subIcon = sub?.icon || '\uD83D\uDCCB';
-  const subColor = sub?.color || COLORS.teal;
+  const subColor = SUBJECT_META[subjectId]?.color || sub?.color || COLORS.streak;
 
   const accept = () => {
     sessionStorage.setItem('entprep_challenge', JSON.stringify({ subjectId, score, topicId }));
@@ -40,44 +40,108 @@ export default function Challenge({ data }: ChallengeProps) {
 
   return (
     <div style={{ padding: `0 var(--content-padding) ${isDesktop ? 40 : 100}px` }}>
-      <BackButton onClick={decline} label={t.challenge.goHome} style={{ marginBottom: 20 }} />
+      <BackButton onClick={decline} label={t.challenge.goHome} style={{ marginBottom: 14 }} />
       <div style={{
-        ...CARD,
-        background: 'linear-gradient(135deg,rgba(255,107,53,0.08),rgba(26,154,140,0.08))',
-        border: '2px solid rgba(255,107,53,0.25)',
-        borderRadius: 22, padding: '40px 24px', textAlign: 'center',
-        animation: 'slideUp 0.5s cubic-bezier(0.16,1,0.3,1)',
+        position: 'relative',
+        background: COLORS.streakSoft,
+        border: '2px solid #0F0F10',
+        borderRadius: 20,
+        padding: '32px 22px 24px',
+        boxShadow: '0 6px 0 0 #0F0F10',
+        textAlign: 'center',
+        overflow: 'hidden',
+        animation: 'heroEnter 0.55s cubic-bezier(0.16,1,0.3,1) both',
       }}>
-        <Swords size={56} color={COLORS.accent} style={{ marginBottom: 16 }} />
-        <div style={{ ...TYPE.h2, fontSize: 20, marginBottom: 12 }}>{t.challenge.challenged}</div>
-        <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: 24 }}>
-          {t.challenge.friendScored} <span style={{ color: COLORS.accent, fontWeight: 700, fontSize: 16 }}>{score}%</span> {t.challenge.inSubject}
-        </div>
         <div style={{
-          background: 'var(--bg-card)', borderRadius: 16,
-          border: `1px solid ${subColor}30`, padding: '18px 16px', marginBottom: 24,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
-        }}>
-          <span style={{ fontSize: 32 }}>{subIcon}</span>
-          <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>{subName}</span>
+          position: 'absolute', inset: 0,
+          backgroundImage: 'radial-gradient(#0F0F10 1px, transparent 1px)',
+          backgroundSize: '22px 22px', opacity: 0.05, pointerEvents: 'none',
+        }} />
+        <div style={{ position: 'relative' }}>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            width: 64, height: 64, borderRadius: 16,
+            background: '#0F0F10', border: '2px solid #0F0F10',
+            boxShadow: '0 4px 0 0 ' + COLORS.streak,
+            color: '#fff', marginBottom: 16,
+          }}>
+            <Swords size={32} strokeWidth={2.4} />
+          </div>
+          <div style={{
+            fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
+            letterSpacing: '0.18em', textTransform: 'uppercase',
+            color: COLORS.streak, marginBottom: 6,
+          }}>вызов на дуэль</div>
+          <h2 style={{
+            fontFamily: FF.display, fontSize: 24, fontWeight: 900,
+            color: '#0F0F10', letterSpacing: '-0.035em', margin: '0 0 8px', lineHeight: 1.05,
+          }}>{t.challenge.challenged}</h2>
+          <div style={{
+            fontFamily: "'Nunito',sans-serif", fontSize: 13, fontWeight: 700,
+            color: '#0F0F10', opacity: 0.7, lineHeight: 1.5, marginBottom: 22,
+          }}>
+            {t.challenge.friendScored}{' '}
+            <span style={{
+              fontFamily: FF.display, fontWeight: 900,
+              color: COLORS.streak, fontSize: 18, letterSpacing: '-0.02em',
+              fontVariantNumeric: 'tabular-nums',
+            }}>{score}%</span>{' '}{t.challenge.inSubject}
+          </div>
+
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 10,
+            padding: '10px 14px', marginBottom: 22,
+            background: 'var(--bg-card)',
+            border: '2px solid #0F0F10',
+            borderRadius: 12,
+            boxShadow: '0 2px 0 0 #0F0F10',
+          }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: 9,
+              background: `${subColor}18`, border: `1.5px solid ${subColor}`,
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <SubjectIcon sid={subjectId} size={16} color={subColor} strokeWidth={2.2} />
+            </div>
+            <span style={{
+              fontFamily: "'Nunito',sans-serif", fontSize: 14, fontWeight: 800,
+              color: 'var(--text)',
+            }}>{subName}</span>
+          </div>
+
+          <div style={{
+            fontFamily: FF.display, fontSize: 16, fontWeight: 900,
+            color: '#0F0F10', letterSpacing: '-0.03em', marginBottom: 18,
+          }}>{t.challenge.canYouBeat}</div>
+
+          <button onClick={accept} style={{
+            width: '100%', padding: '14px',
+            background: `linear-gradient(180deg, #FF6A47 0%, ${COLORS.streak} 100%)`,
+            color: '#fff',
+            border: '2px solid #0F0F10',
+            borderRadius: 12,
+            boxShadow: '0 4px 0 0 #0F0F10',
+            fontFamily: FF.display, fontSize: 14, fontWeight: 900,
+            letterSpacing: '0.06em', textTransform: 'uppercase',
+            cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            marginBottom: 10,
+          }}>
+            <Play size={16} strokeWidth={3} fill="#fff" />{t.challenge.accept}
+          </button>
+          <button onClick={decline} style={{
+            width: '100%', padding: '11px',
+            background: 'transparent',
+            color: '#0F0F10', opacity: 0.65,
+            border: 'none',
+            fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 800,
+            cursor: 'pointer',
+            letterSpacing: '0.02em',
+          }}>
+            {t.challenge.notNow}
+          </button>
         </div>
-        <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-body)', marginBottom: 28 }}>{t.challenge.canYouBeat}</div>
-        <button onClick={accept} style={{
-          width: '100%', padding: '16px',
-          background: `linear-gradient(135deg,${COLORS.accent},${COLORS.accentDark})`, color: '#fff',
-          border: 'none', borderRadius: 14, fontSize: 16, fontWeight: 700, cursor: 'pointer',
-          boxShadow: '0 4px 24px rgba(255,107,53,0.3)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 10,
-        }}>
-          <Play size={18} />{t.challenge.accept}
-        </button>
-        <button onClick={decline} style={{
-          width: '100%', padding: '14px',
-          background: 'var(--bg-subtle)', color: 'var(--text-muted)',
-          border: '1px solid var(--border)', borderRadius: 14, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-        }}>
-          {t.challenge.notNow}
-        </button>
       </div>
     </div>
   );

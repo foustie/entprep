@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { SUBS, ALL_PROFILES } from '../config/questionPools';
 import { getPool } from '../utils/questionStore';
 import { TOPIC_MAP, getTopicQuestions } from '../config/topics';
@@ -429,8 +429,8 @@ export default function Admin() {
               ))}
             </div>
             <div style={{ padding: "0 16px 16px" }}>
-              <div style={{ ...CARD_COMPACT, background: "rgba(26,154,140,0.05)", border: "1px solid rgba(26,154,140,0.12)", padding: "11px 13px" }}>
-                <div style={{ fontSize: 11, color: "#1A9A8C", fontWeight: 600, marginBottom: 4 }}>Объяснение</div>
+              <div style={{ ...CARD_COMPACT, background: "rgba(255,90,54,0.05)", border: "1px solid rgba(255,90,54,0.12)", padding: "11px 13px" }}>
+                <div style={{ fontSize: 11, color: "#FF5A36", fontWeight: 600, marginBottom: 4 }}>Объяснение</div>
                 <div style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.5 }}>{generated.e}</div>
               </div>
               {generated.q_kk && (
@@ -448,7 +448,7 @@ export default function Admin() {
               <button onClick={handleSkip} style={{ flex: 1, padding: "12px", background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.18)", borderRadius: 10, color: "#ef4444", fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
                 <X size={14} />Пропустить
               </button>
-              <button onClick={handleGenerate} disabled={loading} style={{ flex: 1, padding: "12px", background: "rgba(26,154,140,0.06)", border: "1px solid rgba(26,154,140,0.18)", borderRadius: 10, color: "#1A9A8C", fontSize: 12, fontWeight: 700, cursor: loading ? "wait" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+              <button onClick={handleGenerate} disabled={loading} style={{ flex: 1, padding: "12px", background: "rgba(255,90,54,0.06)", border: "1px solid rgba(255,90,54,0.18)", borderRadius: 10, color: "#FF5A36", fontSize: 12, fontWeight: 700, cursor: loading ? "wait" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
                 <RefreshCw size={14} />{loading ? "..." : "Ещё"}
               </button>
             </div>
@@ -529,7 +529,7 @@ export default function Admin() {
             ))}
 
             {/* Explanation */}
-            <div style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.6, marginTop: 10, padding: '8px 10px', background: 'rgba(26,154,140,0.05)', borderRadius: 8, border: '1px solid rgba(26,154,140,0.1)' }}>
+            <div style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.6, marginTop: 10, padding: '8px 10px', background: 'rgba(255,90,54,0.05)', borderRadius: 8, border: '1px solid rgba(255,90,54,0.1)' }}>
               {selectedQ.e}
             </div>
 
@@ -551,7 +551,7 @@ export default function Admin() {
             {/* Action buttons */}
             <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
               <button onClick={startEditing}
-                style={{ flex: 1, padding: '12px', background: 'rgba(26,154,140,0.08)', border: '1px solid rgba(26,154,140,0.2)', borderRadius: 10, color: '#1A9A8C', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+                style={{ flex: 1, padding: '12px', background: 'rgba(255,90,54,0.08)', border: '1px solid rgba(255,90,54,0.2)', borderRadius: 10, color: '#FF5A36', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
                 <Edit3 size={13} />Редактировать
               </button>
               <button onClick={deleteQuestion}
@@ -567,7 +567,7 @@ export default function Admin() {
 
           {/* Editing mode */}
           {selectedQ && editing && <>
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#1A9A8C', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#FF5A36', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
               <Edit3 size={14} />Редактирование
             </div>
 

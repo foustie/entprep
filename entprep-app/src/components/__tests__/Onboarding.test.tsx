@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import Onboarding from '../Onboarding';
 
 vi.mock('../../config/questionPools', () => ({
-  TOTAL_Q: 30000,
+  TOTAL_Q: 28000,
 }));
 
 vi.mock('../../locales', () => ({
@@ -12,7 +12,7 @@ vi.mock('../../locales', () => ({
     next: 'Далее',
     skip: 'Пропустить',
     onboarding: {
-      slide1Title: '30 000+ вопросов',
+      slide1Title: '28 000+ вопросов',
       slide1Desc: 'Все 13 предметов ЕНТ',
       slide2Title: 'AI-помощник',
       slide2Desc: 'Объяснит любой вопрос',
@@ -28,19 +28,19 @@ vi.mock('../../locales', () => ({
 describe('Onboarding', () => {
   it('renders first slide', () => {
     render(<Onboarding onFinish={() => {}} />);
-    expect(screen.getByText('30 000+ вопросов')).toBeInTheDocument();
+    expect(screen.getByText('28 000+ вопросов')).toBeInTheDocument();
     expect(screen.getByText('Все 13 предметов ЕНТ')).toBeInTheDocument();
   });
 
   it('shows ENTprep branding', () => {
     render(<Onboarding onFinish={() => {}} />);
     expect(screen.getByText('ENT')).toBeInTheDocument();
-    expect(screen.getByText('prep')).toBeInTheDocument();
+    expect(screen.getByText('prep.')).toBeInTheDocument();
   });
 
   it('shows skip button', () => {
     render(<Onboarding onFinish={() => {}} />);
-    expect(screen.getByText('Пропустить')).toBeInTheDocument();
+    expect(screen.getByText(/Пропустить/)).toBeInTheDocument();
   });
 
   it('navigates to next slide on click', () => {
@@ -53,7 +53,7 @@ describe('Onboarding', () => {
   it('navigates through all 3 slides', () => {
     render(<Onboarding onFinish={() => {}} />);
     // Slide 1
-    expect(screen.getByText('30 000+ вопросов')).toBeInTheDocument();
+    expect(screen.getByText('28 000+ вопросов')).toBeInTheDocument();
     fireEvent.click(screen.getByText('Далее'));
     // Slide 2
     expect(screen.getByText('AI-помощник')).toBeInTheDocument();
@@ -76,7 +76,7 @@ describe('Onboarding', () => {
     render(<Onboarding onFinish={() => {}} />);
     fireEvent.click(screen.getByText('Далее')); // → slide 2
     fireEvent.click(screen.getByLabelText('Назад')); // → slide 1
-    expect(screen.getByText('30 000+ вопросов')).toBeInTheDocument();
+    expect(screen.getByText('28 000+ вопросов')).toBeInTheDocument();
   });
 
   it('calls onFinish on last slide button', () => {
@@ -91,7 +91,7 @@ describe('Onboarding', () => {
   it('calls onFinish on skip', () => {
     const onFinish = vi.fn();
     render(<Onboarding onFinish={onFinish} />);
-    fireEvent.click(screen.getByText('Пропустить'));
+    fireEvent.click(screen.getByText(/Пропустить/));
     expect(onFinish).toHaveBeenCalledOnce();
   });
 
@@ -99,7 +99,7 @@ describe('Onboarding', () => {
     const onFinish = vi.fn();
     render(<Onboarding onFinish={onFinish} />);
     fireEvent.click(screen.getByText('Далее')); // → slide 2
-    fireEvent.click(screen.getByText('Пропустить'));
+    fireEvent.click(screen.getByText(/Пропустить/));
     expect(onFinish).toHaveBeenCalledOnce();
   });
 });

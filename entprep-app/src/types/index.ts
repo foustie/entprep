@@ -97,7 +97,6 @@ export interface Settings {
   exp: boolean;
   tmr: boolean;
   shf: boolean;
-  theme?: 'light' | 'dark';
   lang?: 'ru' | 'kk';  // UI language: Russian (default) or Kazakh
   goal?: GoalSettings;
   dailyGoal?: number;  // target tests per day (default 3)
@@ -258,6 +257,8 @@ export interface AuthUser {
   id: string;
   email?: string;
   user_metadata?: Record<string, unknown>;
+  app_metadata?: { provider?: string };
+  created_at?: string;
 }
 
 // ── Adaptive & Stats ───────────────────────────────────────────────────────
@@ -348,6 +349,7 @@ export interface Profile {
   xp: number;
   streak: number;
   last_active: string;
+  region?: string;
 }
 
 export type FriendStatus = 'pending' | 'accepted' | 'declined';

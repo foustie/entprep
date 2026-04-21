@@ -817,7 +817,7 @@ describe('Friends', () => {
     const buttons = screen.getAllByRole('button');
     const shareBtn = buttons.find(btn => {
       const style = btn.getAttribute('style') || '';
-      return style.includes('rgba(26, 154, 140, 0.1)') && style.includes('38');
+      return style.includes('rgba(255, 90, 54, 0.1)') && style.includes('38');
     });
     expect(shareBtn).toBeTruthy();
 

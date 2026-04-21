@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
+import { FF } from '../../constants/styles';
 
 interface BottomSheetProps {
   visible: boolean;
@@ -50,7 +51,7 @@ export default function BottomSheet({ visible, onClose, children }: BottomSheetP
           maxWidth: 520,
           maxHeight: '80vh',
           overflowY: 'auto',
-          fontFamily: "'Segoe UI',-apple-system,sans-serif",
+          fontFamily: FF.body,
           background: 'var(--bg-sheet)',
           border: '1px solid var(--border)',
           borderRadius: 20,
@@ -64,7 +65,7 @@ export default function BottomSheet({ visible, onClose, children }: BottomSheetP
           right: 0,
           maxWidth: "var(--content-max-width)",
           margin: '0 auto',
-          fontFamily: "'Segoe UI',-apple-system,sans-serif",
+          fontFamily: FF.body,
           background: 'var(--bg-sheet)',
           borderTop: '1px solid var(--border)',
           borderRadius: '20px 20px 0 0',

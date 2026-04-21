@@ -30,13 +30,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const [hist, setHist] = useState<TestResult[]>(() => loadData()?.hist || []);
   const [prof, setProf] = useState<string[]>(() => loadData()?.prof || []);
-  const [st, setSt] = useState<Settings>(() => loadData()?.st || { exp: true, tmr: true, shf: true, theme: 'dark' });
+  const [st, setSt] = useState<Settings>(() => loadData()?.st || { exp: true, tmr: true, shf: true });
   const [srCards, setSrCards] = useState<SRCard[]>(() => loadData()?.srCards || []);
-  const [showOnboarding, setShowOnboarding] = useState(() => {
-    const data = loadData();
-    if (data?.hist?.length && data.hist.length > 0 || data?.prof?.length && data.prof.length > 0) return false;
-    return !localStorage.getItem('entprep_onboarded');
-  });
+  // Onboarding removed — Landing page already covers the same content.
+  // Keeping the state/callbacks to avoid breaking type contracts.
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
@@ -67,7 +65,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (cancelled) return;
       // Read fresh local data from localStorage (not stale closure values)
       const stored = loadData();
-      const local = { hist: stored?.hist || [], prof: stored?.prof || [], st: stored?.st || { exp: true, tmr: true, shf: true, theme: 'dark' as const }, srCards: stored?.srCards || [] };
+      const local = { hist: stored?.hist || [], prof: stored?.prof || [], st: stored?.st || { exp: true, tmr: true, shf: true }, srCards: stored?.srCards || [] };
       const merged = mergeData(local, cloud);
       setHist(merged.hist);
       setProf(merged.prof);
@@ -77,12 +75,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       await cloudSave(user.id, merged);
     })();
     return () => { cancelled = true; };
-  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user]);  
 
   useEffect(() => {
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', st.theme === 'light' ? '#f5f5f7' : '#0f0f1a');
-  }, [st.theme]);
+    if (meta) meta.setAttribute('content', '#FAFAF8');
+  }, []);
 
   useEffect(() => {
     saveData({ hist, st, prof, srCards, lastLogin: new Date().toISOString() });
@@ -128,7 +126,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     // Save immediately to localStorage so it persists even if app is closed before useEffect fires
     try {
       const current = loadData();
-      const currentSt = current?.st || { exp: true, tmr: true, shf: true, theme: 'dark' };
+      const currentSt = current?.st || { exp: true, tmr: true, shf: true };
       const newSt = goal ? { ...currentSt, goal } : currentSt;
       if (goal) setSt(newSt);
       saveData({ hist: current?.hist || [], st: newSt, prof: sel, lastLogin: new Date().toISOString() });

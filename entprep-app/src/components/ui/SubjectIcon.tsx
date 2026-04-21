@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Calculator, BookOpen, Landmark, Globe, Languages, Pi, Atom,
   Dna, FlaskConical, ScrollText, Monitor, Scale, BookMarked,

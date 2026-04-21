@@ -1,33 +1,11 @@
-import React from 'react';
 import { UNIS } from '../data/universities';
-import { CARD_COMPACT, COLORS, TINT } from '../constants/styles';
+import { CARD_COMPACT, COLORS } from '../constants/styles';
 import { useNav } from '../contexts/NavigationContext';
 import { useApp } from '../contexts/AppContext';
 import { useT } from '../locales';
 import { TrendingUp, GraduationCap, ChevronRight, Target } from 'lucide-react';
 import type { TestResult } from '../types';
-
-/** Calculate predicted ENT score from test history */
-function predictScore(hist: TestResult[]): number | null {
-  const regular = hist.filter(t => t.type !== 'fullent' && t.sc != null);
-  if (regular.length < 3) return null; // Need at least 3 tests for meaningful prediction
-
-  // Weight recent tests more heavily (last 15 tests, exponential decay)
-  const recent = regular.slice(-15);
-  let weightedSum = 0;
-  let weightTotal = 0;
-  for (let i = 0; i < recent.length; i++) {
-    const weight = 1 + (i / recent.length); // older=1.0, newest=~2.0
-    weightedSum += (recent[i].sc || 0) * weight;
-    weightTotal += weight;
-  }
-  const avgPct = weightedSum / weightTotal;
-
-  // Map average % to ENT scale (140 max)
-  // Avg% represents per-subject performance; ENT has different weights
-  // but as rough estimate: score = avg% * 1.4
-  return Math.round(avgPct * 1.4);
-}
+import { predictScore } from '../utils/predictScore';
 
 /** Get universities sorted by how close they are to the predicted score */
 function getUniMatches(predicted: number) {

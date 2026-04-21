@@ -121,11 +121,19 @@ vi.mock('lucide-react', () => ({
 vi.mock('../../constants/styles', () => ({
   CARD_COMPACT: {},
   TYPE: { h2: {}, caption: {} },
+  FF: {
+    display: "'Unbounded', system-ui, sans-serif",
+    body: "'Nunito', system-ui, sans-serif",
+    mono: "'JetBrains Mono', monospace",
+  },
   COLORS: {
     green: '#22c55e',
     yellow: '#eab308',
     red: '#ef4444',
-    accent: '#FF6B35',
+    accent: '#FF5A36',
+    streak: '#FF5A36', streakSoft: '#FFC4AC',
+    xp: '#FFC233', xpSoft: '#FFDF5E',
+    win: '#1EB854', winSoft: '#B8ECC8',
   },
 }));
 
@@ -284,9 +292,9 @@ describe('Leaderboard', () => {
   });
 
   // 7
-  it('sorts by testCount desc, then avgScore desc', async () => {
+  it('sorts by avgScore desc, then testCount desc', async () => {
     // User A: 2 tests, avg 70; User B: 3 tests, avg 60; User C: 2 tests, avg 90
-    // Expected order: B (3 tests) > C (2 tests, 90 avg) > A (2 tests, 70 avg)
+    // Expected order (avgScore first): C (90) > A (70) > B (60)
     respondWithRows([
       makeRow({ id: 'r1', user_id: 'uA', user_name: 'UserA', score: 70 }),
       makeRow({ id: 'r2', user_id: 'uA', user_name: 'UserA', score: 70 }),
@@ -300,9 +308,9 @@ describe('Leaderboard', () => {
     await waitForLoaded();
 
     const names = screen.getAllByText(/^User[ABC]$/);
-    expect(names[0].textContent).toBe('UserB');
-    expect(names[1].textContent).toBe('UserC');
-    expect(names[2].textContent).toBe('UserA');
+    expect(names[0].textContent).toBe('UserC');
+    expect(names[1].textContent).toBe('UserA');
+    expect(names[2].textContent).toBe('UserB');
   });
 
   // 8
@@ -437,25 +445,23 @@ describe('Leaderboard', () => {
   });
 
   // 15
-  it('score color: green for >=80, yellow for >=60, red for <60', async () => {
+  it('score color: win for >=80, xp for >=60, streak for <60', async () => {
     respondWithRows([
-      makeRow({ id: 'r1', user_id: 'u1', user_name: 'Green', score: 85 }),
-      makeRow({ id: 'r2', user_id: 'u2', user_name: 'Yellow', score: 65 }),
-      makeRow({ id: 'r3', user_id: 'u3', user_name: 'Red', score: 45 }),
+      makeRow({ id: 'r1', user_id: 'u1', user_name: 'Win', score: 85 }),
+      makeRow({ id: 'r2', user_id: 'u2', user_name: 'Xp', score: 65 }),
+      makeRow({ id: 'r3', user_id: 'u3', user_name: 'Streak', score: 45 }),
     ]);
     render(<Leaderboard />);
     await waitForLoaded();
 
-    const greenScore = screen.getByText('85%');
-    const yellowScore = screen.getByText('65%');
-    const redScore = screen.getByText('45%');
+    const winScore = screen.getByText('85%');
+    const xpScore = screen.getByText('65%');
+    const streakScore = screen.getByText('45%');
 
-    // Green for >=80 (jsdom converts hex to rgb)
-    expect(greenScore.style.color).toBe('rgb(34, 197, 94)');
-    // Yellow for >=60
-    expect(yellowScore.style.color).toBe('rgb(234, 179, 8)');
-    // Red for <60
-    expect(redScore.style.color).toBe('rgb(239, 68, 68)');
+    // v2 tokens: win #1EB854, xp #FFC233, streak #FF5A36
+    expect(winScore.style.color).toBe('rgb(30, 184, 84)');
+    expect(xpScore.style.color).toBe('rgb(255, 194, 51)');
+    expect(streakScore.style.color).toBe('rgb(255, 90, 54)');
   });
 
   // 16

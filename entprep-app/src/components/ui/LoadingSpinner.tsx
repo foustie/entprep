@@ -1,4 +1,3 @@
-import React from 'react';
 import { COLORS } from '../../constants/styles';
 import { useT } from '../../locales';
 

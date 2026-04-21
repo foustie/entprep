@@ -1,5 +1,6 @@
 import { corsResponse, CORS_HEADERS, verifyAuth, createRateLimiter, rateLimitResponse, validateExplain, checkPremium } from "./utils/shared.mjs";
 import { AI_MODEL, ANTHROPIC_API_URL } from "./utils/constants.mjs";
+import { getContext } from "./utils/rag.mjs";
 
 const checkRate = createRateLimiter("explain", { max: 30, windowSec: 60 });
 
@@ -24,11 +25,14 @@ export default async function handler(req) {
   const err = validateExplain(body);
   if (err) return Response.json({ error: err }, { status: 400, headers: CORS_HEADERS });
 
-  const { question, options, userAnswer, correctAnswer, explanation, questionType, pairs, lang } = body;
+  const { question, options, userAnswer, correctAnswer, explanation, questionType, pairs, lang, subject } = body;
 
   // Anthropic API key
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return Response.json({ error: "AI not configured" }, { status: 500, headers: CORS_HEADERS });
+
+  // RAG: fetch textbook context for supported subjects
+  const ragContext = subject ? await getContext(subject, question).catch(() => null) : null;
 
   // Build prompt text based on question type
   const qType = questionType || 'single';
@@ -53,6 +57,11 @@ export default async function handler(req) {
     const correctIdx = Array.isArray(correctAnswer) ? correctAnswer[0] : correctAnswer;
     const correctAnsText = options[correctIdx];
     userContent = `Вопрос: ${question}\n\nВарианты:\n${optionsText}\n\nУченик ответил: ${userAnsText}\nПравильный ответ: ${correctAnsText}\n\nКраткое пояснение: ${explanation || "нет"}`;
+  }
+
+  // Append textbook context if available
+  if (ragContext) {
+    userContent += `\n\n--- КОНТЕКСТ ИЗ УЧЕБНИКА ---\n${ragContext}`;
   }
 
   const isKk = lang === 'kk';
