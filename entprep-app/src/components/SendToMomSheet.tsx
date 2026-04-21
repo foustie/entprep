@@ -69,7 +69,7 @@ export default function SendToMomSheet({
         {/* Preview card */}
         <div style={previewCard}>
           <div style={previewBrand}>
-            entprep<span style={{ color: COLORS.streak }}>.</span>
+ENT<span style={{ color: COLORS.streak }}>prep.</span>
           </div>
           <div style={previewHeader}>
             <span style={previewAvatar}>Д</span>

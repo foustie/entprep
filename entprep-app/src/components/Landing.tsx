@@ -46,7 +46,7 @@ export default function Landing({ onStart, totalQ }: Props) {
               fontSize: 18, fontWeight: 800, fontFamily: FF.display,
               letterSpacing: '-0.01em',
             }}>
-              <span style={{ color: INK }}>ENT</span><span style={{ color: COLORS.streak }}>prep</span>
+              <span style={{ color: INK }}>ENT</span><span style={{ color: COLORS.streak }}>prep.</span>
             </div>
 
             {/* Lang toggle */}
@@ -277,7 +277,7 @@ export default function Landing({ onStart, totalQ }: Props) {
       <section style={{ padding: '24px 20px 16px', textAlign: 'center', maxWidth: 440, margin: '0 auto' }}>
         <div style={{ ...TYPE.caption, marginBottom: 14 }}>
           <span style={{ fontFamily: FF.display, fontWeight: 800 }}>
-            <span style={{ color: INK }}>ENT</span><span style={{ color: COLORS.streak }}>prep</span>
+            <span style={{ color: INK }}>ENT</span><span style={{ color: COLORS.streak }}>prep.</span>
           </span>
           {' '}· {tl.format}
         </div>

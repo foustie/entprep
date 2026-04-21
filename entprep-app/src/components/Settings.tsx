@@ -564,7 +564,7 @@ export default function Settings() {
       {/* ════════ ABOUT ════════ */}
       <div style={{ textAlign: 'center', marginTop: 8, marginBottom: 16 }}>
         <div style={{ fontSize: 15, fontWeight: 800, fontFamily: FF.display }}>
-          <span style={{ color: COLORS.accent }}>ENT</span><span style={{ color: COLORS.teal }}>prep</span>
+          <span style={{ color: 'var(--text)' }}>ENT</span><span style={{ color: COLORS.streak }}>prep.</span>
         </div>
         <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 3 }}>{t.settings.version} • {getTotalQ()} {t.settings.questionsCount} • {Math.floor(getPoolSize('reading') / 5)} {t.settings.textsCount}</div>
         <div style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 2 }}>{UNIS.length} {t.settings.unisFormat}</div>

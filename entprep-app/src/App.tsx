@@ -331,9 +331,9 @@ function AppContent() {
 
   const sidebarNav = (
     <aside style={{ width: 220, flexShrink: 0, position: "sticky", top: 0, height: "100vh", background: "var(--bg-footer)", borderRight: "1px solid var(--border-light)", display: "flex", flexDirection: "column", padding: "20px 0" }}>
-      <div style={{ padding: "0 20px 24px", fontSize: 15, fontWeight: 800, fontFamily: FF.display }}>
-        <span style={{ color: COLORS.accent }}>ENT</span>
-        <span style={{ color: COLORS.teal }}>prep</span>
+      <div style={{ padding: "0 20px 24px", fontSize: 15, fontWeight: 800, fontFamily: FF.display, letterSpacing: '-0.02em' }}>
+        <span style={{ color: 'var(--text)' }}>ENT</span>
+        <span style={{ color: COLORS.streak }}>prep.</span>
       </div>
       {NAV_ITEMS.map(ni => {
         const active = tab === ni.id;
@@ -373,9 +373,9 @@ function AppContent() {
           {sidebarNav}
           <div style={{ flex: 1, maxWidth: LAYOUT.maxWidth, margin: "0 auto", position: "relative" }}>
             <header role="banner" style={{ padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "center", borderBottom: "1px solid var(--border-light)", background: "var(--bg-header)",  }}>
-              <div style={{ fontSize: 15, fontWeight: 800, fontFamily: FF.display }}>
-                <span style={{ color: COLORS.accent }}>ENT</span>
-                <span style={{ color: COLORS.teal }}>prep</span>
+              <div style={{ fontSize: 15, fontWeight: 800, fontFamily: FF.display, letterSpacing: '-0.02em' }}>
+                <span style={{ color: 'var(--text)' }}>ENT</span>
+                <span style={{ color: COLORS.streak }}>prep.</span>
               </div>
             </header>
             {mainContent}

@@ -97,7 +97,7 @@ npm run test         # Run tests (vitest)
 npm run test:watch   # Watch mode tests
 
 # Deploy (--no-build avoids OOM on Netlify server)
-VITE_RC_API_KEY_APPLE=appl_hSiijbsNKsMxZEeQDZLYTtjSwmw npx vite build && netlify deploy --prod --dir=dist --no-build
+node scripts/dump-questions.mjs && node scripts/compute-quarantine.mjs && VITE_RC_API_KEY_APPLE=appl_hSiijbsNKsMxZEeQDZLYTtjSwmw npx vite build && netlify deploy --prod --dir=dist --no-build
 ```
 
 ## Technical Stack
