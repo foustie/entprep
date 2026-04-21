@@ -6,9 +6,17 @@ import { ExpirationPlugin } from 'workbox-expiration';
 
 declare let self: ServiceWorkerGlobalScope;
 
-// ── SW activation: only via user action (UpdatePrompt), never auto ──────
-// Don't skipWaiting on install — wait for user to accept update via prompt.
-// This prevents page reloads during OAuth flows.
+// ── SW activation: auto-skipWaiting on install ──────────────────────────
+// Returning users get new version silently on next visit (next navigation
+// fetches fresh index.html + fresh chunks). Current session keeps working
+// on the old bundle until the user reloads — prevents disruption of
+// in-flight OAuth flows or test sessions.
+self.addEventListener('install', () => {
+  self.skipWaiting();
+});
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim());
+});
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
