@@ -13,7 +13,7 @@ import { isNewRecord, completeDailyChallenge, loadDaily } from '../utils/competi
 import TestSkeleton from './ui/TestSkeleton';
 import BackButton from './ui/BackButton';
 import ProgressBar from './ui/ProgressBar';
-import { Lightbulb, Bot, Share2, Check, X, ChevronDown, ChevronUp, ChevronRight, Swords, Trophy, Flag, WifiOff, RotateCcw, ArrowRight, Sparkles } from 'lucide-react';
+import { Lightbulb, Bot, Share2, Check, X, ChevronDown, ChevronUp, ChevronRight, Swords, Trophy, Flag, WifiOff, RotateCcw, ArrowRight, Sparkles, Flame } from 'lucide-react';
 import { getRecommendation } from '../utils/recommendationEngine';
 import { trackEvent } from '../utils/analytics';
 // ShareModal removed — 15 clicks total, dead feature
@@ -175,6 +175,17 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
 
   const tot = qs.length; const timerSec = tid ? Math.max(5 * 60, Math.round(baseTime * (tot / sub.cnt))) : baseTime;
   const q = qs[cur]; const qType = getQType(q); const cc = qs.filter((qq, i) => ans[i] !== undefined && scoreQuestion(qq, ans[i]).correct).length;
+  // Consecutive-correct streak run ending at current (or last answered) question
+  const streakRun = (() => {
+    let run = 0;
+    const upto = show ? cur : cur - 1;
+    for (let i = upto; i >= 0; i--) {
+      const a = ans[i];
+      if (a !== undefined && scoreQuestion(qs[i], a).correct) run++;
+      else break;
+    }
+    return run;
+  })();
   const trackFirstAnswer = () => {
     // Fires once per user (localStorage flag) on their very first answered question across the app.
     const key = 'entprep_first_q_answered';
@@ -414,6 +425,33 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
         pointerEvents: 'none',
       }} />
       <div style={{ position: 'relative' }}>
+        {(() => {
+          const tierPhrase = pct === 100 ? t.test.resultTierPerfect
+            : pct >= 80 ? t.test.resultTierGreat
+            : pct >= 60 ? t.test.resultTierGood
+            : pct >= 40 ? t.test.resultTierOk
+            : t.test.resultTierLow;
+          return (
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              marginBottom: 14,
+              fontFamily: FF.display,
+              fontSize: 26,
+              fontWeight: 900,
+              letterSpacing: '-0.035em',
+              color: '#0F0F10',
+              lineHeight: 1,
+              animation: 'heroEnter 0.55s cubic-bezier(0.34,1.56,0.64,1) 0.15s both',
+            }}>
+              {pct >= 80 && <Sparkles size={22} color={COLORS.xp} fill={COLORS.xp} strokeWidth={2.5} style={{ filter: 'drop-shadow(0 0 3px rgba(255,194,51,0.6))' }} />}
+              {tierPhrase}
+              {pct >= 80 && <Sparkles size={22} color={COLORS.xp} fill={COLORS.xp} strokeWidth={2.5} style={{ filter: 'drop-shadow(0 0 3px rgba(255,194,51,0.6))' }} />}
+            </div>
+          );
+        })()}
         <ScoreRing value={pct} label={`${pct}%`} sublabel={`${cc}/${tot} ${t.correct}`} />
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 16 }}>
           <div style={{ background: 'rgba(255,255,255,0.6)', border: '1.5px solid #0F0F10', borderRadius: 12, padding: "10px 8px" }}>
@@ -588,11 +626,26 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
           letterSpacing: '0.12em', textTransform: 'uppercase',
           color: "var(--text-muted)",
         }}>{t.test.questionN} {cur + 1} {t.test.of} {tot}</span>
-        <span style={{
-          fontFamily: FF.display, fontSize: 12, fontWeight: 900,
-          letterSpacing: '-0.02em',
-          color: COLORS.win, fontVariantNumeric: 'tabular-nums',
-        }}>{cc} {t.correct}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {streakRun >= 3 && (
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              padding: '3px 8px', borderRadius: 999,
+              background: COLORS.streak, color: '#fff',
+              border: '2px solid #0F0F10',
+              fontFamily: FF.mono, fontSize: 10, fontWeight: 700,
+              letterSpacing: '0.04em',
+              animation: 'firePulse 1.6s ease-in-out infinite',
+            }}>
+              <Flame size={11} strokeWidth={2.5} fill="#fff" />{streakRun}
+            </span>
+          )}
+          <span style={{
+            fontFamily: FF.display, fontSize: 12, fontWeight: 900,
+            letterSpacing: '-0.02em',
+            color: COLORS.win, fontVariantNumeric: 'tabular-nums',
+          }}>{cc} {t.correct}</span>
+        </div>
       </div>
       <div style={{
         height: 8, borderRadius: 999,
@@ -661,11 +714,21 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
       })}
     </div>
     )}
-    {show && qType === 'single' && (() => {
-      const userAns = ans[cur] as number | undefined;
-      const correctIdx = getSingleCorrect(q);
-      const isCorrect = userAns === correctIdx;
-      const correctLetter = String.fromCharCode(65 + correctIdx);
+    {show && ans[cur] !== undefined && (() => {
+      const sr = scoreQuestion(q, ans[cur]);
+      const isCorrect = sr.correct;
+      let wrongLabel = '';
+      if (!isCorrect) {
+        if (qType === 'single') {
+          const correctIdx = getSingleCorrect(q);
+          wrongLabel = `${String.fromCharCode(65 + correctIdx)} — ${q.o[correctIdx]}`;
+        } else if (qType === 'multiple') {
+          const correctArr = Array.isArray(q.c) ? q.c : [q.c];
+          wrongLabel = correctArr.map(i => String.fromCharCode(65 + i)).join(', ');
+        } else {
+          wrongLabel = t.test.seeExplanation || 'Смотри разбор ниже';
+        }
+      }
       const phrases = t.test.correctPhrases || [t.test.correctBanner];
       const phrase = phrases[cur % phrases.length];
       return (
@@ -716,7 +779,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
                   {t.test.wrongBanner}
                 </div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: '#0F0F10', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {correctLetter} — {q.o[correctIdx]}
+                  {wrongLabel}
                 </div>
               </div>
             </>
