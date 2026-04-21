@@ -978,6 +978,22 @@ const kk: Translations = {
     whatsapp: 'WhatsApp-қа жазыңыз',
     format: 'ҰБТ форматы 2026',
   },
+
+  // ── Send to Mom (parent-share sheet) ─────────────────────────────
+  sendToMom: {
+    title: 'Анаңа жібер',
+    subtitle: 'Прогресіңді көрсін. Өзі шешсін — PRO немесе 30К репетитор.',
+    previewName: 'Сенің болжамың',
+    previewSub: 'ҰБТ 2026',
+    trend: 'болжам ↑',
+    note: 'Ана, AI-репетитор',
+    noteVs: 'vs',
+    noteSuffix: '. 15 есе арзан, әрқашан байланыста.',
+    shareText: 'Ана, ҰБТ-ға болжамыма қара: {prognosis}/{maxScore}.\nМақсатым — {grantTarget}.\n\nМен entprep-те оқимын — AI-репетитор 1 990₸/ай (тірі репетитор 30 000₸).\nhttps://entprep.org',
+    whatsappBtn: 'WhatsApp',
+    copyBtn: 'сілтемені көшіру',
+    close: 'Жабу',
+  },
 } as const;
 
 export default kk;

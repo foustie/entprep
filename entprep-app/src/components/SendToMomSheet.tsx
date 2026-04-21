@@ -3,6 +3,7 @@ import { shareToWhatsApp, copyText } from '../utils/shareHelpers';
 import { X } from 'lucide-react';
 import { useEffect } from 'react';
 import type { CSSProperties } from 'react';
+import { useT } from '../locales';
 
 /**
  * Bottom-sheet modal prompting the student to share prognosis with a parent via WhatsApp.
@@ -19,6 +20,8 @@ export default function SendToMomSheet({
   grantTarget: number;
   onClose: () => void;
 }) {
+  const t = useT();
+  const tm = t.sendToMom;
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -32,11 +35,10 @@ export default function SendToMomSheet({
     };
   }, [onClose]);
 
-  const shareText =
-    `Мам, посмотри мой прогноз на ЕНТ: ${prognosis}/${maxScore}.\n` +
-    `Моя цель — ${grantTarget}.\n\n` +
-    `Я учусь в entprep — AI-репетитор за 1 990₸/мес (живой репетитор стоит 30 000₸).\n` +
-    `https://entprep.org`;
+  const shareText = tm.shareText
+    .replace('{prognosis}', String(prognosis))
+    .replace('{maxScore}', String(maxScore))
+    .replace('{grantTarget}', String(grantTarget));
 
   function shareWhatsApp() {
     shareToWhatsApp(shareText);
@@ -54,14 +56,14 @@ export default function SendToMomSheet({
         <div style={handle} />
 
         <div style={headerRow}>
-          <h3 style={title}>Отправь маме</h3>
-          <button onClick={onClose} style={closeBtn} aria-label="Закрыть">
+          <h3 style={title}>{tm.title}</h3>
+          <button onClick={onClose} style={closeBtn} aria-label={tm.close}>
             <X size={16} />
           </button>
         </div>
 
         <p style={subtitle}>
-          Пусть увидит твой прогресс. И решит сама — PRO или репетитор за&nbsp;30К.
+          {tm.subtitle}
         </p>
 
         {/* Preview card */}
@@ -72,33 +74,33 @@ export default function SendToMomSheet({
           <div style={previewHeader}>
             <span style={previewAvatar}>Д</span>
             <div style={{ lineHeight: 1.2 }}>
-              <div style={previewName}>Твой прогноз</div>
-              <div style={previewSub}>ЕНТ 2026</div>
+              <div style={previewName}>{tm.previewName}</div>
+              <div style={previewSub}>{tm.previewSub}</div>
             </div>
           </div>
           <div style={previewScoreRow}>
             <span style={previewScoreBig}>{prognosis}</span>
             <span style={previewScoreMax}>/ {maxScore}</span>
-            <span style={previewTrend}>прогноз ↑</span>
+            <span style={previewTrend}>{tm.trend}</span>
           </div>
           <div style={previewProgressTrack}>
             <div style={{ ...previewProgressFill, width: `${Math.min(100, (prognosis / maxScore) * 100)}%` }} />
           </div>
           <div style={previewNote}>
-            Мам, AI-репетитор <b>1 990₸/мес</b>{' '}
+            {tm.note} <b>1 990₸/мес</b>{' '}
             <span style={{ textDecoration: 'line-through', color: COLORS.textMuted }}>
-              vs 30 000₸
-            </span>. В 15 раз дешевле, всегда на связи.
+              {tm.noteVs} 30 000₸
+            </span>{tm.noteSuffix}
           </div>
         </div>
 
         {/* CTAs */}
         <button onClick={shareWhatsApp} style={wappBtn}>
-          <span>WhatsApp</span>
+          <span>{tm.whatsappBtn}</span>
           <span style={{ fontSize: 18 }}>→</span>
         </button>
         <button onClick={copyLink} style={copyBtn}>
-          скопировать ссылку
+          {tm.copyBtn}
         </button>
       </div>
     </div>

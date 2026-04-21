@@ -994,6 +994,22 @@ const ru = {
     whatsapp: 'Напишите в WhatsApp',
     format: 'Формат ЕНТ 2026',
   },
+
+  // ── Send to Mom (parent-share sheet) ─────────────────────────────
+  sendToMom: {
+    title: 'Отправь маме',
+    subtitle: 'Пусть увидит твой прогресс. И решит сама — PRO или репетитор за\u00a030К.',
+    previewName: 'Твой прогноз',
+    previewSub: 'ЕНТ 2026',
+    trend: 'прогноз ↑',
+    note: 'Мам, AI-репетитор',
+    noteVs: 'vs',
+    noteSuffix: '. В 15 раз дешевле, всегда на связи.',
+    shareText: 'Мам, посмотри мой прогноз на ЕНТ: {prognosis}/{maxScore}.\nМоя цель — {grantTarget}.\n\nЯ учусь в entprep — AI-репетитор за 1 990₸/мес (живой репетитор стоит 30 000₸).\nhttps://entprep.org',
+    whatsappBtn: 'WhatsApp',
+    copyBtn: 'скопировать ссылку',
+    close: 'Закрыть',
+  },
 } as const;
 
 // Widen literal string types to `string` so kk.ts can use different values
