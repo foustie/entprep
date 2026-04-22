@@ -3,7 +3,7 @@ import BottomSheet from './ui/BottomSheet';
 import { Crown, Sparkles, Bot, GraduationCap, BookOpen, RotateCcw, Loader2, LogIn } from 'lucide-react';
 import { COLORS, BUTTON, FF, TYPE } from '../constants/styles';
 
-const INK = '#0F0F10';
+const INK = 'var(--ink)';
 import { useT } from '../locales';
 import { useAuth } from '../contexts/AuthContext';
 import { useNav } from '../contexts/NavigationContext';

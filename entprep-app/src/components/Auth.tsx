@@ -118,7 +118,16 @@ export default function Auth({ user, onSignOut }: AuthProps) {
       await Promise.all([refreshUser(), refreshProfile()]);
       toast.success(t.auth.photoUpdated);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t.auth.photoError);
+      const msg = err instanceof Error ? err.message : t.auth.photoError;
+      // Partial success: avatar uploaded to storage + user_metadata but profiles row
+      // didn't update. Refresh user so the uploader at least sees it; warn that
+      // Leaderboard/Friends may lag until profiles sync catches up.
+      if (msg.startsWith('AVATAR_PARTIAL:')) {
+        try { await Promise.all([refreshUser(), refreshProfile()]); } catch { /* ignore */ }
+        toast.warning(t.auth.photoPartial || t.auth.photoUpdated);
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setUploading(false);
     }
@@ -140,7 +149,7 @@ export default function Auth({ user, onSignOut }: AuthProps) {
             {avatar ? (
               <img src={avatar} alt={fullName || 'Avatar'} style={{ width: 44, height: 44, borderRadius: 22, border: `2px solid ${COLORS.accent}`, objectFit: 'cover' }} />
             ) : (
-              <div style={{ width: 44, height: 44, borderRadius: 22, border: '2px solid #0F0F10', background: COLORS.streak, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff' }}>
+              <div style={{ width: 44, height: 44, borderRadius: 22, border: '2px solid var(--ink)', background: COLORS.streak, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff' }}>
                 {initials}
               </div>
             )}

@@ -293,9 +293,9 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
               display: 'inline-flex', alignItems: 'center', gap: 8,
               padding: '10px 14px', width: '100%',
               background: 'var(--bg-card)',
-              border: '2px solid #0F0F10',
+              border: '2px solid var(--ink)',
               borderRadius: 12,
-              boxShadow: '0 3px 0 0 #0F0F10',
+              boxShadow: '0 3px 0 0 var(--ink)',
               cursor: aiLoad[index] ? 'wait' : 'pointer',
               color: 'var(--text)',
               fontFamily: "'Nunito',sans-serif",
@@ -305,7 +305,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
             }}>
               <span style={{
                 width: 28, height: 28, borderRadius: 8,
-                background: COLORS.streak, border: '1.5px solid #0F0F10',
+                background: COLORS.streak, border: '1.5px solid var(--ink)',
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                 color: '#fff', fontFamily: FF.display,
                 fontWeight: 900, fontSize: 12, letterSpacing: '-0.04em', flexShrink: 0,
@@ -337,7 +337,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
           }}>
             <div style={{
               width: 32, height: 32, borderRadius: 9,
-              background: COLORS.streak, border: '1.5px solid #0F0F10',
+              background: COLORS.streak, border: '1.5px solid var(--ink)',
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
               color: '#fff', fontFamily: FF.display,
               fontWeight: 900, fontSize: 14, letterSpacing: '-0.04em',
@@ -346,10 +346,10 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
             <div style={{
               flex: 1,
               background: 'var(--bg-card)',
-              border: '2px solid #0F0F10',
+              border: '2px solid var(--ink)',
               borderRadius: 14,
               borderBottomLeftRadius: 6,
-              boxShadow: '0 3px 0 0 #0F0F10',
+              boxShadow: '0 3px 0 0 var(--ink)',
               padding: '12px 14px',
             }}>
               <div style={{
@@ -407,19 +407,19 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
     <div style={{
       position: 'relative',
       background: pct >= 70 ? '#B8ECC8' : pct >= 50 ? COLORS.xpSoft : 'rgba(255,90,54,0.16)',
-      border: `2px solid #0F0F10`,
+      border: `2px solid var(--ink)`,
       borderRadius: 22,
       padding: "28px 20px 22px",
       textAlign: "center",
       marginBottom: 18,
-      boxShadow: `0 6px 0 0 #0F0F10`,
+      boxShadow: `0 6px 0 0 var(--ink)`,
       overflow: 'hidden',
       animation: "heroEnter 0.55s cubic-bezier(0.16,1,0.3,1) both",
     }}>
       {/* dotted grid decoration */}
       <div style={{
         position: 'absolute', inset: 0,
-        backgroundImage: `radial-gradient(#0F0F10 1px, transparent 1px)`,
+        backgroundImage: `radial-gradient(var(--ink) 1px, transparent 1px)`,
         backgroundSize: '22px 22px',
         opacity: 0.045,
         pointerEvents: 'none',
@@ -442,7 +442,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
               fontSize: 26,
               fontWeight: 900,
               letterSpacing: '-0.035em',
-              color: '#0F0F10',
+              color: 'var(--ink)',
               lineHeight: 1,
               animation: 'heroEnter 0.55s cubic-bezier(0.34,1.56,0.64,1) 0.15s both',
             }}>
@@ -454,12 +454,12 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
         })()}
         <ScoreRing value={pct} label={`${pct}%`} sublabel={`${cc}/${tot} ${t.correct}`} />
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 16 }}>
-          <div style={{ background: 'rgba(255,255,255,0.6)', border: '1.5px solid #0F0F10', borderRadius: 12, padding: "10px 8px" }}>
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: "'JetBrains Mono',monospace", color: '#0F0F10', opacity: 0.55, marginBottom: 3 }}>{t.test.timeLabel}</div>
-            <div style={{ fontSize: 16, fontWeight: 900, fontFamily: FF.display, letterSpacing: '-0.025em', color: '#0F0F10', fontVariantNumeric: 'tabular-nums' }}>{fm(timerSec - tl)}</div>
+          <div style={{ background: 'rgba(255,255,255,0.6)', border: '1.5px solid var(--ink)', borderRadius: 12, padding: "10px 8px" }}>
+            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: "'JetBrains Mono',monospace", color: 'var(--ink)', opacity: 0.55, marginBottom: 3 }}>{t.test.timeLabel}</div>
+            <div style={{ fontSize: 16, fontWeight: 900, fontFamily: FF.display, letterSpacing: '-0.025em', color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' }}>{fm(timerSec - tl)}</div>
           </div>
-          <div style={{ background: 'rgba(255,255,255,0.6)', border: '1.5px solid #0F0F10', borderRadius: 12, padding: "10px 8px" }}>
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: "'JetBrains Mono',monospace", color: '#0F0F10', opacity: 0.55, marginBottom: 3 }}>XP</div>
+          <div style={{ background: 'rgba(255,255,255,0.6)', border: '1.5px solid var(--ink)', borderRadius: 12, padding: "10px 8px" }}>
+            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: "'JetBrains Mono',monospace", color: 'var(--ink)', opacity: 0.55, marginBottom: 3 }}>XP</div>
             <div style={{ fontSize: 16, fontWeight: 900, fontFamily: FF.display, letterSpacing: '-0.025em', color: '#C77D00', fontVariantNumeric: 'tabular-nums' }}>+{calcTestXP({ su: sid, sc: pct, dt: '', co: cc, to: tot })}</div>
           </div>
         </div>
@@ -467,7 +467,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
           display: 'inline-flex', alignItems: 'center', gap: 5,
           marginTop: 14,
           padding: '6px 12px', borderRadius: 999,
-          background: '#0F0F10', color: '#fff',
+          background: 'var(--ink)', color: '#fff',
           fontFamily: FF.display, fontSize: 10.5, fontWeight: 900,
           letterSpacing: '0.08em', textTransform: 'uppercase',
         }}>
@@ -475,9 +475,9 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
         </div>
         {record.isRecord && <div style={{
           marginTop: 14, padding: "10px 14px",
-          background: COLORS.xp, color: '#0F0F10',
-          border: '2px solid #0F0F10', borderRadius: 12,
-          boxShadow: '0 3px 0 0 #0F0F10',
+          background: COLORS.xp, color: 'var(--ink)',
+          border: '2px solid var(--ink)', borderRadius: 12,
+          boxShadow: '0 3px 0 0 var(--ink)',
         }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
             <Trophy size={16} strokeWidth={2.5} />
@@ -574,12 +574,12 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
         width: "100%", padding: "15px", marginTop: 8,
         background: `linear-gradient(180deg, #FF6A47 0%, ${COLORS.streak} 100%)`,
         color: "#fff",
-        border: "2px solid #0F0F10",
+        border: "2px solid var(--ink)",
         borderRadius: 14,
         fontFamily: FF.display,
         fontSize: 13, fontWeight: 900, letterSpacing: '0.05em', textTransform: 'uppercase',
         cursor: "pointer",
-        boxShadow: "0 5px 0 0 #0F0F10, 0 0 28px rgba(255,90,54,0.3)",
+        boxShadow: "0 5px 0 0 var(--ink), 0 0 28px rgba(255,90,54,0.3)",
         display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
       }}
     >
@@ -610,9 +610,9 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
         display: 'inline-flex', alignItems: 'center', gap: 6,
         padding: "7px 12px",
         background: tl < 120 ? "rgba(239,68,68,0.12)" : "var(--bg-card)",
-        border: `2px solid ${tl < 120 ? COLORS.red : '#0F0F10'}`,
+        border: `2px solid ${tl < 120 ? COLORS.red : 'var(--ink)'}`,
         borderRadius: 999,
-        boxShadow: tl < 120 ? 'none' : '0 2px 0 0 #0F0F10',
+        boxShadow: tl < 120 ? 'none' : '0 2px 0 0 var(--ink)',
         fontFamily: FF.display, fontSize: 13, fontWeight: 900,
         letterSpacing: '-0.025em',
         color: tl < 120 ? COLORS.red : "var(--text)",
@@ -632,7 +632,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
               display: 'inline-flex', alignItems: 'center', gap: 4,
               padding: '3px 8px', borderRadius: 999,
               background: COLORS.streak, color: '#fff',
-              border: '2px solid #0F0F10',
+              border: '2px solid var(--ink)',
               fontFamily: FF.mono, fontSize: 10, fontWeight: 700,
               letterSpacing: '0.04em',
               animation: 'firePulse 1.6s ease-in-out infinite',
@@ -650,14 +650,14 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
       <div style={{
         height: 8, borderRadius: 999,
         background: 'rgba(15,15,16,0.1)',
-        border: '1.5px solid #0F0F10',
+        border: '1.5px solid var(--ink)',
         overflow: 'hidden',
       }}>
         <div style={{
           height: '100%',
           width: `${Math.max(0, ((cur + 1) / tot) * 100)}%`,
           background: COLORS.streak,
-          borderRight: cur + 1 < tot ? '1.5px solid #0F0F10' : 'none',
+          borderRight: cur + 1 < tot ? '1.5px solid var(--ink)' : 'none',
           transition: 'width 0.45s cubic-bezier(0.16,1,0.3,1)',
         }} />
       </div>
@@ -737,8 +737,8 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
           padding: '11px 14px',
           borderRadius: 14,
           background: isCorrect ? '#B8ECC8' : '#FFE8DE',
-          border: '2px solid #0F0F10',
-          borderBottom: '4px solid #0F0F10',
+          border: '2px solid var(--ink)',
+          borderBottom: '4px solid var(--ink)',
           animation: 'slideUp 0.35s cubic-bezier(0.34,1.56,0.64,1)',
           display: 'flex',
           alignItems: 'center',
@@ -746,20 +746,20 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
         }}>
           {isCorrect ? (
             <>
-              <div style={{ width: 28, height: 28, borderRadius: 14, background: '#58CC02', border: '2px solid #0F0F10', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div style={{ width: 28, height: 28, borderRadius: 14, background: '#58CC02', border: '2px solid var(--ink)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Check size={14} color="#fff" strokeWidth={3.2} />
               </div>
               <div style={{
                 flex: 1,
                 fontFamily: FF.display, fontSize: 16, fontWeight: 800,
-                color: '#0F0F10', letterSpacing: '-0.01em',
+                color: 'var(--ink)', letterSpacing: '-0.01em',
               }}>
                 {phrase}
               </div>
               <div style={{
                 padding: '3px 10px',
                 borderRadius: 100,
-                background: '#0F0F10',
+                background: 'var(--ink)',
                 color: COLORS.xp,
                 fontFamily: FF.mono,
                 fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
@@ -771,14 +771,14 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
             </>
           ) : (
             <>
-              <div style={{ width: 28, height: 28, borderRadius: 14, background: COLORS.streak, border: '2px solid #0F0F10', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div style={{ width: 28, height: 28, borderRadius: 14, background: COLORS.streak, border: '2px solid var(--ink)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <X size={14} color="#fff" strokeWidth={3} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: FF.mono, fontSize: 10, fontWeight: 700, color: '#0F0F10', letterSpacing: '0.08em', textTransform: 'uppercase', opacity: 0.7 }}>
+                <div style={{ fontFamily: FF.mono, fontSize: 10, fontWeight: 700, color: 'var(--ink)', letterSpacing: '0.08em', textTransform: 'uppercase', opacity: 0.7 }}>
                   {t.test.wrongBanner}
                 </div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: '#0F0F10', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {wrongLabel}
                 </div>
               </div>
@@ -793,7 +793,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
       </div>
       {aiBtn(cur)}
     </div>}
-    {show && <button onClick={nxt} style={{ width: "100%", padding: "15px", marginTop: 12, background: `linear-gradient(180deg, #FF6A47 0%, ${COLORS.streak} 100%)`, color: "#fff", border: "2px solid #0F0F10", borderRadius: 14, fontFamily: FF.display, fontSize: 13, fontWeight: 900, letterSpacing: '0.05em', textTransform: 'uppercase', cursor: "pointer", animation: "slideUp 0.4s cubic-bezier(0.16,1,0.3,1)", boxShadow: "0 5px 0 0 #0F0F10, 0 0 24px rgba(255,90,54,0.25)" }}>{cur < tot - 1 ? t.test.nextQuestion : t.test.finishTest}</button>}
+    {show && <button onClick={nxt} style={{ width: "100%", padding: "15px", marginTop: 12, background: `linear-gradient(180deg, #FF6A47 0%, ${COLORS.streak} 100%)`, color: "#fff", border: "2px solid var(--ink)", borderRadius: 14, fontFamily: FF.display, fontSize: 13, fontWeight: 900, letterSpacing: '0.05em', textTransform: 'uppercase', cursor: "pointer", animation: "slideUp 0.4s cubic-bezier(0.16,1,0.3,1)", boxShadow: "0 5px 0 0 var(--ink), 0 0 24px rgba(255,90,54,0.25)" }}>{cur < tot - 1 ? t.test.nextQuestion : t.test.finishTest}</button>}
     </div>}
     <ReportSheet visible={reportIdx !== null} questionText={reportIdx !== null ? qs[reportIdx]?.q : undefined} options={reportIdx !== null ? qs[reportIdx]?.o : undefined} comment={reportComment} loading={reportLoading} onClose={() => { setReportIdx(null); setReportComment(''); }} onCommentChange={setReportComment} onReport={reason => reportQuestion(reportIdx!, reason)} />
     {showPaywall && <PaywallScreen trigger="explain_limit" onClose={() => setShowPaywall(false)} />}

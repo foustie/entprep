@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Concept 3: Checkmark with streak period — "Правильно." glyph -->
+  <rect width="512" height="512" rx="112" fill="#FFDF5E"/>
+  <!-- Bold checkmark ink stroke -->
+  <path d="M112 280 L208 368 L396 160"
+        stroke="#0F0F10" stroke-width="64"
+        stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Streak period — baseline right of check tail -->
+  <circle cx="432" cy="368" r="36" fill="#FF5A36" stroke="#0F0F10" stroke-width="10"/>
+</svg>

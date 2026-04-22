@@ -85,7 +85,10 @@ export async function getFriendIds(): Promise<string[]> {
 
 export async function syncProfileStats(userId: string, xp: number, level: number, streak: number, avatarUrl?: string): Promise<void> {
   if (!supabase) return;
-  // Direct Supabase client update (RLS allows owner to update own profile)
+  // Direct Supabase client update (RLS allows owner to update own profile).
+  // Fire-and-forget — errors are logged but not thrown (called inside cloudSave
+  // after primary user_data write succeeded). Surface any failure so RLS/network
+  // issues become visible in Sentry instead of silently staling Leaderboard data.
   const update: Record<string, unknown> = {
     xp,
     level,
@@ -93,7 +96,8 @@ export async function syncProfileStats(userId: string, xp: number, level: number
     last_active: new Date().toISOString(),
   };
   if (avatarUrl) update.avatar_url = avatarUrl;
-  await supabase.from('profiles').update(update).eq('id', userId);
+  const { error } = await supabase.from('profiles').update(update).eq('id', userId);
+  if (error) console.error('[syncProfileStats] profiles update failed:', error.message);
 }
 
 // ── Invite links ─────────────────────────────────────────────────────────────

@@ -85,9 +85,9 @@ export default function MultipleAnswerCard({
           const isCorrect = correctSet.has(idx);
 
           let bg = 'var(--bg-card)';
-          let bd = '2px solid #0F0F10';
+          let bd = '2px solid var(--ink)';
           let tc = 'var(--text)';
-          let boxShadow = '0 2px 0 0 #0F0F10';
+          let boxShadow = '0 2px 0 0 var(--ink)';
 
           if (showResult) {
             if (isCorrect && isSelected) {
@@ -147,9 +147,9 @@ export default function MultipleAnswerCard({
               ? `linear-gradient(180deg, #FF6A47 0%, ${COLORS.streak} 100%)`
               : 'var(--bg-subtle)',
             color: selected.size > 0 ? '#fff' : 'var(--text-muted)',
-            border: `2px solid ${selected.size > 0 ? '#0F0F10' : 'rgba(15,15,16,0.12)'}`,
+            border: `2px solid ${selected.size > 0 ? 'var(--ink)' : 'rgba(15,15,16,0.12)'}`,
             borderRadius: 12,
-            boxShadow: selected.size > 0 ? '0 3px 0 0 #0F0F10' : 'none',
+            boxShadow: selected.size > 0 ? '0 3px 0 0 var(--ink)' : 'none',
             fontFamily: FF.display, fontSize: 13, fontWeight: 900,
             letterSpacing: '0.05em', textTransform: 'uppercase',
             cursor: selected.size > 0 ? 'pointer' : 'default',

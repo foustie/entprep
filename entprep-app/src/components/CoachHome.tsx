@@ -420,7 +420,7 @@ export default function CoachHome() {
 // ── Unified Home Hero ────────────────────────────────────────────────────
 type RecType = ReturnType<typeof getRecommendation>;
 
-const INK = '#0F0F10';
+const INK = 'var(--ink)';
 
 function useCountUp(target: number, durationMs = 850): number {
   const [n, setN] = useState(0);

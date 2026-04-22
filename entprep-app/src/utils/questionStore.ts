@@ -6,7 +6,7 @@ import { captureError } from '../config/sentry';
 const CACHE_KEY = 'entprep_qcache';
 const COUNTS_KEY = 'entprep_qcounts';
 const DATA_VERSION_KEY = 'entprep_qversion';
-const DATA_VERSION = 17; // bump: quarantine filter + 11 answer fixes + 2 deleted questions
+const DATA_VERSION = 18; // bump: 16 pure duplicates removed (15 лит-ру, 1 гео) + matching type inference fix
 
 // Memory caches
 const memCache: Record<string, Question[]> = {};
@@ -394,22 +394,36 @@ function getTotalQ(): number {
   return Object.values(counts).reduce((s, n) => s + n, 0);
 }
 
-/** Fast count-only fetch from Supabase (no question data). Returns true if counts were updated. */
+/** Fast count-only fetch from Supabase (no question data). Returns true if counts were updated.
+ *  Sequential (not parallel) to avoid hammering Supabase connection pool — 14 parallel
+ *  COUNT(*) over 28K-row table returned 503 from Kong and cascaded into user-facing
+ *  "тест не запускается" because real getPool() calls queued behind them.
+ *  Once localStorage has counts, skip the refetch entirely. */
 let _countsFetched = false;
 async function prefetchCounts(): Promise<boolean> {
   if (_countsFetched) return false;
   _countsFetched = true;
   if (!supabase) return false;
   try {
+    if (localStorage.getItem(COUNTS_KEY)) return false;
+  } catch {}
+  try {
     const subjects = Object.keys(getDefaultCounts());
     const counts: Record<string, number> = {};
-    await Promise.all(subjects.map(async (sid) => {
-      const { count, error } = await supabase!
-        .from('questions')
-        .select('*', { count: 'exact', head: true })
-        .eq('subject', sid);
-      if (!error && typeof count === 'number') counts[sid] = count;
-    }));
+    for (const sid of subjects) {
+      try {
+        const { count, error } = await supabase!
+          .from('questions')
+          .select('id', { count: 'exact', head: true })
+          .eq('subject', sid);
+        if (error) { captureError(error, { context: 'prefetchCounts', sid }); break; }
+        if (typeof count === 'number') counts[sid] = count;
+      } catch (err) {
+        captureError(err, { context: 'prefetchCounts.sid', sid });
+        break;
+      }
+      await new Promise(r => setTimeout(r, 120));
+    }
     if (Object.keys(counts).length > 0) {
       saveCounts(counts);
       return true;

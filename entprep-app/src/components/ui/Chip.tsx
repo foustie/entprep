@@ -30,8 +30,8 @@ export default function Chip({
     transition: 'transform 80ms, box-shadow 80ms',
     whiteSpace: 'nowrap',
     flexShrink: 0,
-    border: '1.5px solid #0F0F10',
-    background: active ? '#0F0F10' : 'var(--bg-card)',
+    border: '1.5px solid var(--ink)',
+    background: active ? 'var(--ink)' : 'var(--bg-card)',
     color: active ? '#fff' : 'var(--text)',
     boxShadow: active ? `0 2px 0 0 ${COLORS.streak}` : '0 2px 0 0 rgba(15,15,16,0.18)',
   };

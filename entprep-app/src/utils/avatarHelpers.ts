@@ -61,8 +61,18 @@ export async function uploadAvatar(userId: string, file: File): Promise<string> 
   });
   if (updateError) throw updateError;
 
-  // Also update profiles table so leaderboard/friends see the new avatar
-  await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', userId);
+  // Also update profiles table so leaderboard/friends see the new avatar.
+  // If this fails we still return the URL (upload succeeded, user_metadata is authoritative)
+  // but we surface the error so the caller can show a toast and retry later.
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .update({ avatar_url: publicUrl })
+    .eq('id', userId);
+  if (profileError) {
+    console.error('[avatar] profiles.avatar_url update failed:', profileError.message);
+    // non-fatal: surface via thrown warning string the caller recognises
+    throw new Error(`AVATAR_PARTIAL:${publicUrl}:${profileError.message}`);
+  }
 
   return publicUrl;
 }

@@ -82,8 +82,8 @@ export default function InstallPrompt() {
       willChange: 'opacity,transform',
     }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-        <div style={{ width: 40, height: 40, borderRadius: 12, background: COLORS.streakSoft, border: '2px solid #0F0F10', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <Download size={20} color="#0F0F10" strokeWidth={2.25} />
+        <div style={{ width: 40, height: 40, borderRadius: 12, background: COLORS.streakSoft, border: '2px solid var(--ink)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Download size={20} color='var(--ink)' strokeWidth={2.25} />
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>

@@ -58,8 +58,8 @@ export default function PushPrompt() {
       <div style={{ textAlign: 'center', padding: '4px 0' }}>
         <div style={{
           width: 56, height: 56, borderRadius: 14,
-          background: '#0F0F10',
-          border: '2px solid #0F0F10',
+          background: 'var(--ink)',
+          border: '2px solid var(--ink)',
           boxShadow: '0 4px 0 0 ' + COLORS.streak,
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           color: '#fff', margin: '0 auto 16px',
@@ -79,8 +79,8 @@ export default function PushPrompt() {
 
         <div style={{
           background: 'var(--bg-card)',
-          border: '2px solid #0F0F10',
-          boxShadow: '0 3px 0 0 #0F0F10',
+          border: '2px solid var(--ink)',
+          boxShadow: '0 3px 0 0 var(--ink)',
           borderRadius: 12, padding: '6px 14px',
           marginBottom: 18, textAlign: 'left',
         }}>
@@ -114,9 +114,9 @@ export default function PushPrompt() {
           width: '100%', padding: '14px',
           background: `linear-gradient(180deg, #FF6A47 0%, ${COLORS.streak} 100%)`,
           color: '#fff',
-          border: '2px solid #0F0F10',
+          border: '2px solid var(--ink)',
           borderRadius: 12,
-          boxShadow: '0 3px 0 0 #0F0F10',
+          boxShadow: '0 3px 0 0 var(--ink)',
           fontFamily: FF.display, fontSize: 14, fontWeight: 900,
           letterSpacing: '0.05em', textTransform: 'uppercase',
           cursor: 'pointer',

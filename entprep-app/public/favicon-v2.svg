@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Concept 2: OMR bubble sheet — filled exam bubble with streak accent -->
+  <rect width="512" height="512" rx="112" fill="#FAFAF8"/>
+  <!-- 4 answer bubbles A/B/C/D — one (C) filled streak -->
+  <g stroke="#0F0F10" stroke-width="14" fill="none">
+    <circle cx="140" cy="256" r="44"/>
+    <circle cx="244" cy="256" r="44"/>
+    <circle cx="348" cy="256" r="44" fill="#FF5A36"/>
+    <circle cx="452" cy="256" r="44"/>
+  </g>
+  <!-- Labels micro -->
+  <g font-family="'JetBrains Mono', monospace" font-size="32" font-weight="700" fill="#0F0F10" text-anchor="middle">
+    <text x="140" y="372">A</text>
+    <text x="244" y="372">B</text>
+    <text x="348" y="372">C</text>
+    <text x="452" y="372">D</text>
+  </g>
+  <!-- Ink period dot at baseline right -->
+  <circle cx="348" cy="140" r="14" fill="#0F0F10"/>
+</svg>

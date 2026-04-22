@@ -1,17 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- v2 — ink rounded square + bold geometric "E" + streak period dot (same lockup as ENTprep. wordmark) -->
-  <rect width="512" height="512" rx="112" fill="#0F0F10"/>
-  <g transform="translate(140 100)">
-    <!-- E — three horizontal bars + vertical stem, Unbounded-inspired geometry -->
-    <!-- stem -->
-    <rect x="0" y="0" width="56" height="312" rx="10" fill="#FAFAF8"/>
-    <!-- top bar -->
-    <rect x="0" y="0" width="196" height="56" rx="10" fill="#FAFAF8"/>
-    <!-- middle bar (shorter per typographic norm) -->
-    <rect x="0" y="128" width="156" height="56" rx="10" fill="#FAFAF8"/>
-    <!-- bottom bar -->
-    <rect x="0" y="256" width="196" height="56" rx="10" fill="#FAFAF8"/>
-  </g>
-  <!-- Streak period — sits on baseline to the right of E, size-matched to stroke width -->
-  <circle cx="376" cy="384" r="36" fill="#FF5A36"/>
+  <!-- ENTprep. v2 — ink check on xpSoft yellow + streak period -->
+  <rect width="512" height="512" rx="112" fill="#FFDF5E"/>
+  <!-- Bold ink checkmark -->
+  <path d="M112 280 L208 368 L396 160"
+        stroke="#0F0F10" stroke-width="64"
+        stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Streak period — brand accent -->
+  <circle cx="432" cy="368" r="36" fill="#FF5A36" stroke="#0F0F10" stroke-width="10"/>
 </svg>

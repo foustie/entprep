@@ -15,11 +15,11 @@ import {
 } from 'lucide-react';
 import PaywallScreen from './ui/PaywallScreen';
 
-const INK = '#0F0F10';
+const INK = 'var(--ink)';
 
 export default function ProfileTab() {
   const { hist, st } = useApp();
-  const { user, profile, isPremium } = useAuth();
+  const { user, profile, isPremium, needsNickname } = useAuth();
   const { nav } = useNav();
   const bp = useBreakpoint();
   const t = useT();
@@ -34,8 +34,14 @@ export default function ProfileTab() {
     ? Math.round(regular.reduce((s, h) => s + (h.sc || 0), 0) / regular.length)
     : 0;
 
-  const nickname = profile?.nickname
+  // Display name priority: profiles.display_name (Google full_name at signup)
+  // → user_metadata.full_name (live OAuth data) → custom nickname (if user set one)
+  // → fallback. NEVER show auto-generated "user_abcd1234" as primary name.
+  const customNickname = profile?.nickname && !profile.nickname.startsWith('user_')
+    ? profile.nickname : null;
+  const displayName = profile?.display_name
     || (user?.user_metadata?.full_name as string | undefined)
+    || customNickname
     || 'ENTprep User';
   const avatarUrl = profile?.avatar_url
     || (user?.user_metadata?.avatar_url as string | undefined)
@@ -74,7 +80,7 @@ export default function ProfileTab() {
               fontFamily: FF.display, fontSize: 26, fontWeight: 900,
               letterSpacing: '-0.04em',
             }}>
-              {nickname[0]?.toUpperCase() || <User size={24} />}
+              {displayName[0]?.toUpperCase() || <User size={24} />}
             </span>
           )}
         </div>
@@ -90,7 +96,7 @@ export default function ProfileTab() {
               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               minWidth: 0,
             }}>
-              {nickname}
+              {displayName}
             </span>
             {isPremium && (
               <span style={{
@@ -130,6 +136,36 @@ export default function ProfileTab() {
           }}>
             {levelName}
           </div>
+          {/* Nickname handle OR "choose nickname" CTA */}
+          {user && profile && (
+            needsNickname ? (
+              <button
+                onClick={() => nav('settings')}
+                style={{
+                  marginTop: 6,
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                  padding: '3px 9px', borderRadius: 999,
+                  background: COLORS.streakSoft || 'rgba(255,90,54,0.12)',
+                  border: `1px solid ${COLORS.streak}`,
+                  color: COLORS.streak,
+                  fontFamily: FF.mono, fontSize: 10, fontWeight: 800,
+                  letterSpacing: '0.05em',
+                  cursor: 'pointer',
+                }}
+              >
+                ✎ выбери ник
+              </button>
+            ) : (
+              <div style={{
+                marginTop: 6,
+                fontFamily: FF.mono, fontSize: 11, fontWeight: 700,
+                color: COLORS.textMuted,
+                letterSpacing: '0.02em',
+              }}>
+                @{profile.nickname}
+              </div>
+            )
+          )}
         </div>
       </div>
 

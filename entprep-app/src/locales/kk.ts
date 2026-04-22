@@ -632,6 +632,7 @@ const kk: Translations = {
   auth: {
     photoUpdated: 'Фото жаңартылды',
     photoError: 'Фото жүктеу қатесі',
+    photoPartial: 'Фото жаңартылды. Рейтингте және достарда кейінірек көрінеді',
     user: 'Пайдаланушы',
     syncOn: 'Синхрондау қосулы',
     syncFailed: 'Синхрондау сәтсіз аяқталды. Деректер жергілікті сақталды.',
@@ -653,6 +654,13 @@ const kk: Translations = {
     freeAndFast: 'Тегін. 5 секунд алады.',
     connecting: 'Қосылуда...',
     later: 'Кейінірек',
+    inAppWarningTitle: 'Google бұл браузерде жұмыс істемейді',
+    inAppWarningText: 'WhatsApp, Instagram және TikTok Google арқылы кіруді бұғаттайды. entprep.org сайтын Chrome немесе Safari-де ашыңыз — онда бәрі жұмыс істейді.',
+    copyLink: 'Сілтемені көшіру',
+    linkCopied: 'Сілтеме көшірілді',
+    openInChrome: 'Chrome-да ашу',
+    inAppTipIos: 'iPhone: төменгі оң жақтағы ••• батырмасын басыңыз → «Safari-де ашу»',
+    inAppTipAndroid: 'Android: бұрыштағы ⋮ батырмасын басыңыз → «Браузерде ашу»',
   },
 
   // ── Onboarding ──────────────────────────────────────────────────────

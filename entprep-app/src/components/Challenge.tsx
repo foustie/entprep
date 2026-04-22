@@ -44,24 +44,24 @@ export default function Challenge({ data }: ChallengeProps) {
       <div style={{
         position: 'relative',
         background: COLORS.streakSoft,
-        border: '2px solid #0F0F10',
+        border: '2px solid var(--ink)',
         borderRadius: 20,
         padding: '32px 22px 24px',
-        boxShadow: '0 6px 0 0 #0F0F10',
+        boxShadow: '0 6px 0 0 var(--ink)',
         textAlign: 'center',
         overflow: 'hidden',
         animation: 'heroEnter 0.55s cubic-bezier(0.16,1,0.3,1) both',
       }}>
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(#0F0F10 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(var(--ink) 1px, transparent 1px)',
           backgroundSize: '22px 22px', opacity: 0.05, pointerEvents: 'none',
         }} />
         <div style={{ position: 'relative' }}>
           <div style={{
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
             width: 64, height: 64, borderRadius: 16,
-            background: '#0F0F10', border: '2px solid #0F0F10',
+            background: 'var(--ink)', border: '2px solid var(--ink)',
             boxShadow: '0 4px 0 0 ' + COLORS.streak,
             color: '#fff', marginBottom: 16,
           }}>
@@ -74,11 +74,11 @@ export default function Challenge({ data }: ChallengeProps) {
           }}>вызов на дуэль</div>
           <h2 style={{
             fontFamily: FF.display, fontSize: 24, fontWeight: 900,
-            color: '#0F0F10', letterSpacing: '-0.035em', margin: '0 0 8px', lineHeight: 1.05,
+            color: 'var(--ink)', letterSpacing: '-0.035em', margin: '0 0 8px', lineHeight: 1.05,
           }}>{t.challenge.challenged}</h2>
           <div style={{
             fontFamily: "'Nunito',sans-serif", fontSize: 13, fontWeight: 700,
-            color: '#0F0F10', opacity: 0.7, lineHeight: 1.5, marginBottom: 22,
+            color: 'var(--ink)', opacity: 0.7, lineHeight: 1.5, marginBottom: 22,
           }}>
             {t.challenge.friendScored}{' '}
             <span style={{
@@ -92,9 +92,9 @@ export default function Challenge({ data }: ChallengeProps) {
             display: 'inline-flex', alignItems: 'center', gap: 10,
             padding: '10px 14px', marginBottom: 22,
             background: 'var(--bg-card)',
-            border: '2px solid #0F0F10',
+            border: '2px solid var(--ink)',
             borderRadius: 12,
-            boxShadow: '0 2px 0 0 #0F0F10',
+            boxShadow: '0 2px 0 0 var(--ink)',
           }}>
             <div style={{
               width: 32, height: 32, borderRadius: 9,
@@ -112,16 +112,16 @@ export default function Challenge({ data }: ChallengeProps) {
 
           <div style={{
             fontFamily: FF.display, fontSize: 16, fontWeight: 900,
-            color: '#0F0F10', letterSpacing: '-0.03em', marginBottom: 18,
+            color: 'var(--ink)', letterSpacing: '-0.03em', marginBottom: 18,
           }}>{t.challenge.canYouBeat}</div>
 
           <button onClick={accept} style={{
             width: '100%', padding: '14px',
             background: `linear-gradient(180deg, #FF6A47 0%, ${COLORS.streak} 100%)`,
             color: '#fff',
-            border: '2px solid #0F0F10',
+            border: '2px solid var(--ink)',
             borderRadius: 12,
-            boxShadow: '0 4px 0 0 #0F0F10',
+            boxShadow: '0 4px 0 0 var(--ink)',
             fontFamily: FF.display, fontSize: 14, fontWeight: 900,
             letterSpacing: '0.06em', textTransform: 'uppercase',
             cursor: 'pointer',
@@ -133,7 +133,7 @@ export default function Challenge({ data }: ChallengeProps) {
           <button onClick={decline} style={{
             width: '100%', padding: '11px',
             background: 'transparent',
-            color: '#0F0F10', opacity: 0.65,
+            color: 'var(--ink)', opacity: 0.65,
             border: 'none',
             fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 800,
             cursor: 'pointer',

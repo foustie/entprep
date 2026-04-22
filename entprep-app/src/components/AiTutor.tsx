@@ -308,7 +308,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
         }}>
           <div style={{
             width: 28, height: 28, borderRadius: 8,
-            background: COLORS.streak, border: '1.5px solid #0F0F10',
+            background: COLORS.streak, border: '1.5px solid var(--ink)',
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
             color: '#fff', fontFamily: FF.display,
             fontWeight: 900, fontSize: 12, letterSpacing: '-0.04em',
@@ -319,8 +319,8 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
             padding: '12px 14px',
             borderRadius: 16, borderBottomLeftRadius: 6,
             background: 'var(--bg-card)',
-            border: '2px solid #0F0F10',
-            boxShadow: '0 2px 0 0 #0F0F10',
+            border: '2px solid var(--ink)',
+            boxShadow: '0 2px 0 0 var(--ink)',
             fontFamily: "'Nunito',sans-serif", fontSize: 13.5, fontWeight: 600,
             color: 'var(--text)', lineHeight: 1.55,
           }}>
@@ -356,7 +356,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
                 flexShrink: 0,
                 padding: '7px 12px', borderRadius: 999,
                 background: 'var(--bg-card)',
-                border: '1.5px solid #0F0F10',
+                border: '1.5px solid var(--ink)',
                 boxShadow: '0 2px 0 0 rgba(15,15,16,0.15)',
                 fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 700,
                 color: 'var(--text)', cursor: 'pointer',
@@ -372,7 +372,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
         <div style={{
           position: 'fixed', bottom: bp === 'desktop' ? 20 : 80, left: 0, right: 0,
           padding: '8px var(--content-padding) 10px',
-          background: 'var(--bg)', borderTop: '2px solid #0F0F10',
+          background: 'var(--bg)', borderTop: '2px solid var(--ink)',
         }}>
           <div style={{ display: 'flex', gap: 6, maxWidth: 'var(--content-max-width)', margin: '0 auto', alignItems: 'flex-end' }}>
             {'webkitSpeechRecognition' in window && (
@@ -397,7 +397,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
               style={{
                 flex: 1, padding: '11px 14px', borderRadius: 12,
                 background: 'var(--bg-card)',
-                border: '2px solid #0F0F10',
+                border: '2px solid var(--ink)',
                 color: 'var(--text)',
                 fontFamily: "'Nunito',sans-serif",
                 fontSize: 14, fontWeight: 600, resize: 'none',
@@ -409,8 +409,8 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
               background: input.trim()
                 ? `linear-gradient(180deg, #FF6A47 0%, ${COLORS.streak} 100%)`
                 : 'var(--bg-subtle)',
-              border: `2px solid ${input.trim() ? '#0F0F10' : 'rgba(15,15,16,0.12)'}`,
-              boxShadow: input.trim() ? '0 3px 0 0 #0F0F10' : 'none',
+              border: `2px solid ${input.trim() ? 'var(--ink)' : 'rgba(15,15,16,0.12)'}`,
+              boxShadow: input.trim() ? '0 3px 0 0 var(--ink)' : 'none',
               color: input.trim() ? '#fff' : 'var(--text-muted)',
               cursor: input.trim() ? 'pointer' : 'default',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -453,9 +453,9 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
             return (
               <div key={s.id} style={{
                 background: 'var(--bg-card)',
-                border: '2px solid #0F0F10',
+                border: '2px solid var(--ink)',
                 borderRadius: 12,
-                boxShadow: '0 3px 0 0 #0F0F10',
+                boxShadow: '0 3px 0 0 var(--ink)',
                 overflow: 'hidden',
               }}>
                 <button onClick={() => setPickerExpanded(isOpen ? null : s.id)} style={{
@@ -594,9 +594,9 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
         <div style={{
           padding: '14px 14px', marginBottom: 14,
           background: 'rgba(236,72,153,0.06)',
-          border: '2px solid #0F0F10',
+          border: '2px solid var(--ink)',
           borderRadius: 14,
-          boxShadow: '0 3px 0 0 #0F0F10',
+          boxShadow: '0 3px 0 0 var(--ink)',
           animation: 'slideUp 0.3s cubic-bezier(0.16,1,0.3,1)',
         }}>
           <div style={{
@@ -614,7 +614,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
           </div>
           <div style={{
             padding: '10px 14px', borderRadius: 10,
-            background: '#0F0F10',
+            background: 'var(--ink)',
             fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 800,
             color: '#fff', textAlign: 'center', letterSpacing: '0.04em',
           }}>
@@ -640,7 +640,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
               <div style={{
                 width: 28, height: 28, borderRadius: 8,
                 background: showAvatar ? COLORS.streak : 'transparent',
-                border: showAvatar ? '1.5px solid #0F0F10' : 'none',
+                border: showAvatar ? '1.5px solid var(--ink)' : 'none',
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                 color: showAvatar ? '#fff' : 'transparent',
                 fontFamily: FF.display,
@@ -657,8 +657,8 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
               background: isUser
                 ? `linear-gradient(180deg, #FF6A47 0%, ${COLORS.streak} 100%)`
                 : 'var(--bg-card)',
-              border: '2px solid #0F0F10',
-              boxShadow: isUser ? '0 2px 0 0 #0F0F10' : '0 2px 0 0 #0F0F10',
+              border: '2px solid var(--ink)',
+              boxShadow: isUser ? '0 2px 0 0 var(--ink)' : '0 2px 0 0 var(--ink)',
               color: isUser ? '#fff' : 'var(--text)',
               fontFamily: "'Nunito',sans-serif",
               fontSize: 13.5, lineHeight: 1.55, whiteSpace: 'pre-wrap', fontWeight: 600,
@@ -688,7 +688,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
         <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'flex-end', gap: 6, marginBottom: 10 }}>
           <div style={{
             width: 28, height: 28, borderRadius: 8,
-            background: COLORS.streak, border: '1.5px solid #0F0F10',
+            background: COLORS.streak, border: '1.5px solid var(--ink)',
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
             color: '#fff', fontFamily: FF.display,
             fontWeight: 900, fontSize: 12, letterSpacing: '-0.04em',
@@ -696,8 +696,8 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
           }}>Д</div>
           <div style={{
             padding: '10px 14px', borderRadius: 16, borderBottomLeftRadius: 6,
-            background: 'var(--bg-card)', border: '2px solid #0F0F10',
-            boxShadow: '0 2px 0 0 #0F0F10',
+            background: 'var(--bg-card)', border: '2px solid var(--ink)',
+            boxShadow: '0 2px 0 0 var(--ink)',
           }}>
             <div style={{ display: 'flex', gap: 4 }}>
               {[0, 1, 2].map(di => (
@@ -720,7 +720,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
         position: 'fixed', bottom: bp === 'desktop' ? 20 : 70, left: 0, right: 0,
         padding: '10px var(--content-padding) 12px',
         background: 'var(--bg)',
-        borderTop: '2px solid #0F0F10',
+        borderTop: '2px solid var(--ink)',
       }}>
         <div style={{ display: 'flex', gap: 6, maxWidth: 'var(--content-max-width)', margin: '0 auto', alignItems: 'flex-end' }}>
           {/* Voice button */}
@@ -749,7 +749,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
             style={{
               flex: 1, padding: '11px 14px', borderRadius: 12,
               background: 'var(--bg-card)',
-              border: '2px solid #0F0F10',
+              border: '2px solid var(--ink)',
               color: 'var(--text)',
               fontFamily: "'Nunito',sans-serif",
               fontSize: 14, fontWeight: 600, resize: 'none',
@@ -763,8 +763,8 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
             background: input.trim() && !loading
               ? `linear-gradient(180deg, #FF6A47 0%, ${COLORS.streak} 100%)`
               : 'var(--bg-subtle)',
-            border: `2px solid ${input.trim() && !loading ? '#0F0F10' : 'rgba(15,15,16,0.12)'}`,
-            boxShadow: input.trim() && !loading ? '0 3px 0 0 #0F0F10' : 'none',
+            border: `2px solid ${input.trim() && !loading ? 'var(--ink)' : 'rgba(15,15,16,0.12)'}`,
+            boxShadow: input.trim() && !loading ? '0 3px 0 0 var(--ink)' : 'none',
             color: input.trim() && !loading ? '#fff' : 'var(--text-muted)',
             cursor: input.trim() && !loading ? 'pointer' : 'default',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -784,8 +784,8 @@ function iconBtnStyle(bg: string, color: string, pulsing = false): React.CSSProp
     position: 'relative',
     width: 44, height: 44, borderRadius: 12, flexShrink: 0,
     background: bg,
-    border: '2px solid #0F0F10',
-    boxShadow: '0 2px 0 0 #0F0F10',
+    border: '2px solid var(--ink)',
+    boxShadow: '0 2px 0 0 var(--ink)',
     color,
     cursor: 'pointer',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -797,7 +797,7 @@ const proDotStyle: React.CSSProperties = {
   position: 'absolute', top: 2, right: 2,
   width: 10, height: 10, borderRadius: '50%',
   background: '#FFC233',
-  border: '1.5px solid #0F0F10',
+  border: '1.5px solid var(--ink)',
 };
 
 // Renders a user message — extracts inline `![image](data:...)` and shows thumbnail

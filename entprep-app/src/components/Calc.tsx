@@ -107,8 +107,8 @@ export default function Calc() {
       {/* HERO — dark ink score card */}
       <div style={{
         position: 'relative',
-        background: '#0F0F10',
-        border: '2px solid #0F0F10',
+        background: 'var(--ink)',
+        border: '2px solid var(--ink)',
         borderRadius: 18,
         boxShadow: '0 5px 0 0 ' + COLORS.streak,
         padding: '22px 20px 18px',
@@ -148,7 +148,7 @@ export default function Calc() {
               padding: '5px 11px', borderRadius: 999,
               background: sliderColor,
               fontFamily: FF.display, fontSize: 10, fontWeight: 900,
-              color: sliderColor === COLORS.xp ? '#0F0F10' : '#fff',
+              color: sliderColor === COLORS.xp ? 'var(--ink)' : '#fff',
               letterSpacing: '-0.02em',
               whiteSpace: 'nowrap',
             }}>
@@ -247,26 +247,26 @@ export default function Calc() {
         <div style={{
           padding: '14px 16px', marginBottom: 16,
           background: COLORS.xpSoft,
-          border: '2px solid #0F0F10',
+          border: '2px solid var(--ink)',
           borderRadius: 14,
-          boxShadow: '0 3px 0 0 #0F0F10',
+          boxShadow: '0 3px 0 0 var(--ink)',
           display: 'flex', alignItems: 'center', gap: 12,
         }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{
               fontFamily: FF.display, fontSize: 13, fontWeight: 900,
-              color: '#0F0F10', letterSpacing: '-0.02em', marginBottom: 2,
+              color: 'var(--ink)', letterSpacing: '-0.02em', marginBottom: 2,
             }}>Пройди тест — посчитаем точно</div>
             <div style={{
               fontFamily: "'Nunito',sans-serif", fontSize: 11, fontWeight: 700,
-              color: '#0F0F10', opacity: 0.6,
+              color: 'var(--ink)', opacity: 0.6,
             }}>Пока ставим 80 — можно поменять вручную</div>
           </div>
           <button onClick={goHome} style={{
             flexShrink: 0,
             padding: '8px 14px', borderRadius: 10,
-            background: '#0F0F10', color: '#fff',
-            border: '2px solid #0F0F10',
+            background: 'var(--ink)', color: '#fff',
+            border: '2px solid var(--ink)',
             fontFamily: FF.display, fontSize: 10, fontWeight: 900,
             letterSpacing: '0.06em', textTransform: 'uppercase',
             cursor: 'pointer',
@@ -306,7 +306,7 @@ export default function Calc() {
           style={{
             width: '100%', padding: '12px 38px 12px 38px',
             background: 'var(--bg-card)',
-            border: '2px solid #0F0F10',
+            border: '2px solid var(--ink)',
             borderRadius: 12,
             fontFamily: "'Nunito',sans-serif", fontSize: 13, fontWeight: 600,
             color: 'var(--text)', outline: 'none',
@@ -331,8 +331,8 @@ export default function Calc() {
               padding: '7px 14px', borderRadius: 999,
               fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 800,
               cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
-              border: '1.5px solid #0F0F10',
-              background: active ? '#0F0F10' : 'var(--bg-card)',
+              border: '1.5px solid var(--ink)',
+              background: active ? 'var(--ink)' : 'var(--bg-card)',
               color: active ? '#fff' : 'var(--text)',
               boxShadow: active ? `0 2px 0 0 ${COLORS.streak}` : '0 2px 0 0 rgba(15,15,16,0.18)',
             }}>
@@ -414,7 +414,7 @@ function MatchRow({
       position: 'relative',
       padding: '14px 14px 14px 18px',
       background: 'var(--bg-card)',
-      border: '2px solid #0F0F10',
+      border: '2px solid var(--ink)',
       borderRadius: 14,
       boxShadow: `0 3px 0 0 ${color}`,
       display: 'flex', alignItems: 'center', gap: 12,
@@ -481,9 +481,9 @@ function UniCard({
       position: 'relative',
       padding: '12px 12px 12px 16px',
       background: 'var(--bg-card)',
-      border: '2px solid #0F0F10',
+      border: '2px solid var(--ink)',
       borderRadius: 12,
-      boxShadow: '0 2px 0 0 #0F0F10',
+      boxShadow: '0 2px 0 0 var(--ink)',
       opacity: isLow ? 0.78 : 1,
       overflow: 'hidden',
     }}>

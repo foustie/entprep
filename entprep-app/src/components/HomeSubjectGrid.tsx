@@ -7,7 +7,7 @@ import { Trophy } from 'lucide-react';
 import SubjectIcon from './ui/SubjectIcon';
 import type { SubjectConfig, TestResult } from '../types';
 
-const INK = '#0F0F10';
+const INK = 'var(--ink)';
 
 interface Props {
   mandatory: SubjectConfig[];

@@ -138,7 +138,7 @@ export default function ErrorReview() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '4px 0 18px' }}>
         <div style={{
           width: 40, height: 40, borderRadius: 11,
-          background: '#0F0F10', border: '2px solid #0F0F10',
+          background: 'var(--ink)', border: '2px solid var(--ink)',
           boxShadow: '0 3px 0 0 ' + COLORS.streak,
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           color: '#fff', flexShrink: 0,
@@ -170,8 +170,8 @@ export default function ErrorReview() {
             >
               <div style={{
                 width: 36, height: 36, borderRadius: 9,
-                background: `${SUBJECT_META[g.su]?.color || '#0F0F10'}18`,
-                border: `1.5px solid ${SUBJECT_META[g.su]?.color || '#0F0F10'}`,
+                background: `${SUBJECT_META[g.su]?.color || 'var(--ink)'}18`,
+                border: `1.5px solid ${SUBJECT_META[g.su]?.color || 'var(--ink)'}`,
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0,
               }}>

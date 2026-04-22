@@ -7,6 +7,7 @@ import { useApp } from '../../contexts/AppContext';
 import { useT } from '../../locales/index';
 import { COLORS, FF, FW, SP, TINT } from '../../constants/styles';
 import { getEntCountdown } from '../../config/ent';
+import { trackEvent } from '../../utils/analytics';
 import SendToMomSheet from '../SendToMomSheet';
 
 interface PaywallScreenProps {
@@ -18,11 +19,11 @@ interface PaywallScreenProps {
 const SEASON_URL = 'https://entprep.lemonsqueezy.com/checkout/buy/f2bd4267-eddc-4ba3-9e88-b43eee15dc9a';
 const MONTHLY_URL = 'https://entprep.lemonsqueezy.com/checkout/buy/6dac2860-6f5a-4643-8eee-1981e3441d08';
 
-const INK = '#0F0F10';
+const INK = 'var(--ink)';
 const DEFAULT_GRANT = 122;
 const MAX_SCORE = 140;
 
-function PrimaryCTA({ href, label, sub, onClose }: { href: string; label: string; sub?: string; onClose: () => void }) {
+function PrimaryCTA({ href, label, sub, onClose, onTrackClick }: { href: string; label: string; sub?: string; onClose: () => void; onTrackClick: () => void }) {
   const [pressed, setPressed] = useState(false);
   const base: CSSProperties = {
     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -51,7 +52,7 @@ function PrimaryCTA({ href, label, sub, onClose }: { href: string; label: string
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      onClick={onClose}
+      onClick={() => { onTrackClick(); onClose(); }}
       onMouseDown={() => setPressed(true)}
       onMouseUp={() => setPressed(false)}
       onMouseLeave={() => setPressed(false)}
@@ -109,6 +110,14 @@ export default function PaywallScreen({ trigger, score, onClose }: PaywallScreen
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
 
+  // Track paywall view exactly once per mount — funnel anchor for sales drought analysis
+  const viewTrackedRef = useRef(false);
+  useEffect(() => {
+    if (viewTrackedRef.current) return;
+    viewTrackedRef.current = true;
+    trackEvent('Paywall View', { trigger, hasScore: typeof score === 'number' });
+  }, [trigger, score]);
+
   const email = user?.email ?? '';
   const qs = email ? `?checkout[email]=${encodeURIComponent(email)}` : '';
   const seasonLink = SEASON_URL + qs;
@@ -143,7 +152,7 @@ export default function PaywallScreen({ trigger, score, onClose }: PaywallScreen
   return createPortal(
     <>
       <div
-        onClick={onClose}
+        onClick={() => { trackEvent('Paywall Dismissed', { trigger, via: 'overlay' }); onClose(); }}
         style={{
           position: 'fixed', inset: 0, zIndex: 10001,
           background: 'rgba(15,15,16,0.72)',
@@ -172,7 +181,7 @@ export default function PaywallScreen({ trigger, score, onClose }: PaywallScreen
         >
           {/* Close */}
           <button
-            onClick={onClose}
+            onClick={() => { trackEvent('Paywall Dismissed', { trigger, via: 'close_btn' }); onClose(); }}
             aria-label={t.close}
             style={{
               position: 'absolute', top: 14, right: 14,
@@ -397,6 +406,7 @@ export default function PaywallScreen({ trigger, score, onClose }: PaywallScreen
               label={pw.ctaSeason.replace(/\d.*/, '').trim() || 'Забрать PRO'}
               sub={pw.ctaSeason.match(/\d.+/)?.[0]}
               onClose={onClose}
+              onTrackClick={() => trackEvent('Paywall Checkout Click', { trigger, plan: 'season' })}
             />
           </div>
 
@@ -406,7 +416,7 @@ export default function PaywallScreen({ trigger, score, onClose }: PaywallScreen
               href={monthlyLink}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={onClose}
+              onClick={() => { trackEvent('Paywall Checkout Click', { trigger, plan: 'monthly' }); onClose(); }}
               style={{
                 fontFamily: FF.body,
                 fontSize: 12.5, fontWeight: FW.bold,
@@ -451,7 +461,7 @@ export default function PaywallScreen({ trigger, score, onClose }: PaywallScreen
               </div>
 
               <button
-                onClick={() => setShowMom(true)}
+                onClick={() => { trackEvent('Paywall Send To Mom', { trigger, score: score ?? 0 }); setShowMom(true); }}
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                   width: '100%', height: 46,

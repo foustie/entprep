@@ -169,23 +169,23 @@ export default function Leaderboard() {
           gap: 10,
           padding: '12px 14px',
           background: isMe ? COLORS.streakSoft : 'var(--bg-card)',
-          border: '2px solid #0F0F10',
+          border: '2px solid var(--ink)',
           borderRadius: 12,
-          boxShadow: isMe ? `0 3px 0 0 ${COLORS.streak}` : '0 2px 0 0 #0F0F10',
+          boxShadow: isMe ? `0 3px 0 0 ${COLORS.streak}` : '0 2px 0 0 var(--ink)',
           animation: `fadeIn 0.3s ease ${Math.min((rank - 1) * 0.03, 0.5)}s both`,
         }}
       >
         {/* Rank badge — ink chip */}
         <div style={{
           width: 34, height: 34, borderRadius: 9,
-          background: medal ? medal : '#0F0F10',
-          border: '2px solid #0F0F10',
+          background: medal ? medal : 'var(--ink)',
+          border: '2px solid var(--ink)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           flexShrink: 0,
           color: '#fff',
         }}>
           {rank <= 3 ? (
-            <Medal size={17} color={medal === '#FFD700' ? '#0F0F10' : '#fff'} strokeWidth={2.4} />
+            <Medal size={17} color={medal === '#FFD700' ? 'var(--ink)' : '#fff'} strokeWidth={2.4} />
           ) : (
             <span style={{
               fontFamily: FF.display, fontSize: 13, fontWeight: 900,
@@ -201,7 +201,7 @@ export default function Leaderboard() {
             alt=""
             style={{
               width: 30, height: 30, borderRadius: 8,
-              border: '1.5px solid #0F0F10',
+              border: '1.5px solid var(--ink)',
               flexShrink: 0, objectFit: 'cover',
             }}
           />
@@ -259,12 +259,12 @@ export default function Leaderboard() {
         <div style={{
           width: 40, height: 40, borderRadius: 11,
           background: COLORS.xp,
-          border: '2px solid #0F0F10',
-          boxShadow: '0 3px 0 0 #0F0F10',
+          border: '2px solid var(--ink)',
+          boxShadow: '0 3px 0 0 var(--ink)',
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           flexShrink: 0,
         }}>
-          <Trophy size={20} color="#0F0F10" strokeWidth={2.4} />
+          <Trophy size={20} color='var(--ink)' strokeWidth={2.4} />
         </div>
         <div style={{ minWidth: 0 }}>
           <div style={{

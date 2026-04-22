@@ -15,7 +15,7 @@ import { getGoalProgress } from '../utils/competitionHelpers';
 import { setNickname } from '../utils/socialHelpers';
 import Toggle from './ui/Toggle';
 import ProgressBar from './ui/ProgressBar';
-import { Settings as SettingsIcon, BarChart2, Trash2, Target, Wrench, Trophy, AtSign, Check, Globe, User, BookOpen, Palette, Database, Bell, Shield, Users, GraduationCap, Heart, ExternalLink, Instagram, MessageCircle, Send, Mail } from 'lucide-react';
+import { Settings as SettingsIcon, BarChart2, Trash2, Target, Wrench, Trophy, AtSign, Check, Globe, User, BookOpen, Palette, Database, Bell, Shield, Users, GraduationCap, Heart, ExternalLink, Instagram, MessageCircle, Send, Mail, Sun, Moon } from 'lucide-react';
 import { isPushSupported, getPushPermission, subscribeToPush, unsubscribeFromPush, syncPushPrefs } from '../utils/pushHelpers';
 
 /* ─── Section wrapper — v2 ink-bordered card ─── */
@@ -33,8 +33,8 @@ function Section({ icon, label, children }: { icon: React.ReactNode; label: stri
       <div style={{
         background: 'var(--bg-card)',
         borderRadius: 14,
-        border: '2px solid #0F0F10',
-        boxShadow: '0 3px 0 0 #0F0F10',
+        border: '2px solid var(--ink)',
+        boxShadow: '0 3px 0 0 var(--ink)',
         overflow: 'hidden',
       }}>
         {children}
@@ -112,7 +112,7 @@ export default function Settings() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0 22px' }}>
         <div style={{
           width: 36, height: 36, borderRadius: 10,
-          background: '#0F0F10', border: '2px solid #0F0F10',
+          background: 'var(--ink)', border: '2px solid var(--ink)',
           boxShadow: '0 3px 0 0 ' + COLORS.streak,
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           color: '#fff', flexShrink: 0,
@@ -202,7 +202,7 @@ export default function Settings() {
                       setNickSaving(false);
                     }}
                     disabled={nickSaving || nickInput.trim().length < 3}
-                    style={{ padding: '10px 16px', background: nickInput.trim().length >= 3 ? COLORS.streak : 'var(--bg-subtle-2)', border: nickInput.trim().length >= 3 ? '2px solid #0F0F10' : 'none', borderBottom: nickInput.trim().length >= 3 ? '3px solid #0F0F10' : 'none', borderRadius: 10, color: '#fff', fontSize: 12, fontWeight: 700, cursor: nickInput.trim().length >= 3 ? 'pointer' : 'default', opacity: nickSaving ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 4 }}
+                    style={{ padding: '10px 16px', background: nickInput.trim().length >= 3 ? COLORS.streak : 'var(--bg-subtle-2)', border: nickInput.trim().length >= 3 ? '2px solid var(--ink)' : 'none', borderBottom: nickInput.trim().length >= 3 ? '3px solid var(--ink)' : 'none', borderRadius: 10, color: '#fff', fontSize: 12, fontWeight: 700, cursor: nickInput.trim().length >= 3 ? 'pointer' : 'default', opacity: nickSaving ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 4 }}
                   >
                     <Check size={14} />{nickSaving ? '...' : 'OK'}
                   </button>
@@ -221,7 +221,7 @@ export default function Settings() {
       {/* ════════ APPEARANCE ════════ */}
       <Section icon={<Palette size={11} />} label={t.settings.sectionAppearance || 'Appearance'}>
         {/* Language */}
-        <div style={{ ...ROW_LAST, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ ...ROW, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Globe size={15} color={COLORS.teal} />
             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{t.settings.language}</div>
@@ -232,6 +232,24 @@ export default function Settings() {
                 {l === 'ru' ? 'РУС' : 'ҚАЗ'}
               </button>
             ))}
+          </div>
+        </div>
+        {/* Theme — restored Apr 22 (eye-strain user request) */}
+        <div style={{ ...ROW_LAST, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {st.theme === 'dark' ? <Moon size={15} color={COLORS.teal} /> : <Sun size={15} color={COLORS.teal} />}
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{t.settings.theme || 'Тема'}</div>
+          </div>
+          <div style={{ display: 'flex', gap: 0, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border-md)' }}>
+            {(['light', 'dark'] as const).map(mode => {
+              const active = (st.theme || 'light') === mode;
+              return (
+                <button key={mode} onClick={() => updSt({ ...st, theme: mode })} style={{ padding: '6px 14px', fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer', background: active ? COLORS.teal : 'transparent', color: active ? '#fff' : 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 5, transition: 'all 0.2s' }}>
+                  {mode === 'light' ? <Sun size={11} /> : <Moon size={11} />}
+                  {mode === 'light' ? (t.settings.lightTheme || 'Светлая') : (t.settings.darkTheme || 'Тёмная')}
+                </button>
+              );
+            })}
           </div>
         </div>
       </Section>
@@ -331,7 +349,7 @@ export default function Settings() {
                 <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 4 }}>{t.settings.entDate}</div>
                 <input type="date" value={goalDate} onChange={e => setGoalDate(e.target.value)} style={{ display: 'block', width: '100%', boxSizing: 'border-box', padding: '8px 10px', background: 'var(--bg-subtle-2)', border: '1px solid var(--border-stronger)', borderRadius: 8, color: 'var(--text)', fontSize: 13, fontFamily: 'inherit', colorScheme: 'var(--color-scheme)', margin: 0, WebkitAppearance: 'none', appearance: 'none' }} />
               </div>
-              <button onClick={() => { updSt({ ...st, goal: { target: goalTarget, date: goalDate } }); setEditGoal(false); }} disabled={!goalDate} style={{ width: '100%', padding: '10px', background: goalDate ? COLORS.xp : 'var(--bg-subtle-2)', border: goalDate ? '2px solid #0F0F10' : 'none', borderBottom: goalDate ? '3px solid #0F0F10' : 'none', borderRadius: 10, color: goalDate ? '#0F0F10' : 'var(--text-muted)', fontSize: 12, fontWeight: 700, cursor: goalDate ? 'pointer' : 'default' }}>
+              <button onClick={() => { updSt({ ...st, goal: { target: goalTarget, date: goalDate } }); setEditGoal(false); }} disabled={!goalDate} style={{ width: '100%', padding: '10px', background: goalDate ? COLORS.xp : 'var(--bg-subtle-2)', border: goalDate ? '2px solid var(--ink)' : 'none', borderBottom: goalDate ? '3px solid var(--ink)' : 'none', borderRadius: 10, color: goalDate ? 'var(--ink)' : 'var(--text-muted)', fontSize: 12, fontWeight: 700, cursor: goalDate ? 'pointer' : 'default' }}>
                 {t.settings.saveGoal}
               </button>
             </div>
@@ -444,8 +462,8 @@ export default function Settings() {
         <div style={{ ...ROW, display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{
             width: 42, height: 42, borderRadius: 12,
-            background: COLORS.streak, border: '2px solid #0F0F10',
-            boxShadow: '0 2px 0 0 #0F0F10',
+            background: COLORS.streak, border: '2px solid var(--ink)',
+            boxShadow: '0 2px 0 0 var(--ink)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: '#fff', fontWeight: 800, fontSize: 17, fontFamily: FF.display,
             flexShrink: 0,
@@ -463,8 +481,8 @@ export default function Settings() {
           { icon: MessageCircle, color: '#25D366', label: 'WhatsApp', sub: '+7 747 356 4629', href: 'https://wa.me/77473564629?text=' + encodeURIComponent('Привет, Дияр! Пишу с ENTprep') },
           { icon: Send, color: '#0088CC', label: 'Telegram', sub: '@foustie', href: 'https://t.me/foustie' },
           { icon: Instagram, color: '#E1306C', label: 'Instagram', sub: '@diyarbuilds', href: 'https://instagram.com/diyarbuilds' },
-          { icon: AtSign, color: '#0F0F10', label: 'TikTok', sub: '@diyarbuilds', href: 'https://tiktok.com/@diyarbuilds' },
-          { icon: Mail, color: '#0F0F10', label: t.settings.contactEmail, sub: 'dzakpelov@gmail.com', href: 'mailto:dzakpelov@gmail.com', last: true },
+          { icon: AtSign, color: 'var(--ink)', label: 'TikTok', sub: '@diyarbuilds', href: 'https://tiktok.com/@diyarbuilds' },
+          { icon: Mail, color: 'var(--ink)', label: t.settings.contactEmail, sub: 'dzakpelov@gmail.com', href: 'mailto:dzakpelov@gmail.com', last: true },
         ].map((item, i, arr) => (
           <a
             key={item.label}

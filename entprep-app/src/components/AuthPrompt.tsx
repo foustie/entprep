@@ -1,11 +1,43 @@
-import { useState } from 'react';
-import { Cloud, Swords, Trophy, Flame } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Cloud, Swords, Trophy, Flame, AlertTriangle, Copy, ExternalLink } from 'lucide-react';
 import { supabase } from '../config/supabase';
 import { COLORS, FF } from '../constants/styles';
 import { useT } from '../locales';
 import { useToast } from '../contexts/ToastContext';
 import { Capacitor, registerPlugin } from '@capacitor/core';
 import type { LucideIcon } from 'lucide-react';
+
+/**
+ * Detect in-app browsers (WhatsApp, Instagram, TikTok, Facebook, etc).
+ * Google OAuth policy since 2021 blocks embedded WebViews — button silently fails.
+ * UA signatures below cover the top KZ social entry points for ENTprep.
+ */
+function isInAppBrowser(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent;
+  const lua = ua.toLowerCase();
+  // Native app = capacitor runs OAuth via Browser plugin, not WebView — skip warning
+  if (Capacitor.isNativePlatform()) return false;
+  return (
+    /\bwv\b/i.test(ua) ||                           // Android WebView
+    /whatsapp/i.test(lua) ||
+    /instagram/i.test(lua) ||
+    /\bfban\b|\bfbav\b|\bfb_iab\b/i.test(lua) ||     // Facebook, Messenger
+    /musical_ly|bytedance|tiktok/i.test(lua) ||
+    /line\//i.test(ua) ||
+    /twitter/i.test(lua) ||
+    /micromessenger/i.test(lua) ||                    // WeChat
+    (/telegram/i.test(lua) && /android/i.test(lua))  // Telegram iOS uses SFSafariViewController (OK)
+  );
+}
+
+function detectMobileOs(): 'ios' | 'android' | 'other' {
+  if (typeof navigator === 'undefined') return 'other';
+  const ua = navigator.userAgent.toLowerCase();
+  if (/iphone|ipad|ipod/.test(ua)) return 'ios';
+  if (/android/.test(ua)) return 'android';
+  return 'other';
+}
 
 interface AppleSignInPlugin {
   authorize(options: { nonce: string }): Promise<{
@@ -54,6 +86,8 @@ export default function AuthPrompt({ onFinish }: AuthPromptProps) {
   const t = useT();
   const toast = useToast();
   const [loading, setLoading] = useState<'google' | 'apple' | null>(null);
+  const inApp = useMemo(() => isInAppBrowser(), []);
+  const os = useMemo(() => detectMobileOs(), []);
 
   const benefitTexts = [
     t.authPrompt.benefit1,
@@ -61,6 +95,33 @@ export default function AuthPrompt({ onFinish }: AuthPromptProps) {
     t.authPrompt.benefit3,
     t.authPrompt.benefit4,
   ];
+
+  const copyShareLink = async () => {
+    const url = window.location.href || 'https://entprep.org';
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.info(t.authPrompt.linkCopied);
+      return;
+    } catch {}
+    // Fallback for browsers without clipboard API (in-app WebViews often lack it)
+    const ta = document.createElement('textarea');
+    ta.value = url;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch {}
+    document.body.removeChild(ta);
+    if (ok) toast.info(t.authPrompt.linkCopied);
+    else toast.error(url);
+  };
+
+  const openInChrome = () => {
+    const hrefWithoutScheme = (window.location.href || 'https://entprep.org').replace(/^https?:\/\//, '');
+    // Android Chrome intent — preserves path/query (ref codes, deep links) when opening in Chrome
+    window.location.href = `intent://${hrefWithoutScheme}#Intent;scheme=https;package=com.android.chrome;end`;
+  };
 
   const signInWith = async (provider: 'google' | 'apple') => {
     if (!supabase) return;
@@ -134,16 +195,16 @@ export default function AuthPrompt({ onFinish }: AuthPromptProps) {
           fontSize: 22, fontWeight: 900, fontFamily: FF.display,
           letterSpacing: '-0.04em',
         }}>
-          <span style={{ color: '#0F0F10' }}>ENT</span><span style={{ color: COLORS.streak }}>prep.</span>
+          <span style={{ color: 'var(--ink)' }}>ENT</span><span style={{ color: COLORS.streak }}>prep.</span>
         </div>
       </div>
 
       {/* Main card — ink-bordered with 3D shadow */}
       <div style={{
         background: 'var(--bg-card)',
-        border: '2px solid #0F0F10',
+        border: '2px solid var(--ink)',
         borderRadius: 18,
-        boxShadow: '0 5px 0 0 #0F0F10',
+        boxShadow: '0 5px 0 0 var(--ink)',
         padding: '28px 22px 26px',
         marginBottom: 22,
         animation: 'heroEnter 0.45s cubic-bezier(0.16,1,0.3,1) both',
@@ -193,6 +254,78 @@ export default function AuthPrompt({ onFinish }: AuthPromptProps) {
           ))}
         </div>
 
+        {/* In-app browser warning — Google OAuth blocked by policy in WhatsApp/Instagram/TikTok/etc */}
+        {inApp && (
+          <div style={{
+            background: `${COLORS.streak}14`,
+            border: `2px solid ${COLORS.streak}`,
+            borderRadius: 12,
+            padding: '12px 13px',
+            marginBottom: 14,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 10,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+              <div style={{
+                width: 26, height: 26, borderRadius: 7, flexShrink: 0,
+                background: COLORS.streak,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <AlertTriangle size={15} color="#fff" strokeWidth={2.5} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{
+                  fontFamily: FF.display, fontSize: 13, fontWeight: 900,
+                  color: 'var(--ink)', marginBottom: 3, lineHeight: 1.2,
+                }}>{t.authPrompt.inAppWarningTitle}</div>
+                <div style={{
+                  fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 600,
+                  color: 'var(--ink)CC', lineHeight: 1.35,
+                }}>{t.authPrompt.inAppWarningText}</div>
+              </div>
+            </div>
+            <div style={{
+              fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 700,
+              color: 'var(--ink)BB', lineHeight: 1.35, paddingLeft: 36,
+            }}>
+              {os === 'ios' ? t.authPrompt.inAppTipIos : t.authPrompt.inAppTipAndroid}
+            </div>
+            <div style={{ display: 'flex', gap: 8, paddingLeft: 36 }}>
+              <button
+                onClick={copyShareLink}
+                style={{
+                  flex: 1, padding: '9px 10px',
+                  background: '#fff', border: '1.5px solid var(--ink)',
+                  borderRadius: 9, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  fontFamily: "'Nunito',sans-serif", fontSize: 11, fontWeight: 800,
+                  color: 'var(--ink)',
+                }}
+              >
+                <Copy size={12} strokeWidth={2.4} />
+                {t.authPrompt.copyLink}
+              </button>
+              {os === 'android' && (
+                <button
+                  onClick={openInChrome}
+                  style={{
+                    flex: 1, padding: '9px 10px',
+                    background: 'var(--ink)', border: '1.5px solid var(--ink)',
+                    borderRadius: 9, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                    fontFamily: "'Nunito',sans-serif", fontSize: 11, fontWeight: 800,
+                    color: '#fff',
+                  }}
+                >
+                  <ExternalLink size={12} strokeWidth={2.4} />
+                  {t.authPrompt.openInChrome}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Google button — ink border + shadow */}
         <button
           onClick={() => signInWith('google')}
@@ -200,13 +333,13 @@ export default function AuthPrompt({ onFinish }: AuthPromptProps) {
           style={{
             width: '100%', padding: '13px 18px',
             background: '#fff',
-            border: '2px solid #0F0F10',
+            border: '2px solid var(--ink)',
             borderRadius: 12,
-            boxShadow: '0 3px 0 0 #0F0F10',
+            boxShadow: '0 3px 0 0 var(--ink)',
             cursor: loading ? 'wait' : 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
             fontFamily: "'Nunito',sans-serif", fontSize: 14, fontWeight: 800,
-            color: '#0F0F10',
+            color: 'var(--ink)',
             opacity: loading ? 0.6 : 1,
             marginBottom: 10,
           }}
@@ -237,8 +370,8 @@ export default function AuthPrompt({ onFinish }: AuthPromptProps) {
           disabled={!!loading}
           style={{
             width: '100%', padding: '13px 18px',
-            background: '#0F0F10',
-            border: '2px solid #0F0F10',
+            background: 'var(--ink)',
+            border: '2px solid var(--ink)',
             borderRadius: 12,
             boxShadow: '0 3px 0 0 ' + COLORS.streak,
             cursor: loading ? 'wait' : 'pointer',

@@ -646,6 +646,7 @@ const ru = {
   auth: {
     photoUpdated: 'Фото обновлено',
     photoError: 'Ошибка загрузки фото',
+    photoPartial: 'Фото обновлено. В рейтинге и у друзей появится позже',
     user: 'Пользователь',
     syncOn: 'Синхронизация вкл.',
     syncFailed: 'Синхронизация не удалась. Данные сохранены локально.',
@@ -667,6 +668,13 @@ const ru = {
     freeAndFast: 'Бесплатно. Занимает 5 секунд.',
     connecting: 'Подключение...',
     later: 'Позже',
+    inAppWarningTitle: 'Google не работает в этом браузере',
+    inAppWarningText: 'WhatsApp, Instagram и TikTok блокируют вход через Google. Открой entprep.org в Chrome или Safari — там всё сработает.',
+    copyLink: 'Скопировать ссылку',
+    linkCopied: 'Ссылка скопирована',
+    openInChrome: 'Открыть в Chrome',
+    inAppTipIos: 'iPhone: нажми ••• внизу справа → «Открыть в Safari»',
+    inAppTipAndroid: 'Android: нажми ⋮ в углу → «Открыть в браузере»',
   },
 
   // ── Onboarding ──────────────────────────────────────────────────────

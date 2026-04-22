@@ -65,8 +65,8 @@ export default function HomeNavCards() {
         ...CARD_COMPACT,
         display: 'flex', alignItems: 'center', width: '100%',
         background: COLORS.streak,
-        border: '2px solid #0F0F10',
-        borderBottom: '4px solid #0F0F10',
+        border: '2px solid var(--ink)',
+        borderBottom: '4px solid var(--ink)',
         padding: '14px 14px',
         cursor: 'pointer', textAlign: 'left',
       }}>

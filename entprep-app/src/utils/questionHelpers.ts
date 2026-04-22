@@ -85,11 +85,15 @@ function assembleRegularMix(source: Question[], n: number, shuffle: boolean): Qu
 /**
  * Sample questions balanced by topic and difficulty.
  * ENT spec: 50% easy, 30% medium, 20% hard. Even across topics.
+ *
+ * Granularity priority: _subtopic (matches official ENT spec topic IDs, 12-55 per subject)
+ * → _topic (section-level fallback, 3-13 per subject) → '_' bucket.
+ * Audited Apr 22: 95-100% _subtopic coverage in CDN data, IDs match spec for 8/10 subjects.
  */
 function balancedSample(source: Question[], n: number, shuffle: boolean): Question[] {
-  // Group by topic
+  // Group by subtopic when available (ENT spec granularity), fall back to section, then catch-all
   const byTopic: Record<string, Question[]> = {};
-  for (const q of source) (byTopic[q._topic || '_'] ||= []).push(q);
+  for (const q of source) (byTopic[q._subtopic || q._topic || '_'] ||= []).push(q);
   const topicKeys = Object.keys(byTopic);
 
   // If only 1 topic or very few questions, just shuffle

@@ -2,7 +2,7 @@ import React, { Suspense, useEffect, useRef, useState } from "react";
 import { TOTAL_Q } from './config/questionPools';
 import { prefetchCounts, getTotalQ, prefetchSubjects } from './utils/questionStore';
 import { GLOBAL_STYLES, LAYOUT, COLORS, FF } from './constants/styles';
-import { LIGHT, themeToCss } from './constants/themes';
+import { LIGHT, DARK, themeToCss } from './constants/themes';
 import { SCREENS } from './constants/screens';
 import { useBreakpoint } from './hooks/useBreakpoint';
 import { AuthProvider } from './contexts/AuthContext';
@@ -89,7 +89,8 @@ function AppContent() {
   const bp = useBreakpoint();
   const isDesktop = bp === 'desktop';
 
-  const palette = LIGHT;
+  const isDark = st.theme === 'dark';
+  const palette = isDark ? DARK : LIGHT;
 
   useEffect(() => {
     const splash = document.getElementById('splash');
@@ -177,7 +178,7 @@ function AppContent() {
   const needProfile = prof.length === 0 && screen !== SCREENS.PROFILE;
   const showNav = !needProfile && screen !== SCREENS.TEST && screen !== SCREENS.FULL_ENT && screen !== SCREENS.PROFILE && screen !== SCREENS.SUBJECT && screen !== SCREENS.ERROR_REVIEW && screen !== SCREENS.ADMIN && screen !== SCREENS.CHALLENGE && screen !== SCREENS.LEADERBOARD && screen !== SCREENS.FRIENDS && screen !== SCREENS.DUEL && screen !== SCREENS.REVIEW && screen !== SCREENS.TEACHER && !showOnboarding && !showAuthPrompt;
 
-  const { user, isPremium } = useAuth();
+  const { user, isPremium, needsNickname } = useAuth();
 
   // PRO welcome toast — show once when user first becomes premium
   useEffect(() => {
@@ -187,6 +188,28 @@ function AppContent() {
     localStorage.setItem(key, '1');
     toast.success('Спасибо за подписку! PRO активирован');
   }, [isPremium, toast]);
+
+  // Nickname nudge — show once per user after first sign-in when still on default user_xxx.
+  // Without this, new users never learn they have an auto-generated ник — Leaderboard/Duel/Friends
+  // all show "user_abcd1234" until they explicitly open Settings.
+  useEffect(() => {
+    if (!user || !needsNickname) return;
+    const key = `entprep_nickname_nudged_${user.id}`;
+    if (localStorage.getItem(key)) return;
+    const msg = tr.settings.chooseNickname || 'Выбери ник — его видят в рейтинге';
+    try {
+      toast.info(msg, {
+        duration: 8000,
+        action: () => nav('settings'),
+        actionLabel: tr.tabs.settings || 'Настройки',
+      });
+      // Only set guard AFTER toast succeeds — if ToastProvider isn't mounted
+      // or throws, we retry on the next render cycle instead of burning the flag.
+      localStorage.setItem(key, '1');
+    } catch (err) {
+      console.warn('Nickname nudge toast failed:', err);
+    }
+  }, [user, needsNickname, toast, tr, nav]);
 
   // Handle referral + UTM tracking after user signs in
   const refClaimedRef = useRef(false);

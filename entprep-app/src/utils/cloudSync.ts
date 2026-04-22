@@ -13,21 +13,40 @@ interface CloudData {
   srCards?: SRCard[];
 }
 
-export async function cloudLoad(userId: string): Promise<CloudData | null> {
-  if (!supabase) return null;
-  const { data, error } = await supabase
-    .from('user_data')
-    .select('hist, prof, st')
-    .eq('id', userId)
-    .single();
-  if (error && error.code === 'PGRST116') return null;
-  if (error) { captureError(error, { context: 'cloudLoad' }); return null; }
-  const raw = data as { hist: TestResult[]; prof: string[]; st: Settings & { srCards?: SRCard[] } };
-  // Unpack srCards from st field
-  const srCards = raw.st?.srCards || [];
-  const st = { ...raw.st };
-  delete (st as Record<string, unknown>).srCards;
-  return { hist: raw.hist, prof: raw.prof, st, srCards };
+export type CloudLoadResult =
+  | { status: 'ok'; data: CloudData }
+  | { status: 'empty' } // user has no cloud record yet (first-time signin)
+  | { status: 'failed'; error: string }; // network / 503 / RLS — MUST NOT overwrite cloud with local
+
+/**
+ * Load cloud user_data with retry. Distinguishes "no data" (PGRST116) from network/503 failure.
+ * CRITICAL: callers MUST check status === 'failed' and skip cloudSave, otherwise a
+ * new device with empty local state will wipe existing cloud data on sync.
+ */
+export async function cloudLoad(userId: string): Promise<CloudLoadResult> {
+  if (!supabase) return { status: 'failed', error: 'no supabase' };
+  let lastErr: { message?: string; code?: string } | null = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const { data, error } = await supabase
+      .from('user_data')
+      .select('hist, prof, st')
+      .eq('id', userId)
+      .single();
+    if (error && error.code === 'PGRST116') return { status: 'empty' };
+    if (error) {
+      lastErr = error;
+      if (attempt < 2) await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
+      continue;
+    }
+    const raw = data as { hist: TestResult[]; prof: string[]; st: Settings & { srCards?: SRCard[] } };
+    const srCards = raw.st?.srCards || [];
+    const st = { ...raw.st };
+    delete (st as Record<string, unknown>).srCards;
+    return { status: 'ok', data: { hist: raw.hist, prof: raw.prof, st, srCards } };
+  }
+  const errMsg = lastErr?.message || 'cloudLoad failed';
+  captureError(new Error(errMsg), { context: 'cloudLoad.failedAll3Attempts', userId, code: lastErr?.code });
+  return { status: 'failed', error: lastErr?.message || 'cloudLoad failed after 3 attempts' };
 }
 
 export async function cloudSave(userId: string, { hist, prof, st, srCards }: CloudData): Promise<{ ok: boolean; error?: string }> {

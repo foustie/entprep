@@ -440,8 +440,8 @@ export default function Progress() {
       <div style={{
         width: 42, height: 42, borderRadius: 12,
         background: COLORS.win,
-        border: '2px solid #0F0F10',
-        boxShadow: '0 3px 0 0 #0F0F10',
+        border: '2px solid var(--ink)',
+        boxShadow: '0 3px 0 0 var(--ink)',
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
         color: '#fff', flexShrink: 0,
       }}>
@@ -479,9 +479,9 @@ export default function Progress() {
               position: 'relative',
               padding: '14px 14px 12px 16px',
               background: 'var(--bg-card)',
-              border: '2px solid #0F0F10',
+              border: '2px solid var(--ink)',
               borderRadius: 12,
-              boxShadow: '0 3px 0 0 #0F0F10',
+              boxShadow: '0 3px 0 0 var(--ink)',
               overflow: 'hidden',
             }}>
               <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 4, background: clr }} />
@@ -584,7 +584,7 @@ export default function Progress() {
               <div key={`fe${i}`} style={{
                 padding: '14px 14px 12px',
                 background: 'var(--bg-card)',
-                border: '2px solid #0F0F10',
+                border: '2px solid var(--ink)',
                 borderRadius: 12,
                 boxShadow: `0 3px 0 0 ${scColor}`,
                 marginBottom: 8,
@@ -672,7 +672,7 @@ export default function Progress() {
               }}>{t.progress.noResultsFound}</div>
             : <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {filteredHist.slice(0, 20).map((ti, i) => {
-                  const subColor = SUBJECT_META[ti.su]?.color || '#0F0F10';
+                  const subColor = SUBJECT_META[ti.su]?.color || 'var(--ink)';
                   const scColor = scoreColor(ti.sc);
                   return (
                     <div key={i} style={{
@@ -680,9 +680,9 @@ export default function Progress() {
                       display: 'flex', alignItems: 'center', gap: 10,
                       padding: '10px 12px 10px 16px',
                       background: 'var(--bg-card)',
-                      border: '2px solid #0F0F10',
+                      border: '2px solid var(--ink)',
                       borderRadius: 10,
-                      boxShadow: '0 2px 0 0 #0F0F10',
+                      boxShadow: '0 2px 0 0 var(--ink)',
                       overflow: 'hidden',
                     }}>
                       <div style={{

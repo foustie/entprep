@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Concept 1: Refined E — asymmetry + integrated period dot as "Edge" serif -->
+  <rect width="512" height="512" rx="112" fill="#0F0F10"/>
+  <!-- Vertical stem slightly taller -->
+  <rect x="140" y="96"  width="56" height="320" rx="12" fill="#FAFAF8"/>
+  <!-- Top bar — extends longer right, ends in wedge -->
+  <path d="M140 96 L360 96 Q380 96 388 112 L372 152 L140 152 Z" fill="#FAFAF8"/>
+  <!-- Middle bar — shorter, with streak DOT as terminator -->
+  <rect x="140" y="228" width="140" height="56" rx="12" fill="#FAFAF8"/>
+  <circle cx="308" cy="256" r="24" fill="#FF5A36"/>
+  <!-- Bottom bar — angled wedge pointing right -->
+  <path d="M140 360 L356 360 Q376 360 368 380 L336 416 L140 416 Z" fill="#FAFAF8"/>
+</svg>

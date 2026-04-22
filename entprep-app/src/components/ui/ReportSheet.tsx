@@ -70,8 +70,8 @@ export default function ReportSheet({ visible, questionText, options, comment, l
               return (
                 <button key={i} onClick={() => onCommentChange(`correct:${i} ${comment}`)} style={{
                   padding: '7px 11px',
-                  background: active ? '#0F0F10' : 'var(--bg-card)',
-                  border: '1.5px solid #0F0F10',
+                  background: active ? 'var(--ink)' : 'var(--bg-card)',
+                  border: '1.5px solid var(--ink)',
                   boxShadow: active ? `0 2px 0 0 ${COLORS.streak}` : '0 2px 0 0 rgba(15,15,16,0.18)',
                   borderRadius: 10,
                   fontFamily: "'Nunito',sans-serif", fontSize: 11.5, fontWeight: 800,
@@ -99,7 +99,7 @@ export default function ReportSheet({ visible, questionText, options, comment, l
         style={{
           width: '100%', padding: '10px 12px',
           background: 'var(--bg-card)',
-          border: '2px solid #0F0F10',
+          border: '2px solid var(--ink)',
           borderRadius: 10,
           color: 'var(--text)',
           fontFamily: "'Nunito',sans-serif", fontSize: 12.5, fontWeight: 600,
@@ -117,8 +117,8 @@ export default function ReportSheet({ visible, questionText, options, comment, l
               display: 'flex', alignItems: 'center', gap: 10,
               padding: '12px 14px',
               background: 'var(--bg-card)',
-              border: '2px solid #0F0F10',
-              boxShadow: '0 2px 0 0 #0F0F10',
+              border: '2px solid var(--ink)',
+              boxShadow: '0 2px 0 0 var(--ink)',
               borderRadius: 10,
               fontFamily: "'Nunito',sans-serif", fontSize: 13, fontWeight: 700,
               color: 'var(--text)',

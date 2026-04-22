@@ -122,7 +122,7 @@ export default function TheorySummary({ sid, topicId }: Props) {
                 style={{
                   flex: 1, padding: '14px', borderRadius: 12,
                   background: sub?.color || COLORS.streak,
-                  color: '#fff', border: '2px solid #0F0F10', borderBottom: '4px solid #0F0F10',
+                  color: '#fff', border: '2px solid var(--ink)', borderBottom: '4px solid var(--ink)',
                   fontSize: 13, fontWeight: 700,
                   cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 }}

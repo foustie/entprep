@@ -40,9 +40,14 @@ export interface Question {
   px_kk?: string;
 }
 
-/** Get the question type, defaulting to 'single' for legacy questions */
+/** Get the question type, defaulting to 'single' for legacy questions.
+ *  Infers 'matching' from presence of pairs[] — prod data pipeline sometimes
+ *  omits the `type` field on matching questions, which would otherwise cause
+ *  the Test screen to render via the single-choice path (empty q.o = blank screen). */
 export function getQType(q: Question): QuestionType {
-  return q.type || 'single';
+  if (q.type) return q.type;
+  if (Array.isArray(q.pairs) && q.pairs.length > 0) return 'matching';
+  return 'single';
 }
 
 /** Get the correct answer index for single-choice questions (backward compat) */
@@ -97,6 +102,7 @@ export interface Settings {
   exp: boolean;
   tmr: boolean;
   shf: boolean;
+  theme?: 'light' | 'dark';  // UI theme — restored Apr 22 after eye-strain user request
   lang?: 'ru' | 'kk';  // UI language: Russian (default) or Kazakh
   goal?: GoalSettings;
   dailyGoal?: number;  // target tests per day (default 3)

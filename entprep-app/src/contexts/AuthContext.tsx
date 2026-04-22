@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '../config/supabase';
 import { setUser as setSentryUser } from '../config/sentry';
 import { getMyProfile } from '../utils/socialHelpers';
@@ -41,14 +41,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Guard against race conditions — onAuthStateChange can fire INITIAL_SESSION →
+  // SIGNED_IN → TOKEN_REFRESHED rapidly. Without a token, 3 parallel retry loops
+  // (9 /api/social requests) fight over setProfile(). Each new refresh cancels
+  // the previous in-flight cycle.
+  const refreshTokenRef = useRef(0);
   const refreshProfile = useCallback(async () => {
     if (!supabase) return;
-    try {
-      const p = await getMyProfile();
-      setProfile(p);
-    } catch (err) {
-      console.error('refreshProfile error:', err);
-      // Profile fetch failed — will retry on next auth change
+    const myToken = ++refreshTokenRef.current;
+    // Retry 2x with exponential backoff — /api/social can 503 under Supabase pool pressure.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const p = await getMyProfile();
+        if (refreshTokenRef.current !== myToken) return; // superseded
+        setProfile(p);
+        return;
+      } catch (err) {
+        if (refreshTokenRef.current !== myToken) return; // superseded
+        if (attempt === 2) {
+          console.error('refreshProfile failed after 3 attempts:', err);
+          return;
+        }
+        await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
+      }
     }
   }, []);
 

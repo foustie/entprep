@@ -326,7 +326,7 @@ export default function Adaptive() {
           {planIsOld ? t.adaptive.planOutdatedDesc : t.adaptive.planDesc}
         </div>
         {planError && <div style={{ fontSize: 12, color: COLORS.red, marginBottom: 10 }}>{planError}</div>}
-        <button onClick={generatePlan} disabled={planLoading} style={{ background: planLoading ? "rgba(255,90,54,0.15)" : COLORS.streak, border: "2px solid #0F0F10", borderBottom: planLoading ? "2px solid #0F0F10" : "4px solid #0F0F10", borderRadius: 12, padding: "12px 24px", color: "#fff", fontSize: 13, fontWeight: 700, cursor: planLoading ? "wait" : "pointer", display: "inline-flex", alignItems: "center", gap: 8, transition: "all 0.2s" }}>
+        <button onClick={generatePlan} disabled={planLoading} style={{ background: planLoading ? "rgba(255,90,54,0.15)" : COLORS.streak, border: "2px solid var(--ink)", borderBottom: planLoading ? "2px solid var(--ink)" : "4px solid var(--ink)", borderRadius: 12, padding: "12px 24px", color: "#fff", fontSize: 13, fontWeight: 700, cursor: planLoading ? "wait" : "pointer", display: "inline-flex", alignItems: "center", gap: 8, transition: "all 0.2s" }}>
           {planLoading ? <><Loader size={16} style={{ animation: "spin 1s linear infinite" }} /> {t.adaptive.generating}</> : <><Sparkles size={16} />{' '}{planIsOld ? t.adaptive.refreshPlan : t.adaptive.createPlan}</>}
         </button>
         {planLoading && (() => {

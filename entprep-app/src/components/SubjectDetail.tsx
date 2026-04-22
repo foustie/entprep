@@ -107,7 +107,7 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
         <div style={{
           width: 56, height: 56, borderRadius: 14,
           background: 'var(--bg-card)',
-          border: `2px solid #0F0F10`,
+          border: `2px solid var(--ink)`,
           boxShadow: `0 3px 0 0 ${sub.color}`,
           display: "flex", alignItems: "center", justifyContent: "center",
           flexShrink: 0,
@@ -205,9 +205,9 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
                 display: "flex", alignItems: "stretch",
                 width: "100%",
                 background: 'var(--bg-card)',
-                border: `2px solid #0F0F10`,
+                border: `2px solid var(--ink)`,
                 borderRadius: 14,
-                boxShadow: '0 3px 0 0 #0F0F10',
+                boxShadow: '0 3px 0 0 var(--ink)',
                 overflow: 'hidden',
               }}>
                 {/* Subject-colored side stripe */}
@@ -397,13 +397,13 @@ function ActionRow({
         display: 'flex', alignItems: 'center', gap: 12,
         padding: '12px 14px',
         background: 'var(--bg-card)',
-        border: '2px solid #0F0F10',
+        border: '2px solid var(--ink)',
         borderRadius: 14,
         cursor: disabled ? 'wait' : 'pointer',
         textAlign: 'left',
         width: '100%',
         transition: 'transform 80ms, box-shadow 80ms',
-        boxShadow: pressed ? '0 1px 0 0 #0F0F10' : '0 4px 0 0 #0F0F10',
+        boxShadow: pressed ? '0 1px 0 0 var(--ink)' : '0 4px 0 0 var(--ink)',
         transform: pressed ? 'translateY(3px)' : 'none',
         opacity: disabled ? 0.6 : 1,
       }}
@@ -412,7 +412,7 @@ function ActionRow({
         flexShrink: 0,
         width: 42, height: 42, borderRadius: 12,
         background: iconBg,
-        border: `2px solid #0F0F10`,
+        border: `2px solid var(--ink)`,
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
       }}>
         {icon}

@@ -5,7 +5,7 @@ import { COLORS, FF, FW, SP } from '../constants/styles';
 import { useT } from '../locales';
 import { TOTAL_Q } from '../config/questionPools';
 
-const INK = '#0F0F10';
+const INK = 'var(--ink)';
 
 interface SlideSpec {
   Icon: ComponentType<{ size?: number; strokeWidth?: number; color?: string }>;

@@ -1,5 +1,52 @@
 import type { ThemePalette } from '../types/index';
 
+// Restored Apr 22 after eye-strain (астенопия) user request.
+// Strategy: ink stays #0F0F10 (text on light splash cards must remain dark/readable);
+// bg-card is significantly LIGHTER than page bg so dark ink borders/shadows read via contrast.
+export const DARK: ThemePalette = {
+  bg: 'radial-gradient(ellipse at 50% 0%, #16161E 0%, #0B0B12 60%)',
+  'bg-card': '#22222E',                          // solid, ~40% lighter than bg → dark ink border visible
+  'bg-header': 'rgba(11,11,18,0.92)',
+  'bg-footer': 'rgba(11,11,18,0.95)',
+  'bg-hero': 'linear-gradient(135deg,rgba(30,24,18,0.8),rgba(24,20,16,0.8),rgba(20,28,26,0.6))',
+  'bg-modal': 'linear-gradient(180deg,#1E1E2A,#0B0B12)',
+  'bg-sheet': '#1B1B26',
+  'bg-prompt': 'rgba(28,28,42,0.9)',
+  'bg-overlay': 'rgba(0,0,0,0.7)',
+  'bg-overlay-light': 'rgba(0,0,0,0.5)',
+  'bg-elevated': '#262632',
+  'bg-subtle': 'rgba(255,255,255,0.05)',
+  'bg-subtle-2': 'rgba(255,255,255,0.08)',
+  'bg-option': 'rgba(255,255,255,0.04)',
+  'bg-disabled': 'rgba(36,36,52,0.6)',
+  'bg-card-dim': 'rgba(34,34,46,0.45)',
+  text: '#F5F2EA',
+  'text-body': '#E2E0D6',
+  'text-secondary': '#A8AAB4',
+  'text-muted': '#7B7D87',
+  'text-dim': '#5A5C66',
+  'text-light': '#CDCFD7',
+  border: 'rgba(255,255,255,0.1)',
+  'border-light': 'rgba(255,255,255,0.07)',
+  'border-md': 'rgba(255,255,255,0.13)',
+  'border-strong': 'rgba(255,255,255,0.16)',
+  'border-stronger': 'rgba(255,255,255,0.2)',
+  'scroll-thumb': 'rgba(255,255,255,0.1)',
+  'spinner-track': 'rgba(255,255,255,0.1)',
+  'toggle-off': 'rgba(255,255,255,0.1)',
+  'sheet-handle': 'rgba(255,255,255,0.18)',
+  'skeleton-bg': 'rgba(255,255,255,0.07)',
+  'shadow-sm': '0 2px 8px rgba(0,0,0,0.4)',
+  'shadow-md': '0 4px 16px rgba(0,0,0,0.5)',
+  'shadow-glow': '0 4px 16px rgba(255,90,54,0.18)',
+  'color-scheme': 'dark',
+  'theme-color': '#0B0B12',
+  // KEEP DARK to preserve readability of text/icons placed on bright splash cards
+  // (xpSoft/streakSoft/winSoft hero panels remain coloured even in dark theme).
+  ink: '#0F0F10',
+  'ink-soft': 'rgba(15,15,16,0.7)',
+};
+
 export const LIGHT: ThemePalette = {
   bg: 'radial-gradient(ellipse at 50% 0%, #FBF7EE 0%, #F2ECDE 60%)',
   'bg-card': 'rgba(255,255,255,0.96)',
@@ -38,6 +85,8 @@ export const LIGHT: ThemePalette = {
   'shadow-glow': '0 4px 16px rgba(255,90,54,0.06)',
   'color-scheme': 'light',
   'theme-color': '#FAFAF8',
+  ink: '#0F0F10',
+  'ink-soft': 'rgba(15,15,16,0.7)',
 };
 
 export function themeToCss(palette: ThemePalette): string {

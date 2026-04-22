@@ -280,18 +280,18 @@ export default function FullENT({ finish }: FullENTProps) {
       <div style={{
         position: 'relative',
         background: COLORS.xpSoft,
-        border: '2px solid #0F0F10',
+        border: '2px solid var(--ink)',
         borderRadius: 22,
         padding: "28px 20px 22px",
         textAlign: "center",
         marginBottom: 18,
-        boxShadow: '0 6px 0 0 #0F0F10',
+        boxShadow: '0 6px 0 0 var(--ink)',
         overflow: 'hidden',
         animation: 'heroEnter 0.55s cubic-bezier(0.16,1,0.3,1) both',
       }}>
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(#0F0F10 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(var(--ink) 1px, transparent 1px)',
           backgroundSize: '22px 22px',
           opacity: 0.045,
           pointerEvents: 'none',
@@ -300,21 +300,21 @@ export default function FullENT({ finish }: FullENTProps) {
           <div style={{
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
             width: 56, height: 56, borderRadius: 16,
-            background: '#0F0F10', color: COLORS.xp,
-            border: '2px solid #0F0F10',
+            background: 'var(--ink)', color: COLORS.xp,
+            border: '2px solid var(--ink)',
             boxShadow: '0 4px 0 0 #FF5A36',
             marginBottom: 14,
           }}>
             <GraduationCap size={28} strokeWidth={2.2} />
           </div>
           <h1 style={{
-            ...TYPE.h1, fontSize: 26, marginBottom: 6, color: '#0F0F10',
+            ...TYPE.h1, fontSize: 26, marginBottom: 6, color: 'var(--ink)',
             fontFamily: FF.display, fontWeight: 900,
             letterSpacing: '-0.035em',
           }}>{t.fullent.title}</h1>
           <p style={{
             fontFamily: "'Nunito',sans-serif", fontSize: 13.5, fontWeight: 700,
-            color: '#0F0F10', opacity: 0.65, margin: 0, lineHeight: 1.45,
+            color: 'var(--ink)', opacity: 0.65, margin: 0, lineHeight: 1.45,
           }}>{t.fullent.subtitle}</p>
 
           {/* Spec chips row */}
@@ -332,14 +332,14 @@ export default function FullENT({ finish }: FullENTProps) {
                 display: 'inline-flex', alignItems: 'baseline', gap: 4,
                 padding: '5px 10px', borderRadius: 999,
                 background: 'rgba(255,255,255,0.7)',
-                border: '1.5px solid #0F0F10',
+                border: '1.5px solid var(--ink)',
                 fontFamily: FF.display,
               }}>
-                <span style={{ fontSize: 12, fontWeight: 900, color: '#0F0F10', fontVariantNumeric: 'tabular-nums' }}>{s.n}</span>
+                <span style={{ fontSize: 12, fontWeight: 900, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' }}>{s.n}</span>
                 <span style={{
                   fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 700,
                   letterSpacing: '0.08em', textTransform: 'uppercase',
-                  color: '#0F0F10', opacity: 0.55,
+                  color: 'var(--ink)', opacity: 0.55,
                 }}>{s.l}</span>
               </div>
             ))}
@@ -356,15 +356,15 @@ export default function FullENT({ finish }: FullENTProps) {
       <div style={{ display: "grid", gridTemplateColumns: bp === 'mobile' ? '1fr' : 'repeat(2, 1fr)', gap: 8, marginBottom: 18 }}>
         {sections.map((s, i) => {
           const isProfile = s.cnt === ENT_CONFIG.profileCnt;
-          const subColor = SUBJECT_META[s.sid]?.color || '#0F0F10';
+          const subColor = SUBJECT_META[s.sid]?.color || 'var(--ink)';
           return (
           <div key={i} style={{
             display: 'flex', alignItems: 'center', gap: 12,
             padding: '12px 14px',
             background: 'var(--bg-card)',
-            border: '2px solid #0F0F10',
+            border: '2px solid var(--ink)',
             borderRadius: 14,
-            boxShadow: '0 3px 0 0 #0F0F10',
+            boxShadow: '0 3px 0 0 var(--ink)',
           }}>
             <div style={{
               width: 40, height: 40, borderRadius: 10,
@@ -397,11 +397,11 @@ export default function FullENT({ finish }: FullENTProps) {
       {/* Warning card */}
       <div style={{
         background: COLORS.streakSoft,
-        border: '2px solid #0F0F10',
+        border: '2px solid var(--ink)',
         borderRadius: 14,
         padding: "12px 14px",
         marginBottom: 18,
-        boxShadow: '0 3px 0 0 #0F0F10',
+        boxShadow: '0 3px 0 0 var(--ink)',
       }}>
         <div style={{
           display: "flex", alignItems: "center", gap: 6,
@@ -430,8 +430,8 @@ export default function FullENT({ finish }: FullENTProps) {
         width: "100%", padding: "16px",
         background: COLORS.streak,
         color: "#fff",
-        border: "2px solid #0F0F10",
-        borderBottom: "5px solid #0F0F10",
+        border: "2px solid var(--ink)",
+        borderBottom: "5px solid var(--ink)",
         borderRadius: 14,
         fontFamily: FF.display,
         fontSize: 14, fontWeight: 900, letterSpacing: '0.05em', textTransform: 'uppercase',
@@ -455,18 +455,18 @@ export default function FullENT({ finish }: FullENTProps) {
         <div style={{
           position: 'relative',
           background: totalPts >= 122 ? '#B8ECC8' : totalPts >= 85 ? COLORS.xpSoft : COLORS.streakSoft,
-          border: '2px solid #0F0F10',
+          border: '2px solid var(--ink)',
           borderRadius: 22,
           padding: "28px 20px 22px",
           textAlign: "center",
           marginBottom: 18,
-          boxShadow: '0 6px 0 0 #0F0F10',
+          boxShadow: '0 6px 0 0 var(--ink)',
           overflow: 'hidden',
           animation: 'heroEnter 0.55s cubic-bezier(0.16,1,0.3,1) both',
         }}>
           <div style={{
             position: 'absolute', inset: 0,
-            backgroundImage: 'radial-gradient(#0F0F10 1px, transparent 1px)',
+            backgroundImage: 'radial-gradient(var(--ink) 1px, transparent 1px)',
             backgroundSize: '22px 22px',
             opacity: 0.045,
             pointerEvents: 'none',
@@ -476,26 +476,26 @@ export default function FullENT({ finish }: FullENTProps) {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 16 }}>
               <div style={{
                 background: 'rgba(255,255,255,0.6)',
-                border: '1.5px solid #0F0F10',
+                border: '1.5px solid var(--ink)',
                 borderRadius: 12, padding: "10px 8px",
               }}>
-                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#0F0F10', opacity: 0.55, marginBottom: 3 }}>{t.correct}</div>
-                <div style={{ fontFamily: FF.display, fontSize: 14, fontWeight: 900, color: '#0F0F10', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.025em' }}>{totalCorrect}/120</div>
+                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink)', opacity: 0.55, marginBottom: 3 }}>{t.correct}</div>
+                <div style={{ fontFamily: FF.display, fontSize: 14, fontWeight: 900, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.025em' }}>{totalCorrect}/120</div>
               </div>
               <div style={{
                 background: 'rgba(255,255,255,0.6)',
-                border: '1.5px solid #0F0F10',
+                border: '1.5px solid var(--ink)',
                 borderRadius: 12, padding: "10px 8px",
               }}>
-                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#0F0F10', opacity: 0.55, marginBottom: 3 }}>{t.test.timeLabel}</div>
-                <div style={{ fontFamily: FF.display, fontSize: 14, fontWeight: 900, color: '#0F0F10', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.025em' }}>{fm(elapsed)}</div>
+                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink)', opacity: 0.55, marginBottom: 3 }}>{t.test.timeLabel}</div>
+                <div style={{ fontFamily: FF.display, fontSize: 14, fontWeight: 900, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.025em' }}>{fm(elapsed)}</div>
               </div>
               <div style={{
                 background: 'rgba(255,255,255,0.6)',
-                border: '1.5px solid #0F0F10',
+                border: '1.5px solid var(--ink)',
                 borderRadius: 12, padding: "10px 8px",
               }}>
-                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#0F0F10', opacity: 0.55, marginBottom: 3 }}>XP</div>
+                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink)', opacity: 0.55, marginBottom: 3 }}>XP</div>
                 <div style={{ fontFamily: FF.display, fontSize: 14, fontWeight: 900, color: '#C77D00', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.025em' }}>+{calcTestXP({ type: 'fullent', su: 'fullent', sc: 0, dt: '', sections: res.map(r => ({ pts: r.pts })) as unknown as TestResult['sections'] })}</div>
               </div>
             </div>
@@ -503,7 +503,7 @@ export default function FullENT({ finish }: FullENTProps) {
               display: 'inline-flex', alignItems: 'center', gap: 5,
               marginTop: 14,
               padding: '6px 12px', borderRadius: 999,
-              background: '#0F0F10', color: '#fff',
+              background: 'var(--ink)', color: '#fff',
               fontFamily: FF.display, fontSize: 10.5, fontWeight: 900,
               letterSpacing: '0.08em', textTransform: 'uppercase',
             }}>
@@ -519,8 +519,8 @@ export default function FullENT({ finish }: FullENTProps) {
               <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
                 <div style={{
                   width: 32, height: 32, borderRadius: 9,
-                  background: `${SUBJECT_META[r.sid]?.color || '#0F0F10'}14`,
-                  border: `1.5px solid ${SUBJECT_META[r.sid]?.color || '#0F0F10'}4D`,
+                  background: `${SUBJECT_META[r.sid]?.color || 'var(--ink)'}14`,
+                  border: `1.5px solid ${SUBJECT_META[r.sid]?.color || 'var(--ink)'}4D`,
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 }}>
                   <SubjectIcon sid={r.sid} size={17} color={SUBJECT_META[r.sid]?.color} strokeWidth={2.2} />
@@ -603,11 +603,11 @@ export default function FullENT({ finish }: FullENTProps) {
         <div style={{ ...CARD_COMPACT, background: timeLeft < 600 ? "rgba(239,68,68,0.12)" : "var(--bg-card)", border: `1px solid ${timeLeft < 600 ? "rgba(239,68,68,0.25)" : "var(--border)"}`, padding: "7px 11px", fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color: timeLeft < 600 ? COLORS.red : "var(--text)" }}>{fm(timeLeft)}</div>
       </div>
       {paused && !offline && <div style={{ ...CARD, background: COLORS.xpSofter, padding: "48px 20px", textAlign: "center", marginBottom: 16, animation: "slideUp 0.3s cubic-bezier(0.16,1,0.3,1)" }}>
-        <Pause size={40} color="#0F0F10" style={{ marginBottom: 12 }} />
-        <div style={{ fontSize: 18, fontWeight: 700, color: "#0F0F10", marginBottom: 8 }}>{t.fullent.paused}</div>
+        <Pause size={40} color='var(--ink)' style={{ marginBottom: 12 }} />
+        <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--ink)', marginBottom: 8 }}>{t.fullent.paused}</div>
         <div style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 16 }}>{t.fullent.pauseDesc}</div>
         <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 20 }}>{t.fullent.pauseStats} {totalAnswered}/120 {t.fullent.pauseRemaining} {fm(timeLeft)}</div>
-        <button onClick={() => setPaused(false)} style={{ padding: "14px 32px", background: COLORS.streak, color: "#fff", border: "2px solid #0F0F10", borderBottom: "4px solid #0F0F10", borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+        <button onClick={() => setPaused(false)} style={{ padding: "14px 32px", background: COLORS.streak, color: "#fff", border: "2px solid var(--ink)", borderBottom: "4px solid var(--ink)", borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
           <Play size={16} style={{ verticalAlign: "-3px", marginRight: 6 }} />{t.fullent.resume}
         </button>
       </div>}
@@ -686,7 +686,7 @@ export default function FullENT({ finish }: FullENTProps) {
         {curQ > 0 && <button onClick={prev} style={{ flex: 1, padding: "13px", background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 12, color: "var(--text)", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
           <ChevronLeft size={16} />{t.fullent.prev}
         </button>}
-        {secAnswers[curQ] !== undefined ? <button onClick={nxt} style={{ flex: 2, padding: "13px", background: COLORS.streak, color: "#fff", border: "2px solid #0F0F10", borderBottom: "4px solid #0F0F10", borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
+        {secAnswers[curQ] !== undefined ? <button onClick={nxt} style={{ flex: 2, padding: "13px", background: COLORS.streak, color: "#fff", border: "2px solid var(--ink)", borderBottom: "4px solid var(--ink)", borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
           {curQ < sec!.qs.length - 1 ? t.fullent.nextQ : curSec < sections.length - 1 ? t.fullent.nextSubject : t.fullent.finish}<ChevronRight size={16} />
         </button> : <button onClick={() => { if (curQ < sec!.qs.length - 1) navigateTo(curSec, curQ + 1); else if (curSec < sections.length - 1) navigateTo(curSec + 1, secPos[curSec + 1] || 0); }} style={{ flex: 2, padding: "13px", background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 12, color: "var(--text-secondary)", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
           {t.fullent.skipQuestion}<ChevronRight size={16} />

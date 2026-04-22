@@ -12,7 +12,9 @@
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json}\"",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "design:lint": "npx @google/design.md lint DESIGN.md",
+    "design:spec": "npx @google/design.md spec --rules"
   },
   "dependencies": {
     "@capacitor/app": "^8.0.1",

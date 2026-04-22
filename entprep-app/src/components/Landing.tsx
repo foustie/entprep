@@ -8,7 +8,7 @@ interface Props {
   totalQ: number;
 }
 
-const INK = '#0F0F10';
+const INK = 'var(--ink)';
 const LANGS = ['ru', 'kk'] as const;
 
 export default function Landing({ onStart, totalQ }: Props) {

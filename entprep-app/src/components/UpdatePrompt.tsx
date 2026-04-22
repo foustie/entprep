@@ -36,7 +36,7 @@ export default function UpdatePrompt() {
       position: 'fixed', bottom: 74, left: 16, right: 16,
       maxWidth: 448, margin: '0 auto', zIndex: 9998,
       background: 'var(--bg-card)',
-      border: '2px solid #0F0F10',
+      border: '2px solid var(--ink)',
       borderRadius: 14, padding: '16px 18px',
       boxShadow: `0 5px 0 0 ${COLORS.streak}`,
       animation: 'slideUp 0.45s cubic-bezier(0.16,1,0.3,1)',
@@ -46,7 +46,7 @@ export default function UpdatePrompt() {
         <div style={{
           width: 38, height: 38, borderRadius: 10,
           background: COLORS.streak,
-          border: '2px solid #0F0F10',
+          border: '2px solid var(--ink)',
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           color: '#fff', flexShrink: 0,
         }}>
@@ -73,8 +73,8 @@ export default function UpdatePrompt() {
           cursor: 'pointer',
         }}>{t.pwa.later}</button>
         <button onClick={handleUpdate} style={{
-          background: '#0F0F10',
-          border: '2px solid #0F0F10',
+          background: 'var(--ink)',
+          border: '2px solid var(--ink)',
           boxShadow: '0 2px 0 0 ' + COLORS.streak,
           color: '#fff',
           borderRadius: 10, padding: '8px 18px',

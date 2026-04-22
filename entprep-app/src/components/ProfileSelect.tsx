@@ -10,7 +10,7 @@ import { useT } from '../locales';
 import { getUpcomingPeriods, type PeriodKey } from '../config/ent';
 import type { GoalSettings } from '../types/index';
 
-const INK = '#0F0F10';
+const INK = 'var(--ink)';
 
 interface ProfileSelectProps {
   onConfirm: (sel: string[], goal?: GoalSettings) => void;

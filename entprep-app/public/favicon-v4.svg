@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Concept 4: Diploma scroll + streak period — academic + brand mark -->
+  <rect width="512" height="512" rx="112" fill="#0F0F10"/>
+  <!-- Scroll body — streak orange -->
+  <path d="M96 136 Q96 112 120 112 L380 112 Q420 112 420 160 L420 376 Q420 400 396 400 L120 400 Q96 400 96 376 Z"
+        fill="#FF5A36" stroke="#FAFAF8" stroke-width="10"/>
+  <!-- Horizontal text-lines — typographic hint -->
+  <g fill="#FAFAF8">
+    <rect x="144" y="180" width="200" height="18" rx="6"/>
+    <rect x="144" y="226" width="160" height="18" rx="6"/>
+    <rect x="144" y="272" width="220" height="18" rx="6"/>
+    <rect x="144" y="318" width="140" height="18" rx="6"/>
+  </g>
+  <!-- Roll edge right -->
+  <circle cx="420" cy="256" r="44" fill="#FAFAF8" stroke="#0F0F10" stroke-width="10"/>
+  <circle cx="420" cy="256" r="12" fill="#FF5A36"/>
+</svg>
