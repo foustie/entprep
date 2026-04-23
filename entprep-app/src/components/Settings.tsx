@@ -141,12 +141,6 @@ export default function Settings() {
           </div>
         )}
 
-        {/* Premium UI removed — all features free for students. Revenue from B2B (schools/government). */}
-
-        {/* Promo code removed — all features free */}
-
-        {/* Referral removed — 9 uses total, not worth the complexity */}
-
         {/* Nickname */}
         {user && profile && (
           <div style={ROW_LAST}>

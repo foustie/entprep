@@ -16,7 +16,6 @@ import ProgressBar from './ui/ProgressBar';
 import { Lightbulb, Bot, Share2, Check, X, ChevronDown, ChevronUp, ChevronRight, Swords, Trophy, Flag, WifiOff, RotateCcw, ArrowRight, Sparkles, Flame } from 'lucide-react';
 import { getRecommendation } from '../utils/recommendationEngine';
 import { trackEvent } from '../utils/analytics';
-// ShareModal removed — 15 clicks total, dead feature
 import ReportSheet from './ui/ReportSheet';
 import { captureError } from '../config/sentry';
 import type { Question, TestResult, AnswerValue } from '../types';

@@ -105,9 +105,7 @@ export default function CoachHome() {
   const mandatorySubs = Object.values(SUBS);
   const bests = getPersonalBests(hist);
 
-  // Care banners
   const hour = new Date().getHours();
-  // Evening/night banners removed — Andy handles this via getAndySpeech() + emotion changes
   const [authNudgeDismissed, setAuthNudgeDismissed] = useState(
     () => !!localStorage.getItem('entprep_auth_nudge_dismissed'),
   );

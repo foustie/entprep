@@ -11,14 +11,12 @@ interface AppContextValue {
   st: Settings;
   srCards: SRCard[];
   syncError: string | null;
-  showOnboarding: boolean;
   showAuthPrompt: boolean;
   addHist: (result: TestResult) => void;
   clearHist: () => void;
   updSt: (newSt: Settings) => void;
   confirmProfile: (sel: string[], goal?: GoalSettings) => void;
   resetProfile: () => void;
-  finishOnboarding: () => void;
   finishAuthPrompt: () => void;
   addSrFromResult: (result: TestResult) => void;
   setSrCards: React.Dispatch<React.SetStateAction<SRCard[]>>;
@@ -83,9 +81,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [prof, setProf] = useState<string[]>(() => loadData()?.prof || []);
   const [st, setSt] = useState<Settings>(() => loadData()?.st || { exp: true, tmr: true, shf: true });
   const [srCards, setSrCards] = useState<SRCard[]>(() => loadData()?.srCards || []);
-  // Onboarding removed — Landing page already covers the same content.
-  // Keeping the state/callbacks to avoid breaking type contracts.
-  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
@@ -220,11 +215,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setProf([]);
   }, []);
 
-  const finishOnboarding = useCallback(() => {
-    localStorage.setItem('entprep_onboarded', '1');
-    setShowOnboarding(false);
-  }, []);
-
   const finishAuthPrompt = useCallback(() => {
     // Read hist.length via functional setHist to avoid adding it as a dep —
     // otherwise finishAuthPrompt rebuilds on every test completion, cascading
@@ -236,13 +226,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<AppContextValue>(
     () => ({
       hist, prof, st, srCards, syncError,
-      showOnboarding, showAuthPrompt,
+      showAuthPrompt,
       addHist, clearHist, updSt,
       confirmProfile, resetProfile,
-      finishOnboarding, finishAuthPrompt,
+      finishAuthPrompt,
       addSrFromResult, setSrCards,
     }),
-    [hist, prof, st, srCards, syncError, showOnboarding, showAuthPrompt, addHist, clearHist, updSt, confirmProfile, resetProfile, finishOnboarding, finishAuthPrompt, addSrFromResult],
+    [hist, prof, st, srCards, syncError, showAuthPrompt, addHist, clearHist, updSt, confirmProfile, resetProfile, finishAuthPrompt, addSrFromResult],
   );
 
   return (

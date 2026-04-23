@@ -17,7 +17,6 @@ import type { LucideIcon } from 'lucide-react';
 import ProfileSelect from './components/ProfileSelect';
 import CoachHome from './components/CoachHome';
 import ProfileTab from './components/ProfileTab';
-// ArenaFab removed — Arena is now a tab in bottom nav
 import SubjectDetail from './components/SubjectDetail';
 import Challenge from './components/Challenge';
 import InstallPrompt from './components/InstallPrompt';
@@ -26,7 +25,6 @@ import UpdatePrompt from './components/UpdatePrompt';
 import { API_BASE } from './config/app';
 import { supabase } from './config/supabase';
 import { useAuth } from './contexts/AuthContext';
-// Referral removed — 9 uses total
 import { trackEvent } from './utils/analytics';
 import type { TestResult, SRCard } from './types';
 
@@ -64,7 +62,6 @@ const Progress = React.lazy(() => import('./components/Progress'));
 const Settings = React.lazy(() => import('./components/Settings'));
 const Adaptive = React.lazy(() => import('./components/Adaptive'));
 const Landing = React.lazy(() => import('./components/Landing'));
-const Onboarding = React.lazy(() => import('./components/Onboarding'));
 const AuthPrompt = React.lazy(() => import('./components/AuthPrompt'));
 const PaywallModal = React.lazy(() => import('./components/PaywallModal'));
 const PushPrompt = React.lazy(() => import('./components/PushPrompt'));
@@ -83,7 +80,7 @@ const NAV_ITEMS: NavItem[] = [
 
 function AppContent() {
   const { screen, curSub, selTopic, customQs, tab, challengeData, paywallReason, nav, goHome, changeTab, setScreen, setTab, closePaywall } = useNav();
-  const { hist, prof, st, srCards, syncError, showOnboarding, showAuthPrompt, addHist, confirmProfile, finishOnboarding, finishAuthPrompt, addSrFromResult, setSrCards } = useApp();
+  const { hist, prof, st, srCards, syncError, showAuthPrompt, addHist, confirmProfile, finishAuthPrompt, addSrFromResult, setSrCards } = useApp();
   const toast = useToast();
   const tr = useT();
   const bp = useBreakpoint();
@@ -121,7 +118,6 @@ function AppContent() {
       [SCREENS.REVIEW]: tr.review.title,
       [SCREENS.TEACHER]: tr.teacher.panel,
       profile_tab: tr.tabs.profile,
-      // arena removed
       tutor: 'AI Tutor',
     };
     const title = SCREEN_TITLES[screen];
@@ -176,7 +172,7 @@ function AppContent() {
   }, [syncError]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const needProfile = prof.length === 0 && screen !== SCREENS.PROFILE;
-  const showNav = !needProfile && screen !== SCREENS.TEST && screen !== SCREENS.FULL_ENT && screen !== SCREENS.PROFILE && screen !== SCREENS.SUBJECT && screen !== SCREENS.ERROR_REVIEW && screen !== SCREENS.ADMIN && screen !== SCREENS.CHALLENGE && screen !== SCREENS.LEADERBOARD && screen !== SCREENS.FRIENDS && screen !== SCREENS.DUEL && screen !== SCREENS.REVIEW && screen !== SCREENS.TEACHER && !showOnboarding && !showAuthPrompt;
+  const showNav = !needProfile && screen !== SCREENS.TEST && screen !== SCREENS.FULL_ENT && screen !== SCREENS.PROFILE && screen !== SCREENS.SUBJECT && screen !== SCREENS.ERROR_REVIEW && screen !== SCREENS.ADMIN && screen !== SCREENS.CHALLENGE && screen !== SCREENS.LEADERBOARD && screen !== SCREENS.FRIENDS && screen !== SCREENS.DUEL && screen !== SCREENS.REVIEW && screen !== SCREENS.TEACHER && !showAuthPrompt;
 
   const { user, isPremium, needsNickname } = useAuth();
 
@@ -248,13 +244,6 @@ function AppContent() {
     </div>
   );
 
-  if (showOnboarding) return (
-    <div style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: FF.body, maxWidth: LAYOUT.maxWidth, margin: "0 auto", position: "relative" }}>
-      <style>{`:root{${themeToCss(palette)}}${GLOBAL_STYLES}`}</style>
-      <Suspense fallback={<LoadingSpinner />}><Onboarding onFinish={finishOnboarding} /></Suspense>
-    </div>
-  );
-
   if (showAuthPrompt) return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: FF.body, maxWidth: LAYOUT.maxWidth, margin: "0 auto", position: "relative" }}>
       <style>{`:root{${themeToCss(palette)}}${GLOBAL_STYLES}`}</style>
@@ -269,7 +258,6 @@ function AppContent() {
         {!needProfile && screen === SCREENS.PROFILE && <ProfileSelect onConfirm={handleConfirmProfile} />}
         {!needProfile && screen === SCREENS.HOME && <CoachHome />}
         {!needProfile && screen === 'profile_tab' && <ProfileTab />}
-        {/* Arena removed — 61 uses total, dead feature */}
         {!needProfile && screen === 'tutor' && <Suspense fallback={<LoadingSpinner />}><AiTutor /></Suspense>}
         {!needProfile && screen === SCREENS.SUBJECT && curSub && (
           <ErrorBoundary key="subject" title={tr.errors.subjectTitle} message={tr.errors.subjectMessage} onRecover={goHome}>
@@ -421,8 +409,6 @@ function AppContent() {
       <UpdatePrompt />
       <Suspense fallback={null}><PushPrompt /></Suspense>
       <Suspense fallback={null}><PaywallModal open={paywallReason !== null} reason={paywallReason} onClose={closePaywall} /></Suspense>
-      {/* Arena/Duel FAB */}
-      {/* ArenaFab removed — Arena is now a tab in bottom nav */}
     </div>
   );
 }

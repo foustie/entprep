@@ -111,39 +111,6 @@ export function parseFriendInviteParam(): string | null {
   return params.get('add');
 }
 
-// ── Referral links ──────────────────────────────────────────────────────────
-
-export function buildReferralUrl(nickname: string): string {
-  return `${APP_URL}?ref=${encodeURIComponent(nickname)}`;
-}
-
-export function parseReferralParam(): string | null {
-  const params = new URLSearchParams(window.location.search);
-  return params.get('ref');
-}
-
-/** Claim a referral reward via the server. Call after first login if ?ref= was present. */
-export async function claimReferral(referrerNickname: string): Promise<boolean> {
-  if (!supabase) return false;
-  const session = (await supabase.auth.getSession()).data.session;
-  if (!session) return false;
-
-  try {
-    const res = await fetch(`${API_BASE}/api/referral`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${session.access_token}`,
-      },
-      body: JSON.stringify({ referrer_nickname: referrerNickname }),
-    });
-    if (!res.ok) return false;
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 // ── Relative time formatting (Russian) ───────────────────────────────────────
 
 export function formatLastActive(isoDate: string): string {

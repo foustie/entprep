@@ -19,7 +19,6 @@ import ProgressBar from './ui/ProgressBar';
 import { GraduationCap, AlertTriangle, Share2, Check, X, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Lightbulb, Grid3X3, Play, Flag, Pause, BookOpen, WifiOff } from 'lucide-react';
 import SubjectIcon from './ui/SubjectIcon';
 import { SUBJECT_META } from '../config/subjects';
-// ShareModal removed — dead feature
 import ReportSheet from './ui/ReportSheet';
 import { supabase } from '../config/supabase';
 import { useAuth } from '../contexts/AuthContext';
