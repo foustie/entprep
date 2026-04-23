@@ -3,7 +3,9 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { CORS_HEADERS, corsResponse, findUserByEmail, activatePremium } from "./utils/shared.mjs";
 
 const WEBHOOK_SECRET = process.env.LEMON_WEBHOOK_SECRET;
-const HANDLED_EVENTS = new Set(["order_created", "subscription_created", "subscription_updated"]);
+// order_created = yearly season pass (one-time), subscription_created = monthly recurring.
+// subscription_updated intentionally excluded — it would misclassify as yearly and re-grant premium on every renewal/status change.
+const HANDLED_EVENTS = new Set(["order_created", "subscription_created"]);
 
 function verifySignature(rawBody, signature) {
   if (!WEBHOOK_SECRET || !signature) return false;
@@ -51,7 +53,6 @@ export default async function handler(req) {
       return Response.json({ error: "User not found, retry later" }, { status: 500, headers: CORS_HEADERS });
     }
 
-    // Determine plan: subscription_created = monthly, order_created = yearly (season pass)
     const plan = eventName === "subscription_created" ? "monthly" : "yearly";
     if (!body.data?.id) {
       return Response.json({ error: "Missing data.id" }, { status: 400, headers: CORS_HEADERS });
