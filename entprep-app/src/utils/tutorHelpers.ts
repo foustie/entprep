@@ -24,7 +24,6 @@ export interface StudentProfile {
 
 export interface TutorResponse {
   text: string;
-  remaining: number;
 }
 
 // ── Build student profile from test history ──
@@ -153,8 +152,7 @@ export async function sendTutorMessage(
     const ua = navigator.userAgent.substring(0, 80);
     console.error('[AI Tutor] Error response:', res.status, errBody.slice(0, 200), 'UA:', ua);
     if (res.status === 401) throw new Error('Сессия истекла. Перезайдите в аккаунт.');
-    if (res.status === 429) throw new Error('Слишком много запросов. Подожди минутку.');
-    try { const d = JSON.parse(errBody); throw new Error(d.error || 'AI временно недоступен'); } catch(e) { if (e instanceof SyntaxError) throw new Error('AI временно недоступен'); throw e; }
+    try { const d = JSON.parse(errBody); throw new Error(d.error || (res.status === 429 ? 'Слишком много запросов. Подожди минутку.' : 'AI временно недоступен')); } catch(e) { if (e instanceof SyntaxError) throw new Error(res.status === 429 ? 'Слишком много запросов. Подожди минутку.' : 'AI временно недоступен'); throw e; }
   }
 
   // Non-streaming (streaming disabled — Netlify buffers SSE)

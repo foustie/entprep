@@ -1,13 +1,20 @@
 // AI Tutor: Socratic method, personalized, caring, RAG-powered
 // Streaming response for fast UX
 
-import { CORS_HEADERS, corsResponse, verifyAuth, createRateLimiter, rateLimitResponse } from "./utils/shared.mjs";
+import { CORS_HEADERS, corsResponse, verifyAuth, createRateLimiter, checkPremium } from "./utils/shared.mjs";
 import { ANTHROPIC_API_URL, VALID_SUBJECTS } from "./utils/constants.mjs";
 
 // Sonnet for tutor — smarter, better Socratic reasoning
 const TUTOR_MODEL = "claude-sonnet-4-20250514";
 
-const checkRate = createRateLimiter("tutor", { max: 30, windowSec: 86400 }); // 30/day with Haiku (cheaper)
+// Free tier matches client-side limit in src/utils/aiLimits.ts (DAILY_TUTOR_LIMIT)
+// so cheaters who clear localStorage hit the same ceiling as honest users.
+const TUTOR_FREE_DAILY = 10;
+const TUTOR_PREMIUM_DAILY = 50;
+
+// Single shared bucket — tier cap is applied per-request via maxOverride.
+// This prevents free→premium (or premium→free) transitions mid-window from resetting the counter.
+const checkRate = createRateLimiter("tutor", { max: TUTOR_PREMIUM_DAILY, windowSec: 86400 });
 
 const SITE_URL = process.env.URL || "https://entprep.org";
 const summaryCache = new Map();
@@ -82,8 +89,13 @@ export default async function handler(req) {
   const user = await verifyAuth(req);
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401, headers: CORS_HEADERS });
 
-  const retryAfter = checkRate(user.id);
-  if (retryAfter) return Response.json({ error: "Лимит сообщений на сегодня исчерпан. Завтра у тебя будет ещё 20 — ты справишься!", remaining: 0 }, { status: 429, headers: CORS_HEADERS });
+  const isPremium = await checkPremium(user.id);
+  const dailyLimit = isPremium ? TUTOR_PREMIUM_DAILY : TUTOR_FREE_DAILY;
+
+  const retryAfter = checkRate(user.id, dailyLimit);
+  if (retryAfter) return Response.json({
+    error: `Лимит сообщений на сегодня исчерпан. Завтра у тебя будет ещё ${dailyLimit} — ты справишься!`,
+  }, { status: 429, headers: CORS_HEADERS });
 
   let body;
   try { body = await req.json(); } catch {
@@ -169,7 +181,7 @@ export default async function handler(req) {
 
     const data = await aiRes.json();
     const text = data.content?.[0]?.text?.trim() || "";
-    return Response.json({ text, remaining: 19 }, { headers: CORS_HEADERS });
+    return Response.json({ text }, { headers: CORS_HEADERS });
   } catch {
     return Response.json({ error: "AI service unavailable" }, { status: 500, headers: CORS_HEADERS });
   }

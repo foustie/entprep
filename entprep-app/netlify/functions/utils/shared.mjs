@@ -45,8 +45,11 @@ export function createRateLimiter(name, { max = 20, windowSec = 60 } = {}) {
   const store = (stores[name] = new Map());
   const windowMs = windowSec * 1000;
 
-  return (userId) => {
+  // Optional `maxOverride` lets callers swap the cap per-request (e.g. tier-based limits)
+  // while still sharing a single counter bucket — prevents bucket-swap resets on tier changes.
+  return (userId, maxOverride) => {
     const now = Date.now();
+    const limit = maxOverride ?? max;
 
     // Cleanup old entries when map grows too large
     if (store.size > 500) {
@@ -61,7 +64,7 @@ export function createRateLimiter(name, { max = 20, windowSec = 60 } = {}) {
       store.set(userId, { count: 1, start: now });
       return null; // allowed
     }
-    if (entry.count >= max) {
+    if (entry.count >= limit) {
       const retryAfter = Math.ceil((entry.start + windowMs - now) / 1000);
       return retryAfter; // blocked — return seconds to wait
     }
@@ -137,7 +140,7 @@ export function validatePlan(body) {
 // Authoritative server-side premium check. Queries the subscriptions table
 // (only service_role can write). Falls back to user_metadata if table missing.
 
-export async function checkPremium(userId, supabaseAdmin) {
+export async function checkPremium(userId) {
   try {
     const res = await fetch(
       `${process.env.VITE_SUPABASE_URL}/rest/v1/subscriptions?user_id=eq.${userId}&select=is_active,expires_at`,

@@ -192,7 +192,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
           updated[updated.length - 1] = {
             role: 'assistant',
             content: errMsg.includes('Лимит')
-              ? (isKk ? 'Бүгінгі сұхбаттар лимиті аяқталды. Ертең тағы 20 хабарлама болады 💜' : 'Сообщения на сегодня закончились. Завтра будет ещё 20 💜')
+              ? errMsg.replace(/^Error:\s*/, '')
               : (isKk ? 'Қате орын алды. Қайтадан жіберіп көріңіз.' : `Ошибка: ${errMsg}. Попробуй ещё раз.`),
             timestamp: Date.now(),
           };
