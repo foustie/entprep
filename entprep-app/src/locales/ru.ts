@@ -787,6 +787,11 @@ const ru = {
     webOnly: 'Скачать приложение',
     purchasing: 'Оформление...',
     yearlyPlanAuto: '9 990 \u20B8/год',
+    legalPrefix: 'Оформляя подписку, вы соглашаетесь с',
+    legalTermsLink: 'Условиями использования',
+    legalConjunction: ' и ',
+    legalPrivacyLink: 'Политикой конфиденциальности',
+    legalRenewalNotice: 'Подписка продлевается автоматически. Отменить можно в настройках Apple ID до конца оплаченного периода.',
     // PaywallScreen (LemonSqueezy web)
     explainTitle: 'Объяснения на сегодня закончились',
     explainSubtitle: 'Хочешь разобраться прямо сейчас?',

@@ -27,37 +27,48 @@ export default async function handler(req) {
   }
 
   try {
-    // 1. Delete avatar files from storage (best-effort)
+    // 1. Delete avatar files from storage (best-effort, but logged for admin cleanup)
     try {
       const listRes = await fetch(
         `${SB_URL}/storage/v1/object/list/avatars?prefix=${user.id}`,
         { headers: sbHeaders() },
       );
-      if (listRes.ok) {
+      if (!listRes.ok) {
+        console.warn("delete-account: avatar list failed", user.id, listRes.status, await listRes.text());
+      } else {
         const files = await listRes.json();
         if (files.length > 0) {
-          await fetch(`${SB_URL}/storage/v1/object/avatars`, {
+          const delRes = await fetch(`${SB_URL}/storage/v1/object/avatars`, {
             method: "DELETE",
             headers: sbHeaders(),
             body: JSON.stringify({ prefixes: files.map((f) => `${user.id}/${f.name}`) }),
           });
+          if (!delRes.ok) {
+            console.warn("delete-account: avatar delete failed", user.id, delRes.status, await delRes.text());
+          }
         }
       }
-    } catch {
-      // Non-fatal — continue with account deletion
+    } catch (err) {
+      console.warn("delete-account: avatar cleanup threw", user.id, err);
     }
 
     // 2. Delete profile + cascaded data (friendships, friend_requests, etc.)
-    await fetch(`${SB_URL}/rest/v1/profiles?id=eq.${user.id}`, {
+    const profRes = await fetch(`${SB_URL}/rest/v1/profiles?id=eq.${user.id}`, {
       method: "DELETE",
       headers: { ...sbHeaders(), Prefer: "return=minimal" },
     });
+    if (!profRes.ok) {
+      console.warn("delete-account: profile delete failed", user.id, profRes.status, await profRes.text());
+    }
 
     // 3. Delete push subscriptions
-    await fetch(`${SB_URL}/rest/v1/push_subscriptions?user_id=eq.${user.id}`, {
+    const pushRes = await fetch(`${SB_URL}/rest/v1/push_subscriptions?user_id=eq.${user.id}`, {
       method: "DELETE",
       headers: { ...sbHeaders(), Prefer: "return=minimal" },
     });
+    if (!pushRes.ok) {
+      console.warn("delete-account: push_subscriptions delete failed", user.id, pushRes.status, await pushRes.text());
+    }
 
     // 4. Delete auth.users record (requires service_role key)
     const deleteRes = await fetch(`${SB_URL}/auth/v1/admin/users/${user.id}`, {

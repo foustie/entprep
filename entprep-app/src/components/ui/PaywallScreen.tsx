@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, ComponentType } from 'react';
 import { createPortal } from 'react-dom';
+import { Capacitor } from '@capacitor/core';
 import { X, Sparkles, Zap, ArrowRight, Lock, MessageCircle, Bot, TrendingUp, BookOpen } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useApp } from '../../contexts/AppContext';
@@ -9,11 +10,27 @@ import { COLORS, FF, FW, SP, TINT } from '../../constants/styles';
 import { getEntCountdown } from '../../config/ent';
 import { trackEvent } from '../../utils/analytics';
 import SendToMomSheet from '../SendToMomSheet';
+import PaywallModal from '../PaywallModal';
 
 interface PaywallScreenProps {
   trigger: 'explain_limit' | 'tutor_limit' | 'fullent_result';
   score?: number;
   onClose: () => void;
+}
+
+// Apple Guideline 3.1.1: digital subscriptions inside native iOS must use IAP, not web checkout.
+// On native platforms route every paywall surface to PaywallModal (RevenueCat StoreKit).
+function NativePaywallBridge({ trigger, onClose }: PaywallScreenProps) {
+  const viewTrackedRef = useRef(false);
+  useEffect(() => {
+    if (viewTrackedRef.current) return;
+    viewTrackedRef.current = true;
+    trackEvent('Paywall View', { trigger, native: true });
+  }, [trigger]);
+  const reason = trigger === 'fullent_result' ? 'fullent'
+    : trigger === 'tutor_limit' ? 'ai'
+    : 'daily_limit';
+  return <PaywallModal open reason={reason} onClose={onClose} />;
 }
 
 const SEASON_URL = 'https://entprep.lemonsqueezy.com/checkout/buy/f2bd4267-eddc-4ba3-9e88-b43eee15dc9a';
@@ -93,7 +110,14 @@ function useCountUp(target: number, durationMs = 700): number {
   return n;
 }
 
-export default function PaywallScreen({ trigger, score, onClose }: PaywallScreenProps) {
+export default function PaywallScreen(props: PaywallScreenProps) {
+  if (Capacitor.isNativePlatform()) {
+    return <NativePaywallBridge {...props} />;
+  }
+  return <WebPaywallScreen {...props} />;
+}
+
+function WebPaywallScreen({ trigger, score, onClose }: PaywallScreenProps) {
   const { user } = useAuth();
   const { st } = useApp();
   const t = useT();
@@ -394,7 +418,7 @@ export default function PaywallScreen({ trigger, score, onClose }: PaywallScreen
                 color: COLORS.streak,
                 letterSpacing: '-0.015em',
               }}>
-                1 990 ₸<span style={{ ...priceUnit, color: COLORS.streak, opacity: 0.8 }}>/мес</span>
+                2 990 ₸<span style={{ ...priceUnit, color: COLORS.streak, opacity: 0.8 }}>/мес</span>
               </span>
             </div>
           </div>

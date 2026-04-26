@@ -49,6 +49,14 @@
 	<true/>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>ENTprep uses your photo library to set a profile picture</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>ru</string>
+		<string>kk</string>
+	</array>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

@@ -773,6 +773,11 @@ const kk: Translations = {
     webOnly: 'Қосымшаны жүктеу',
     purchasing: 'Рәсімдеу...',
     yearlyPlanAuto: '9 990 \u20B8/жыл',
+    legalPrefix: 'Жазылым рәсімдей отырып, сіз төмендегі шарттарға келісесіз:',
+    legalTermsLink: 'Пайдалану шарттары',
+    legalConjunction: ' және ',
+    legalPrivacyLink: 'Құпиялылық саясаты',
+    legalRenewalNotice: 'Жазылым автоматты түрде ұзартылады. Ақы төленген кезеңнің соңына дейін Apple ID параметрлерінде бас тартуға болады.',
     // PaywallScreen (LemonSqueezy web)
     explainTitle: 'Бүгінгі түсіндірмелер бітті',
     explainSubtitle: 'Қазір түсінгің келе ме?',

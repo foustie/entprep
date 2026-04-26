@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import BottomSheet from './ui/BottomSheet';
 import { Crown, Sparkles, Bot, GraduationCap, BookOpen, RotateCcw, Loader2, LogIn } from 'lucide-react';
-import { COLORS, BUTTON, FF, TYPE } from '../constants/styles';
+import { COLORS, BUTTON, FF } from '../constants/styles';
 
 const INK = 'var(--ink)';
 import { useT } from '../locales';
@@ -310,10 +310,13 @@ export default function PaywallModal({ open, reason, onClose }: PaywallModalProp
 
         {/* Legal links (Apple requirement) */}
         <div style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 14, lineHeight: 1.6, textAlign: 'center' }}>
-          Оформляя подписку, вы соглашаетесь с{' '}
-          <a href="https://entprep.org/terms.html" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-muted)', textDecoration: 'underline' }}>Условиями использования</a>
-          {' '}и{' '}
-          <a href="https://entprep.org/privacy.html" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-muted)', textDecoration: 'underline' }}>Политикой конфиденциальности</a>
+          {isNative && (
+            <div style={{ marginBottom: 6 }}>{t.paywall.legalRenewalNotice}</div>
+          )}
+          {t.paywall.legalPrefix}{' '}
+          <a href="https://entprep.org/terms.html" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-muted)', textDecoration: 'underline' }}>{t.paywall.legalTermsLink}</a>
+          {t.paywall.legalConjunction}
+          <a href="https://entprep.org/privacy.html" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-muted)', textDecoration: 'underline' }}>{t.paywall.legalPrivacyLink}</a>
         </div>
       </div>
     </BottomSheet>
