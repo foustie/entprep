@@ -115,3 +115,31 @@ node scripts/dump-questions.mjs && node scripts/compute-quarantine.mjs && VITE_R
 - Question content: bilingual (Russian + Kazakh via `_kk` Supabase columns)
 - Question explanations include math symbols: ², ³, √, π, ×, ÷, ≈, →
 - `VITE_RC_API_KEY_APPLE` must be passed at build time (Vite inlines it)
+
+## iOS App Store Submission (Apr 2026)
+
+| Item | Value |
+|------|-------|
+| Bundle ID | `kz.entprep.app` |
+| Apple Team ID | `85MH8SWD4T` |
+| App Store ID | `6760261689` |
+| Marketing version | `1.1.0` |
+| Build number | `5` (incremented from 4 — Apr 26) |
+| RevenueCat API key (Apple) | `appl_hSiijbsNKsMxZEeQDZLYTtjSwmw` (in Netlify env + CLAUDE.md) |
+| Test account for App Review | `apple-review@entprep.org` (creds in `entprep-app/.apple-review-account.local`) |
+
+**Submission docs:**
+- `entprep-app/docs/aso-listing.md` — listing copy (RU + KK), keywords, screenshots plan
+- `entprep-app/docs/app-store-submission.md` — step-by-step ASC + RC + TestFlight checklist
+- `entprep-app/docs/app-review-notes.md` — pre-baked text for Apple reviewer (English)
+
+**Native IAP architecture:** `src/components/ui/PaywallScreen.tsx` bridges to `PaywallModal` (RevenueCat StoreKit) on `Capacitor.isNativePlatform()`. All 5 paywall surfaces (Test/AiTutor/FullENT/ProfileTab/ErrorReview) use this bridge — no Lemon Squeezy webview inside iOS (Apple Guideline 3.1.1).
+
+**Build (iOS Release archive):**
+```bash
+cd entprep-app
+VITE_RC_API_KEY_APPLE=appl_hSiijbsNKsMxZEeQDZLYTtjSwmw npm run build
+npx cap sync ios
+open ios/App/App.xcodeproj
+# Xcode → Product → Archive → Distribute App → App Store Connect
+```
