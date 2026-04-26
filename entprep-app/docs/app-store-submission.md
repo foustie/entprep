@@ -78,8 +78,8 @@ Open My Apps → ENTprep → **Features → In-App Purchases**.
 Создай два **Auto-Renewable Subscription** в группе `entprep_premium`:
 
 **Monthly:**
-- Reference Name: `ENTprep PRO Monthly`
-- Product ID: `entprep_pro_monthly`
+- Reference Name: `ENTprep monthly`
+- Product ID: `entprep_monthly` ← ВАЖНО: должен 1:1 с RC (`entprep_monthly`, не с `_pro_`)
 - Price: Tier 5 (~$5.99 / ~2 990 ₸ / ~₽599) — Apple price tier picker
 - Subscription Duration: 1 month
 - Localizations:
@@ -90,8 +90,8 @@ Open My Apps → ENTprep → **Features → In-App Purchases**.
 - Review Screenshot: 1242×2208 от paywall (любой test screen)
 
 **Yearly:**
-- Reference Name: `ENTprep PRO Yearly`
-- Product ID: `entprep_pro_yearly`
+- Reference Name: `ENTprep yearly`
+- Product ID: `entprep_yearly` ← должен 1:1 с RC (`entprep_yearly`)
 - Price: Tier 19 (~$19.99 / ~9 990 ₸)
 - Duration: 1 year
 - Localizations: тот же стиль, заменить "месяц/ай" → "год/жыл"
@@ -101,29 +101,29 @@ Open My Apps → ENTprep → **Features → In-App Purchases**.
 
 ---
 
-### 3. RevenueCat Dashboard (~15 мин)
+### 3. RevenueCat Dashboard (~5 мин — почти всё уже сделано)
 
-Open https://app.revenuecat.com → Project ENTprep.
+Project `projb194089c` "ENTprep" уже сконфигурирован (verified via API):
+- ✅ App Store app `app8cb5287225` (bundle `kz.entprep.app`)
+- ✅ Products: `entprep_monthly` (P1M) + `entprep_yearly` (P1Y)
+- ✅ Entitlement `premium` (lookup_key: "premium") — оба products привязаны
+- ✅ Default offering `default` с packages Monthly + Yearly
+- ✅ Public Apple API key `appl_hSiijbsNKsMxZEeQDZLYTtjSwmw` в Netlify env (`VITE_RC_API_KEY_APPLE`)
 
-- **Settings → Apps → iOS:**
-  - Bundle ID: `kz.entprep.app`
-  - App Store Connect API: connect (если ещё не) — issue API key в ASC → Users and Access → Keys → App Store Connect API → копируй Issuer ID + Key ID + .p8 файл → upload в RC
-- **Products:** import обоих (monthly + yearly) из ASC. Verify identifiers.
-- **Entitlements:**
-  - Create entitlement `premium` (если ещё нет)
-  - Attach обои products к этому entitlement
-  - В коде проверка: `customerInfo.entitlements.active.premium` ([purchases.ts:69](entprep-app/src/config/purchases.ts:69))
-- **Offerings:**
-  - Create offering `default`
-  - Add Package `monthly` → product `entprep_pro_monthly`
-  - Add Package `yearly` → product `entprep_pro_yearly`
-  - Set as Current
-- **Integrations → Webhooks:**
-  - URL: `https://entprep.org/api/revenuecat-webhook`
-  - Auth: HMAC SHA256, secret = тот же что в Netlify env `REVENUECAT_WEBHOOK_SECRET`
-  - Events: GRANT_ENTITLEMENT, REVOKE_ENTITLEMENT, INITIAL_PURCHASE, RENEWAL, CANCELLATION, EXPIRATION
+**Что осталось доконфигурировать в UI** (RC API не позволяет через REST):
 
-**Apple API Key (`appl_hSiijbsNKsMxZEeQDZLYTtjSwmw`):** уже в Netlify env `VITE_RC_API_KEY_APPLE`. Проверь что для `master` deploy он есть. Если нет — добавь в Netlify → Site settings → Environment variables.
+1. **App Store Connect API key:** RC dashboard → Project Settings → Apps → ENTprep (App Store) → "Add App Store Connect API Key"
+   - Issuer ID: [твой ASC Issuer ID]
+   - Key ID: `SF5NW6S5AD`
+   - .p8 file: `/Users/diyar/entprep/.secrets/AuthKey_SF5NW6S5AD.p8`
+   - Эта связка нужна для validation receipts + restore purchases
+
+2. **Webhook:** RC dashboard → Project Settings → Integrations → Add Integration → Webhook
+   - URL: `https://entprep.org/api/revenuecat-webhook`
+   - Authorization Header: HMAC secret должен совпадать с `REVENUECAT_WEBHOOK_SECRET` в Netlify env
+   - Events: GRANT_ENTITLEMENT, REVOKE_ENTITLEMENT, INITIAL_PURCHASE, RENEWAL, CANCELLATION, EXPIRATION
+
+Verify Netlify env содержит `REVENUECAT_WEBHOOK_SECRET=<матчится с RC>` — если нет, добавь.
 
 ---
 
