@@ -5,3 +5,7 @@ dist/
 
 # Local Netlify folder
 .netlify
+
+# API keys / secrets — never commit
+.secrets/
+AuthKey_*.p8
