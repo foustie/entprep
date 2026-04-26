@@ -1,0 +1,146 @@
+{
+  "identifier" : "ENTPREP_LOCAL_TESTING",
+  "nonRenewingSubscriptions" : [],
+  "products" : [],
+  "settings" : {
+    "_applicationInternalID" : "6760261689",
+    "_developerTeamID" : "85MH8SWD4T",
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : 776546400,
+    "_locale" : "ru_KZ",
+    "_storefront" : "KAZ",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Store Sync"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Subscription Status"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Refund Request Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      }
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21678901",
+      "localizations" : [
+        {
+          "description" : "ENTprep Premium",
+          "displayName" : "Premium",
+          "locale" : "en_US"
+        },
+        {
+          "description" : "Полный доступ к ENTprep",
+          "displayName" : "Premium",
+          "locale" : "ru"
+        }
+      ],
+      "name" : "Premium",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "5.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "ENT_M_001",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Безлимит AI-репетитор и AI-разборы. Пробный ЕНТ без ограничений.",
+              "displayName" : "Premium · 1 месяц",
+              "locale" : "ru"
+            },
+            {
+              "description" : "Шектеусіз AI-репетитор және AI-түсіндірмелер.",
+              "displayName" : "Premium · 1 ай",
+              "locale" : "kk"
+            },
+            {
+              "description" : "Unlimited AI tutor and AI explanations. Full mock exam.",
+              "displayName" : "Premium · 1 month",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "entprep_monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "ENTprep Monthly",
+          "subscriptionGroupID" : "21678901",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "19.99",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "ENT_Y_001",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Безлимит AI-репетитор и AI-разборы. Пробный ЕНТ без ограничений. Сэкономь 58%.",
+              "displayName" : "Premium · 1 год",
+              "locale" : "ru"
+            },
+            {
+              "description" : "Шектеусіз AI-репетитор және AI-түсіндірмелер. 58% үнемде.",
+              "displayName" : "Premium · 1 жыл",
+              "locale" : "kk"
+            },
+            {
+              "description" : "Unlimited AI tutor and AI explanations. Full mock exam. Save 58%.",
+              "displayName" : "Premium · 1 year",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "entprep_yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "ENTprep Yearly",
+          "subscriptionGroupID" : "21678901",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}
