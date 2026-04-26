@@ -18,9 +18,9 @@ Primary languages: Russian and Kazakh. UI defaults to Russian; user can switch t
 LOGIN FOR REVIEW
 ==============================
 Email: apple-review@entprep.org
-Password: [FILL_IN_BEFORE_SUBMIT]
+Password: [см. .apple-review-account.local]
 
-This account has Premium pre-activated so you can verify all paid features without testing IAP.
+Use this account to test all features. Premium-gated features (Full Exam Simulation, unlimited AI explanations, unlimited AI tutor) can be unlocked via in-app purchase using your Apple sandbox card during review — purchases are processed through Apple StoreKit (RevenueCat).
 
 ==============================
 HOW TO TEST KEY FEATURES
@@ -89,7 +89,7 @@ Thanks for the review!
 ```
 ENTprep is an AI-powered exam prep app for Kazakhstan's Unified National Testing (UNT/ЕНТ). 28,000+ questions across 13 subjects, AI tutor, mastery tracking.
 
-Test account: apple-review@entprep.org / [FILL_PASSWORD] (Premium pre-activated)
+Test account: apple-review@entprep.org / [см. .apple-review-account.local]
 
 To test AI Tutor: bottom tab "Дияр" → ask anything.
 To test exam simulation: Главная → "Полный ЕНТ".
@@ -104,7 +104,7 @@ Terms: https://entprep.org/terms.html
 ---
 
 ## ⚠️ Перед submit:
-1. Создать аккаунт `apple-review@entprep.org` в Supabase Auth
-2. Установить ему `is_premium = true` через admin
-3. Заменить `[FILL_IN_BEFORE_SUBMIT]` / `[FILL_PASSWORD]` реальным паролем (генерируй надёжный — Apple reviewer не делится)
-4. Verify аккаунт работает — залогинься через web entprep.org с этими credentials прежде чем отправлять
+1. ✅ Аккаунт `apple-review@entprep.org` уже создан в Supabase (см. `.apple-review-account.local`)
+2. При вставке в App Store Connect → App Review Information → Sign-in: подставь email + пароль из `.apple-review-account.local`
+3. Verify работает: залогинься через https://entprep.org с этими credentials до submit
+4. (опционально) Активировать `is_premium=true` через admin UI если хочешь чтобы Apple reviewer не тратил sandbox card на тестовую покупку. Но **рекомендую оставить НЕ pre-activated** — Apple reviewer должен видеть полный flow от paywall до StoreKit dialog
