@@ -1,16 +1,18 @@
 import { useState } from 'react';
 import type { CSSProperties } from 'react';
-import { COLORS, FF, FW, SP, TINT } from '../constants/styles';
+import { COLORS, FF, FW, TINT } from '../constants/styles';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useApp } from '../contexts/AppContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useNav } from '../contexts/NavigationContext';
+import { useToast } from '../contexts/ToastContext';
 import { useT } from '../locales';
 import { calcTotalXP, getLevel } from '../utils/xpHelpers';
 import { calcStreak } from '../utils/adaptiveHelpers';
+import { reconcileMyOrder } from '../utils/reconcileHelpers';
 import {
   User, Flame, Zap, BarChart3, Trophy, Calculator,
-  Settings as SettingsIcon, ChevronRight, Users, Snowflake, Sparkles,
+  Settings as SettingsIcon, ChevronRight, Snowflake, Sparkles,
   ArrowRight,
 } from 'lucide-react';
 import PaywallScreen from './ui/PaywallScreen';
@@ -19,12 +21,36 @@ const INK = 'var(--ink)';
 
 export default function ProfileTab() {
   const { hist, st } = useApp();
-  const { user, profile, isPremium, needsNickname } = useAuth();
+  const { user, profile, isPremium, needsNickname, refreshUser } = useAuth();
   const { nav } = useNav();
   const bp = useBreakpoint();
   const t = useT();
+  const toast = useToast();
 
   const [showPaywall, setShowPaywall] = useState(false);
+  const [recoverOpen, setRecoverOpen] = useState(false);
+  const [recoverOrderId, setRecoverOrderId] = useState('');
+  const [recoverBusy, setRecoverBusy] = useState(false);
+
+  const submitRecover = async () => {
+    const id = recoverOrderId.trim();
+    if (!/^\d+$/.test(id)) {
+      toast.error('Введите номер заказа (только цифры)');
+      return;
+    }
+    setRecoverBusy(true);
+    try {
+      const result = await reconcileMyOrder(id);
+      await refreshUser();
+      toast.success(`Премиум активирован до ${new Date(result.premiumUntil).toLocaleDateString('ru-RU')}`);
+      setRecoverOpen(false);
+      setRecoverOrderId('');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Ошибка');
+    } finally {
+      setRecoverBusy(false);
+    }
+  };
   const totalXP = calcTotalXP(hist);
   const lvl = getLevel(totalXP);
   const levelName = (t.levels as Record<number, string>)?.[lvl.level] || lvl.name;
@@ -197,10 +223,97 @@ export default function ProfileTab() {
 
       {/* PRO upsell — non-premium authed users */}
       {user && !isPremium && (
-        <ProBanner
-          featureText={`${(t.paywall as Record<string, string>)?.feat1 || 'AI без лимита'} · ${(t.paywall as Record<string, string>)?.ctaSeason || '4 990₸ за сезон'}`}
-          onClick={() => setShowPaywall(true)}
-        />
+        <>
+          <ProBanner
+            featureText={`${(t.paywall as Record<string, string>)?.feat1 || 'AI без лимита'} · ${(t.paywall as Record<string, string>)?.ctaSeason || '4 990₸ за сезон'}`}
+            onClick={() => setShowPaywall(true)}
+          />
+          {/* Self-service recovery — for users who paid with a different email
+              than they registered with (common KZ pattern: parent's card → parent's email). */}
+          <div style={{ marginTop: 6, marginBottom: 14, textAlign: 'center' }}>
+            {!recoverOpen ? (
+              <button
+                onClick={() => setRecoverOpen(true)}
+                style={{
+                  background: 'transparent', border: 'none',
+                  fontFamily: FF.body, fontSize: 11.5, fontWeight: FW.semibold,
+                  color: COLORS.textMuted,
+                  textDecoration: 'underline',
+                  textUnderlineOffset: 2,
+                  cursor: 'pointer', padding: '4px 8px',
+                }}
+              >
+                Оплатил, но PRO не активирован? Восстановить
+              </button>
+            ) : (
+              <div style={{
+                display: 'flex', flexDirection: 'column', gap: 8,
+                padding: 12,
+                background: 'var(--bg-subtle)',
+                border: `2px solid ${INK}`,
+                borderRadius: 12,
+                textAlign: 'left',
+              }}>
+                <div style={{
+                  fontFamily: FF.body, fontSize: 12, fontWeight: FW.semibold,
+                  color: COLORS.textSecondary, lineHeight: 1.4,
+                }}>
+                  Номер заказа из письма Lemon Squeezy («Order #12345»):
+                </div>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={recoverOrderId}
+                  onChange={(e) => setRecoverOrderId(e.target.value.replace(/\D/g, ''))}
+                  placeholder="12345"
+                  disabled={recoverBusy}
+                  style={{
+                    fontFamily: FF.mono, fontSize: 14, fontWeight: 700,
+                    padding: '10px 12px',
+                    border: `2px solid ${INK}`,
+                    borderRadius: 8,
+                    background: 'var(--bg-card)',
+                    color: COLORS.text,
+                  }}
+                />
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    onClick={submitRecover}
+                    disabled={recoverBusy || !recoverOrderId}
+                    style={{
+                      flex: 1,
+                      background: COLORS.streak, color: '#fff',
+                      border: `2px solid ${INK}`,
+                      borderRadius: 8,
+                      padding: '10px 14px',
+                      fontFamily: FF.display, fontSize: 12, fontWeight: 900,
+                      letterSpacing: '0.04em', textTransform: 'uppercase',
+                      cursor: recoverBusy ? 'wait' : 'pointer',
+                      opacity: !recoverOrderId || recoverBusy ? 0.6 : 1,
+                    }}
+                  >
+                    {recoverBusy ? 'Проверка…' : 'Восстановить'}
+                  </button>
+                  <button
+                    onClick={() => { setRecoverOpen(false); setRecoverOrderId(''); }}
+                    disabled={recoverBusy}
+                    style={{
+                      background: 'transparent', color: COLORS.textMuted,
+                      border: `2px solid ${COLORS.cardBorder}`,
+                      borderRadius: 8,
+                      padding: '10px 14px',
+                      fontFamily: FF.body, fontSize: 12, fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Отмена
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </>
       )}
 
       {/* Nav section */}
@@ -210,7 +323,6 @@ export default function ProfileTab() {
       }}>
         {[
           { icon: BarChart3,    label: (t.tabs as Record<string, string>).progress || 'Прогресс',          target: 'prog',        color: COLORS.win,    bg: TINT.win.bgLight },
-          { icon: Users,        label: (t.home as Record<string, string>).friends || 'Друзья',             target: 'friends',     color: '#38BDF8',     bg: 'rgba(56,189,248,0.1)' },
           { icon: Trophy,       label: (t.home as Record<string, string>).leaderboard || 'Рейтинг',        target: 'leaderboard', color: COLORS.xp,     bg: TINT.xp.bgLight },
           { icon: Calculator,   label: (t.home as Record<string, string>).grantCalc || 'Калькулятор',      target: 'calc',        color: COLORS.streak, bg: TINT.streak.bgLight },
           { icon: SettingsIcon, label: (t.tabs as Record<string, string>).settings || 'Настройки',         target: 'settings',    color: COLORS.text,   bg: 'var(--bg-subtle)' },

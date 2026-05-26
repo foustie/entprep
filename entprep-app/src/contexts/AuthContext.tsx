@@ -25,19 +25,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [nativePremium, setNativePremium] = useState(false);
   const [dbPremium, setDbPremium] = useState(false);
 
-  // Check subscriptions table (authoritative source, RLS allows reading own row)
+  // Check subscriptions table (authoritative source, RLS allows reading own row).
+  // maybeSingle() — return null on 0 rows instead of throwing, since most users
+  // are free-tier and have no subscription row at all.
   const checkSubscription = useCallback(async (userId: string) => {
     if (!supabase) return false;
     try {
-      const { data } = await supabase.from('subscriptions')
+      const { data, error } = await supabase.from('subscriptions')
         .select('is_active, expires_at')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
+      if (error) {
+        console.error('checkSubscription error:', error);
+        return false;
+      }
       if (!data) return false;
       return data.is_active && (!data.expires_at || new Date(data.expires_at) > new Date());
     } catch (err) {
-      console.error('checkSubscription error:', err);
-      return false; // table may not exist yet — graceful fallback
+      console.error('checkSubscription threw:', err);
+      return false;
     }
   }, []);
 
@@ -137,6 +143,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => { subscription.unsubscribe(); };
   }, [refreshProfile, checkSubscription]);
+
+  // Post-checkout refresh: when the user comes back from the Lemon Squeezy
+  // checkout tab (or refocuses the app), re-check subscription status so the
+  // newly-granted premium becomes visible without a hard reload.
+  // Webhook activates premium server-side, but onAuthStateChange doesn't fire
+  // for a tab regaining focus — without this, users see "still free" until login.
+  useEffect(() => {
+    if (!supabase || !user) return;
+    let lastCheck = Date.now();
+    const REFRESH_THROTTLE_MS = 5_000;
+    const maybeRefresh = () => {
+      if (document.visibilityState !== 'visible') return;
+      const now = Date.now();
+      if (now - lastCheck < REFRESH_THROTTLE_MS) return;
+      lastCheck = now;
+      checkSubscription(user.id).then(setDbPremium).catch(() => {});
+      checkPremiumStatus().then(setNativePremium).catch(() => {});
+    };
+    document.addEventListener('visibilitychange', maybeRefresh);
+    window.addEventListener('focus', maybeRefresh);
+    return () => {
+      document.removeEventListener('visibilitychange', maybeRefresh);
+      window.removeEventListener('focus', maybeRefresh);
+    };
+  }, [user, checkSubscription]);
 
   const isAdmin = useMemo(() => !!user?.email && ADMIN_EMAILS.includes(user.email), [user]);
   const needsNickname = useMemo(() => !!profile && profile.nickname.startsWith('user_'), [profile]);
