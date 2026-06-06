@@ -1,398 +1,182 @@
-# ENTprep Full Audit & Roadmap
+# ENTprep Audit — June 2026
 
-> Generated: 2026-03-08 | Updated: 2026-03-18
-> Use this file as context for any Claude session working on ENTprep.
-> ✅ = fixed, ⚠️ = partially fixed, ❌ = not fixed
+> **Generated: 2026-06-06** by a fresh full-codebase review (supersedes the 2026-03 audit, preserved in git history).
+> Legend: 🔴 CRITICAL · 🟠 HIGH · 🟡 MEDIUM · 🟢 LOW · ✅ verified OK
+>
+> **How this audit was produced** (ground-truth, not guesses):
+> - `tsc --noEmit` → ✅ clean (0 type errors)
+> - `eslint src/` → ❌ **3 errors, 74 warnings** (`npm run lint` fails CI — see L-group)
+> - `vitest run` → ❌ **1 of 345 tests failing** (`npm run test` fails CI — see T1)
+> - `npm audit` → **27 vulns (3 critical, 17 high, 7 moderate)** — all build/dev-time
+> - Manual read of all 14 Netlify functions, the 13 highest-risk components/contexts, all config files, and both doc files.
 
 ---
 
 ## Table of Contents
-
-1. [Security](#1-security)
-2. [Code Hygiene & Logic Bugs](#2-code-hygiene--logic-bugs)
-3. [UX & Design](#3-ux--design)
-4. [App Store Readiness](#4-app-store-readiness)
-5. [Incomplete Integrations](#5-incomplete-integrations)
-6. [Prioritized Roadmap](#6-prioritized-roadmap)
-
----
-
-## 1. Security
-
-### CRITICAL
-
-| # | Issue | File:Line | Details |
-|---|-------|-----------|---------|
-| S1 | ✅ **Payment system disabled** | `AuthContext.tsx:84` | Fixed: RevenueCat IAP active, `FREE_PREMIUM = false`, premium checks DB + native |
-| S2 | ✅ **Rate limiter broken in push-subscribe** | `netlify/functions/push-subscribe.mjs:17` | Fixed: uses `user.id` after auth verification |
-| S3 | ✅ **Leaderboard score not validated** | `netlify/functions/leaderboard.mjs:127-272` | Fixed: server-side verification — fetches questions, verifies answers, calculates score |
-
-### HIGH
-
-| # | Issue | File:Line | Details |
-|---|-------|-----------|---------|
-| S4 | ✅ **Duel question IDs not sanitized** | `netlify/functions/duel.mjs:200` | Fixed: explicit integer validation `qIds.every(id => Number.isInteger(id))` |
-| S5 | ✅ **Duel fetched questions not validated** | `netlify/functions/duel.mjs:213` | Fixed: validates `ordered.length === qIds.length` |
-| S6 | ✅ **Webhook timing attack** | `netlify/functions/revenuecat-webhook.mjs:112` | Fixed: uses `crypto.timingSafeEqual()` |
-
-### MEDIUM
-
-| # | Issue | File:Line | Details |
-|---|-------|-----------|---------|
-| S7 | **In-memory rate limiter not persistent** | `netlify/functions/utils/shared.mjs:42` | Each Netlify Function instance has own store. Effective rate = `max × instances`. Fix: move to Supabase table or Redis |
-| S8 | ✅ **Admin email check case-sensitive** | `netlify/functions/ai-generate.mjs:21` | Fixed: `.toLowerCase()` on both sides |
-| S9 | **No admin audit logging** | `netlify/functions/admin-action.mjs` | Admin can delete/modify questions with no trail. Fix: add `audit_logs` table |
-
-### LOW
-
-| # | Issue | File:Line | Details |
-|---|-------|-----------|---------|
-| S10 | ✅ **Android keystore passwords in plaintext** | `android/app/build.gradle:22` | Fixed: uses `System.getenv()` with fallback to project properties |
-| S11 | **npm audit: 12 vulnerabilities** | `package.json` | 1 moderate, 11 high (rollup, serialize-javascript, minimatch, tar). Build-time only. Fix: `npm audit fix` |
-| S12 | **AI endpoint returns raw text on parse failure** | `netlify/functions/ai-explain.mjs:96` | If Claude returns bad JSON, raw text shown as explanation. Fix: return proper error |
+1. [Build & CI Health (tooling ground-truth)](#1-build--ci-health)
+2. [Security](#2-security)
+3. [Correctness Bugs](#3-correctness-bugs)
+4. [Code Hygiene](#4-code-hygiene)
+5. [Documentation & Config Drift](#5-documentation--config-drift)
+6. [Dead Code](#6-dead-code)
+7. [UX / Accessibility](#7-ux--accessibility)
+8. [Prioritized Action Plan](#8-prioritized-action-plan)
+9. [Verified OK](#9-verified-ok)
 
 ---
 
-## 2. Code Hygiene & Logic Bugs
+## 1. Build & CI Health
 
-### HIGH
-
-| # | Issue | File:Line | Details |
-|---|-------|-----------|---------|
-| C1 | ✅ **Unsafe type coercion** | `NavigationContext.tsx:85` | Fixed: `navToErrorTest()` accepts `Question[]` properly |
-| C2 | ✅ **SubjectDetail shows wrong count** | `SubjectDetail.tsx:106` | Fixed: shows `poolSize` (actual from Supabase) |
-| C3 | ✅ **Timer not cleared on unmount** | `Test.tsx:141`, `FullENT.tsx:110` | Fixed: cleanup functions call `clearInterval()` |
-| C4 | ✅ **Pool size mismatch Home vs SubjectDetail** | `SubjectDetail.tsx:32` | Fixed: uses `getPoolSize(sid)` |
-
-### MEDIUM
-
-| # | Issue | File:Line | Details |
-|---|-------|-----------|---------|
-| C5 | ✅ **Debounce race condition** | `AppContext.tsx:47` | Fixed: reads fresh `loadData()` inside debounced callback |
-| C6 | **SUBS/TOTAL_Q static initialization** | `questionPools.ts:1-17` | `TOTAL_Q` calculated at module load from localStorage (may be stale). Shows 1950 (13×150) until `prefetchCounts()` completes. Causes UI flicker |
-| C7 | ✅ **Missing Kazakh translations** | `kk.ts` | Fixed: 855 lines (ru.ts: 877), all UI keys present. `Translations` type exported from ru.ts |
-| C8 | **26 components have no tests** | `src/components/` | Core untested: Test, FullENT, Adaptive, SubjectDetail, Home, Duel, Friends, Leaderboard, Progress, Settings |
-| C9 | ✅ **Silent localStorage failures** | `questionStore.ts:85` | Fixed: calls `captureError()` for QuotaExceededError (Sentry) |
-
-### LOW
-
-| # | Issue | File:Line | Details |
-|---|-------|-----------|---------|
-| C10 | **No Supabase request timeout** | `questionStore.ts:109` | Fetch hangs forever on slow network. Fix: `Promise.race` with 10s AbortController |
-| C11 | **Duel.tsx complexity** | `Duel.tsx:37-96` | 895 lines, 15+ state variables, real-time sync. High bug risk during refactoring. Consider `useReducer` |
-| C12 | **ESLint suppressions** | `Test.tsx:78-80` | 6× `eslint-disable-line react-hooks/exhaustive-deps` — potential stale state bugs hidden |
+| # | Sev | Issue | Evidence | Fix |
+|---|-----|-------|----------|-----|
+| **B1** | 🟠 | **`npm run lint` fails** — 3 `react-hooks/rules-of-hooks` errors | `Test.tsx:156` `useExplain()`, `Adaptive.tsx:115` `usePlanLimit/usePlan`, `Calc.tsx:16` `useMemoHelper()` | These are **false positives**: `useExplain`/`usePlan`/`useFreeFullEnt` (`utils/aiLimits.ts`) and `useMemoHelper` (`Calc.tsx:18`, returns a city list) are **plain utility functions, not React hooks** — the `use` prefix collides with the linter rule. **Rename** to non-`use` verbs (`consumeExplain`, `spendPlanCredit`, `getCities`). This is what's actually breaking lint. |
+| **B2** | 🟠 | **`npm run test` fails** — time-bomb test | `utils/__tests__/competitionHelpers.test.ts:140` expects `daysLeft > 0`, but the test hardcodes goal date `2026-06-01` which is now in the past (today 2026-06-06) → `daysLeft` clamps to `0` | Use a relative future date in the test (e.g. `today + 30d`) or `vi.useFakeTimers()`. Not a product bug — but the suite is red. |
+| **B3** | 🟡 | **27 npm vulnerabilities** (3 critical, 17 high) | `vite`, `vitest`, `esbuild`, `ws` advisories | **All are build/dev-time only** (not shipped to users). `npm audit fix` resolves most; the critical vitest-UI one only affects local dev. Low urgency, but keep current. |
+| **B4** | 🟢 | 74 lint warnings | mostly unused vars in tests, 2 unused `eslint-disable` directives (`AppContext.tsx:80`, `MatchingCard.tsx:29`), unused imports | `npm run lint:fix` clears 35; remove the dead `eslint-disable` lines. |
 
 ---
 
-## 3. UX & Design
+## 2. Security
 
-### CRITICAL
+> Note on premium context: the paywall is currently **unreachable** (see DC1), so premium is effectively free for everyone right now. That *lowers the practical impact* of the referral/premium-grant bugs below today — but they become CRITICAL the moment paywall gating is re-enabled. Rated on that basis.
 
-| # | Issue | File:Line | Details |
-|---|-------|-----------|---------|
-| D1 | ✅ **No safe area handling (iOS notch)** | `index.html:5,64` | Fixed: `viewport-fit=cover` + `env(safe-area-inset-*)` CSS padding |
-| D2 | ✅ **Touch targets too small** | `Home.tsx:231` | Fixed: close buttons 44×44px, multiple components updated |
-| D3 | ⚠️ **White (#fff) hardcoded on accent backgrounds** | `FullENT.tsx`, `Duel.tsx`, `Settings.tsx` | Partially fixed: some `color="#fff"` remain on gradient buttons |
+### 🔴 / 🟠 High-impact
 
-### HIGH
+| # | Sev | Issue | File:Line | Detail & Fix |
+|---|-----|-------|-----------|--------------|
+| **S1** | 🟠→🔴 | **PostgREST `ilike` injection in referral lookup → grant Premium to arbitrary/matched users** | `referral.mjs:46` | `nickname=ilike.${encodeURIComponent(referrer_nickname)}`. `encodeURIComponent` does **not** escape `*` (PostgREST wildcard), `(`, `)`. Only validation is `length >= 3` (`:39`). A value like `"ab*"` matches any nick starting `ab` → resolves an arbitrary referrer and grants 7d Premium to both. **Fix:** validate against strict nick regex `^[a-zA-Z0-9_]{3,20}$` before interpolating (the pattern `social.mjs` set_nickname already uses). |
+| **S2** | 🟠 | **PostgREST `ilike` injection in user search / nickname resolve** | `social.mjs:106` (`search_users`), `social.mjs:306` (`resolve_nickname`), `promo.mjs:48` | Same `encodeURIComponent`-doesn't-cover-operators issue. `query` validated only as 2–30 chars. Allows altering the filter (enumerate profiles, bypass `id=neq.self`). Read-only, service key not leaked → HIGH not CRIT. **Fix:** regex-validate / strip non-alphanumerics before building the filter. |
+| **S3** | 🟠 | **Prompt injection in `ai-explain` — user input concatenated raw into prompt** | `ai-explain.mjs:42,49,55` | Unlike `ai-plan.mjs:34` (which has a `sanitize()` stripping `{}[]<>` + length cap), `ai-explain` injects `question`, `options[]`, `explanation`, `pairs[]` verbatim. Enables system-prompt exfiltration / output steering and wastes paid tokens. **Fix:** reuse `ai-plan`'s `sanitize()` and clear instruction boundaries. |
+| **S4** | 🟠 | **`teacher.mjs create_class` has no teacher-role check → cross-user history exposure** | `teacher.mjs:142-169` (create), `:70-135` (`get_class`) | Any authenticated user can create a "class" and become a teacher; `get_class` then returns **other students' full `user_data.hist` and per-subject stats** to anyone with the invite code. No role gate. **Fix:** gate on a verified teacher role (profiles column / allowlist), not mere authentication. |
 
-| # | Issue | File:Line | Details |
-|---|-------|-----------|---------|
-| D4 | ✅ **Hardcoded Russian in UI components** | `MultipleAnswerCard.tsx:59`, `MatchingCard.tsx:86` | Fixed: uses `t.test.multipleAnswers` / `t.test.matching` via `useT()` |
-| D5 | **Inconsistent icon sizes** | Multiple files | Sizes: 10/13/14/15/16/18/20/22/28/32/38/44px — no standard. Fix: create constants (sm=14, md=16, lg=20, xl=24) |
-| D6 | **Close buttons lack context** | `Home.tsx:211-243` | `aria-label={t.close}` — screen readers don't know what is being closed. Fix: context-specific labels |
+### 🟡 / 🟢 Lower-impact
 
-### MEDIUM
-
-| # | Issue | File:Line | Details |
-|---|-------|-----------|---------|
-| D7 | ✅ **Onboarding 100vh ignores safe area** | `Onboarding.tsx:34` | Fixed: uses `100dvh` |
-| D8 | **Keyboard navigation stuck after answer** | `Test.tsx:98-127` | After selecting answer, can't change via keyboard. Fix: allow re-navigation |
-| D9 | **MatchingCard dropdowns not accessible** | `MatchingCard.tsx:36-58` | `<select>` elements missing `aria-label`. Fix: add descriptive labels |
-| D10 | **Auth avatar missing alt text** | `Auth.tsx:62` | `<img alt="">` — empty alt. Fix: `alt={user.name}` |
-| D11 | **Status bar not theme-aware** | `index.html:6` | `theme-color="#0C0C14"` hardcoded dark. Not updated for light theme |
-
-### LOW
-
-| # | Issue | File:Line | Details |
-|---|-------|-----------|---------|
-| D12 | **Inconsistent button padding** | Multiple files | Ad-hoc values: "8px 12px", "15px", "16px 14px". Fix: use SP constants |
-| D13 | **Dark mode splash flash** | `index.html:74-90` | Brief dark flash before light theme applies (~100ms) |
+| # | Sev | Issue | File:Line | Detail & Fix |
+|---|-----|-------|-----------|--------------|
+| **S5** | 🟡 | **In-memory rate limiter is per-instance, non-persistent** | `utils/shared.mjs:40-71` | Module-level `Map` resets on cold start and isn't shared across concurrent Netlify instances → effective limit = `max × instances`. For abuse-sensitive endpoints (`referral`, `promo`) back the limiter with a Supabase row/atomic counter. |
+| **S6** | 🟡 | **`set_nickname` uniqueness check is racy (TOCTOU)** | `social.mjs:121,125` | Two concurrent requests can both pass the pre-check and write. **Fix:** rely on a case-insensitive `UNIQUE` DB constraint + handle the 409, rather than the read-then-write pre-check. |
+| **S7** | 🟢 | **RC webhook: static bearer secret, no replay/idempotency protection** | `revenuecat-webhook.mjs:113-119` | `timingSafeEqual` itself is correct, but it validates a static secret (not an HMAC of the body) and there's no `event.id` idempotency → a captured valid request can be replayed. **Fix:** add idempotency on `event.id`; use RC body-signature if available. |
+| **S8** | 🟢 | **Public leaderboard GET may expose emails** | `leaderboard.mjs:33-110`, POST fallback `:244` | GET is intentionally unauthenticated and strips `user_id` for anon callers (good), but `user_name` falls back to `user.email` on POST (`:244`). Any historical row storing an email as `user_name` leaks it publicly. **Fix:** never persist email into `user_name`. |
+| **S9** | 🟢 | **No admin audit logging** | `admin-action.mjs` | Admins can delete/modify questions with no trail. **Fix:** `audit_logs` table. (Carried from prior audit — still open.) |
 
 ---
 
-## 4. App Store Readiness
+## 3. Correctness Bugs
 
-### BLOCKERS
-
-| # | Issue | File:Line | Details |
-|---|-------|-----------|---------|
-| A1 | ✅ **Placeholder App Store ID** | `PaywallModal.tsx:30` | Fixed: real ID `id6760261689` |
-| A2 | ✅ **FREE_PREMIUM = true** | `AuthContext.tsx:84` | Fixed: RevenueCat active, premium checks DB + native |
-| A3 | **No app icon** | `ios/App/App/Assets.xcassets/AppIcon.appiconset/` | Only 1024px provided. Need proper icon or verify Xcode auto-scales |
-| A4 | **No screenshots** | App Store Connect | Need 6.7" and 6.5" screenshots (5-6 screens) |
-
-### MAJOR (Rejection Risks)
-
-| # | Issue | File:Line | Details |
-|---|-------|-----------|---------|
-| A5 | **WebView-only app risk** | — | Apple may reject as "website wrapper". Mitigations: RevenueCat IAP (native), push notifications, offline support. Need to emphasize native features in review notes |
-| A6 | ✅ **Missing viewport-fit=cover** | `index.html:5` | Fixed: `viewport-fit=cover` added |
-| A7 | ✅ **RevenueCat not configured** | `purchases.ts` | Fixed: products created, IAP working on TestFlight |
-| A8 | **Push notifications setup incomplete** | — | Web Push may not work on iOS native. Need Capacitor Push plugin or verify |
-
-### MODERATE
-
-| # | Issue | File:Line | Details |
-|---|-------|-----------|---------|
-| A9 | **Splash screen notch support** | `LaunchScreen.storyboard` | No safe area constraints for notch |
-| A10 | **App description/keywords** | App Store Connect | Not yet filled in |
-| A11 | **Age rating** | App Store Connect | Not yet configured |
-| A12 | **Privacy policy** | ✅ Done | `https://entprep.org/privacy` |
+| # | Sev | Issue | File:Line | Detail & Fix |
+|---|-----|-------|-----------|--------------|
+| **C1** | 🟠 | **Duel: `setState` called during render** | `Duel.tsx:643-646` | `if (!q ...) { if (q && duelId && !submittingRef.current) handleSubmit(null); ... }` — `handleSubmit` calls `setState` **during render** → React "cannot update during render" / potential loop. **Fix:** move into a `useEffect`. |
+| **C2** | 🟠 | **Duel: stale-closure timer/submit can desync or hang at "waiting"** | `Duel.tsx:280-296` (timer), `:314-335` (`handleSubmit`) | Per-question interval calls `handleSubmit(null)` and `handleSubmit` branches on `oppDone` captured from an old render. Mitigated by a recovery effect (`:349-360`) but fragile. **Fix:** make `handleSubmit` a `useCallback` with correct deps and/or read `oppDone` via a ref; re-fetch via `getDuel` on done. |
+| **C3** | 🟡 | **Exam mode from SubjectDetail ignores language → Kazakh users get Russian questions** | `SubjectDetail.tsx:76` | `assembleProfileSection(sid, PROFILE_BLOCKS, true)` omits the `lang` arg that `FullENT.tsx:71-72` passes. Real localization bug. **Fix:** pass `st.lang`. |
+| **C4** | 🟡 | **cloudSync dedup silently drops same-day identical results** | `cloudSync.ts:57-63` | Dedup key uses day-granular `dt` + `su/sc/tm/tp/co/to`. Two genuine same-day tests with identical subject/score/time collapse to one → lost from history, skews streak/XP. **Fix:** add a unique id/timestamp to `TestResult` and key on it. |
+| **C5** | 🟡 | **Test.tsx: 300ms auto-finish `setTimeout` not cleared on unmount** | `Test.tsx:149-151` | If the component unmounts within 300ms of the last answer, `setFin`/`setCur` fire on an unmounted component (state lost / warning). **Fix:** store the timeout id in a ref and clear in cleanup. |
+| **C6** | 🟡 | **AppContext: cross-tab `storage` handler overwrites unsynced local state** | `AppContext.tsx:93-106` | A storage event from tab B calls `setHist(fresh.hist)` etc., clobbering newer in-memory state in tab A not yet flushed. **Fix:** merge instead of overwrite. |
+| **C7** | 🟡 | **Scoring: matching questions are all-or-nothing (no partial credit)** | `scoringEngine.ts:41-51` | `allCorrect ? maxPts : 0`. Multiple-answer gets partial credit but matching doesn't. **Verify against the official ЕНТ rubric** — if ЕНТ awards per-pair partial credit, this under-scores users. |
+| **C8** | 🟢 | **AuthContext: duplicate premium/profile fetch race on mount** | `AuthContext.tsx:65-74` & `:76-110` | Eager `getSession` and `onAuthStateChange(INITIAL_SESSION)` both call `refreshProfile()` + `checkSubscription()`; later resolver wins → wasted calls + possible flicker. **Fix:** dedupe/gate the eager restore. |
+| **C9** | 🟢 | **srEngine: interval can be 0 for an edge-case card** | `srEngine.ts:36-39` | `else` branch uses `card.interval` (0 for a fresh card) → "due today forever". **Fix:** `Math.max(1, ...)`. |
 
 ---
 
-## 5. Incomplete Integrations
+## 4. Code Hygiene
 
-### Integration Status Matrix
-
-| Integration | Code Written | Configured | Working | Blocker |
-|-------------|:---:|:---:|:---:|---------|
-| **Apple Sign In** | ✅ | ✅ | ✅ | — |
-| **Google OAuth** | ✅ | ✅ | ✅ | — |
-| **RevenueCat IAP (iOS)** | ✅ | ✅ | ✅ | — |
-| **RevenueCat IAP (Android)** | ✅ | ❌ | ❌ | Service account JSON + Play Console setup needed |
-| **Push (Web)** | ✅ | ✅ | ✅ | — |
-| **Push (Native iOS)** | ❌ | ❌ | ❌ | @capacitor/push-notifications not installed |
-| **Push (Native Android)** | ❌ | ❌ | ❌ | google-services.json missing |
-| **Sentry** | ✅ | ✅ | ✅ | — |
-| **Plausible** | ✅ | ✅ | ✅ | — |
-| **Referral System** | ✅ | ✅ | ✅ | — |
-
-### I1. Apple Sign In — Setup Steps
-
-**Code exists:** `Auth.tsx:25-30`, `AuthPrompt.tsx:35-43` — `signInWithOAuth({ provider: 'apple' })`
-
-**What's missing:**
-1. **Apple Developer Portal:**
-   - Go to Certificates, Identifiers & Profiles → Identifiers → `kz.entprep.app`
-   - Enable **Sign In with Apple** capability
-   - Create **Services ID** (for web OAuth): identifier `kz.entprep.app.auth`
-   - Register domain: add Supabase callback URL as authorized redirect
-   - Create **Key** with Sign In with Apple enabled → download .p8 file
-
-2. **Supabase Dashboard:**
-   - Auth → Providers → Apple → Enable
-   - Enter: Services ID, Team ID, Key ID, .p8 private key contents
-   - Authorized redirect: `https://<project>.supabase.co/auth/v1/callback`
-
-3. **Xcode:**
-   - Signing & Capabilities → + Capability → **Sign In with Apple** (for native app)
-
-### I2. RevenueCat — Remaining Setup
-
-**Code exists:** `src/config/purchases.ts`, `netlify/functions/revenuecat-webhook.mjs`
-
-**What's missing:**
-1. Create products in **App Store Connect** → Subscriptions:
-   - `entprep_monthly` (1990₸/мес)
-   - `entprep_yearly` (4990₸/год)
-2. Create products in **Google Play Console** → Monetize → Subscriptions
-3. **RevenueCat Dashboard:**
-   - Create project, add iOS + Android apps
-   - Add products with same IDs
-   - Upload Apple .p8 key
-   - Upload Google service account JSON
-   - Set webhook URL: `https://entprep.org/.netlify/functions/revenuecat-webhook`
-4. **Netlify env vars:**
-   - `VITE_RC_API_KEY_APPLE=appl_xxxxx`
-   - `VITE_RC_API_KEY_GOOGLE=goog_xxxxx`
-   - `REVENUECAT_WEBHOOK_SECRET=<token>`
-5. **Supabase:** Run `payments` table migration SQL
-6. **AuthContext.tsx:78:** Flip `FREE_PREMIUM = false`
-
-### I3. Native Push Notifications
-
-**Web push works** (push-subscribe.mjs, push-cron.mjs, sw.ts)
-
-**Native not configured:**
-- Install: `npm install @capacitor/push-notifications && npx cap sync`
-- iOS: Add Push Notifications capability in Xcode + APNs key
-- Android: Add `google-services.json` from Firebase Console
-- Update `src/utils/pushHelpers.ts` to use Capacitor plugin on native
-
-### I4. Dead Code — Kaspi Payment System
-
-**Files:** `src/config/payment.ts`, `netlify/functions/payment-webhook.mjs`
-
-Kaspi was dropped in favor of RevenueCat. Code lingers but is disabled. Can be removed after RevenueCat is fully working to reduce confusion.
-
-### I5. Missing .env Documentation
-
-**Used but undocumented env vars:**
-
-| Variable | Used In | Required |
-|----------|---------|----------|
-| `VITE_SUPABASE_URL` | supabase.ts | Yes |
-| `VITE_SUPABASE_ANON_KEY` | supabase.ts | Yes |
-| `SUPABASE_SERVICE_KEY` | netlify functions | Yes (server) |
-| `ANTHROPIC_API_KEY` | ai-*.mjs | Yes (server) |
-| `VITE_SENTRY_DSN` | sentry.ts | Optional |
-| `VITE_VAPID_PUBLIC_KEY` | pushHelpers.ts | For push |
-| `VAPID_PRIVATE_KEY` | push-cron.mjs | For push |
-| `ADMIN_EMAILS` | admin-action.mjs | Yes (server) |
-| `ALLOWED_ORIGIN` | shared.mjs | Optional (defaults) |
-| `VITE_RC_API_KEY_APPLE` | purchases.ts | For IAP |
-| `VITE_RC_API_KEY_GOOGLE` | purchases.ts | For IAP |
-| `REVENUECAT_WEBHOOK_SECRET` | revenuecat-webhook.mjs | For IAP |
+| # | Sev | Issue | File:Line | Detail |
+|---|-----|-------|-----------|--------|
+| **H1** | 🟡 | Unsafe `as Record<string,string>` casts on typed i18n object | `Test.tsx:138-139,344-345`, `FullENT.tsx:119-120,417-418` | Bypasses the `Translations` type → missing keys render `undefined` silently. Add the keys to the typed locale interface instead. |
+| **H2** | 🟡 | Duel.tsx complexity | `Duel.tsx` (~895 lines, 15+ state vars, manual realtime) | High bug surface (root of C1/C2). Consider `useReducer` + extracting the realtime sync hook. |
+| **H3** | 🟢 | Variable shadowing of i18n `t` by loop vars | `Adaptive.tsx:103,164-208` | `.map(t => ...)` shadows `const t = useT()`. Works today, footgun for future edits. Rename loop vars. |
+| **H4** | 🟢 | `getPool` partial-fetch handling | `questionStore.ts:126-147` | On a mid-pagination network failure it returns partial rows but (correctly) skips caching/count-write when `!complete`. Verify UI doesn't treat a partial pool as authoritative within the session. |
+| **H5** | 🟢 | 26 components still have no tests | `src/components/` | Core untested: Test, FullENT, Adaptive, SubjectDetail, Home, Progress, Settings (Duel/Friends/Leaderboard now have tests). |
 
 ---
 
-## 6. Prioritized Roadmap
+## 5. Documentation & Config Drift
 
-> **Realistic timeline: 5-7 дней** при ежедневной работе
-> - Claude делает: код, фиксы, сборка, конфиги (~80% работы)
-> - Ты делаешь: Apple Developer Portal, App Store Connect, RevenueCat dashboard, скриншоты, иконка (~20%, но блокирующие)
+> These are **verified** mismatches between the docs and the actual code.
 
-### Phase 1: Critical Code Fixes
-> **~1 сессия Claude** | День 1
+| # | Where | Doc says | Code actually says |
+|---|-------|----------|--------------------|
+| **DOC1** | Old AUDIT.md (pre-fix) | yearly = **4990₸** | `config/payment.ts:5-8` → **9990₸** (CLAUDE.md was right). Fixed in this rewrite. |
+| **DOC2** | CLAUDE.md | "**33** components, **19** UI primitives" | Actual: **35** components, **20** UI (`Landing`, `TeacherDashboard`, the 6 `Home*` split files not counted). |
+| **DOC3** | CLAUDE.md functions list | omits 3 functions | Actual extras: `delete-account.mjs`, `promo.mjs`, `teacher.mjs`. |
+| **DOC4** | Old AUDIT.md I4 | "dead **Kaspi** code in `payment.ts` + `payment-webhook.mjs`" | **False** — no Kaspi code exists; `payment.ts` is pure RevenueCat; `payment-webhook.mjs` doesn't exist. Only a legacy `kaspiTxId` DB column name lingers. Removed that claim. |
+| **DOC5** | Old AUDIT.md "free AI for all" | implied unlimited | AI explain still capped **10/day for everyone** (`aiLimits.ts:31`), AI plan capped **1 lifetime** — caps are no longer premium-gated but still enforced. |
+| **DOC6** | `.env.example` | — | Missing vars that ARE used: `VITE_RC_API_KEY_APPLE`/`_GOOGLE` (`purchases.ts:4-5`), `REVENUECAT_WEBHOOK_SECRET` (`revenuecat-webhook.mjs:7`), `SUPABASE_SERVICE_KEY`, bare `SUPABASE_URL` (scripts). |
 
-- [ ] **D1**: Add `viewport-fit=cover` + safe area CSS padding (`index.html`, main layout)
-- [ ] **C2**: Fix SubjectDetail showing `sub.cnt` instead of `poolSize` (line 113)
-- [ ] **C3**: Add timer cleanup in Test.tsx and FullENT.tsx useEffect returns
-- [ ] **S2**: Fix push-subscribe rate limiter — use `user.id` instead of `req`
-- [ ] **S10**: Move Android keystore passwords out of build.gradle into env vars
-- [ ] **C1**: Fix unsafe type coercion in NavigationContext.tsx
-- [ ] **S4**: Sanitize duel question IDs (integer validation)
-- [ ] **S5**: Validate fetched duel questions count
-- [ ] **S6**: Use `crypto.timingSafeEqual` for webhook secret
-- [ ] **S8**: Normalize admin email check to lowercase
-- [ ] **S11**: Run `npm audit fix`
-
-### Phase 2: UX & Design Fixes
-> **~1 сессия Claude** | День 1-2
-
-- [ ] **D3**: Replace hardcoded `#fff` with theme-aware colors in FullENT, Duel, Settings, Auth
-- [ ] **D2**: Increase touch targets to 44px minimum (Home, Friends, BackButton)
-- [ ] **D4**: Extract hardcoded Russian labels to i18n (MultipleAnswerCard, MatchingCard)
-- [ ] **D5**: Standardize icon sizes (create constants)
-- [ ] **D7**: Fix onboarding height (use `100dvh`)
-- [ ] **D8**: Fix keyboard navigation in Test after answer selection
-- [ ] **D9**: Add aria-labels to MatchingCard dropdowns
-- [ ] **D10**: Add alt text to auth avatar
-- [ ] **D11**: Make status bar theme-aware
-- [ ] **D12**: Standardize button padding with SP constants
-
-### Phase 3: Apple Sign In
-> **~1 сессия** | День 2 | ⚠️ Ты + Claude вместе
-
-- [ ] Enable Sign In with Apple on App ID `kz.entprep.app` (Apple Developer Portal — **ты**)
-- [ ] Create Services ID for web OAuth `kz.entprep.app.auth` (**ты**)
-- [ ] Generate .p8 key with Sign In with Apple enabled (**ты**)
-- [ ] Configure Supabase Apple provider — Services ID, Team ID, Key ID, .p8 (**ты**, Claude подскажет)
-- [ ] Add Sign In with Apple capability in Xcode (**ты**)
-- [ ] Test sign in flow end-to-end
-
-### Phase 4: Payment System (RevenueCat)
-> **~1 сессия** | День 3 | ⚠️ Ты + Claude вместе
-
-- [ ] Create subscription products in App Store Connect: `entprep_monthly` (1990₸), `entprep_yearly` (4990₸) (**ты**)
-- [ ] Create RevenueCat project, add iOS app (**ты**)
-- [ ] Upload .p8 key to RevenueCat (**ты**)
-- [ ] Add products in RevenueCat dashboard (**ты**)
-- [ ] Set Netlify env vars: `VITE_RC_API_KEY_APPLE`, `REVENUECAT_WEBHOOK_SECRET` (**ты**)
-- [ ] Run `payments` table SQL in Supabase (**ты**, Claude даст SQL)
-- [ ] Flip `FREE_PREMIUM = false` (Claude)
-- [ ] Replace placeholder App Store ID in PaywallModal (Claude)
-- [ ] Test purchase flow in sandbox
-
-### Phase 5: App Store Preparation
-> **~1 сессия** | День 4 | ⚠️ Смешанная
-
-- [ ] Создать иконку 1024×1024 (**ты** — Canva/Figma/заказать)
-- [ ] Сделать 5-6 скриншотов на симуляторе iPhone 16 Pro Max (Claude + ты)
-- [ ] Заполнить описание, ключевые слова, возрастной рейтинг (Claude напишет, **ты** вставишь)
-- [ ] Update LaunchScreen.storyboard for notch safe areas (Claude)
-- [ ] Review notes для Apple: объяснить native features (Claude напишет)
-
-### Phase 6: Security Hardening
-> **~1 сессия Claude** | День 4-5
-
-- [ ] **S3**: Validate leaderboard scores server-side
-- [ ] **S9**: Add admin audit logging table
-- [ ] **C5**: Fix debounce race condition in AppContext
-- [ ] **C10**: Add Supabase request timeout (10s AbortController)
-- [ ] **C9**: Add user notification on localStorage quota exceeded
-- [ ] Remove dead Kaspi payment code (`payment.ts`, `payment-webhook.mjs`)
-
-### 🚀 Phase 7: RELEASE
-> **День 5-6** | ⚠️ Ты + Claude вместе
-
-- [ ] Final `npm run build` + `npx cap sync ios`
-- [ ] Archive in Xcode → Distribute to App Store Connect
-- [ ] Deploy web: `npx vite build && netlify deploy --prod --dir=dist --no-build`
-- [ ] Выбрать build в App Store Connect
-- [ ] Submit for Review
-- [ ] ⏳ Ждать Apple Review (1-3 дня)
-
-### Phase 8: Post-Release (Code Quality)
-> **После релиза** | Ongoing
-
-- [ ] **C7**: Complete Kazakh translations (missing UI keys)
-- [ ] **C8**: Write tests for core components (Test, FullENT, SubjectDetail, Home)
-- [ ] **C6**: Make TOTAL_Q reactive (not frozen at module load)
-- [x] Kazakh question translations — **28 593/28 593 (100%) fully translated**
-- [ ] Topic/section name localization (80 sections, 284 subtopics)
-- [ ] Add more questions per subject (target: 2000+ each)
-- [ ] Native push notifications (Capacitor plugin + APNs)
+**Action:** update CLAUDE.md counts (DOC2/DOC3) and `.env.example` (DOC6) this session per the repo's own "keep docs up to date" rule.
 
 ---
 
-## Quick Reference: File Index
+## 6. Dead Code
 
-| File | Issues |
-|------|--------|
-| `index.html` | D1, D11, D13 |
-| `AuthContext.tsx` | S1, A2 |
-| `NavigationContext.tsx` | C1 |
-| `AppContext.tsx` | C5 |
-| `Home.tsx` | D2, D6 |
-| `SubjectDetail.tsx` | C2, C4 |
-| `Test.tsx` | C3, D8, C12 |no nnen
-| `FullENT.tsx` | C3, D3 |
-| `Duel.tsx` | D3, C11 |
-| `PaywallModal.tsx` | A1 |
-| `Onboarding.tsx` | D7 |
-| `MultipleAnswerCard.tsx` | D4 |
-| `MatchingCard.tsx` | D4, D9 |
-| `Auth.tsx` | D3, D10 |
-| `Settings.tsx` | D3 |
-| `BackButton.tsx` | D2 |
-| `Friends.tsx` | D2 |
-| `questionStore.ts` | C9, C10 |
-| `questionPools.ts` | C6 |
-| `kk.ts` | C7 |
-| `netlify/functions/push-subscribe.mjs` | S2 |
-| `netlify/functions/leaderboard.mjs` | S3 |
-| `netlify/functions/duel.mjs` | S4, S5 |
-| `netlify/functions/revenuecat-webhook.mjs` | S6 |
-| `netlify/functions/utils/shared.mjs` | S7 |
-| `netlify/functions/ai-generate.mjs` | S8 |
-| `netlify/functions/admin-action.mjs` | S9 |
-| `netlify/functions/payment-webhook.mjs` | I4 (dead code) |
-| `purchases.ts` | A7, I2 |
-| `android/app/build.gradle` | S10 |
-| `config/payment.ts` | I4 (dead code) |
+| # | Item | Evidence |
+|---|------|----------|
+| **DC1** | **Entire paywall trigger path is unreachable** | `openPaywall(...)` is **destructured in 5 components** (`FullENT.tsx:51`, `HomeNavCards.tsx:14`, `Settings.tsx:52`, `Adaptive.tsx:66`, `Test.tsx:51`) but **called in none**. `paywallReason` (`NavigationContext.tsx:46`) only ever set by that unused fn → `PaywallModal` (`App.tsx:361`) can never open via normal flow. **Decide:** either re-wire gating or remove the dead path + modal. |
+| **DC2** | **Dead imports in FullENT** | `FullENT.tsx:32` imports `canUseFreeFullEnt`/`useFreeFullEnt`, `:51-52` destructures `openPaywall`/`isPremium` — **none used** in the body. |
+| **DC3** | **`FREE_PREMIUM` constant is inert** | `AuthContext.tsx:115` `= false`, but with paywall removed, `isPremium` only affects streak-freeze + cosmetic badges. No feature is locked. |
+| **DC4** | **RevenueCat purchase flow orphaned on web** | `PaywallModal` purchase buttons fire only on native; with DC1 the whole RC flow is unreachable on web build. Keep for native, but document it. |
+
+---
+
+## 7. UX / Accessibility
+
+| # | Sev | Issue | File:Line |
+|---|-----|-------|-----------|
+| **U1** | 🟡 | MatchingCard `<select>` dropdowns lack `aria-label` | `ui/MatchingCard.tsx` |
+| **U2** | 🟡 | Inconsistent icon sizes (10–44px, no scale) | multiple — add `sm/md/lg/xl` constants |
+| **U3** | 🟢 | Close buttons use generic `aria-label={t.close}` (no context for screen readers) | `Home.tsx` |
+| **U4** | 🟢 | Keyboard nav can't change a selected answer in Test | `Test.tsx` |
+| ✅ | — | **theme-color now updates for light theme** (`index.html:87`) — prior audit's D11 is resolved | — |
+| ✅ | — | viewport-fit=cover + safe areas present (`index.html:5`) | — |
+
+---
+
+## 8. Prioritized Action Plan
+
+**Now (CI is red — fixes are quick):**
+1. **B1** — rename `useExplain`/`usePlan`/`useFreeFullEnt`/`useMemoHelper` → non-`use` names. Unblocks `npm run lint`.
+2. **B2** — make the competitionHelpers test date relative. Unblocks `npm run test`.
+3. **DOC2/DOC3/DOC6** — sync CLAUDE.md counts + function list + `.env.example`.
+
+**This week (security + real bugs):**
+4. **S1, S2** — strict regex-validate nicknames/queries before PostgREST `ilike` (free Premium / profile enumeration).
+5. **S4** — add teacher-role gate (cross-user data exposure).
+6. **S3** — sanitize `ai-explain` input.
+7. **C1, C2** — fix Duel render-phase setState + stale-closure timer.
+8. **C3** — pass `lang` in SubjectDetail exam mode.
+
+**Decide (product call):**
+9. **DC1** — re-enable paywall gating *or* delete the dead paywall path. Current state ("wired but unreachable") is the worst of both.
+10. **C7** — confirm matching-question scoring vs official ЕНТ rubric.
+
+**Backlog:**
+11. **S5/S6/S7/S9** server hardening · **C4/C5/C6** data-integrity · **B3** `npm audit fix` · **H1–H5** hygiene · **U1–U4** a11y.
+
+---
+
+## 9. Verified OK
+
+These were checked and are sound (no action needed):
+- `tsc --noEmit` clean — no type errors.
+- **Leaderboard POST** computes scores server-side from DB `c` values, regex-filters `user_ids` (`leaderboard.mjs:60`) — strong design.
+- **Duel** strips correct answers before sending to client, validates question IDs as integers, enforces creator/opponent ownership.
+- **Social friend ops** UUID-validate `friend_id`, enforce ownership on respond/remove.
+- **Admin gating** — case-insensitive email allowlist checked after JWT verify (`ai-generate.mjs:21`, `admin-action.mjs:66`).
+- **Service-role key** never returned to clients in any function.
+- **`ai-plan.mjs`** properly sanitizes + clamps user input (the pattern `ai-explain` should copy).
+- `questionStore` Supabase fetch has a 15s AbortController timeout and graceful localStorage→static fallback.
+- iOS safe areas + light-theme status bar handled in `index.html`.
 
 ---
 
 ## Stats Summary
 
-| Category | Total | ✅ Fixed | ⚠️ Partial | ❌ Open |
-|----------|-------|---------|-----------|--------|
-| Security | 12 | 8 | 0 | 4 (S7, S9, S11, S12) |
-| Code/Logic | 12 | 7 | 0 | 5 (C6, C8, C10, C11, C12) |
-| UX/Design | 13 | 4 | 2 | 7 (D5, D6, D8, D9, D10, D12, D13) |
-| App Store | 11 | 5 | 2 | 4 (A3, A4, A10, A11) |
-| Integrations | 5 | 3 | 0 | 2 (native push iOS/Android) |
-| **Total** | **53** | **27** | **4** | **22** |
+| Category | Items | 🔴/🟠 | 🟡 | 🟢 | ✅ |
+|----------|------:|:----:|:--:|:--:|:--:|
+| Build/CI | 4 | 2 | 1 | 1 | — |
+| Security | 9 | 4 | 2 | 3 | 7 |
+| Correctness | 9 | 2 | 5 | 2 | — |
+| Hygiene | 5 | — | 2 | 3 | — |
+| Doc/Config drift | 6 | — | 6 | — | — |
+| Dead code | 4 | — | 4 | — | — |
+| UX/a11y | 4 | — | 2 | 2 | 2 |
+| **Total** | **41** | **8** | **22** | **11** | — |
