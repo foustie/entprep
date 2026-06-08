@@ -1,6 +1,6 @@
 import React from 'react';
 import { COLORS, TINT, R } from '../constants/styles';
-import { BookOpen, Brain, Zap, Users, ArrowRight, GraduationCap, CheckCircle2, ChevronDown } from 'lucide-react';
+import { BookOpen, Brain, Zap, Users, ArrowRight, GraduationCap, CheckCircle2, ChevronDown, Star, Clock } from 'lucide-react';
 
 interface Props {
   onStart: () => void;
@@ -91,6 +91,106 @@ export default function Landing({ onStart, totalQ }: Props) {
             </div>
           </div>
         ))}
+      </section>
+
+      {/* Three steps to your dream score */}
+      <section style={{ padding: '24px 24px 8px', maxWidth: 480, margin: '0 auto' }}>
+        <h2 style={{ fontSize: 26, fontWeight: 800, fontFamily: "'Unbounded',sans-serif", lineHeight: 1.25, textAlign: 'center', marginBottom: 32, color: 'var(--text)' }}>
+          Три шага к&nbsp;баллу мечты
+        </h2>
+
+        {/* 01 — Diagnostic / predicted score */}
+        <div style={{ marginBottom: 36 }}>
+          <div style={{ background: TINT.teal.bg, borderRadius: 20, padding: 14 }}>
+            <div style={{ background: 'var(--bg-card)', borderRadius: 14, padding: '16px 16px 18px', border: '1px solid var(--border-light)' }}>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 2 }}>Прогноз балла</div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                <span style={{ fontSize: 40, fontWeight: 800, fontFamily: "'Unbounded',sans-serif", color: 'var(--text)' }}>118</span>
+                <span style={{ fontSize: 15, color: 'var(--text-muted)', fontWeight: 600 }}>/ 140</span>
+              </div>
+              <div style={{ display: 'flex', gap: 24, margin: '12px 0 16px' }}>
+                <div><div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Математика</div><div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)' }}>34</div></div>
+                <div><div style={{ fontSize: 11, color: 'var(--text-muted)' }}>История</div><div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)' }}>17</div></div>
+                <div><div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Физика</div><div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)' }}>31</div></div>
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>Слабые темы</div>
+              {[
+                { name: 'Производная и интеграл', pct: 58, color: COLORS.red },
+                { name: 'Стереометрия', pct: 72, color: COLORS.amber },
+                { name: 'Тригонометрия', pct: 81, color: COLORS.green },
+              ].map((b, i) => (
+                <div key={i} style={{ marginBottom: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 3 }}>
+                    <span style={{ color: 'var(--text-body)' }}>{b.name}</span>
+                    <span style={{ color: 'var(--text-muted)' }}>{b.pct}%</span>
+                  </div>
+                  <div style={{ height: 6, borderRadius: 3, background: 'var(--bg-subtle-2)', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${b.pct}%`, background: b.color, borderRadius: 3 }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--text-muted)', fontFamily: "'Unbounded',sans-serif", fontWeight: 700, marginTop: 16 }}>01</div>
+          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', margin: '2px 0 4px' }}>Пройди диагностику</div>
+          <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>Узнай свой прогнозируемый балл и темы, которые забирают больше всего очков.</div>
+        </div>
+
+        {/* 02 — Tailored plan */}
+        <div style={{ marginBottom: 36 }}>
+          <div style={{ background: TINT.accent.bg, borderRadius: 20, padding: 14 }}>
+            <div style={{ background: 'var(--bg-card)', borderRadius: 14, padding: 8, border: '1px solid var(--border-light)' }}>
+              {[
+                { name: 'Квадратные уравнения', chip: 'Математика', color: COLORS.accent, time: '25 мин' },
+                { name: 'Тюркский каганат', chip: 'История', color: COLORS.teal, time: '20 мин' },
+                { name: 'Законы Ньютона', chip: 'Физика', color: '#EC4899', time: '30 мин' },
+              ].map((r, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 10px', borderBottom: i < 2 ? '1px solid var(--border-light)' : 'none' }}>
+                  <span style={{ width: 18, height: 18, borderRadius: 9, border: '2px solid var(--border-strong)', flexShrink: 0 }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{r.name}</div>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: r.color, background: `${r.color}1a`, padding: '2px 7px', borderRadius: 6 }}>{r.chip}</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 3 }}><Clock size={11} /> {r.time}</span>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: '#fff', background: r.color, padding: '7px 14px', borderRadius: 10 }}>Начать</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--text-muted)', fontFamily: "'Unbounded',sans-serif", fontWeight: 700, marginTop: 16 }}>02</div>
+          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', margin: '2px 0 4px' }}>Получи персональный план</div>
+          <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>Укажи дату экзамена и цель. План сам перестраивается по мере роста твоей точности.</div>
+        </div>
+
+        {/* 03 — Hit your target */}
+        <div style={{ marginBottom: 8 }}>
+          <div style={{ background: TINT.green.bg, borderRadius: 20, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ background: 'var(--bg-card)', borderRadius: 14, padding: '14px', border: '1px solid var(--border-light)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                <BookOpen size={16} color={COLORS.teal} />
+                <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>Банк вопросов</span>
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>Решай в своём темпе с полными объяснениями каждой ошибки.</div>
+            </div>
+            <div style={{ background: 'var(--bg-card)', borderRadius: 14, padding: '14px', border: '1px solid var(--border-light)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Zap size={16} color={COLORS.accent} fill={COLORS.accent} />
+                  <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>Question Rush</span>
+                </div>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 13, fontWeight: 800, color: COLORS.amber }}>
+                  <Star size={13} fill={COLORS.amber} color={COLORS.amber} /><Star size={13} fill={COLORS.amber} color={COLORS.amber} /><Star size={13} fill={COLORS.amber} color={COLORS.amber} />
+                </span>
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>Гонка на время. Чем быстрее отвечаешь — тем больше звёзд.</div>
+            </div>
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--text-muted)', fontFamily: "'Unbounded',sans-serif", fontWeight: 700, marginTop: 16 }}>03</div>
+          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', margin: '2px 0 4px' }}>Достигни своей цели</div>
+          <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>Целевые дриллы и тренировки на скорость, собранные вокруг твоих слабых тем.</div>
+        </div>
       </section>
 
       {/* What's included */}

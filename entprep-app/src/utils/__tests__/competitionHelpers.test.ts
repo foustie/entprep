@@ -131,7 +131,9 @@ describe('getGoalProgress', () => {
       { su: 'math', sc: 70, dt: '01.01.2026' },
       { su: 'math', sc: 80, dt: '02.01.2026' },
     ];
-    const goal = { target: 100, date: '2026-06-01' };
+    // Use a date ~30 days in the future so daysLeft stays positive regardless of run date
+    const future = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
+    const goal = { target: 100, date: future };
     const result = getGoalProgress(hist, goal);
     expect(result).not.toBeNull();
     expect(result!.currentAvg).toBe(75);

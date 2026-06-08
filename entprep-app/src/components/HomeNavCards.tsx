@@ -3,7 +3,7 @@ import { UNIS } from '../data/universities';
 import { CARD_COMPACT, COLORS, SECTION_LABEL, TINT, hoverGlow } from '../constants/styles';
 import { useT } from '../locales';
 import { useNav } from '../contexts/NavigationContext';
-import { GraduationCap, ChevronRight, Calculator, Trophy, Crown, Users, Swords } from 'lucide-react';
+import { GraduationCap, ChevronRight, Calculator, Trophy, Crown, Users, Swords, Zap } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 interface Props {
@@ -46,6 +46,29 @@ export default function HomeNavCards({ isPremium }: Props) {
           <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{t.home.fullEntDesc}</div>
         </div>
         <ChevronRight size={18} color={COLORS.teal} />
+      </button>
+
+      {/* Question Rush — speed practice */}
+      <button
+        onClick={() => nav("rush")}
+        aria-label={`${t.rush.title} — ${t.rush.tagline}`}
+        style={{
+          ...CARD_COMPACT,
+          display: 'flex', alignItems: 'center', width: '100%',
+          borderLeft: `3px solid ${COLORS.accent}`,
+          padding: '16px 14px', marginBottom: 20,
+          cursor: 'pointer', textAlign: 'left', transition: 'box-shadow 0.2s',
+        }}
+        {...hoverGlow(COLORS.accent)}
+      >
+        <div style={{ width: 44, height: 44, borderRadius: 12, background: TINT.accent.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Zap size={22} color={COLORS.accent} fill={COLORS.accent} />
+        </div>
+        <div style={{ marginLeft: 12, flex: 1 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{t.rush.title}</div>
+          <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{t.rush.tagline}</div>
+        </div>
+        <ChevronRight size={18} color={COLORS.accent} />
       </button>
 
       {/* Social row */}
