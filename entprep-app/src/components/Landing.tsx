@@ -101,11 +101,11 @@ export default function Landing({ onStart, totalQ }: Props) {
           Три шага к&nbsp;баллу мечты
         </h2>
 
-        <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? 'repeat(3, 1fr)' : '1fr', gap: isDesktop ? 28 : 0, alignItems: 'start' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? 'repeat(3, 1fr)' : '1fr', gap: isDesktop ? 28 : 0, alignItems: 'stretch' }}>
 
         {/* 01 — Diagnostic / predicted score */}
-        <div style={{ marginBottom: isDesktop ? 0 : 36 }}>
-          <div style={{ background: TINT.teal.bg, borderRadius: 20, padding: 14 }}>
+        <div style={{ marginBottom: isDesktop ? 0 : 36, display: 'flex', flexDirection: 'column', height: isDesktop ? '100%' : 'auto' }}>
+          <div style={{ background: TINT.teal.bg, borderRadius: 20, padding: 14, flex: isDesktop ? 1 : 'none' }}>
             <div style={{ background: 'var(--bg-card)', borderRadius: 14, padding: '16px 16px 18px', border: '1px solid var(--border-light)' }}>
               <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 2 }}>Прогноз балла</div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
@@ -141,8 +141,8 @@ export default function Landing({ onStart, totalQ }: Props) {
         </div>
 
         {/* 02 — Tailored plan */}
-        <div style={{ marginBottom: isDesktop ? 0 : 36 }}>
-          <div style={{ background: TINT.accent.bg, borderRadius: 20, padding: 14 }}>
+        <div style={{ marginBottom: isDesktop ? 0 : 36, display: 'flex', flexDirection: 'column', height: isDesktop ? '100%' : 'auto' }}>
+          <div style={{ background: TINT.accent.bg, borderRadius: 20, padding: 14, flex: isDesktop ? 1 : 'none' }}>
             <div style={{ background: 'var(--bg-card)', borderRadius: 14, padding: 8, border: '1px solid var(--border-light)' }}>
               {[
                 { name: 'Квадратные уравнения', chip: 'Математика', color: COLORS.accent, time: '25 мин' },
@@ -169,8 +169,8 @@ export default function Landing({ onStart, totalQ }: Props) {
         </div>
 
         {/* 03 — Hit your target */}
-        <div style={{ marginBottom: isDesktop ? 0 : 8 }}>
-          <div style={{ background: TINT.green.bg, borderRadius: 20, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ marginBottom: isDesktop ? 0 : 8, display: 'flex', flexDirection: 'column', height: isDesktop ? '100%' : 'auto' }}>
+          <div style={{ background: TINT.green.bg, borderRadius: 20, padding: 14, display: 'flex', flexDirection: 'column', gap: 10, flex: isDesktop ? 1 : 'none' }}>
             <div style={{ background: 'var(--bg-card)', borderRadius: 14, padding: '14px', border: '1px solid var(--border-light)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                 <BookOpen size={16} color={COLORS.teal} />
