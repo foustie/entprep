@@ -1,5 +1,6 @@
 import React from 'react';
-import { COLORS, TINT, R } from '../constants/styles';
+import { COLORS, TINT } from '../constants/styles';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 import { BookOpen, Brain, Zap, Users, ArrowRight, GraduationCap, CheckCircle2, ChevronDown, Star, Clock } from 'lucide-react';
 
 interface Props {
@@ -9,6 +10,7 @@ interface Props {
 
 export default function Landing({ onStart, totalQ }: Props) {
   const qLabel = `${Math.floor(totalQ / 1000)} 000+`;
+  const isDesktop = useBreakpoint() === 'desktop';
 
   return (
     <div style={{ minHeight: '100dvh', background: 'var(--bg)', color: 'var(--text)', fontFamily: "'Segoe UI',-apple-system,sans-serif", paddingBottom: 80 }}>
@@ -94,13 +96,15 @@ export default function Landing({ onStart, totalQ }: Props) {
       </section>
 
       {/* Three steps to your dream score */}
-      <section style={{ padding: '24px 24px 8px', maxWidth: 480, margin: '0 auto' }}>
-        <h2 style={{ fontSize: 26, fontWeight: 800, fontFamily: "'Unbounded',sans-serif", lineHeight: 1.25, textAlign: 'center', marginBottom: 32, color: 'var(--text)' }}>
+      <section style={{ padding: isDesktop ? '48px 24px 24px' : '24px 24px 8px', maxWidth: isDesktop ? 1100 : 480, margin: '0 auto' }}>
+        <h2 style={{ fontSize: isDesktop ? 34 : 26, fontWeight: 800, fontFamily: "'Unbounded',sans-serif", lineHeight: 1.25, textAlign: 'center', marginBottom: isDesktop ? 44 : 32, color: 'var(--text)' }}>
           Три шага к&nbsp;баллу мечты
         </h2>
 
+        <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? 'repeat(3, 1fr)' : '1fr', gap: isDesktop ? 28 : 0, alignItems: 'start' }}>
+
         {/* 01 — Diagnostic / predicted score */}
-        <div style={{ marginBottom: 36 }}>
+        <div style={{ marginBottom: isDesktop ? 0 : 36 }}>
           <div style={{ background: TINT.teal.bg, borderRadius: 20, padding: 14 }}>
             <div style={{ background: 'var(--bg-card)', borderRadius: 14, padding: '16px 16px 18px', border: '1px solid var(--border-light)' }}>
               <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 2 }}>Прогноз балла</div>
@@ -137,7 +141,7 @@ export default function Landing({ onStart, totalQ }: Props) {
         </div>
 
         {/* 02 — Tailored plan */}
-        <div style={{ marginBottom: 36 }}>
+        <div style={{ marginBottom: isDesktop ? 0 : 36 }}>
           <div style={{ background: TINT.accent.bg, borderRadius: 20, padding: 14 }}>
             <div style={{ background: 'var(--bg-card)', borderRadius: 14, padding: 8, border: '1px solid var(--border-light)' }}>
               {[
@@ -165,7 +169,7 @@ export default function Landing({ onStart, totalQ }: Props) {
         </div>
 
         {/* 03 — Hit your target */}
-        <div style={{ marginBottom: 8 }}>
+        <div style={{ marginBottom: isDesktop ? 0 : 8 }}>
           <div style={{ background: TINT.green.bg, borderRadius: 20, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
             <div style={{ background: 'var(--bg-card)', borderRadius: 14, padding: '14px', border: '1px solid var(--border-light)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
@@ -190,6 +194,8 @@ export default function Landing({ onStart, totalQ }: Props) {
           <div style={{ fontSize: 13, color: 'var(--text-muted)', fontFamily: "'Unbounded',sans-serif", fontWeight: 700, marginTop: 16 }}>03</div>
           <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', margin: '2px 0 4px' }}>Достигни своей цели</div>
           <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>Целевые дриллы и тренировки на скорость, собранные вокруг твоих слабых тем.</div>
+        </div>
+
         </div>
       </section>
 
@@ -259,8 +265,8 @@ export default function Landing({ onStart, totalQ }: Props) {
         </div>
       </section>
 
-      {/* Sticky CTA — mobile */}
-      <div style={{
+      {/* Sticky CTA — mobile/tablet only (overlaps content on desktop) */}
+      {!isDesktop && <div style={{
         position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
         padding: '12px 20px', paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
         background: 'var(--bg-footer)',
@@ -278,7 +284,7 @@ export default function Landing({ onStart, totalQ }: Props) {
         }}>
           Начать бесплатно <ArrowRight size={18} />
         </button>
-      </div>
+      </div>}
     </div>
   );
 }
