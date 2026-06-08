@@ -201,10 +201,10 @@ export default function Landing({ onStart, totalQ }: Props) {
 
       {/* What's included */}
       <section style={{
-        padding: '32px 24px', maxWidth: 440, margin: '0 auto',
+        padding: '32px 24px', maxWidth: isDesktop ? 560 : 440, margin: '0 auto',
         background: 'var(--bg-card)', borderRadius: 20,
         border: '1px solid var(--border-light)',
-        marginLeft: 16, marginRight: 16,
+        marginLeft: isDesktop ? 'auto' : 16, marginRight: isDesktop ? 'auto' : 16,
       }}>
         <h2 style={{ fontSize: 18, fontWeight: 700, fontFamily: "'Unbounded',sans-serif", marginBottom: 20, color: 'var(--text)' }}>
           Всё бесплатно

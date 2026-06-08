@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { SUBS, ALL_PROFILES } from '../config/questionPools';
-import { TOPIC_MAP } from '../config/topics';
+import { TOPIC_MAP, getTopicQuestions } from '../config/topics';
 import { getPool } from '../utils/questionStore';
 import { shuffleArray, shuffleOptions } from '../utils/questionHelpers';
 import { getQType, getSingleCorrect } from '../types';
@@ -71,6 +71,7 @@ export default function QuestionRush({ finish }: RushProps) {
   const advanceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lockedRef = useRef(false);
   const savedRef = useRef(false);
+  const hasDbTopicsRef = useRef(false); // true when pool questions carry _topic (Supabase); else fall back to TOPIC_MAP ranges
 
   const timePerQ = Math.round(BASE_SEC * PACE_MULT[pace]);
   const subColor = RUSH_SUBJECTS.find(s => s.id === subject)?.color || COLORS.accent;
@@ -85,6 +86,9 @@ export default function QuestionRush({ finish }: RushProps) {
       poolRef.current = pool;
       const singles = pool.filter(q => getQType(q) === 'single');
       const sections = TOPIC_MAP[sid];
+      // Supabase questions carry _topic; static-fallback questions don't — then use TOPIC_MAP ranges
+      const hasDbTopics = singles.some(q => q._topic);
+      hasDbTopicsRef.current = hasDbTopics;
       let counts: typeof topicCounts;
       if (sections && sections.length > 0) {
         counts = sections.map(sec => ({
@@ -92,7 +96,9 @@ export default function QuestionRush({ finish }: RushProps) {
           name: lang === 'kk' ? (sec.name_kk || sec.name) : sec.name,
           icon: sec.icon,
           skills: sec.subtopics?.length || 0,
-          q: singles.filter(q => q._topic === sec.id).length,
+          q: hasDbTopics
+            ? singles.filter(q => q._topic === sec.id).length
+            : getTopicQuestions(pool, sec.ranges).filter(q => getQType(q) === 'single').length,
           subs: (sec.subtopics || []).map(s => (lang === 'kk' ? (s.name_kk || s.name) : s.name)),
         })).filter(c => c.q > 0);
       } else {
@@ -119,8 +125,23 @@ export default function QuestionRush({ finish }: RushProps) {
       hist.filter(r => r.su === subject).forEach(r => r.qd?.forEach(d => answered.add(d.oi)));
     }
     const allTopics = topics.has('__all__');
-    let src = poolRef.current.filter(q => getQType(q) === 'single');
-    if (!allTopics) src = src.filter(q => q._topic && topics.has(q._topic));
+    let src: Question[];
+    if (allTopics) {
+      src = poolRef.current.filter(q => getQType(q) === 'single');
+    } else if (hasDbTopicsRef.current) {
+      src = poolRef.current.filter(q => getQType(q) === 'single' && q._topic && topics.has(q._topic));
+    } else {
+      // Static fallback: collect selected sections via TOPIC_MAP ranges (deduped)
+      const sections = TOPIC_MAP[subject!] || [];
+      const seen = new Set<number>();
+      src = [];
+      for (const sec of sections) {
+        if (!topics.has(sec.id)) continue;
+        for (const q of getTopicQuestions(poolRef.current, sec.ranges)) {
+          if (getQType(q) === 'single' && q._oi != null && !seen.has(q._oi)) { seen.add(q._oi); src.push(q); }
+        }
+      }
+    }
     src = src.filter(q => {
       const d = (q.difficulty || 'medium') as Difficulty;
       if (diffs.has(d)) return true;
