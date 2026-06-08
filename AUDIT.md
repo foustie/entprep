@@ -13,6 +13,7 @@
 ---
 
 ## Table of Contents
+0. [Open Issues — Question Rush & Landing (2026-06-08)](#0-open-issues--question-rush--landing-logged-2026-06-08)
 1. [Build & CI Health (tooling ground-truth)](#1-build--ci-health)
 2. [Security](#2-security)
 3. [Correctness Bugs](#3-correctness-bugs)
@@ -22,6 +23,19 @@
 7. [UX / Accessibility](#7-ux--accessibility)
 8. [Prioritized Action Plan](#8-prioritized-action-plan)
 9. [Verified OK](#9-verified-ok)
+
+---
+
+## 0. Open Issues — Question Rush & Landing (logged 2026-06-08)
+
+> New issues from the Question Rush + "Три шага" landing work. Logged, not yet fixed.
+
+| # | Sev | Issue | File | Root cause / notes |
+|---|-----|-------|------|--------------------|
+| **QR1** | 🟡 | **Wizard step 1 shows "Все вопросы" instead of the topic list** | `QuestionRush.tsx` (`selectSubject` → `topicCounts`) | Topic counts are built by grouping the pool on `q._topic` and filtering `c.q > 0`. On the **static fallback** data (no Supabase, or before it loads) static questions have no `_topic`, so every section is dropped and it collapses to the synthetic `__all__` ("Все вопросы") bucket. Need to verify it shows real sections on prod (Supabase has `_topic`), and provide a better fallback (e.g. map via `TOPIC_MAP` ranges with `getTopicQuestions`) so topics still appear offline. Should mirror the reference ("Craft and Structure · 3 skills · 391 questions"). |
+| **QR2** | 🟢 | Rush uses single-choice questions only | `QuestionRush.tsx` `startGame` filters `getQType==='single'` | Intentional for clean speed mode, but means profile subjects' multiple/matching questions never appear in Rush. Revisit if we want them. |
+| **QR3** | 🟢 | "Challenge" (PRO) tier has no real data tier | `QuestionRush.tsx` difficulty filter | There's no `challenge` difficulty in the DB; the toggle maps to `hard`. Shows the PRO upsell faithfully but adds no distinct questions. Needs a real challenge question set or relabel. |
+| **LP1** | 🟡 | **Landing looks crooked / unbalanced on desktop** | `Landing.tsx` | Sections use inconsistent max-widths and alignment: hero & features `maxWidth: 440`, three-steps `maxWidth: 1100`, "Всё бесплатно" `maxWidth: 440` + `marginLeft/Right: 16` (left-shifted narrow box), "Для школ" 440. On desktop they don't align to a common column → empty sides + misaligned blocks. Fix: unify to one responsive container width and center consistently; consider a proper 2-column hero on desktop. |
 
 ---
 
