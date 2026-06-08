@@ -16,6 +16,7 @@ export const SCREENS = {
   DUEL: 'duel',
   REVIEW: 'review',
   TEACHER: 'teacher',
+  RUSH: 'rush',
 } as const;
 
 export type Screen = (typeof SCREENS)[keyof typeof SCREENS];

@@ -66,6 +66,7 @@ const Friends = React.lazy(() => import('./components/Friends'));
 const Duel = React.lazy(() => import('./components/Duel'));
 const ReviewSession = React.lazy(() => import('./components/ReviewSession'));
 const TeacherDashboard = React.lazy(() => import('./components/TeacherDashboard'));
+const QuestionRush = React.lazy(() => import('./components/QuestionRush'));
 
 interface NavItem {
   id: string;
@@ -136,7 +137,7 @@ function AppContent() {
   }, [syncError]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const needProfile = prof.length === 0 && screen !== SCREENS.PROFILE;
-  const showNav = !needProfile && screen !== SCREENS.TEST && screen !== SCREENS.FULL_ENT && screen !== SCREENS.PROFILE && screen !== SCREENS.SUBJECT && screen !== SCREENS.ERROR_REVIEW && screen !== SCREENS.ADMIN && screen !== SCREENS.CHALLENGE && screen !== SCREENS.LEADERBOARD && screen !== SCREENS.FRIENDS && screen !== SCREENS.DUEL && screen !== SCREENS.REVIEW && screen !== SCREENS.TEACHER && !showOnboarding && !showAuthPrompt;
+  const showNav = !needProfile && screen !== SCREENS.TEST && screen !== SCREENS.FULL_ENT && screen !== SCREENS.PROFILE && screen !== SCREENS.SUBJECT && screen !== SCREENS.ERROR_REVIEW && screen !== SCREENS.ADMIN && screen !== SCREENS.CHALLENGE && screen !== SCREENS.LEADERBOARD && screen !== SCREENS.FRIENDS && screen !== SCREENS.DUEL && screen !== SCREENS.REVIEW && screen !== SCREENS.TEACHER && screen !== SCREENS.RUSH && !showOnboarding && !showAuthPrompt;
 
   const { user } = useAuth();
 
@@ -268,6 +269,11 @@ function AppContent() {
           )}
           {!needProfile && screen === SCREENS.TEACHER && (
             <TeacherDashboard onBack={goHome} />
+          )}
+          {!needProfile && screen === SCREENS.RUSH && (
+            <ErrorBoundary key="rush" title={tr.errors.rushTitle} message={tr.errors.rushMessage} onRecover={goHome}>
+              <QuestionRush finish={handleFinish} />
+            </ErrorBoundary>
           )}
         </Suspense>
         {!needProfile && screen === SCREENS.ADAPTIVE && (
