@@ -26,7 +26,7 @@ entprep-app/src/
 ├── App.tsx              # Root (providers, navigation, lazy routes)
 ├── main.tsx             # Entry point (OAuth deep link handling)
 ├── types/index.ts       # All shared TypeScript interfaces
-├── components/          # 33 components (Home, Test, FullENT, Adaptive, Progress, etc.)
+├── components/          # 40 components (CoachHome, Test, FullENT, QuestionRush, AiTutor, etc.)
 │   └── ui/              # 19 reusable UI primitives
 ├── contexts/            # AppContext, AuthContext, NavigationContext, ToastContext
 ├── locales/             # ru.ts (877 lines), kk.ts (855 lines), index.ts (useT hook)
@@ -73,6 +73,7 @@ entprep-app/scripts/             # Build & generation scripts
 - Full ENT simulation (120q, 5 subjects, 4h, 140 pts, profile blocks)
 - AI explanations, study plans, question generation (Claude Sonnet 4.6)
 - Adaptive learning, daily challenges, error review
+- Question Rush: timed speed mode with star scoring (topics/difficulty/count/pace wizard)
 - Leaderboard, friends system, real-time 1v1 duels
 - Supabase auth (Google OAuth + Apple Sign In), cloud sync
 - RevenueCat IAP (monthly 1990₸, yearly 9990₸)
