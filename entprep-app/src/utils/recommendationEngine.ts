@@ -56,7 +56,7 @@ function topicName(subjectId: string, topicId: string): string {
 /** Last N tests for a subject, sorted newest first */
 function lastNTests(hist: TestResult[], sid: string, n: number): TestResult[] {
   return hist
-    .filter(t => t.su === sid && t.type !== 'fullent')
+    .filter(t => t.su === sid && t.type !== 'fullent' && t.type !== 'rush')
     .sort((a, b) => b.dt.localeCompare(a.dt))
     .slice(0, n);
 }

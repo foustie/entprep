@@ -45,7 +45,7 @@ export interface ScorePrediction {
 
 function getSubjectAccuracy(hist: TestResult[], sid: string): { accuracy: number; count: number; scores: number[] } {
   const tests = hist
-    .filter(t => t.su === sid && t.co !== undefined && t.to !== undefined && t.to > 0 && t.type !== 'fullent')
+    .filter(t => t.su === sid && t.co !== undefined && t.to !== undefined && t.to > 0 && t.type !== 'fullent' && t.type !== 'rush')
     .slice(-LAST_N_TESTS);
 
   if (tests.length === 0) return { accuracy: 0, count: 0, scores: [] };

@@ -261,7 +261,7 @@ export default function QuestionRush({ save }: RushProps) {
       su: subject!, co: correct, to: total,
       sc: total ? Math.round((correct / total) * 100) : 0,
       dt: new Date().toLocaleDateString('ru-RU'), tm: el,
-      qd: qdRef.current, type: 'regular',
+      qd: qdRef.current, type: 'rush',
     });
   }, [phase, stars, correct, questions.length, subject, save]);
 

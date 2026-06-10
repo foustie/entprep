@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { getRecommendations, calcTopicStats, calcSubtopicStats, getWrongQuestions, calcStreak } from '../utils/adaptiveHelpers';
 import { supabase } from '../config/supabase';
-import { usePlan as usePlanLimit, canGeneratePlan } from '../utils/aiLimits';
+import { consumePlan as consumePlanLimit, canGeneratePlan } from '../utils/aiLimits';
 import { CARD_COMPACT, CARD_HERO, TYPE, COLORS, scoreColor, FF } from '../constants/styles';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useNav } from '../contexts/NavigationContext';
@@ -112,7 +112,7 @@ export default function Adaptive() {
       if (res.status === 403) { setPlanError('AI план на сегодня недоступен. Попробуйте завтра.'); setPlanLoading(false); return; }
       if (!res.ok) { const err = await res.json().catch(() => ({})); setPlanError((err as Record<string, string>).error || t.adaptive.planError); toast.error(t.adaptive.planError, { action: generatePlan, actionLabel: t.adaptive.retry }); setPlanLoading(false); return; }
       const json = await res.json();
-      usePlanLimit(); // consume limit only on success
+      consumePlanLimit(); // consume limit only on success
       setPlan(json);
       setPlanDate(new Date().toISOString());
       savePlanCache(json);

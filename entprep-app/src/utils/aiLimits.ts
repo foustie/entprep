@@ -50,7 +50,7 @@ export function getExplainRemaining(): number {
   return Math.max(0, DAILY_EXPLAIN_LIMIT - usage.explainCount);
 }
 
-export function useExplain(): boolean {
+export function consumeExplain(): boolean {
   const usage = load();
   if (usage.explainDate !== today()) {
     usage.explainCount = 0;
@@ -70,7 +70,7 @@ export function getTutorRemaining(): number {
   return Math.max(0, DAILY_TUTOR_LIMIT - usage.tutorCount);
 }
 
-export function useTutor(): boolean {
+export function consumeTutor(): boolean {
   const usage = load();
   if (usage.tutorDate !== today()) {
     usage.tutorCount = 0;
@@ -89,7 +89,7 @@ export function canGeneratePlan(): boolean {
   return !usage.planGenerated;
 }
 
-export function usePlan(): boolean {
+export function consumePlan(): boolean {
   const usage = load();
   if (usage.planGenerated) return false;
   usage.planGenerated = true;

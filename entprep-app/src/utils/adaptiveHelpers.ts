@@ -31,7 +31,7 @@ function getSubjectMeta(subjectId: string): { name: string; icon: string; color:
 
 // Calculate weakness score for a single subject
 function calcWeakness(subjectId: string, hist: TestResult[]): WeaknessResult {
-  const tests = hist.filter(t => t.su === subjectId && t.type !== "fullent");
+  const tests = hist.filter(t => t.su === subjectId && t.type !== "fullent" && t.type !== "rush");
   if (tests.length === 0) {
     return { score: 50, avg: 0, trend: "none", count: 0, message: "\u041d\u0430\u0447\u043d\u0438 \u043f\u0435\u0440\u0432\u044b\u0439 \u0442\u0435\u0441\u0442!" };
   }
@@ -72,9 +72,9 @@ function getRecommendations(hist: TestResult[], prof: string[]): Recommendations
     ...prof,
   ];
 
-  const totalTests = hist.filter(t => t.type !== "fullent").length;
+  const totalTests = hist.filter(t => t.type !== "fullent" && t.type !== "rush").length;
   const overallAvg = totalTests
-    ? Math.round(hist.filter(t => t.type !== "fullent").reduce((s, t) => s + (t.sc || 0), 0) / totalTests)
+    ? Math.round(hist.filter(t => t.type !== "fullent" && t.type !== "rush").reduce((s, t) => s + (t.sc || 0), 0) / totalTests)
     : 0;
 
   const subjects: SubjectRecommendation[] = subjectIds.map(id => {

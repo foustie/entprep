@@ -55,7 +55,7 @@ export default function ProfileTab() {
   const lvl = getLevel(totalXP);
   const levelName = (t.levels as Record<number, string>)?.[lvl.level] || lvl.name;
   const streak = calcStreak(hist, isPremium, st.streakFreezeUsedAt);
-  const regular = hist.filter(h => h.type !== 'fullent');
+  const regular = hist.filter(h => h.type !== 'fullent' && h.type !== 'rush');
   const avg = regular.length
     ? Math.round(regular.reduce((s, h) => s + (h.sc || 0), 0) / regular.length)
     : 0;

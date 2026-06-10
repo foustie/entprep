@@ -1,5 +1,5 @@
 import { CARD, CARD_HERO, BUTTON, COLORS, TYPE, FF, SP } from '../constants/styles';
-import { BookOpen, Brain, Zap, Users, ArrowRight, GraduationCap, CheckCircle2, ChevronDown, Flame, Instagram, Send, AtSign } from 'lucide-react';
+import { BookOpen, Brain, Zap, Users, ArrowRight, GraduationCap, CheckCircle2, ChevronDown, Flame, Instagram, Send, AtSign, Clock, Star } from 'lucide-react';
 import { useT } from '../locales';
 import { useApp } from '../contexts/AppContext';
 
@@ -194,6 +194,113 @@ export default function Landing({ onStart, totalQ }: Props) {
             </div>
           </div>
         ))}
+      </section>
+
+      {/* Three steps to your dream score — ink mockup cards */}
+      <section style={{ padding: '20px 20px 12px', maxWidth: 440, margin: '0 auto' }}>
+        <h2 style={{ ...TYPE.h1, fontSize: 24, textAlign: 'center', marginBottom: 24, textWrap: 'balance' as const }}>
+          {tl.threeSteps}
+        </h2>
+
+        {/* 01 — Diagnostic / predicted score */}
+        <div style={{ marginBottom: 28 }}>
+          <div style={{ background: COLORS.xpSofter, border: `2px solid ${INK}`, borderRadius: 16, boxShadow: `0 3px 0 0 ${INK}`, padding: 12 }}>
+            <div style={{ background: '#FFF', border: `2px solid ${INK}`, borderRadius: 12, padding: '14px 14px 16px' }}>
+              <div style={{ ...TYPE.statLabel, marginTop: 0, marginBottom: 4 }}>{tl.mockPrediction}</div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                <span style={{ fontFamily: FF.display, fontSize: 38, fontWeight: 800, color: INK, letterSpacing: '-0.03em' }}>118</span>
+                <span style={{ fontFamily: FF.display, fontSize: 14, color: 'var(--text-muted)', fontWeight: 700 }}>/ 140</span>
+              </div>
+              <div style={{ display: 'flex', gap: 22, margin: '10px 0 14px' }}>
+                {[
+                  { n: tl.mockMath, v: 34 },
+                  { n: t.subjects.history, v: 17 },
+                  { n: t.subjects.physics, v: 31 },
+                ].map((s, i) => (
+                  <div key={i}>
+                    <div style={{ ...TYPE.caption, fontSize: 10 }}>{s.n}</div>
+                    <div style={{ fontFamily: FF.mono, fontSize: 16, fontWeight: 800, color: INK }}>{s.v}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ ...TYPE.statLabel, marginTop: 0, marginBottom: 8 }}>{tl.mockWeakTopics}</div>
+              {[
+                { name: 'Производная и интеграл', pct: 58, color: COLORS.red },
+                { name: 'Стереометрия', pct: 72, color: COLORS.xp },
+                { name: 'Тригонометрия', pct: 81, color: COLORS.win },
+              ].map((b, i) => (
+                <div key={i} style={{ marginBottom: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontFamily: FF.body, marginBottom: 3 }}>
+                    <span style={{ color: INK, fontWeight: 600 }}>{b.name}</span>
+                    <span style={{ color: 'var(--text-muted)', fontFamily: FF.mono, fontWeight: 700 }}>{b.pct}%</span>
+                  </div>
+                  <div style={{ height: 8, borderRadius: 4, border: `1.5px solid ${INK}`, background: '#FFF', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${b.pct}%`, background: b.color }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{ ...TYPE.eyebrow, marginTop: 14 }}>01</div>
+          <div style={{ ...TYPE.h3, fontSize: 17, margin: '4px 0 4px' }}>{tl.step1Title}</div>
+          <div style={{ ...TYPE.bodySmall, fontSize: 13.5, lineHeight: 1.55 }}>{tl.step1Desc}</div>
+        </div>
+
+        {/* 02 — Tailored plan */}
+        <div style={{ marginBottom: 28 }}>
+          <div style={{ background: COLORS.streakSoft, border: `2px solid ${INK}`, borderRadius: 16, boxShadow: `0 3px 0 0 ${INK}`, padding: 12 }}>
+            <div style={{ background: '#FFF', border: `2px solid ${INK}`, borderRadius: 12, padding: 6 }}>
+              {[
+                { name: 'Квадратные уравнения', chip: tl.mockMath, color: COLORS.streak, time: 25 },
+                { name: 'Тюркский каганат', chip: t.subjects.history, color: COLORS.win, time: 20 },
+                { name: 'Законы Ньютона', chip: t.subjects.physics, color: '#EC4899', time: 30 },
+              ].map((r, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 8px', borderBottom: i < 2 ? `1.5px solid rgba(15,15,16,0.1)` : 'none' }}>
+                  <span style={{ width: 18, height: 18, borderRadius: 9, border: `2px solid ${INK}`, flexShrink: 0, opacity: 0.35 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, fontFamily: FF.body, color: INK, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.name}</div>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
+                      <span style={{ fontSize: 9, fontWeight: 800, fontFamily: FF.mono, color: INK, background: `${r.color}33`, border: `1.5px solid ${r.color}`, padding: '1px 6px', borderRadius: 6, letterSpacing: '0.04em' }}>{r.chip}</span>
+                      <span style={{ ...TYPE.caption, fontSize: 10, display: 'inline-flex', alignItems: 'center', gap: 3 }}><Clock size={10} /> {r.time} {tl.mockMin}</span>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: 11, fontWeight: 800, fontFamily: FF.body, color: '#fff', background: r.color, border: `1.5px solid ${INK}`, padding: '6px 12px', borderRadius: 9, flexShrink: 0 }}>{tl.mockStart}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{ ...TYPE.eyebrow, marginTop: 14 }}>02</div>
+          <div style={{ ...TYPE.h3, fontSize: 17, margin: '4px 0 4px' }}>{tl.step2Title}</div>
+          <div style={{ ...TYPE.bodySmall, fontSize: 13.5, lineHeight: 1.55 }}>{tl.step2Desc}</div>
+        </div>
+
+        {/* 03 — Hit your target: question bank + Question Rush */}
+        <div style={{ marginBottom: 8 }}>
+          <div style={{ background: COLORS.winSoft, border: `2px solid ${INK}`, borderRadius: 16, boxShadow: `0 3px 0 0 ${INK}`, padding: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ background: '#FFF', border: `2px solid ${INK}`, borderRadius: 12, padding: '13px 14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                <BookOpen size={15} color={COLORS.win} strokeWidth={2.5} />
+                <span style={{ fontSize: 14, fontWeight: 800, fontFamily: FF.body, color: INK }}>{tl.mockBank}</span>
+              </div>
+              <div style={{ ...TYPE.bodySmall, fontSize: 12, color: 'rgba(15,15,16,0.65)', lineHeight: 1.5 }}>{tl.mockBankDesc}</div>
+            </div>
+            <div style={{ background: '#FFF', border: `2px solid ${INK}`, borderRadius: 12, padding: '13px 14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Zap size={15} color={COLORS.streak} fill={COLORS.streak} />
+                  <span style={{ fontSize: 14, fontWeight: 800, fontFamily: FF.body, color: INK }}>Question Rush</span>
+                </div>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                  {[0, 1, 2].map(i => <Star key={i} size={13} fill={COLORS.xp} color={INK} strokeWidth={1.5} />)}
+                </span>
+              </div>
+              <div style={{ ...TYPE.bodySmall, fontSize: 12, color: 'rgba(15,15,16,0.65)', lineHeight: 1.5 }}>{tl.mockRushDesc}</div>
+            </div>
+          </div>
+          <div style={{ ...TYPE.eyebrow, marginTop: 14 }}>03</div>
+          <div style={{ ...TYPE.h3, fontSize: 17, margin: '4px 0 4px' }}>{tl.step3Title}</div>
+          <div style={{ ...TYPE.bodySmall, fontSize: 13.5, lineHeight: 1.55 }}>{tl.step3Desc}</div>
+        </div>
       </section>
 
       {/* What's included — ink card with streak checks */}

@@ -6,6 +6,7 @@ import { CARD_COMPACT, TYPE, COLORS, scoreColor, FF } from '../constants/styles'
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useApp } from '../contexts/AppContext';
 import { getScoreHistory, getPersonalBests } from '../utils/competitionHelpers';
+import { pluralizeForms } from '../utils/formatters';
 import EmptyState from './ui/EmptyState';
 import { BarChart3, GraduationCap, Calendar, FileText, Trophy, ArrowUpDown, Filter, Flame, Users, Zap, Snowflake, Target, Star, Sparkles, BookOpen, Building2, Rocket, TrendingUp, Timer, Palette, Hash } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -93,7 +94,7 @@ function ActivityHeatmap({ hist }: { hist: TestResult[] }) {
 interface Badge { id: string; Icon: LucideIcon; color: string; name: string; desc: string; earned: boolean; }
 
 function computeBadges(hist: TestResult[], subjects: string[], badgeTexts: Record<string, { name: string; desc: string }>): Badge[] {
-  const regular = hist.filter(t => t.type !== "fullent");
+  const regular = hist.filter(t => t.type !== "fullent" && t.type !== "rush");
   const total = regular.length;
   const perfects = regular.filter(t => t.sc === 100).length;
   const fullents = hist.filter(t => t.type === "fullent").length;
@@ -387,7 +388,7 @@ function StatsOverview({ hist, bp }: { hist: TestResult[]; bp: string }) {
   const t = useT();
   const { isPremium } = useAuth();
   const { st } = useApp();
-  const regular = hist.filter(h => h.type !== 'fullent');
+  const regular = hist.filter(h => h.type !== 'fullent' && h.type !== 'rush');
   const tot = regular.length;
   const avg = tot ? Math.round(regular.reduce((s, h) => s + (h.sc || 0), 0) / tot) : 0;
   const best = tot ? Math.max(...regular.map(h => h.sc || 0)) : 0;
@@ -428,7 +429,7 @@ export default function Progress() {
   const activeSubjects = useMemo(() => subjects.filter(s => hist.some(t => t.su === s)), [hist, subjects]);
 
   const filteredHist = useMemo(() => {
-    let items = hist.filter(t => t.type !== "fullent");
+    let items = hist.filter(t => t.type !== "fullent" && t.type !== "rush");
     if (filterSub !== "all") items = items.filter(t => t.su === filterSub);
     if (sortBy === "score") items = [...items].sort((a, b) => (b.sc || 0) - (a.sc || 0));
     else items = [...items].reverse();
@@ -467,7 +468,7 @@ export default function Progress() {
         }}>по предметам</div>
         <div style={{ display: "grid", gridTemplateColumns: bp === 'mobile' ? '1fr' : bp === 'tablet' ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 8, marginBottom: 28 }}>
         {subjects.map(sid => {
-          const tests = hist.filter(t => t.su === sid);
+          const tests = hist.filter(t => t.su === sid && t.type !== 'rush');
           if (tests.length === 0) return null;
           const scoreHist = getScoreHistory(hist, sid);
           const pb = bests[sid];
@@ -634,6 +635,49 @@ export default function Progress() {
             );
           })}
         </>}
+        {(() => {
+          // ── Question Rush — separate stats (rush runs are excluded from test stats) ──
+          const rushRuns = hist.filter(r => r.type === 'rush');
+          if (rushRuns.length === 0) return null;
+          let rushStars = 0;
+          try { rushStars = parseInt(localStorage.getItem('entprep_rush_stars') || '0', 10) || 0; } catch { /* ignore */ }
+          const rushAvg = Math.round(rushRuns.reduce((s, r) => s + (r.sc || 0), 0) / rushRuns.length);
+          return (
+            <div style={{ marginTop: 28 }}>
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: 5,
+                fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
+                letterSpacing: '0.16em', textTransform: 'uppercase',
+                color: 'var(--text-muted)', marginBottom: 10, padding: '0 4px',
+              }}>
+                <Zap size={12} strokeWidth={2.4} />{t.rush.title}
+              </div>
+              <div style={{
+                display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8,
+                padding: '14px',
+                background: 'var(--bg-card)',
+                border: '2px solid var(--ink)',
+                borderRadius: 12,
+                boxShadow: `0 3px 0 0 ${COLORS.xp}`,
+              }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontFamily: FF.display, fontSize: 20, fontWeight: 800, color: 'var(--text)', fontVariantNumeric: 'tabular-nums' }}>{rushRuns.length}</div>
+                  <div style={{ ...TYPE.statLabel }}>{pluralizeForms(rushRuns.length, t.rush.runsWord)}</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontFamily: FF.display, fontSize: 20, fontWeight: 800, color: COLORS.xp, fontVariantNumeric: 'tabular-nums', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    <Star size={15} fill={COLORS.xp} color="var(--ink)" strokeWidth={1.5} />{rushStars}
+                  </div>
+                  <div style={{ ...TYPE.statLabel }}>{pluralizeForms(rushStars, t.rush.starsWord)}</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontFamily: FF.display, fontSize: 20, fontWeight: 800, color: scoreColor(rushAvg), fontVariantNumeric: 'tabular-nums' }}>{rushAvg}%</div>
+                  <div style={{ ...TYPE.statLabel }}>{t.rush.accuracy}</div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
         <div style={{ marginTop: 28 }}>
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 5,

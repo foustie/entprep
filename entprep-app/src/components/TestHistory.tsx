@@ -12,7 +12,9 @@ import { History, ChevronDown, ChevronUp, Check, X, Clock, Target, Filter } from
 import Chip from './ui/Chip';
 
 export default function TestHistory() {
-  const { hist, st } = useApp();
+  const { hist: fullHist, st } = useApp();
+  // Rush runs have their own stats block on Progress — keep test history test-only
+  const hist = useMemo(() => fullHist.filter(h => h.type !== 'rush'), [fullHist]);
   const { goHome } = useNav();
   const bp = useBreakpoint();
   const isDesktop = bp === 'desktop';

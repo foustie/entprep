@@ -13,7 +13,7 @@ import {
 } from '../utils/tutorHelpers';
 import type { TutorMessage, StudentProfile } from '../utils/tutorHelpers';
 import { trackEvent } from '../utils/analytics';
-import { useTutor as useTutorLimit, getTutorRemaining } from '../utils/aiLimits';
+import { consumeTutor as consumeTutorLimit, getTutorRemaining } from '../utils/aiLimits';
 import { API_BASE } from '../config/app';
 import BackButton from './ui/BackButton';
 import SubjectIcon from './ui/SubjectIcon';
@@ -149,7 +149,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
     }
     sendingRef.current = true;
     if (!user) { toast.error(isKk ? 'Кіру қажет' : 'Войдите в аккаунт'); sendingRef.current = false; return; }
-    if (!isPremium && !useTutorLimit()) {
+    if (!isPremium && !consumeTutorLimit()) {
       trackEvent('AI Tutor Limit Hit');
       setShowPaywall(true);
       sendingRef.current = false;

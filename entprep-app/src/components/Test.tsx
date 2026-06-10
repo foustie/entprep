@@ -21,7 +21,7 @@ import { captureError } from '../config/sentry';
 import type { Question, TestResult, AnswerValue } from '../types';
 import { getSingleCorrect, getQType } from '../types';
 import { scoreQuestion } from '../utils/scoringEngine';
-import { useExplain, getExplainRemaining } from '../utils/aiLimits';
+import { consumeExplain, getExplainRemaining } from '../utils/aiLimits';
 import MultipleAnswerCard from './ui/MultipleAnswerCard';
 import MatchingCard from './ui/MatchingCard';
 import { calcTestXP } from '../utils/xpHelpers';
@@ -200,7 +200,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
   const askAI = async (index: number) => {
     if (aiText[index] || aiLoad[index]) return;
     if (!user) { toast.warning(t.test.loginRequired || 'Войдите в аккаунт'); return; }
-    if (!isPremium && !useExplain()) { trackEvent('AI Explain Limit Hit', { subject: sid }); setShowPaywall(true); return; }
+    if (!isPremium && !consumeExplain()) { trackEvent('AI Explain Limit Hit', { subject: sid }); setShowPaywall(true); return; }
     trackEvent('AI Explain Used', { subject: sid });
     setAiLoad(p => ({ ...p, [index]: true }));
     try {

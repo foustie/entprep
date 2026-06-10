@@ -18,7 +18,7 @@ interface SubjectGrowth {
 }
 
 export default function GrowthStats({ hist }: Props) {
-  const tests = hist.filter(h => h.type !== 'fullent' && h.su && h.sc != null);
+  const tests = hist.filter(h => h.type !== 'fullent' && h.type !== 'rush' && h.su && h.sc != null);
   if (tests.length < 3) return null;
 
   // Group by subject

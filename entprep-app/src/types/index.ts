@@ -84,7 +84,7 @@ export interface TestResult {
   dt: string;
   tm?: number;
   tp?: string;
-  type?: 'fullent' | 'regular' | 'duel';
+  type?: 'fullent' | 'regular' | 'duel' | 'rush';
   qd?: QuestionDetail[];
   sections?: Record<string, { correct: number; total: number; score: number }>;
   /** Server-verified leaderboard submission data. Not persisted to history. */
