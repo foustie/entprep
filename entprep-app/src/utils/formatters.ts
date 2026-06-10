@@ -20,6 +20,13 @@ export function formatScore(correct: number, total: number): string {
   return `${correct}/${total}`;
 }
 
+/** Pluralize from a locale string: 'вопрос|вопроса|вопросов' (ru) or a single invariant form 'сұрақ' (kk) */
+export function pluralizeForms(n: number, forms: string): string {
+  const parts = forms.split('|');
+  if (parts.length < 3) return parts[0];
+  return pluralize(n, parts as [string, string, string]);
+}
+
 export function pluralize(n: number, forms: [string, string, string]): string {
   const abs = Math.abs(n) % 100;
   const last = abs % 10;

@@ -135,6 +135,7 @@ export default function CoachHome() {
   const pills = [
     { label: t.home.fullEnt, icon: GraduationCap, color: COLORS.win, screen: 'fullent' },
     { label: t.home.leaderboard, icon: Trophy, color: COLORS.xp, screen: 'leaderboard' },
+    { label: t.rush.title, icon: Zap, color: COLORS.streak, screen: 'rush' },
   ];
 
   // AI Tutor message — dynamic based on weakest area
@@ -328,13 +329,15 @@ export default function CoachHome() {
           display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10,
           marginBottom: SP.lg,
         }}>
-          {pills.map(({ label, icon: Icon, color, screen }) => (
+          {pills.map(({ label, icon: Icon, color, screen }, i) => (
             <button
               key={screen}
               onClick={() => nav(screen)}
               {...press3D(INK)}
               style={{
                 display: 'flex', alignItems: 'center', gap: 10,
+                // odd count → last tile spans the full row
+                ...(pills.length % 2 === 1 && i === pills.length - 1 ? { gridColumn: '1 / -1' } : {}),
                 padding: '11px 12px',
                 background: 'var(--bg-card)',
                 border: `2px solid ${INK}`,

@@ -24,7 +24,7 @@ describe('Chip', () => {
     const { container } = render(<Chip active={true} onClick={() => {}}>Active</Chip>);
     const btn = container.querySelector('button')!;
     expect(btn.style.color).toBe('rgb(255, 255, 255)');
-    expect(btn.style.background).toBe('rgb(15, 15, 16)');
+    expect(btn.style.background).toBe('var(--ink)');
   });
 
   it('inactive chip uses card background', () => {

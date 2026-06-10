@@ -161,6 +161,16 @@ export async function sendTutorMessage(
 }
 
 // ── Voice input (Web Speech API) ──
+// Minimal local typings — lib.dom does not ship SpeechRecognition types in all TS versions
+interface SpeechRecognitionLike {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
+  onerror: ((event: { error: string }) => void) | null;
+  start(): void;
+  abort(): void;
+}
 
 export function startVoiceInput(
   lang: string,
@@ -175,17 +185,17 @@ export function startVoiceInput(
     return () => {};
   }
 
-  const recognition = new (SpeechRecognition as new () => SpeechRecognition)();
+  const recognition = new (SpeechRecognition as new () => SpeechRecognitionLike)();
   recognition.lang = lang === 'kk' ? 'kk-KZ' : 'ru-RU';
   recognition.continuous = false;
   recognition.interimResults = false;
 
-  recognition.onresult = (event: SpeechRecognitionEvent) => {
+  recognition.onresult = (event) => {
     const text = event.results[0]?.[0]?.transcript;
     if (text) onResult(text);
   };
 
-  recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+  recognition.onerror = (event) => {
     if (event.error !== 'aborted') onError('Не удалось распознать речь');
   };
 

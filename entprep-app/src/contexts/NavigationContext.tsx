@@ -77,6 +77,8 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
       setScreen(SCREENS.DUEL);
     } else if (target === 'tutor') {
       setScreen('tutor' as typeof screen);
+    } else if (target === 'rush') {
+      setScreen(SCREENS.RUSH);
     } else if (target === 'review') {
       setScreen(SCREENS.REVIEW);
     } else if (target === 'teacher') {

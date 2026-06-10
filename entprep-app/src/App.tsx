@@ -66,6 +66,7 @@ const AuthPrompt = React.lazy(() => import('./components/AuthPrompt'));
 const PaywallModal = React.lazy(() => import('./components/PaywallModal'));
 const PushPrompt = React.lazy(() => import('./components/PushPrompt'));
 const AiTutor = React.lazy(() => import('./components/AiTutor'));
+const QuestionRush = React.lazy(() => import('./components/QuestionRush'));
 
 interface NavItem {
   id: string;
@@ -117,6 +118,7 @@ function AppContent() {
       [SCREENS.DUEL]: tr.duel.title,
       [SCREENS.REVIEW]: tr.review.title,
       [SCREENS.TEACHER]: tr.teacher.panel,
+      [SCREENS.RUSH]: tr.rush.title,
       profile_tab: tr.tabs.profile,
       tutor: 'AI Tutor',
     };
@@ -172,7 +174,7 @@ function AppContent() {
   }, [syncError]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const needProfile = prof.length === 0 && screen !== SCREENS.PROFILE;
-  const showNav = !needProfile && screen !== SCREENS.TEST && screen !== SCREENS.FULL_ENT && screen !== SCREENS.PROFILE && screen !== SCREENS.SUBJECT && screen !== SCREENS.ERROR_REVIEW && screen !== SCREENS.ADMIN && screen !== SCREENS.CHALLENGE && screen !== SCREENS.LEADERBOARD && screen !== SCREENS.FRIENDS && screen !== SCREENS.DUEL && screen !== SCREENS.REVIEW && screen !== SCREENS.TEACHER && !showAuthPrompt;
+  const showNav = !needProfile && screen !== SCREENS.TEST && screen !== SCREENS.FULL_ENT && screen !== SCREENS.PROFILE && screen !== SCREENS.SUBJECT && screen !== SCREENS.ERROR_REVIEW && screen !== SCREENS.ADMIN && screen !== SCREENS.CHALLENGE && screen !== SCREENS.LEADERBOARD && screen !== SCREENS.FRIENDS && screen !== SCREENS.DUEL && screen !== SCREENS.REVIEW && screen !== SCREENS.TEACHER && screen !== SCREENS.RUSH && !showAuthPrompt;
 
   const { user, isPremium, needsNickname } = useAuth();
 
@@ -273,6 +275,11 @@ function AppContent() {
           {!needProfile && screen === SCREENS.TEST && curSub && (
             <ErrorBoundary key="test" title={tr.errors.testTitle} message={tr.errors.testMessage} onRecover={goHome}>
               <Test sid={curSub} tid={selTopic} customQs={customQs} finish={handleFinish} />
+            </ErrorBoundary>
+          )}
+          {!needProfile && screen === SCREENS.RUSH && (
+            <ErrorBoundary key="rush" title={tr.errors.rushTitle} message={tr.errors.rushMessage} onRecover={goHome}>
+              <QuestionRush save={handleFinish} />
             </ErrorBoundary>
           )}
           {!needProfile && screen === SCREENS.CALC && (
