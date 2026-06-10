@@ -2,6 +2,7 @@ import { CARD, CARD_HERO, BUTTON, COLORS, TYPE, FF, SP } from '../constants/styl
 import { BookOpen, Brain, Zap, Users, ArrowRight, GraduationCap, CheckCircle2, ChevronDown, Flame, Instagram, Send, AtSign, Clock, Star } from 'lucide-react';
 import { useT } from '../locales';
 import { useApp } from '../contexts/AppContext';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 interface Props {
   onStart: () => void;
@@ -16,6 +17,7 @@ export default function Landing({ onStart, totalQ }: Props) {
   const tl = t.landing;
   const { st, updSt } = useApp();
   const lang = st.lang || 'ru';
+  const isDesktop = useBreakpoint() === 'desktop';
   const qLabel = `${Math.floor(totalQ / 1000)} 000+`;
 
   const primaryBtn: React.CSSProperties = {
@@ -196,15 +198,17 @@ export default function Landing({ onStart, totalQ }: Props) {
         ))}
       </section>
 
-      {/* Three steps to your dream score — ink mockup cards */}
-      <section style={{ padding: '20px 20px 12px', maxWidth: 440, margin: '0 auto' }}>
-        <h2 style={{ ...TYPE.h1, fontSize: 24, textAlign: 'center', marginBottom: 24, textWrap: 'balance' as const }}>
+      {/* Three steps to your dream score — ink mockup cards (3-col on desktop) */}
+      <section style={{ padding: isDesktop ? '36px 24px 16px' : '20px 20px 12px', maxWidth: isDesktop ? 1080 : 440, margin: '0 auto' }}>
+        <h2 style={{ ...TYPE.h1, fontSize: isDesktop ? 32 : 24, textAlign: 'center', marginBottom: isDesktop ? 36 : 24, textWrap: 'balance' as const }}>
           {tl.threeSteps}
         </h2>
 
+        <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? 'repeat(3, 1fr)' : '1fr', gap: isDesktop ? 24 : 0, alignItems: 'stretch' }}>
+
         {/* 01 — Diagnostic / predicted score */}
-        <div style={{ marginBottom: 28 }}>
-          <div style={{ background: COLORS.xpSofter, border: `2px solid ${INK}`, borderRadius: 16, boxShadow: `0 3px 0 0 ${INK}`, padding: 12 }}>
+        <div style={{ marginBottom: isDesktop ? 0 : 28, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ background: COLORS.xpSofter, border: `2px solid ${INK}`, borderRadius: 16, boxShadow: `0 3px 0 0 ${INK}`, padding: 12, flex: isDesktop ? 1 : 'none' }}>
             <div style={{ background: '#FFF', border: `2px solid ${INK}`, borderRadius: 12, padding: '14px 14px 16px' }}>
               <div style={{ ...TYPE.statLabel, marginTop: 0, marginBottom: 4 }}>{tl.mockPrediction}</div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
@@ -247,8 +251,8 @@ export default function Landing({ onStart, totalQ }: Props) {
         </div>
 
         {/* 02 — Tailored plan */}
-        <div style={{ marginBottom: 28 }}>
-          <div style={{ background: COLORS.streakSoft, border: `2px solid ${INK}`, borderRadius: 16, boxShadow: `0 3px 0 0 ${INK}`, padding: 12 }}>
+        <div style={{ marginBottom: isDesktop ? 0 : 28, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ background: COLORS.streakSoft, border: `2px solid ${INK}`, borderRadius: 16, boxShadow: `0 3px 0 0 ${INK}`, padding: 12, flex: isDesktop ? 1 : 'none' }}>
             <div style={{ background: '#FFF', border: `2px solid ${INK}`, borderRadius: 12, padding: 6 }}>
               {[
                 { name: 'Квадратные уравнения', chip: tl.mockMath, color: COLORS.streak, time: 25 },
@@ -275,8 +279,8 @@ export default function Landing({ onStart, totalQ }: Props) {
         </div>
 
         {/* 03 — Hit your target: question bank + Question Rush */}
-        <div style={{ marginBottom: 8 }}>
-          <div style={{ background: COLORS.winSoft, border: `2px solid ${INK}`, borderRadius: 16, boxShadow: `0 3px 0 0 ${INK}`, padding: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ marginBottom: isDesktop ? 0 : 8, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ background: COLORS.winSoft, border: `2px solid ${INK}`, borderRadius: 16, boxShadow: `0 3px 0 0 ${INK}`, padding: 12, display: 'flex', flexDirection: 'column', gap: 10, flex: isDesktop ? 1 : 'none' }}>
             <div style={{ background: '#FFF', border: `2px solid ${INK}`, borderRadius: 12, padding: '13px 14px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                 <BookOpen size={15} color={COLORS.win} strokeWidth={2.5} />
@@ -300,6 +304,8 @@ export default function Landing({ onStart, totalQ }: Props) {
           <div style={{ ...TYPE.eyebrow, marginTop: 14 }}>03</div>
           <div style={{ ...TYPE.h3, fontSize: 17, margin: '4px 0 4px' }}>{tl.step3Title}</div>
           <div style={{ ...TYPE.bodySmall, fontSize: 13.5, lineHeight: 1.55 }}>{tl.step3Desc}</div>
+        </div>
+
         </div>
       </section>
 
