@@ -44,12 +44,13 @@ export default function Landing({ onStart, totalQ }: Props) {
           {/* Header row: logo left, lang toggle right */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
             {/* Logo */}
-            <div style={{
-              fontSize: 18, fontWeight: 800, fontFamily: FF.display,
-              letterSpacing: '-0.01em',
-            }}>
-              <span style={{ color: INK }}>ENT</span><span style={{ color: COLORS.streak }}>prep.</span>
-            </div>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              <img src="/favicon.svg" alt="" aria-hidden="true" width={30} height={30}
+                style={{ display: 'block', borderRadius: 9, border: `2px solid ${INK}`, boxShadow: `0 2px 0 0 ${INK}` }} />
+              <span style={{ fontSize: 17, fontWeight: 900, fontFamily: FF.display, letterSpacing: '-0.03em' }}>
+                <span style={{ color: INK }}>ENT</span><span style={{ color: COLORS.streak }}>prep.</span>
+              </span>
+            </span>
 
             {/* Lang toggle */}
             <div

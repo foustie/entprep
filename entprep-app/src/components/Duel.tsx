@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { CARD_COMPACT, TYPE, COLORS } from '../constants/styles';
+import SubjectIcon from './ui/SubjectIcon';
 import { SUBJECT_META } from '../config/subjects';
 import { ALL_PROFILES, SUBS } from '../config/questionPools';
 import { useBreakpoint } from '../hooks/useBreakpoint';
@@ -40,7 +41,9 @@ const DuelSubjectButton = memo(function DuelSubjectButton({ s, subjectName, onCl
       borderLeft: `3px solid ${s.color}`, padding: '13px 14px',
       cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s', width: '100%',
     }}>
-      <span style={{ fontSize: 20, marginRight: 10 }}>{s.icon}</span>
+      <span style={{ width: 30, height: 30, borderRadius: 9, marginRight: 10, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `${s.color}1F` }}>
+        <SubjectIcon sid={s.id} size={16} color={s.color} strokeWidth={2.2} />
+      </span>
       <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', flex: 1 }}>{subjectName}</span>
       <ChevronRight size={16} color={s.color} />
     </button>

@@ -2,6 +2,7 @@ import { CARD_COMPACT, COLORS, TINT } from '../constants/styles';
 import { useT } from '../locales';
 import { useNav } from '../contexts/NavigationContext';
 import { Target, Check, Zap, ArrowRight, RotateCcw } from 'lucide-react';
+import SubjectIcon from './ui/SubjectIcon';
 
 interface DailyChallenge {
   subjectId: string;
@@ -97,7 +98,7 @@ export default function HomeTodayStrip({ dailyGoal, dailyProgress, dailyDone, da
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 16, flexShrink: 0,
           }}>
-            {daily.completed ? <Check size={16} color={COLORS.green} /> : daily.sub.icon}
+            {daily.completed ? <Check size={16} color={COLORS.green} /> : <SubjectIcon sid={daily.subjectId} size={16} color={daily.sub.color} strokeWidth={2.2} />}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{

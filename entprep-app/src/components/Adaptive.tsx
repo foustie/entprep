@@ -8,6 +8,7 @@ import { useNav } from '../contexts/NavigationContext';
 import { useApp } from '../contexts/AppContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
+import SubjectIcon from './ui/SubjectIcon';
 import { API_BASE } from '../config/app';
 import { useT } from '../locales';
 import EmptyState from './ui/EmptyState';
@@ -172,7 +173,7 @@ export default function Adaptive() {
                 style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 7, cursor: hasSubtopics ? "pointer" : "default" }}
                 onClick={() => hasSubtopics && toggleSection(subjectId, t.id)}
               >
-                <span style={{ fontSize: 15, width: 22, textAlign: "center", flexShrink: 0 }}>{t.icon}</span>
+                
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 3 }}>
                     <span style={{ fontSize: 12, color: "var(--text-body)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{isKk && t.name_kk ? t.name_kk : t.name}</span>
@@ -224,7 +225,7 @@ export default function Adaptive() {
     return (
       <div key={s.id} style={{ ...CARD_COMPACT, borderLeft: `4px solid ${stripColor(s.score)}`, padding: "16px 14px", animation: "slideUp 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
         <div style={{ display: "flex", alignItems: "center", marginBottom: 10, cursor: canExpand ? "pointer" : "default" }} onClick={() => canExpand && toggle(s.id)}>
-          <div style={{ width: 40, height: 40, borderRadius: 11, background: s.color + "15", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>{s.icon}</div>
+          <div style={{ width: 40, height: 40, borderRadius: 11, background: s.color + "15", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><SubjectIcon sid={s.id} size={20} color={s.color} strokeWidth={2.2} /></div>
           <div style={{ marginLeft: 11, flex: 1 }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>{subjectName}</div>
             <div style={{ fontSize: 12, color: "var(--text-secondary)", display: "flex", alignItems: "center", gap: 4 }}>
@@ -400,7 +401,7 @@ export default function Adaptive() {
           <div style={{ display: "grid", gridTemplateColumns: bp === 'mobile' ? '1fr' : 'repeat(2, 1fr)', gap: 8 }}>
           {strong.map(s => (
             <div key={s.id} style={{ ...CARD_COMPACT, display: "flex", alignItems: "center", borderLeft: `4px solid ${COLORS.green}`, padding: "14px 14px", animation: "slideUp 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
-              <div style={{ fontSize: 18, marginRight: 11 }}>{s.icon}</div>
+              <div style={{ width: 32, height: 32, borderRadius: 9, marginRight: 11, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: s.color + "15" }}><SubjectIcon sid={s.id} size={17} color={s.color} strokeWidth={2.2} /></div>
               <div style={{ flex: 1, fontSize: 14, fontWeight: 600, color: "var(--text)" }}>{(t.subjects as Record<string, string>)[s.id] || s.name}</div>
               <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace", color: COLORS.green }}>{s.avg}%</div>
               {s.trend !== "none" && <span style={{ marginLeft: 6 }}><TrendIcon trend={s.trend} /></span>}

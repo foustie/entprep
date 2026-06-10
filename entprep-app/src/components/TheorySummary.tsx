@@ -210,8 +210,8 @@ export default function TheorySummary({ sid, topicId }: Props) {
                     padding: '14px', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s',
                   }}
                 >
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: (sub?.color || COLORS.teal) + '12', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
-                    {section.icon}
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: (sub?.color || COLORS.teal) + '12', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <BookOpen size={17} color={sub?.color || COLORS.teal} strokeWidth={2.2} />
                   </div>
                   <div style={{ marginLeft: 11, flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{sectionName}</div>

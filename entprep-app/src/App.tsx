@@ -12,6 +12,7 @@ import { ToastProvider, useToast } from './contexts/ToastContext';
 import { useT } from './locales';
 import ErrorBoundary from './components/ErrorBoundary';
 import LoadingSpinner from './components/ui/LoadingSpinner';
+import BrandMark from './components/ui/BrandMark';
 import { Home as HomeIcon, User } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import ProfileSelect from './components/ProfileSelect';
@@ -349,9 +350,8 @@ function AppContent() {
 
   const sidebarNav = (
     <aside style={{ width: 220, flexShrink: 0, position: "sticky", top: 0, height: "100vh", background: "var(--bg-footer)", borderRight: "1px solid var(--border-light)", display: "flex", flexDirection: "column", padding: "20px 0" }}>
-      <div style={{ padding: "0 20px 24px", fontSize: 15, fontWeight: 800, fontFamily: FF.display, letterSpacing: '-0.02em' }}>
-        <span style={{ color: 'var(--text)' }}>ENT</span>
-        <span style={{ color: COLORS.streak }}>prep.</span>
+      <div style={{ padding: "0 20px 24px" }}>
+        <BrandMark size={28} />
       </div>
       {NAV_ITEMS.map(ni => {
         const active = tab === ni.id;
@@ -391,10 +391,7 @@ function AppContent() {
           {sidebarNav}
           <div style={{ flex: 1, maxWidth: LAYOUT.maxWidth, margin: "0 auto", position: "relative" }}>
             <header role="banner" style={{ padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "center", borderBottom: "1px solid var(--border-light)", background: "var(--bg-header)",  }}>
-              <div style={{ fontSize: 15, fontWeight: 800, fontFamily: FF.display, letterSpacing: '-0.02em' }}>
-                <span style={{ color: 'var(--text)' }}>ENT</span>
-                <span style={{ color: COLORS.streak }}>prep.</span>
-              </div>
+              <BrandMark size={26} />
             </header>
             {mainContent}
           </div>
@@ -403,10 +400,7 @@ function AppContent() {
         <div style={{ maxWidth: LAYOUT.maxWidth, margin: "0 auto", position: "relative" }}>
           {/* Mobile header — minimal v2: thin bar with wordmark left, no border */}
           <header role="banner" style={{ padding: "12px 20px 6px", display: "flex", alignItems: "center", justifyContent: "flex-start" }}>
-            <div style={{ fontSize: 17, fontWeight: 900, fontFamily: FF.display, letterSpacing: '-0.03em' }}>
-              <span style={{ color: 'var(--text)' }}>ENT</span>
-              <span style={{ color: COLORS.streak }}>prep.</span>
-            </div>
+            <BrandMark size={30} />
           </header>
           {mainContent}
           {showNav && bottomNav}

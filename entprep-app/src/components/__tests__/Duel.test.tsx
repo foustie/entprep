@@ -149,22 +149,18 @@ vi.mock('../ui/LoadingSpinner', () => ({
 
 // Stub lucide-react icons to simple spans
 vi.mock('lucide-react', () => {
-  const icon = (props: Record<string, unknown>) => <span data-testid={`icon-${props['data-lucide'] || ''}`} />;
-  return {
-    Swords: (p: Record<string, unknown>) => <span {...p} />,
-    Copy: (p: Record<string, unknown>) => <span {...p} />,
-    MessageCircle: (p: Record<string, unknown>) => <span {...p} />,
-    Send: (p: Record<string, unknown>) => <span {...p} />,
-    ArrowRight: (p: Record<string, unknown>) => <span {...p} />,
-    ChevronRight: (p: Record<string, unknown>) => <span {...p} />,
-    Crown: (p: Record<string, unknown>) => <span {...p} />,
-    Clock: (p: Record<string, unknown>) => <span {...p} />,
-    Check: (p: Record<string, unknown>) => <span {...p} />,
-    X: (p: Record<string, unknown>) => <span {...p} />,
-    Zap: (p: Record<string, unknown>) => <span {...p} />,
-    Trophy: (p: Record<string, unknown>) => <span {...p} />,
-    RotateCcw: (p: Record<string, unknown>) => <span {...p} />,
-  };
+  // Proxy mock: any icon name resolves to a stub <span> — survives new icon imports.
+  // 'then' / symbols must return undefined or the module namespace looks like a
+  // thenable and `await import()` hangs forever.
+  const stub = (p: Record<string, unknown>) => <span {...p} />;
+  return new Proxy({}, {
+    has: () => true, // vitest validates named exports via the `in` operator
+    get: (_t, name) => {
+      if (typeof name !== 'string' || name === 'then' || name === 'default') return undefined;
+      if (name === '__esModule') return true;
+      return stub;
+    },
+  });
 });
 
 // ── Test data ──────────────────────────────────────────────────────────────
