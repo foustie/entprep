@@ -13,6 +13,9 @@ The project owner is not a professional developer. When the user proposes someth
 ### No wheel inventions
 Before writing custom implementations, check if an existing npm package or built-in browser/React API already solves the problem. Prefer well-maintained libraries over custom code. When reviewing the codebase, flag custom implementations that could be replaced by existing solutions.
 
+### Follow the design system on ANY UI work
+Before touching any component/screen/landing markup, read `entprep-app/docs/design-prompt.md` (compact rules) — full spec in `entprep-app/DESIGN.md`. Hard rules: tokens only (`COLORS`/`TYPE`/`FF`/`FS`/`SP`/`R` from `src/constants/styles.ts`, CSS vars from `themes.ts`) — no raw hex, no inline font-family, no arbitrary sizes/gaps; one streak CTA + one bright splash card per screen; hard ink shadows only (no blur); every visible string goes through `useT()` locales (ru + kk); verify in both themes at 390px and 1440px.
+
 ## Project Overview
 
 ENTprep is a TypeScript + React educational web app for Kazakhstan's Unified National Testing (ЕНТ). Practice tests across 13 subjects with **28 593 questions** in Supabase (284 subtopics, 150/subject static fallback), AI explanations, adaptive learning, full ЕНТ simulation, leaderboard, social features, real-time duels, referral system, and a university grant calculator.
