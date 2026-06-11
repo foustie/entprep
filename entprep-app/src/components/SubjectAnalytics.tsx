@@ -1,9 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { CARD_COMPACT, COLORS, TYPE, SECTION_LABEL, SP, FS, R } from '../constants/styles';
 import { useApp } from '../contexts/AppContext';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useT } from '../locales';
 import { weeklyActivity, timeByDifficulty, type Difficulty } from '../utils/analyticsHelpers';
+import { fetchPacing, pacingBand, type PacingStats } from '../utils/pacingHelpers';
 import { calcTopicStats } from '../utils/adaptiveHelpers';
 import { pluralizeForms } from '../utils/formatters';
 import { BarChart3, Timer } from 'lucide-react';
@@ -165,6 +166,14 @@ function TimeDonut({ sid }: { sid: string }) {
   const t = useT();
   const data = useMemo(() => timeByDifficulty(hist, sid), [hist, sid]);
 
+  // Platform pacing band (anonymous aggregates) — appears when loaded, no spinner
+  const [platform, setPlatform] = useState<PacingStats | null>(null);
+  useEffect(() => {
+    let alive = true;
+    fetchPacing(sid).then(stats => { if (alive) setPlatform(stats); });
+    return () => { alive = false; };
+  }, [sid]);
+
   if (data.samples < MIN_TIME_SAMPLES) {
     const n = MIN_TIME_SAMPLES - data.samples;
     return (
@@ -224,15 +233,25 @@ function TimeDonut({ sid }: { sid: string }) {
         </text>
       </svg>
       <div style={{ display: 'flex', flexDirection: 'column', gap: SP.sm, flex: 1, minWidth: 0 }}>
-        {order.map(k => (
-          <div key={k} style={{ display: 'flex', alignItems: 'center', gap: SP.sm }}>
-            <div style={{ width: 10, height: 10, borderRadius: R.pill, background: DIFF_COLORS[k], border: '1.5px solid var(--ink)', flexShrink: 0 }} />
-            <div style={{ fontSize: FS.base, color: 'var(--text-body)', flex: 1 }}>{labels[k]}</div>
-            <div style={{ ...MONO_NUM, fontSize: FS.base, fontWeight: 600, color: 'var(--text)' }}>
-              {data[k].count > 0 ? fmtAvg(data[k].avgSec, t.analytics.minShort, t.analytics.secShort) : '—'}
+        {order.map(k => {
+          const band = pacingBand(platform?.[k]);
+          return (
+            <div key={k}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: SP.sm }}>
+                <div style={{ width: 10, height: 10, borderRadius: R.pill, background: DIFF_COLORS[k], border: '1.5px solid var(--ink)', flexShrink: 0 }} />
+                <div style={{ fontSize: FS.base, color: 'var(--text-body)', flex: 1 }}>{labels[k]}</div>
+                <div style={{ ...MONO_NUM, fontSize: FS.base, fontWeight: 600, color: 'var(--text)' }}>
+                  {data[k].count > 0 ? fmtAvg(data[k].avgSec, t.analytics.minShort, t.analytics.secShort) : '—'}
+                </div>
+              </div>
+              {band && (
+                <div style={{ ...MONO_NUM, fontSize: FS.xs, color: 'var(--text-muted)', textAlign: 'right', marginTop: 2 }}>
+                  {t.analytics.platformBand.replace('{a}', String(band.lo)).replace('{b}', String(band.hi))}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

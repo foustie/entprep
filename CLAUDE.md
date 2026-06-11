@@ -44,7 +44,7 @@ entprep-app/src/
 entprep-app/netlify/functions/   # Serverless API
 ├── ai-explain.mjs, ai-generate.mjs, ai-plan.mjs
 ├── admin-action.mjs, leaderboard.mjs, social.mjs, duel.mjs
-├── revenuecat-webhook.mjs, referral.mjs
+├── revenuecat-webhook.mjs, referral.mjs, pacing.mjs
 ├── push-subscribe.mjs, push-cron.mjs
 └── utils/shared.mjs, constants.mjs, quality.mjs
 

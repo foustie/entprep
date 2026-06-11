@@ -27,6 +27,7 @@ import { API_BASE } from './config/app';
 import { supabase } from './config/supabase';
 import { useAuth } from './contexts/AuthContext';
 import { trackEvent } from './utils/analytics';
+import { submitPacing } from './utils/pacingHelpers';
 import type { TestResult, SRCard } from './types';
 
 const submitLeaderboard = async (result: TestResult) => {
@@ -222,7 +223,7 @@ function AppContent() {
     }
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleFinish = (result: TestResult) => { addHist(result); addSrFromResult(result); if (user) { submitLeaderboard(result); } };
+  const handleFinish = (result: TestResult) => { addHist(result); addSrFromResult(result); if (user) { submitLeaderboard(result); submitPacing(result); } };
   const handleReviewFinish = (updated: SRCard[]) => {
     setSrCards(prev => {
       const map = new Map(prev.map(c => [`${c.sid}:${c.oi}`, c]));
