@@ -253,14 +253,14 @@ export default function Landing({ onStart, totalQ }: Props) {
 
         {/* 02 — Tailored plan */}
         <div style={{ marginBottom: isDesktop ? 0 : 28, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ background: COLORS.streakSoft, border: `2px solid ${INK}`, borderRadius: 16, boxShadow: `0 3px 0 0 ${INK}`, padding: 12, flex: isDesktop ? 1 : 'none' }}>
-            <div style={{ background: '#FFF', border: `2px solid ${INK}`, borderRadius: 12, padding: 6 }}>
+          <div style={{ background: COLORS.streakSoft, border: `2px solid ${INK}`, borderRadius: 16, boxShadow: `0 3px 0 0 ${INK}`, padding: 12, flex: isDesktop ? 1 : 'none', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ background: '#FFF', border: `2px solid ${INK}`, borderRadius: 12, padding: 6, flex: 1, display: 'flex', flexDirection: 'column' }}>
               {[
                 { name: 'Квадратные уравнения', chip: tl.mockMath, color: COLORS.streak, time: 25 },
                 { name: 'Тюркский каганат', chip: t.subjects.history, color: COLORS.win, time: 20 },
                 { name: 'Законы Ньютона', chip: t.subjects.physics, color: '#EC4899', time: 30 },
               ].map((r, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 8px', borderBottom: i < 2 ? `1.5px solid rgba(15,15,16,0.1)` : 'none' }}>
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 8px', flex: 1, borderBottom: i < 2 ? `1.5px solid rgba(15,15,16,0.1)` : 'none' }}>
                   <span style={{ width: 18, height: 18, borderRadius: 9, border: `2px solid ${INK}`, flexShrink: 0, opacity: 0.35 }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, fontFamily: FF.body, color: INK, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.name}</div>
@@ -282,14 +282,14 @@ export default function Landing({ onStart, totalQ }: Props) {
         {/* 03 — Hit your target: question bank + Question Rush */}
         <div style={{ marginBottom: isDesktop ? 0 : 8, display: 'flex', flexDirection: 'column' }}>
           <div style={{ background: COLORS.winSoft, border: `2px solid ${INK}`, borderRadius: 16, boxShadow: `0 3px 0 0 ${INK}`, padding: 12, display: 'flex', flexDirection: 'column', gap: 10, flex: isDesktop ? 1 : 'none' }}>
-            <div style={{ background: '#FFF', border: `2px solid ${INK}`, borderRadius: 12, padding: '13px 14px' }}>
+            <div style={{ background: '#FFF', border: `2px solid ${INK}`, borderRadius: 12, padding: '13px 14px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                 <BookOpen size={15} color={COLORS.win} strokeWidth={2.5} />
                 <span style={{ fontSize: 14, fontWeight: 800, fontFamily: FF.body, color: INK }}>{tl.mockBank}</span>
               </div>
               <div style={{ ...TYPE.bodySmall, fontSize: 12, color: 'rgba(15,15,16,0.65)', lineHeight: 1.5 }}>{tl.mockBankDesc}</div>
             </div>
-            <div style={{ background: '#FFF', border: `2px solid ${INK}`, borderRadius: 12, padding: '13px 14px' }}>
+            <div style={{ background: '#FFF', border: `2px solid ${INK}`, borderRadius: 12, padding: '13px 14px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Zap size={15} color={COLORS.streak} fill={COLORS.streak} />
