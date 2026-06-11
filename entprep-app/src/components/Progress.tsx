@@ -30,7 +30,8 @@ function ActivityHeatmap({ hist }: { hist: TestResult[] }) {
 
   const today = new Date();
   const days: { date: Date; key: string; count: number }[] = [];
-  for (let i = 83; i >= 0; i--) {
+  // GitHub-style window: ~6 months of daily practice
+  for (let i = 181; i >= 0; i--) {
     const d = new Date(today); d.setDate(d.getDate() - i);
     const key = d.toLocaleDateString("ru-RU");
     days.push({ date: d, key, count: counts[key] || 0 });
@@ -86,6 +87,14 @@ function ActivityHeatmap({ hist }: { hist: TestResult[] }) {
             ))}
           </div>
         ))}
+      </div>
+      {/* GitHub-style intensity legend */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4, marginTop: 8 }}>
+        <span style={{ fontSize: 9, color: "var(--text-muted)", fontFamily: "'JetBrains Mono',monospace" }}>{t.progress.legendLess}</span>
+        {["var(--bg-subtle)", "rgba(34,197,94,0.2)", "rgba(34,197,94,0.4)", "rgba(34,197,94,0.6)", "rgba(34,197,94,0.85)"].map((c, i) => (
+          <span key={i} style={{ width: 10, height: 10, borderRadius: 2, background: c, border: '1px solid rgba(15,15,16,0.12)' }} />
+        ))}
+        <span style={{ fontSize: 9, color: "var(--text-muted)", fontFamily: "'JetBrains Mono',monospace" }}>{t.progress.legendMore}</span>
       </div>
     </div>
   );

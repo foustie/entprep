@@ -13,7 +13,7 @@ import { useT } from './locales';
 import ErrorBoundary from './components/ErrorBoundary';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import BrandMark from './components/ui/BrandMark';
-import { Home as HomeIcon, User } from 'lucide-react';
+import { Home as HomeIcon, User, BarChart3 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import ProfileSelect from './components/ProfileSelect';
 import CoachHome from './components/CoachHome';
@@ -363,6 +363,17 @@ function AppContent() {
           </button>
         );
       })}
+      {/* Progress — desktop sidebar entry (mobile keeps the 2-tab bottom nav) */}
+      {(() => {
+        const active = screen === SCREENS.PROGRESS;
+        const label = tr.progress.title;
+        return (
+          <button onClick={() => nav('progress')} aria-label={label} aria-current={active ? "page" : undefined} style={{ display: "flex", alignItems: "center", gap: 12, background: active ? "rgba(255,107,53,0.08)" : "none", border: "none", cursor: "pointer", padding: "12px 20px", borderRadius: 0, borderLeft: active ? `3px solid ${COLORS.accent}` : "3px solid transparent", transition: "all 0.2s", width: "100%", textAlign: "left" }}>
+            <BarChart3 size={20} strokeWidth={active ? 2.2 : 1.8} color={active ? COLORS.accent : "var(--text-muted)"} style={{ transition: "color 0.2s" }} />
+            <span style={{ fontSize: 13, fontWeight: active ? 600 : 400, color: active ? COLORS.accent : "var(--text-secondary)", transition: "color 0.2s" }}>{label}</span>
+          </button>
+        );
+      })()}
     </aside>
   );
 

@@ -245,6 +245,8 @@ const ru = {
     goalLabel: 'цель',
     beforeEntLabel: 'до ЕНТ',
     allSubjects: 'Все предметы',
+    alunaPromo: 'Привет, это Дияр AI! Я экспериментирую с новым проектом — приложение про цвет и уход, без оценок внешности. Если интересно — загляни и скажи, что думаешь 🙌',
+    alunaPromoCta: 'Посмотреть',
     loginToSave: 'Войди чтобы сохранить прогресс',
     retryErrors: 'Повторить ошибки',
     nextTest: 'Следующий тест',
@@ -495,6 +497,8 @@ const ru = {
     // Subject stats
     firstTestHint: 'Пройдите первый тест!',
     fullEnt: 'Полный ЕНТ',
+    legendLess: 'Меньше',
+    legendMore: 'Больше',
     testHistory: 'История тестов',
     allFilter: 'Все',
     byDate: 'По дате',

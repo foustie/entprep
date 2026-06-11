@@ -15,7 +15,7 @@ import { prefetchCounts, getPoolSize } from '../utils/questionStore';
 import HomeSubjectGrid from './HomeSubjectGrid';
 import SendToMomSheet from './SendToMomSheet';
 import SubjectIcon from './ui/SubjectIcon';
-import { ArrowRight, GraduationCap, Trophy, ChevronDown, ChevronUp, X, KeyRound, Target, Flame, Zap, MessageSquare, BookOpen } from 'lucide-react';
+import { ArrowRight, GraduationCap, Trophy, ChevronDown, ChevronUp, X, KeyRound, Target, Flame, Zap, MessageSquare, BookOpen, Sparkles } from 'lucide-react';
 import type { SubjectConfig } from '../types';
 import type { EntCountdown } from '../config/ent';
 
@@ -109,6 +109,7 @@ export default function CoachHome() {
   const [authNudgeDismissed, setAuthNudgeDismissed] = useState(
     () => !!localStorage.getItem('entprep_auth_nudge_dismissed'),
   );
+  const [alunaDismissed, setAlunaDismissed] = useState(() => !!localStorage.getItem('entprep_aluna_promo_dismissed'));
   const showAuthNudge = !user && !authNudgeDismissed;
 
   // Mark animation played
@@ -150,6 +151,47 @@ export default function CoachHome() {
 
   return (
     <div style={{ padding: `0 var(--content-padding) ${bp === 'desktop' ? 40 : 80}px`, overscrollBehavior: 'none' }}>
+
+      {/* ═══ Cross-promo: aluna.beauty — dismissible stamped card ═══ */}
+      {!alunaDismissed && (
+        <div style={{
+          display: 'flex', alignItems: 'flex-start', gap: 10,
+          padding: '12px 12px 12px 14px', marginTop: 6, marginBottom: 14,
+          background: 'var(--bg-card)',
+          border: '2px solid var(--ink)',
+          borderRadius: 14,
+          boxShadow: '0 3px 0 0 var(--ink)',
+        }}>
+          <Sparkles size={16} color={COLORS.streak} strokeWidth={2.4} style={{ flexShrink: 0, marginTop: 2 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontFamily: FF.body, fontSize: 12.5, fontWeight: 700, lineHeight: 1.45, color: 'var(--text)' }}>
+              {t.home.alunaPromo}
+            </div>
+            <a
+              href="https://aluna.beauty/?ref=entprep"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                marginTop: 8, padding: '7px 14px',
+                background: 'var(--ink)', color: '#fff',
+                border: '2px solid var(--ink)', borderRadius: 10,
+                fontFamily: FF.body, fontSize: 12, fontWeight: 800,
+                textDecoration: 'none',
+              }}
+            >
+              {t.home.alunaPromoCta}
+            </a>
+          </div>
+          <button
+            onClick={() => { localStorage.setItem('entprep_aluna_promo_dismissed', '1'); setAlunaDismissed(true); }}
+            aria-label={t.close}
+            style={{ flexShrink: 0, width: 28, height: 28, borderRadius: 14, border: 'none', background: 'var(--bg-subtle)', cursor: 'pointer', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
 
       {/* ═══ Auth nudge — v2 ink chip ═══ */}
       {showAuthNudge && (
