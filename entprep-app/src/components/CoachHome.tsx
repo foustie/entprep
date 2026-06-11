@@ -254,13 +254,15 @@ export default function CoachHome() {
           style={{
             width: '100%',
             display: 'flex', alignItems: 'center', gap: 12,
-            background: COLORS.text,
-            color: 'var(--bg)',
-            border: `2px solid ${COLORS.text}`,
+            // Theme-invariant ink banner: bg is var(--ink), NEVER COLORS.text
+            // (in dark theme text is cream → white copy on it disappears)
+            background: 'var(--ink)',
+            color: '#fff',
+            border: '2px solid var(--border-strong)',
             borderRadius: 16,
             padding: '14px 14px',
             marginBottom: SP.lg,
-            boxShadow: `0 4px 0 0 ${COLORS.text}`,
+            boxShadow: '0 4px 0 0 var(--ink)',
             cursor: 'pointer',
             textAlign: 'left',
             transition: 'transform 80ms ease, box-shadow 80ms ease',
@@ -283,7 +285,7 @@ export default function CoachHome() {
               position: 'absolute', bottom: -2, right: -2,
               width: 12, height: 12, borderRadius: '50%',
               background: COLORS.win,
-              border: `2px solid ${COLORS.text}`,
+              border: '2px solid var(--ink)',
             }} />
           </div>
 
@@ -651,24 +653,25 @@ function HomeHero({
               : <SubjectIcon sid={subjectId} size={24} color={subjectColor} />}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
+          {/* Fixed light surface (#FFFDF5) → text must be theme-invariant ink, not var(--text*) */}
           <div style={{
             fontFamily: FF.mono, fontSize: 9, fontWeight: 800,
             letterSpacing: '0.14em', textTransform: 'uppercase',
-            color: COLORS.textMuted, marginBottom: 1,
+            color: 'var(--ink-soft)', marginBottom: 1,
           }}>
             следующий шаг
           </div>
           <div style={{
             fontFamily: FF.display, fontSize: 16, fontWeight: 900,
             letterSpacing: '-0.025em',
-            color: COLORS.text,
+            color: 'var(--ink)',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>
             {missionTitle}
           </div>
           <div style={{
             fontFamily: FF.body, fontSize: 11.5, fontWeight: 700,
-            color: COLORS.textSecondary, marginTop: 1,
+            color: 'var(--ink-soft)', marginTop: 1,
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>
             {missionReason}

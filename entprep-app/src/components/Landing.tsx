@@ -211,10 +211,10 @@ export default function Landing({ onStart, totalQ }: Props) {
         <div style={{ marginBottom: isDesktop ? 0 : 28, display: 'flex', flexDirection: 'column' }}>
           <div style={{ background: COLORS.xpSofter, border: `2px solid ${INK}`, borderRadius: 16, boxShadow: `0 3px 0 0 ${INK}`, padding: 12, flex: isDesktop ? 1 : 'none' }}>
             <div style={{ background: '#FFF', border: `2px solid ${INK}`, borderRadius: 12, padding: '14px 14px 16px' }}>
-              <div style={{ ...TYPE.statLabel, marginTop: 0, marginBottom: 4 }}>{tl.mockPrediction}</div>
+              <div style={{ ...TYPE.statLabel, marginTop: 0, marginBottom: 4, color: 'var(--ink-soft)' }}>{tl.mockPrediction}</div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
                 <span style={{ fontFamily: FF.display, fontSize: 38, fontWeight: 800, color: INK, letterSpacing: '-0.03em' }}>118</span>
-                <span style={{ fontFamily: FF.display, fontSize: 14, color: 'var(--text-muted)', fontWeight: 700 }}>/ 140</span>
+                <span style={{ fontFamily: FF.display, fontSize: 14, color: 'var(--ink-soft)', fontWeight: 700 }}>/ 140</span>
               </div>
               <div style={{ display: 'flex', gap: 22, margin: '10px 0 14px' }}>
                 {[
@@ -223,12 +223,12 @@ export default function Landing({ onStart, totalQ }: Props) {
                   { n: t.subjects.physics, v: 31 },
                 ].map((s, i) => (
                   <div key={i}>
-                    <div style={{ ...TYPE.caption, fontSize: 10 }}>{s.n}</div>
+                    <div style={{ ...TYPE.caption, fontSize: 10, color: 'var(--ink-soft)' }}>{s.n}</div>
                     <div style={{ fontFamily: FF.mono, fontSize: 16, fontWeight: 800, color: INK }}>{s.v}</div>
                   </div>
                 ))}
               </div>
-              <div style={{ ...TYPE.statLabel, marginTop: 0, marginBottom: 8 }}>{tl.mockWeakTopics}</div>
+              <div style={{ ...TYPE.statLabel, marginTop: 0, marginBottom: 8, color: 'var(--ink-soft)' }}>{tl.mockWeakTopics}</div>
               {[
                 { name: 'Производная и интеграл', pct: 58, color: COLORS.red },
                 { name: 'Стереометрия', pct: 72, color: COLORS.xp },
@@ -237,7 +237,7 @@ export default function Landing({ onStart, totalQ }: Props) {
                 <div key={i} style={{ marginBottom: 8 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontFamily: FF.body, marginBottom: 3 }}>
                     <span style={{ color: INK, fontWeight: 600 }}>{b.name}</span>
-                    <span style={{ color: 'var(--text-muted)', fontFamily: FF.mono, fontWeight: 700 }}>{b.pct}%</span>
+                    <span style={{ color: 'var(--ink-soft)', fontFamily: FF.mono, fontWeight: 700 }}>{b.pct}%</span>
                   </div>
                   <div style={{ height: 8, borderRadius: 4, border: `1.5px solid ${INK}`, background: '#FFF', overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${b.pct}%`, background: b.color }} />
@@ -266,7 +266,7 @@ export default function Landing({ onStart, totalQ }: Props) {
                     <div style={{ fontSize: 13, fontWeight: 700, fontFamily: FF.body, color: INK, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.name}</div>
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
                       <span style={{ fontSize: 9, fontWeight: 800, fontFamily: FF.mono, color: INK, background: `${r.color}33`, border: `1.5px solid ${r.color}`, padding: '1px 6px', borderRadius: 6, letterSpacing: '0.04em' }}>{r.chip}</span>
-                      <span style={{ ...TYPE.caption, fontSize: 10, display: 'inline-flex', alignItems: 'center', gap: 3 }}><Clock size={10} /> {r.time} {tl.mockMin}</span>
+                      <span style={{ ...TYPE.caption, fontSize: 10, color: 'var(--ink-soft)', display: 'inline-flex', alignItems: 'center', gap: 3 }}><Clock size={10} /> {r.time} {tl.mockMin}</span>
                     </div>
                   </div>
                   <span style={{ fontSize: 11, fontWeight: 800, fontFamily: FF.body, color: '#fff', background: r.color, border: `1.5px solid ${INK}`, padding: '6px 12px', borderRadius: 9, flexShrink: 0 }}>{tl.mockStart}</span>

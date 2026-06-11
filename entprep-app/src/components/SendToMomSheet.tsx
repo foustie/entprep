@@ -213,7 +213,7 @@ const previewAvatar: CSSProperties = {
   width: 36,
   height: 36,
   borderRadius: '50%',
-  background: COLORS.text,
+  background: 'var(--ink)',
   color: COLORS.xp,
   display: 'inline-flex',
   alignItems: 'center',

@@ -281,13 +281,13 @@ export default function AuthPrompt({ onFinish }: AuthPromptProps) {
                 }}>{t.authPrompt.inAppWarningTitle}</div>
                 <div style={{
                   fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 600,
-                  color: 'var(--ink)CC', lineHeight: 1.35,
+                  color: 'var(--ink-soft)', lineHeight: 1.35,
                 }}>{t.authPrompt.inAppWarningText}</div>
               </div>
             </div>
             <div style={{
               fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 700,
-              color: 'var(--ink)BB', lineHeight: 1.35, paddingLeft: 36,
+              color: 'var(--ink-soft)', lineHeight: 1.35, paddingLeft: 36,
             }}>
               {os === 'ios' ? t.authPrompt.inAppTipIos : t.authPrompt.inAppTipAndroid}
             </div>
