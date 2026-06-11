@@ -38,8 +38,11 @@ function fmtAvg(sec: number, minShort: string, secShort: string): string {
 function EmptyCard({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: SP.sm, padding: `${SP.xl}px ${SP.lg}px`, minHeight: 120, textAlign: 'center' }}>
-      {icon}
-      <div style={{ ...TYPE.bodySmall }}>{text}</div>
+      {/* Stamped icon chip per the design kit */}
+      <span style={{ width: 36, height: 36, borderRadius: 10, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: COLORS.xpSofter, border: '2px solid var(--ink)', boxShadow: '0 2px 0 0 var(--ink)', color: 'var(--ink)' }}>
+        {icon}
+      </span>
+      <div style={{ ...TYPE.bodySmall, marginTop: 2 }}>{text}</div>
     </div>
   );
 }
@@ -52,7 +55,7 @@ function WeeklyChart({ sid }: { sid: string }) {
   const hasData = weeks.some(w => w.correct + w.wrong > 0);
 
   if (!hasData) {
-    return <EmptyCard icon={<BarChart3 size={20} color="var(--text-muted)" />} text={t.analytics.weeklyEmpty} />;
+    return <EmptyCard icon={<BarChart3 size={18} color="var(--ink)" strokeWidth={2.2} />} text={t.analytics.weeklyEmpty} />;
   }
 
   const W = 320;
@@ -91,11 +94,11 @@ function WeeklyChart({ sid }: { sid: string }) {
               <>
                 {/* wrong (bottom) */}
                 {w.wrong > 0 && (
-                  <rect x={x} y={pad.top + ch - hWrong} width={barW} height={hWrong} fill={C_WRONG} rx={w.correct > 0 ? 0 : 2} />
+                  <rect x={x} y={pad.top + ch - hWrong} width={barW} height={hWrong} fill={C_WRONG} rx={w.correct > 0 ? 0 : 2} stroke="var(--ink)" strokeWidth={1.25} />
                 )}
                 {/* correct (top), rounded top corners */}
                 {w.correct > 0 && (
-                  <path d={`M${x},${yCorrect + hCorrect} L${x},${yCorrect + 2} Q${x},${yCorrect} ${x + 2},${yCorrect} L${x + barW - 2},${yCorrect} Q${x + barW},${yCorrect} ${x + barW},${yCorrect + 2} L${x + barW},${yCorrect + hCorrect} Z`} fill={C_CORRECT} />
+                  <path d={`M${x},${yCorrect + hCorrect} L${x},${yCorrect + 2} Q${x},${yCorrect} ${x + 2},${yCorrect} L${x + barW - 2},${yCorrect} Q${x + barW},${yCorrect} ${x + barW},${yCorrect + 2} L${x + barW},${yCorrect + hCorrect} Z`} fill={C_CORRECT} stroke="var(--ink)" strokeWidth={1.25} />
                 )}
               </>
             )}
@@ -121,7 +124,7 @@ function TopicAccuracy({ sid }: { sid: string }) {
   );
 
   if (rows.length === 0) {
-    return <EmptyCard icon={<BarChart3 size={20} color="var(--text-muted)" />} text={t.analytics.accuracyEmpty} />;
+    return <EmptyCard icon={<BarChart3 size={18} color="var(--ink)" strokeWidth={2.2} />} text={t.analytics.accuracyEmpty} />;
   }
 
   const zoneColor = (pct: number) => (pct < 60 ? COLORS.red : pct < 80 ? COLORS.xp : COLORS.win);
@@ -136,13 +139,16 @@ function TopicAccuracy({ sid }: { sid: string }) {
             </div>
             <div style={{ ...MONO_NUM, fontSize: FS.md, fontWeight: 700, color: zoneColor(row.pct), flexShrink: 0 }}>{row.pct}%</div>
           </div>
-          <div style={{ position: 'relative', height: 6, borderRadius: R.sm, overflow: 'visible', marginBottom: SP.xs }}>
-            {/* zone segments: red 0-60, amber 60-80, green 80-100 */}
-            <div style={{ position: 'absolute', left: 0, width: '60%', top: 0, bottom: 0, background: COLORS.red + '2e', borderRadius: '3px 0 0 3px' }} />
-            <div style={{ position: 'absolute', left: '60%', width: '20%', top: 0, bottom: 0, background: COLORS.xp + '2e' }} />
-            <div style={{ position: 'absolute', left: '80%', width: '20%', top: 0, bottom: 0, background: COLORS.win + '2e', borderRadius: '0 3px 3px 0' }} />
-            {/* marker */}
-            <div style={{ position: 'absolute', left: `${row.pct}%`, top: '50%', transform: 'translate(-50%,-50%)', width: 10, height: 10, borderRadius: R.pill, background: zoneColor(row.pct), border: '2px solid var(--bg-card)' }} />
+          {/* Track per the kit progress recipe: ink border + pill + sunken bg */}
+          <div style={{ position: 'relative', height: 12, borderRadius: R.pill, border: '2px solid var(--ink)', background: 'var(--bg-subtle)', overflow: 'visible', marginBottom: SP.xs }}>
+            <div style={{ position: 'absolute', inset: 0, borderRadius: R.pill, overflow: 'hidden' }}>
+              {/* zone segments: red 0-60, amber 60-80, green 80-100 */}
+              <div style={{ position: 'absolute', left: 0, width: '60%', top: 0, bottom: 0, background: COLORS.red + '3d' }} />
+              <div style={{ position: 'absolute', left: '60%', width: '20%', top: 0, bottom: 0, background: COLORS.xp + '3d' }} />
+              <div style={{ position: 'absolute', left: '80%', width: '20%', top: 0, bottom: 0, background: COLORS.win + '3d' }} />
+            </div>
+            {/* marker — stamped dot */}
+            <div style={{ position: 'absolute', left: `${row.pct}%`, top: '50%', transform: 'translate(-50%,-50%)', width: 14, height: 14, borderRadius: R.pill, background: zoneColor(row.pct), border: '2px solid var(--ink)' }} />
           </div>
           <div style={{ ...TYPE.caption }}>
             <span style={MONO_NUM}>{row.total}</span> {pluralizeForms(row.total, t.analytics.attemptForms)}
@@ -163,7 +169,7 @@ function TimeDonut({ sid }: { sid: string }) {
     const n = MIN_TIME_SAMPLES - data.samples;
     return (
       <EmptyCard
-        icon={<Timer size={20} color="var(--text-muted)" />}
+        icon={<Timer size={18} color="var(--ink)" strokeWidth={2.2} />}
         text={t.analytics.timeEmpty.replace('{n}', String(n))}
       />
     );
@@ -192,7 +198,7 @@ function TimeDonut({ sid }: { sid: string }) {
     <div style={{ display: 'flex', alignItems: 'center', gap: SP.lg }}>
       <svg viewBox="0 0 110 110" width={110} height={110} style={{ flexShrink: 0 }} role="img" aria-label={t.analytics.timeTitle}>
         <g transform="rotate(-90 55 55)">
-          <circle cx={55} cy={55} r={RADIUS} fill="none" stroke="var(--border)" strokeWidth={10} />
+          <circle cx={55} cy={55} r={RADIUS} fill="none" stroke="var(--bg-subtle-2)" strokeWidth={10} />
           {segments.map(s => (
             <circle
               key={s.key}
@@ -206,6 +212,9 @@ function TimeDonut({ sid }: { sid: string }) {
               strokeDashoffset={-s.offset}
             />
           ))}
+          {/* stamped outline: thin ink rings on both edges of the donut */}
+          <circle cx={55} cy={55} r={RADIUS + 5} fill="none" stroke="var(--ink)" strokeWidth={1.5} />
+          <circle cx={55} cy={55} r={RADIUS - 5} fill="none" stroke="var(--ink)" strokeWidth={1.5} />
         </g>
         <text x={55} y={53} textAnchor="middle" fontSize={13} fontWeight={700} fontFamily="'JetBrains Mono',monospace" fill="var(--text)">
           {fmtAvg(data.totalAvgSec, t.analytics.minShort, t.analytics.secShort)}
@@ -217,7 +226,7 @@ function TimeDonut({ sid }: { sid: string }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: SP.sm, flex: 1, minWidth: 0 }}>
         {order.map(k => (
           <div key={k} style={{ display: 'flex', alignItems: 'center', gap: SP.sm }}>
-            <div style={{ width: 8, height: 8, borderRadius: R.pill, background: DIFF_COLORS[k], flexShrink: 0 }} />
+            <div style={{ width: 10, height: 10, borderRadius: R.pill, background: DIFF_COLORS[k], border: '1.5px solid var(--ink)', flexShrink: 0 }} />
             <div style={{ fontSize: FS.base, color: 'var(--text-body)', flex: 1 }}>{labels[k]}</div>
             <div style={{ ...MONO_NUM, fontSize: FS.base, fontWeight: 600, color: 'var(--text)' }}>
               {data[k].count > 0 ? fmtAvg(data[k].avgSec, t.analytics.minShort, t.analytics.secShort) : '—'}
