@@ -17,7 +17,7 @@ import { formatTimeHMS } from '../utils/formatters';
 import BackButton from './ui/BackButton';
 import ProgressBar from './ui/ProgressBar';
 import { GraduationCap, AlertTriangle, Share2, Check, X, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Lightbulb, Grid3X3, Play, Flag, Pause, BookOpen, WifiOff } from 'lucide-react';
-import SubjectIcon from './ui/SubjectIcon';
+import SubjectIcon, { SubjectChip } from './ui/SubjectIcon';
 import { SUBJECT_META } from '../config/subjects';
 import ReportSheet from './ui/ReportSheet';
 import { supabase } from '../config/supabase';
@@ -402,15 +402,7 @@ export default function FullENT({ finish }: FullENTProps) {
             borderRadius: 14,
             boxShadow: '0 3px 0 0 var(--ink)',
           }}>
-            <div style={{
-              width: 40, height: 40, borderRadius: 10,
-              background: `${subColor}14`,
-              border: `1.5px solid ${subColor}4D`,
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0,
-            }}>
-              <SubjectIcon sid={s.sid} size={20} color={subColor} strokeWidth={2.2} />
-            </div>
+            <SubjectChip sid={s.sid} size={40} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{
                 fontFamily: "'Nunito',sans-serif", fontSize: 14, fontWeight: 800,

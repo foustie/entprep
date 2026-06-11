@@ -3,7 +3,7 @@ import type { CSSProperties } from 'react';
 import { ALL_PROFILES } from '../config/questionPools';
 import { COLORS, FF, FW, SP, TINT } from '../constants/styles';
 import { Target, Check, ArrowRight, Trophy } from 'lucide-react';
-import SubjectIcon from './ui/SubjectIcon';
+import { SubjectChip as SubjectIconChip } from './ui/SubjectIcon';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { trackEvent } from '../utils/analytics';
 import { useT } from '../locales';
@@ -332,8 +332,8 @@ function SubjectChip({
         </span>
       )}
 
-      <div style={{ marginBottom: 6 }}>
-        <SubjectIcon sid={id} size={30} color={color} />
+      <div style={{ marginBottom: 8 }}>
+        <SubjectIconChip sid={id} size={44} />
       </div>
 
       <div style={{

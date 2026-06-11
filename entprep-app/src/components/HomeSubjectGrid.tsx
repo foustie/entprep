@@ -4,7 +4,7 @@ import { COLORS, FF, FW, SP, scoreColor } from '../constants/styles';
 import { useT } from '../locales';
 import { useNav } from '../contexts/NavigationContext';
 import { Trophy } from 'lucide-react';
-import SubjectIcon from './ui/SubjectIcon';
+import { SubjectChip } from './ui/SubjectIcon';
 import type { SubjectConfig, TestResult } from '../types';
 
 const INK = 'var(--ink)';
@@ -131,17 +131,10 @@ function SubjectRow({
         background: s.color,
       }} />
 
-      {/* Icon chip — neutral ink frame, subject color only in icon */}
-      <div style={{
-        flexShrink: 0,
-        width: 36, height: 36, borderRadius: 10,
-        background: 'var(--bg-subtle)',
-        border: `1.5px solid rgba(15,15,16,0.12)`,
-        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        marginLeft: 12,
-      }}>
-        <SubjectIcon sid={s.id} size={20} color={s.color} />
-      </div>
+      {/* Icon chip — design-kit stamped style */}
+      <span style={{ marginLeft: 12, display: 'inline-flex' }}>
+        <SubjectChip sid={s.id} size={36} radius={10} />
+      </span>
 
       {/* Name */}
       <div style={{

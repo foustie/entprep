@@ -107,13 +107,13 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
       <div style={{ display: "flex", alignItems: "center", marginBottom: 20, gap: 14 }}>
         <div style={{
           width: 56, height: 56, borderRadius: 14,
-          background: 'var(--bg-card)',
+          background: `${sub.color}2E`,
           border: `2px solid var(--ink)`,
-          boxShadow: `0 3px 0 0 ${sub.color}`,
+          boxShadow: `0 3px 0 0 var(--ink)`,
           display: "flex", alignItems: "center", justifyContent: "center",
           flexShrink: 0,
         }}>
-          <SubjectIcon sid={sub.id} size={28} color={sub.color} />
+          <SubjectIcon sid={sub.id} size={28} color="var(--ink)" strokeWidth={2.2} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{

@@ -14,7 +14,7 @@ import { useT } from '../locales';
 import { CARD, CARD_COMPACT, COLORS, TYPE, FF, BUTTON, ANSWER, PROGRESS_BAR } from '../constants/styles';
 import { pluralizeForms } from '../utils/formatters';
 import BackButton from './ui/BackButton';
-import SubjectIcon from './ui/SubjectIcon';
+import { SubjectChip } from './ui/SubjectIcon';
 import { Zap, Star, Check, X, ChevronDown, ChevronRight, Crown, Clock } from 'lucide-react';
 
 interface RushProps {
@@ -314,9 +314,7 @@ export default function QuestionRush({ save }: RushProps) {
               cursor: 'pointer', textAlign: 'left',
               transition: 'transform 80ms, border-bottom 80ms',
             }}>
-              <span style={{ width: 34, height: 34, borderRadius: 10, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `${s.color}1F`, border: `1.5px solid ${s.color}` }}>
-                <SubjectIcon sid={s.id} size={17} color={s.color} strokeWidth={2.2} />
-              </span>
+              <SubjectChip sid={s.id} size={34} radius={10} />
               <span style={{ fontSize: 13, fontWeight: 800, fontFamily: FF.body, color: 'var(--text)', lineHeight: 1.2 }}>{subName(s.id)}</span>
             </button>
           ))}
