@@ -412,7 +412,7 @@ export default function FullENT({ finish }: FullENTProps) {
         </div>
         <div style={{
           fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 600,
-          color: "var(--text)", lineHeight: 1.55,
+          color: "var(--ink)", lineHeight: 1.55,
         }}>{t.fullent.importantDesc}</div>
       </div>
 
@@ -604,8 +604,8 @@ export default function FullENT({ finish }: FullENTProps) {
       {paused && !offline && <div style={{ ...CARD, background: COLORS.xpSofter, padding: "48px 20px", textAlign: "center", marginBottom: 16, animation: "slideUp 0.3s cubic-bezier(0.16,1,0.3,1)" }}>
         <Pause size={40} color='var(--ink)' style={{ marginBottom: 12 }} />
         <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--ink)', marginBottom: 8 }}>{t.fullent.paused}</div>
-        <div style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 16 }}>{t.fullent.pauseDesc}</div>
-        <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 20 }}>{t.fullent.pauseStats} {totalAnswered}/120 {t.fullent.pauseRemaining} {fm(timeLeft)}</div>
+        <div style={{ fontSize: 12, color: "var(--ink-soft)", marginBottom: 16 }}>{t.fullent.pauseDesc}</div>
+        <div style={{ fontSize: 11, color: "var(--ink-soft)", marginBottom: 20 }}>{t.fullent.pauseStats} {totalAnswered}/120 {t.fullent.pauseRemaining} {fm(timeLeft)}</div>
         <button onClick={() => setPaused(false)} style={{ padding: "14px 32px", background: COLORS.streak, color: "#fff", border: "2px solid var(--ink)", borderBottom: "4px solid var(--ink)", borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
           <Play size={16} style={{ verticalAlign: "-3px", marginRight: 6 }} />{t.fullent.resume}
         </button>
@@ -613,8 +613,8 @@ export default function FullENT({ finish }: FullENTProps) {
       {offline && <div style={{ ...CARD, background: COLORS.streakSoft, padding: "48px 20px", textAlign: "center", marginBottom: 16, animation: "slideUp 0.3s cubic-bezier(0.16,1,0.3,1)" }}>
         <WifiOff size={40} color={COLORS.red} style={{ marginBottom: 12 }} />
         <div style={{ fontSize: 18, fontWeight: 700, color: COLORS.red, marginBottom: 8 }}>{(t.test as unknown as Record<string, string>).connectionLost}</div>
-        <div style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 16 }}>{(t.test as unknown as Record<string, string>).timerPaused}</div>
-        <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{t.fullent.pauseStats} {totalAnswered}/120 {t.fullent.pauseRemaining} {fm(timeLeft)}</div>
+        <div style={{ fontSize: 12, color: "var(--ink-soft)", marginBottom: 16 }}>{(t.test as unknown as Record<string, string>).timerPaused}</div>
+        <div style={{ fontSize: 11, color: "var(--ink-soft)" }}>{t.fullent.pauseStats} {totalAnswered}/120 {t.fullent.pauseRemaining} {fm(timeLeft)}</div>
       </div>}
       {!paused && !offline && <><div style={{ display: "flex", gap: 4, marginBottom: 12, overflowX: "auto" }}>
         {sections.map((s, i) => { const sa = answers[i] || {}; const cnt = Object.keys(sa).length; const active = i === curSec; return (

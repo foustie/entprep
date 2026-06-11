@@ -296,7 +296,7 @@ const previewNote: CSSProperties = {
   fontSize: 12,
   fontWeight: FW.semibold,
   lineHeight: 1.45,
-  color: COLORS.text,
+  color: 'var(--ink)',
 };
 
 const wappBtn: CSSProperties = {

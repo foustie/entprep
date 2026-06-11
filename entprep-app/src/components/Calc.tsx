@@ -6,7 +6,18 @@ import { useNav } from '../contexts/NavigationContext';
 import { useApp } from '../contexts/AppContext';
 import { getGoalProgress } from '../utils/competitionHelpers';
 import BackButton from './ui/BackButton';
-import { Calculator, Search, Star, ArrowRight, Sparkles, X } from 'lucide-react';
+import { Calculator, Search, Star, ArrowRight, Sparkles, X, Landmark, Stethoscope, GraduationCap, Wrench, Monitor, Sprout, Building2 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+
+// University category -> Lucide icon (replaces per-uni emoji)
+const UNI_ICON: Record<string, LucideIcon> = {
+  national: Landmark, medical: Stethoscope, pedagogical: GraduationCap,
+  technical: Wrench, it: Monitor, agro: Sprout, other: Building2,
+};
+function UniIcon({ tp, size = 20, color }: { tp: string; size?: number; color?: string }) {
+  const I = UNI_ICON[tp] || Building2;
+  return <I size={size} color={color} strokeWidth={2.2} />;
+}
 import { useT } from '../locales';
 import type { University } from '../types';
 
@@ -428,8 +439,8 @@ function MatchRow({
         background: `${color}18`,
         border: `1.5px solid ${color}`,
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 22, flexShrink: 0,
-      }}>{u.i}</div>
+        flexShrink: 0,
+      }}><UniIcon tp={u.tp} size={20} color={color} /></div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
           fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 800,
@@ -489,7 +500,7 @@ function UniCard({
     }}>
       <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 4, background: clr }} />
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
-        <span style={{ fontSize: 22, flexShrink: 0, lineHeight: 1 }}>{u.i}</span>
+        <span style={{ flexShrink: 0, lineHeight: 1, display: 'inline-flex', marginTop: 1 }}><UniIcon tp={u.tp} size={18} color={clr} /></span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
             fontFamily: "'Nunito',sans-serif", fontSize: 13, fontWeight: 800,
