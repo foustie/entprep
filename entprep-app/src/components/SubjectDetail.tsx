@@ -10,6 +10,7 @@ import { assembleProfileSection } from '../utils/questionAssembler';
 import { PROFILE_BLOCKS } from '../config/ent';
 import { useT } from '../locales';
 import BackButton from './ui/BackButton';
+import SubjectAnalytics from './SubjectAnalytics';
 import SkeletonCard from './ui/SkeletonCard';
 import { ChevronRight, ChevronDown, Play, GraduationCap, BookOpen } from 'lucide-react';
 import TheorySummary from './TheorySummary';
@@ -365,6 +366,9 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
           );
         })}
       </div>
+
+      {/* Per-subject analytics */}
+      <SubjectAnalytics sid={sid} />
     </div>
   );
 }

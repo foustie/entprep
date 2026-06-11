@@ -886,6 +886,26 @@ const ru = {
   },
 
   // ── Contextual Errors (ErrorBoundary per screen) ──────────────────
+  // ── Subject analytics ───────────────────────────────────────────────
+  analytics: {
+    title: 'Аналитика',
+    weeklyTitle: 'Активность по неделям',
+    accuracyTitle: 'Точность по разделам',
+    timeTitle: 'Время по сложности',
+    correct: 'Верно',
+    wrong: 'Ошибки',
+    easy: 'Лёгкие',
+    medium: 'Средние',
+    hard: 'Сложные',
+    attemptForms: 'попытка|попытки|попыток',
+    avgPerQuestion: 'на вопрос',
+    minShort: 'м',
+    secShort: 'с',
+    monthsShort: 'янв|фев|мар|апр|мая|июн|июл|авг|сен|окт|ноя|дек',
+    weeklyEmpty: 'Пройди пару тестов — здесь появится график активности',
+    accuracyEmpty: 'Нет данных по разделам — пройди тест по любой теме',
+    timeEmpty: 'Реши ещё {n} вопросов — покажем время по сложности',
+  },
   rush: {
     title: 'Question Rush',
     tagline: 'Практика на скорость со звёздами',

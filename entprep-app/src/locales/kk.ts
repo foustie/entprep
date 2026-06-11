@@ -872,6 +872,27 @@ const kk: Translations = {
   },
 
   // ── Contextual Errors (ErrorBoundary per screen) ──────────────────
+  // ── Subject analytics ───────────────────────────────────────────────
+  analytics: {
+    title: 'Аналитика',
+    weeklyTitle: 'Апталар бойынша белсенділік',
+    accuracyTitle: 'Бөлімдер бойынша дәлдік',
+    timeTitle: 'Күрделілік бойынша уақыт',
+    correct: 'Дұрыс',
+    wrong: 'Қателер',
+    easy: 'Жеңіл',
+    medium: 'Орташа',
+    hard: 'Күрделі',
+    attemptForms: 'әрекет',
+    avgPerQuestion: 'бір сұраққа',
+    minShort: 'м',
+    secShort: 'с',
+    monthsShort: 'қаң|ақп|нау|сәу|мам|мау|шіл|там|қыр|қаз|қар|жел',
+    weeklyEmpty: 'Бірнеше тест өт — мұнда белсенділік графигі пайда болады',
+    accuracyEmpty: 'Бөлімдер бойынша деректер жоқ — кез келген тақырып бойынша тест өт',
+    timeEmpty: 'Тағы {n} сұрақ шеш — күрделілік бойынша уақытты көрсетеміз',
+  },
+
   rush: {
     title: 'Question Rush',
     tagline: 'Жұлдыздармен жылдамдыққа жаттығу',
