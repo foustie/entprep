@@ -70,7 +70,9 @@ function cardKey(sid: string, oi: number): string {
 /** Add wrong answers from a test result, deduping against existing cards.
  *  Existing cards are NOT overwritten with fresh ones (preserves review history). */
 export function addWrongAnswers(existing: SRCard[], result: TestResult): SRCard[] {
-  if (!result.qd) return existing;
+  // Skip fullent: its qd spans multiple subjects while oi is per-subject,
+  // so cards can't be keyed by result.su ('fullent'). Preserves pre-qd behavior.
+  if (!result.qd || result.type === 'fullent') return existing;
   const wrongOis = result.qd.filter(q => !q.ok).map(q => q.oi);
   if (wrongOis.length === 0) return existing;
 

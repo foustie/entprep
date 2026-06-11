@@ -74,6 +74,8 @@ export interface QuestionDetail {
   tp?: string;  // topic (section) ID from question._topic
   stp?: string; // subtopic ID from question._subtopic
   picked?: number | number[] | Record<number, number> | null; // which answer(s) the user selected — gold data for AI
+  tms?: number;                     // seconds spent answering this question (integer >= 0, cap at 600)
+  df?: 'easy' | 'medium' | 'hard';  // difficulty of the question at answer time
 }
 
 export interface TestResult {

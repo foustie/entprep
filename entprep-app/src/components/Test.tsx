@@ -21,6 +21,7 @@ import { captureError } from '../config/sentry';
 import type { Question, TestResult, AnswerValue } from '../types';
 import { getSingleCorrect, getQType } from '../types';
 import { scoreQuestion } from '../utils/scoringEngine';
+import { buildQd, clampQdTime } from '../utils/qdHelpers';
 import { consumeExplain, getExplainRemaining } from '../utils/aiLimits';
 import MultipleAnswerCard from './ui/MultipleAnswerCard';
 import MatchingCard from './ui/MatchingCard';
@@ -75,6 +76,10 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
   const [isFirstAiExposure, setIsFirstAiExposure] = useState(() => !localStorage.getItem('entprep_ai_btn_seen'));
+  // Per-question answer time tracking (refs, no extra re-renders):
+  // qShownAtRef resets when the current question changes; qTimesRef stores seconds spent per index.
+  const qShownAtRef = useRef(Date.now());
+  const qTimesRef = useRef<Record<number, number>>({});
 
   const doLeave = () => {
     setShowLeaveConfirm(false);
@@ -93,7 +98,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
 
   useEffect(() => { let cancelled = false; (async () => { const questions = customQs ? customQs.map(q => ({ ...q, o: [...q.o] })) : await getQs(sid, sub.cnt, useShuffle, tid, st.lang); if (cancelled) return; if (questions.length === 0) { toast.error('Нет доступных вопросов по этой теме'); doLeave(); return; } const tot = questions.length; const timerSec = tid ? Math.max(5 * 60, Math.round(baseTime * (tot / sub.cnt))) : baseTime; setQs(questions); setTl(timerSec); setLoading(false); })(); return () => { cancelled = true } }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (loading || !useTmr || offline) { if (tr.current) { clearInterval(tr.current); tr.current = null; } return; } tr.current = setInterval(() => setTl(p => { if (p <= 1) { clearInterval(tr.current!); autoFinished.current = true; setFin(true); return 0; } return p - 1; }), 1000); return () => { if (tr.current) clearInterval(tr.current); }; }, [loading, offline]);
-  useEffect(() => { if (!fin || !autoFinished.current || !qs) return; autoFinished.current = false; const tot = qs.length; const timerSec = tid ? Math.max(5 * 60, Math.round(baseTime * (tot / sub.cnt))) : baseTime; const cc = qs.filter((q, i) => ans[i] !== undefined && scoreQuestion(q, ans[i]).correct).length; const qd = qs.map((q, i) => ({ oi: q._oi!, ok: ans[i] !== undefined && scoreQuestion(q, ans[i]).correct, tp: q._topic, stp: q._subtopic, picked: ans[i] ?? null })); finish({ su: sid, tp: tid || undefined, co: cc, to: tot, sc: tot ? Math.round(cc / tot * 100) : 0, dt: new Date().toLocaleDateString("ru-RU"), tm: timerSec, qd, _leaderboard: buildLeaderboardData() }); }, [fin]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (!fin || !autoFinished.current || !qs) return; autoFinished.current = false; const tot = qs.length; const timerSec = tid ? Math.max(5 * 60, Math.round(baseTime * (tot / sub.cnt))) : baseTime; const cc = qs.filter((q, i) => ans[i] !== undefined && scoreQuestion(q, ans[i]).correct).length; const qd = buildQd(qs, ans, qTimesRef.current); finish({ su: sid, tp: tid || undefined, co: cc, to: tot, sc: tot ? Math.round(cc / tot * 100) : 0, dt: new Date().toLocaleDateString("ru-RU"), tm: timerSec, qd, _leaderboard: buildLeaderboardData() }); }, [fin]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!fin || dailyMarkedRef.current || customQs || !qs) return;
     const tot = qs.length;
@@ -108,6 +113,8 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
   useEffect(() => { if (fin && qs) { const cnt = qs.length; const c = qs.filter((q, i) => ans[i] !== undefined && scoreQuestion(q, ans[i]).correct).length; trackEvent('Test Completed', { subject: sid, score: cnt ? Math.round(c / cnt * 100) : 0, questionCount: cnt }); } }, [fin]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { setFocused(-1); }, [cur]);
+  // Restart the per-question stopwatch whenever a new question is shown (or questions finish loading)
+  useEffect(() => { qShownAtRef.current = Date.now(); }, [cur, loading]);
 
   useEffect(() => {
     if (loading || !qs || fin) return;
@@ -192,9 +199,10 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
     localStorage.setItem(key, '1');
     trackEvent('first_question_answered', { subject: sid });
   };
-  const sel = (idx: number) => { if (show || ans[cur] !== undefined || qType !== 'single') return; trackFirstAnswer(); setAns(p => ({ ...p, [cur]: idx })); if (showExp) { setShow(true); } else { setTimeout(() => { if (cur < tot - 1) { setCur(c => c + 1); } else { if (tr.current) clearInterval(tr.current); setFin(true); } }, 300); } };
-  const confirmMulti = (selected: number[]) => { if (ans[cur] !== undefined) return; trackFirstAnswer(); setAns(p => ({ ...p, [cur]: selected })); if (showExp) { setShow(true); } else { setTimeout(() => { if (cur < tot - 1) { setCur(c => c + 1); } else { if (tr.current) clearInterval(tr.current); setFin(true); } }, 300); } };
-  const confirmMatch = (mapping: Record<number, number>) => { if (ans[cur] !== undefined) return; trackFirstAnswer(); setAns(p => ({ ...p, [cur]: mapping })); if (showExp) { setShow(true); } else { setTimeout(() => { if (cur < tot - 1) { setCur(c => c + 1); } else { if (tr.current) clearInterval(tr.current); setFin(true); } }, 300); } };
+  const markAnswerTime = () => { qTimesRef.current[cur] = clampQdTime((Date.now() - qShownAtRef.current) / 1000); };
+  const sel = (idx: number) => { if (show || ans[cur] !== undefined || qType !== 'single') return; trackFirstAnswer(); markAnswerTime(); setAns(p => ({ ...p, [cur]: idx })); if (showExp) { setShow(true); } else { setTimeout(() => { if (cur < tot - 1) { setCur(c => c + 1); } else { if (tr.current) clearInterval(tr.current); setFin(true); } }, 300); } };
+  const confirmMulti = (selected: number[]) => { if (ans[cur] !== undefined) return; trackFirstAnswer(); markAnswerTime(); setAns(p => ({ ...p, [cur]: selected })); if (showExp) { setShow(true); } else { setTimeout(() => { if (cur < tot - 1) { setCur(c => c + 1); } else { if (tr.current) clearInterval(tr.current); setFin(true); } }, 300); } };
+  const confirmMatch = (mapping: Record<number, number>) => { if (ans[cur] !== undefined) return; trackFirstAnswer(); markAnswerTime(); setAns(p => ({ ...p, [cur]: mapping })); if (showExp) { setShow(true); } else { setTimeout(() => { if (cur < tot - 1) { setCur(c => c + 1); } else { if (tr.current) clearInterval(tr.current); setFin(true); } }, 300); } };
   const nxt = () => { setShow(false); if (cur < tot - 1) { setCur(cur + 1); } else { if (tr.current) clearInterval(tr.current); setFin(true); } };
   const fm = formatTime;
   const askAI = async (index: number) => {
@@ -540,7 +548,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
         onClick={() => {
           const errorQs = qs.filter((_, i) => ans[i] !== undefined && !scoreQuestion(qs[i], ans[i]).correct);
           if (errorQs.length > 0) {
-            const qd = qs.map((qq, i) => ({ oi: qq._oi!, ok: ans[i] !== undefined && scoreQuestion(qq, ans[i]).correct, tp: qq._topic, stp: qq._subtopic, picked: ans[i] ?? null }));
+            const qd = buildQd(qs, ans, qTimesRef.current);
             finish({ su: sid, tp: tid || undefined, co: cc, to: tot, sc: pct, dt: new Date().toLocaleDateString("ru-RU"), tm: timerSec - tl, qd, _leaderboard: buildLeaderboardData() });
             setTimeout(() => navToErrorTest(errorQs), 50);
           }
@@ -558,7 +566,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
     )}
     <button
       onClick={() => {
-        const qd = qs.map((qq, i) => ({ oi: qq._oi!, ok: ans[i] !== undefined && scoreQuestion(qq, ans[i]).correct, tp: qq._topic, stp: qq._subtopic, picked: ans[i] ?? null }));
+        const qd = buildQd(qs, ans, qTimesRef.current);
         const result = { su: sid, tp: tid || undefined, co: cc, to: tot, sc: pct, dt: new Date().toLocaleDateString("ru-RU"), tm: timerSec - tl, qd, _leaderboard: buildLeaderboardData() };
         finish(result);
         const profileSubjects = [...['math', 'reading', 'history'], ...prof];
@@ -587,7 +595,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
     <button
       onClick={() => {
         if (challenge) sessionStorage.removeItem("entprep_challenge");
-        const qd = qs.map((qq, i) => ({ oi: qq._oi!, ok: ans[i] !== undefined && scoreQuestion(qq, ans[i]).correct, tp: qq._topic, stp: qq._subtopic, picked: ans[i] ?? null }));
+        const qd = buildQd(qs, ans, qTimesRef.current);
         finish({ su: sid, tp: tid || undefined, co: cc, to: tot, sc: pct, dt: new Date().toLocaleDateString("ru-RU"), tm: timerSec - tl, qd, _leaderboard: buildLeaderboardData() });
         goHome();
       }}

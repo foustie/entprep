@@ -24,7 +24,8 @@ import { supabase } from '../config/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { trackEvent } from '../utils/analytics';
-import type { Question, TestResult, ENTSection, AnswerValue } from '../types';
+import type { Question, TestResult, ENTSection, AnswerValue, QuestionDetail } from '../types';
+import { clampQdTime, qdDifficulty } from '../utils/qdHelpers';
 import { getSingleCorrect, getQType } from '../types';
 import { calcTestXP } from '../utils/xpHelpers';
 import ScoreRing from './ui/ScoreRing';
@@ -110,6 +111,25 @@ export default function FullENT({ finish }: FullENTProps) {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const paywallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // ── Per-question answer-time tracking ──────────────────────────────────────
+  // Questions can be revisited, so we accumulate CUMULATIVE facing time per
+  // question (keyed "sec:qi") in a ref. Time is flushed whenever the active
+  // question changes or the exam is paused/offline, so timer-stopped periods
+  // are not counted.
+  const qTimesRef = useRef<Record<string, number>>({});
+  const qViewRef = useRef<{ key: string; at: number } | null>(null);
+  const flushQTime = () => {
+    const v = qViewRef.current;
+    if (v) {
+      qTimesRef.current[v.key] = (qTimesRef.current[v.key] || 0) + (Date.now() - v.at) / 1000;
+      qViewRef.current = null;
+    }
+  };
+  useEffect(() => {
+    flushQTime();
+    if (phase === 'test' && !paused && !offline) qViewRef.current = { key: `${curSec}:${curQ}`, at: Date.now() };
+  }, [phase, paused, offline, curSec, curQ]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     // Always clear previous interval first to prevent double-tick
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
@@ -172,12 +192,29 @@ export default function FullENT({ finish }: FullENTProps) {
 
   const finishENT = () => {
     if (timerRef.current) clearInterval(timerRef.current);
+    flushQTime(); // capture time spent on the question visible at finish
     setPhase("results");
     const r = calcResults();
     const totalPtsVal = Math.round(r.reduce((s, x) => s + x.pts, 0) * 10) / 10;
     trackEvent('FullENT Completed', { totalScore: totalPtsVal });
+    // Build per-question details for analytics. oi is per-subject, so each entry
+    // carries its own su. tms is the cumulative facing time across revisits.
+    const qd: QuestionDetail[] = sections!.flatMap((s, si) => s.qs.map((qq, qi): QuestionDetail => {
+      const a = (answers[si] || {})[qi];
+      const tSec = qTimesRef.current[`${si}:${qi}`];
+      return {
+        oi: qq._oi!,
+        ok: a !== undefined && scoreQuestion(qq, a).correct,
+        su: s.sid,
+        tp: qq._topic,
+        stp: qq._subtopic,
+        picked: a ?? null,
+        tms: tSec !== undefined ? clampQdTime(tSec) : undefined,
+        df: qdDifficulty(qq),
+      };
+    }));
     // Save results to history immediately (don't wait for "Go Home" click)
-    finish({ type: "fullent", su: "fullent", sc: 0, dt: new Date().toLocaleDateString("ru-RU"), tm: ENT_CONFIG.totalTime - timeLeft, sections: r.map(sr => ({ sid: sr.sid, label: sr.label, icon: sr.icon, pts: sr.pts, maxPts: sr.maxPts, passed: sr.passed, correct: sr.correct, total: sr.total })) as unknown as TestResult['sections'] } as TestResult);
+    finish({ type: "fullent", su: "fullent", sc: 0, dt: new Date().toLocaleDateString("ru-RU"), tm: ENT_CONFIG.totalTime - timeLeft, qd, sections: r.map(sr => ({ sid: sr.sid, label: sr.label, icon: sr.icon, pts: sr.pts, maxPts: sr.maxPts, passed: sr.passed, correct: sr.correct, total: sr.total })) as unknown as TestResult['sections'] } as TestResult);
     // Show paywall after 3s delay for free users (let them see their score first)
     if (!isPremium) paywallTimerRef.current = setTimeout(() => openPaywall('fullent'), 3000);
   };

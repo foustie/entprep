@@ -4,6 +4,7 @@ import { TOPIC_MAP, getTopicQuestions } from '../config/topics';
 import { getPool } from '../utils/questionStore';
 import { shuffleArray, shuffleOptions } from '../utils/questionHelpers';
 import { getQType, getSingleCorrect } from '../types';
+import { clampQdTime, qdDifficulty } from '../utils/qdHelpers';
 import type { Question, TestResult, QuestionDetail } from '../types';
 import { useApp } from '../contexts/AppContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -207,7 +208,8 @@ export default function QuestionRush({ save }: RushProps) {
       const frac = timeLeft / timePerQ;
       s = frac >= 0.66 ? 3 : frac >= 0.33 ? 2 : 1;
     }
-    qdRef.current.push({ oi: q._oi!, ok, tp: q._topic, stp: q._subtopic });
+    // Elapsed = countdown consumed; on timeout (idx === null) timeLeft is 0 → elapsed = timePerQ
+    qdRef.current.push({ oi: q._oi!, ok, tp: q._topic, stp: q._subtopic, tms: clampQdTime(timePerQ - timeLeft), df: qdDifficulty(q) });
     setLastStars(s);
     setStars(v => v + s);
     if (ok) setCorrect(v => v + 1);
