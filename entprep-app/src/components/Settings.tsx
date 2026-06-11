@@ -126,7 +126,9 @@ export default function Settings() {
       </div>
 
       {/* ════════ ACCOUNT ════════ */}
-      <Section icon={<User size={11} />} label={t.settings.sectionAccount || 'Account'}>
+      {/* Auth renders null without a configured Supabase client — hide the whole
+          section then, otherwise it shows as an empty bordered box */}
+      {supabase && <Section icon={<User size={11} />} label={t.settings.sectionAccount || 'Account'}>
         {/* Auth row */}
         <div style={ROW}>
           <Auth user={user} onSignOut={() => setCfSignOut(true)} />
@@ -210,7 +212,7 @@ export default function Settings() {
             )}
           </div>
         )}
-      </Section>
+      </Section>}
 
       {/* ════════ APPEARANCE ════════ */}
       <Section icon={<Palette size={11} />} label={t.settings.sectionAppearance || 'Appearance'}>
