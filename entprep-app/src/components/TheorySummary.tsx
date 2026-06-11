@@ -131,7 +131,7 @@ export default function TheorySummary({ sid, topicId }: Props) {
                 {isKk ? 'Тест тапсыру' : 'Проверь себя'}
               </button>
               <a
-                href={`https://wa.me/77473564629?text=${encodeURIComponent(`Конспект: ${name}. Предложение: `)}`}
+                href={`https://wa.me/77052340280?text=${encodeURIComponent(`Конспект: ${name}. Предложение: `)}`}
                 target="_blank" rel="noopener noreferrer"
                 style={{
                   padding: '14px 18px', borderRadius: 12,

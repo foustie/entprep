@@ -359,7 +359,7 @@ export default function Landing({ onStart, totalQ }: Props) {
             {tl.schoolsDesc}
           </p>
           <a
-            href={`https://wa.me/77473564629?text=${encodeURIComponent('Здравствуйте, Дияр! Хочу создать класс в ENTprep для учителя — подскажите как.')}`}
+            href={`https://wa.me/77052340280?text=${encodeURIComponent('Здравствуйте! Хочу создать класс в ENTprep для учителя — подскажите как.')}`}
             target="_blank"
             rel="noopener noreferrer"
             style={{
@@ -376,7 +376,7 @@ export default function Landing({ onStart, totalQ }: Props) {
           <div style={{ ...TYPE.caption, marginTop: 12 }}>
             {tl.needHelp}{' '}
             <a
-              href={`https://wa.me/77473564629?text=${encodeURIComponent('Здравствуйте! Хочу подключить школу к ENTprep')}`}
+              href={`https://wa.me/77052340280?text=${encodeURIComponent('Здравствуйте! Хочу подключить школу к ENTprep')}`}
               target="_blank"
               rel="noopener noreferrer"
               style={{ color: COLORS.streak, textDecoration: 'underline', fontWeight: 700 }}
@@ -400,9 +400,9 @@ export default function Landing({ onStart, totalQ }: Props) {
         </div>
         <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
           {[
-            { icon: Send, href: 'https://t.me/foustie', label: 'Telegram' },
-            { icon: Instagram, href: 'https://instagram.com/diyarbuilds', label: 'Instagram' },
-            { icon: AtSign, href: 'https://tiktok.com/@diyarbuilds', label: 'TikTok' },
+            { icon: Send, href: 'https://t.me/adletseitenov', label: 'Telegram' },
+            { icon: Instagram, href: 'https://instagram.com/upalstudy', label: 'Instagram' },
+            { icon: AtSign, href: 'https://tiktok.com/@upalstudy', label: 'TikTok' },
           ].map(s => (
             <a
               key={s.label}

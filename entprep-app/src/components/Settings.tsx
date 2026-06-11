@@ -454,14 +454,12 @@ export default function Settings() {
       {/* ════════ AUTHOR / CONTACT ════════ */}
       <Section icon={<Heart size={11} />} label={t.settings.sectionAbout}>
         <div style={{ ...ROW, display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{
-            width: 42, height: 42, borderRadius: 12,
-            background: COLORS.streak, border: '2px solid var(--ink)',
+          <img src="/favicon.svg" alt="" aria-hidden="true" width={42} height={42} style={{
+            display: 'block', borderRadius: 12,
+            border: '2px solid var(--ink)',
             boxShadow: '0 2px 0 0 var(--ink)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#fff', fontWeight: 800, fontSize: 17, fontFamily: FF.display,
             flexShrink: 0,
-          }}>Д</div>
+          }} />
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>
               {t.settings.authorName}
@@ -472,11 +470,11 @@ export default function Settings() {
           </div>
         </div>
         {[
-          { icon: MessageCircle, color: '#25D366', label: 'WhatsApp', sub: '+7 747 356 4629', href: 'https://wa.me/77473564629?text=' + encodeURIComponent('Привет, Дияр! Пишу с ENTprep') },
-          { icon: Send, color: '#0088CC', label: 'Telegram', sub: '@foustie', href: 'https://t.me/foustie' },
-          { icon: Instagram, color: '#E1306C', label: 'Instagram', sub: '@diyarbuilds', href: 'https://instagram.com/diyarbuilds' },
-          { icon: AtSign, color: 'var(--ink)', label: 'TikTok', sub: '@diyarbuilds', href: 'https://tiktok.com/@diyarbuilds' },
-          { icon: Mail, color: 'var(--ink)', label: t.settings.contactEmail, sub: 'dzakpelov@gmail.com', href: 'mailto:dzakpelov@gmail.com', last: true },
+          { icon: MessageCircle, color: '#25D366', label: 'WhatsApp', sub: '+7 705 234 0280', href: 'https://wa.me/77052340280?text=' + encodeURIComponent('Привет! Пишу с ENTprep') },
+          { icon: Send, color: '#0088CC', label: 'Telegram', sub: '@adletseitenov', href: 'https://t.me/adletseitenov' },
+          { icon: Instagram, color: '#E1306C', label: 'Instagram', sub: '@upalstudy', href: 'https://instagram.com/upalstudy' },
+          { icon: AtSign, color: 'var(--ink)', label: 'TikTok', sub: '@upalstudy', href: 'https://tiktok.com/@upalstudy' },
+          { icon: Mail, color: 'var(--ink)', label: t.settings.contactEmail, sub: 'entprep.app@gmail.com', href: 'mailto:entprep.app@gmail.com', last: true },
         ].map((item, i, arr) => (
           <a
             key={item.label}
