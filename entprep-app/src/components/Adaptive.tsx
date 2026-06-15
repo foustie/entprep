@@ -181,7 +181,7 @@ export default function Adaptive() {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 3 }}>
                     <span style={{ fontSize: 12, color: "var(--text-body)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{isKk && ts.name_kk ? ts.name_kk : ts.name}</span>
-                    <span style={{ fontSize: 12, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace", color: ts.pct < 0 ? "var(--text-muted)" : scoreColor(ts.pct), flexShrink: 0, marginLeft: 6 }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, fontFamily: FF.mono, color: ts.pct < 0 ? "var(--text-muted)" : scoreColor(ts.pct), flexShrink: 0, marginLeft: 6 }}>
                       {ts.pct < 0 ? "\u2014" : ts.pct + "%"}
                     </span>
                   </div>
@@ -202,7 +202,7 @@ export default function Adaptive() {
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 2 }}>
                           <span style={{ fontSize: 11, color: "var(--text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{isKk && st.name_kk ? st.name_kk : st.name}</span>
-                          <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace", color: st.pct < 0 ? "var(--text-muted)" : scoreColor(st.pct), flexShrink: 0, marginLeft: 4 }}>
+                          <span style={{ fontSize: 11, fontWeight: 700, fontFamily: FF.mono, color: st.pct < 0 ? "var(--text-muted)" : scoreColor(st.pct), flexShrink: 0, marginLeft: 4 }}>
                             {st.pct < 0 ? "\u2014" : st.pct + "%"}
                           </span>
                         </div>
@@ -235,7 +235,7 @@ export default function Adaptive() {
             <div style={{ fontSize: 12, color: "var(--text-secondary)", display: "flex", alignItems: "center", gap: 4 }}>
               {s.count > 0 ? (
                 <>
-                  <span style={{ fontWeight: 700, fontFamily: "'JetBrains Mono',monospace", color: scoreColor(s.avg) }}>{s.avg}%</span>
+                  <span style={{ fontWeight: 700, fontFamily: FF.mono, color: scoreColor(s.avg) }}>{s.avg}%</span>
                   <span>{t.adaptive.avg}</span>
                   {s.trend !== "none" && <><TrendIcon trend={s.trend} /><span style={{ color: s.trend === "improving" ? COLORS.green : s.trend === "declining" ? COLORS.red : "var(--text-secondary)" }}>{trendLabel(s.trend)}</span></>}
                 </>
@@ -407,7 +407,7 @@ export default function Adaptive() {
             <div key={s.id} style={{ ...CARD_COMPACT, display: "flex", alignItems: "center", borderLeft: `4px solid ${COLORS.green}`, padding: "14px 14px", animation: "slideUp 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
               <div style={{ width: 32, height: 32, borderRadius: 9, marginRight: 11, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: s.color + "15" }}><SubjectIcon sid={s.id} size={17} color={s.color} strokeWidth={2.2} /></div>
               <div style={{ flex: 1, fontSize: 14, fontWeight: 600, color: "var(--text)" }}>{(t.subjects as Record<string, string>)[s.id] || s.name}</div>
-              <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace", color: COLORS.green }}>{s.avg}%</div>
+              <div style={{ fontSize: 14, fontWeight: 700, fontFamily: FF.mono, color: COLORS.green }}>{s.avg}%</div>
               {s.trend !== "none" && <span style={{ marginLeft: 6 }}><TrendIcon trend={s.trend} /></span>}
             </div>
           ))}

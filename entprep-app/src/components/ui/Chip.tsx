@@ -1,5 +1,5 @@
 import React from 'react';
-import { COLORS } from '../../constants/styles';
+import { COLORS, FF } from '../../constants/styles';
 
 type ChipColor = 'teal' | 'accent';
 
@@ -27,7 +27,7 @@ export default function Chip({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 999,
-    fontFamily: "'Nunito',sans-serif",
+    fontFamily: FF.body,
     fontSize: 12,
     fontWeight: 800,
     cursor: 'pointer',

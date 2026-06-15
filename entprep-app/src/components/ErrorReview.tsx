@@ -127,7 +127,7 @@ export default function ErrorReview() {
         <div style={{
           padding: '5px 10px', borderRadius: 999,
           background: COLORS.streakSoft, border: `1.5px solid ${COLORS.streak}`,
-          fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
+          fontFamily: FF.mono, fontSize: 10, fontWeight: 800,
           letterSpacing: '0.08em', textTransform: 'uppercase',
           color: COLORS.streak, display: 'inline-flex', alignItems: 'center', gap: 4,
         }}>
@@ -179,11 +179,11 @@ export default function ErrorReview() {
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{
-                  fontFamily: "'Nunito',sans-serif", fontSize: 14, fontWeight: 800,
+                  fontFamily: FF.body, fontSize: 14, fontWeight: 800,
                   color: 'var(--text)',
                 }}>{subjectName(g.su)}</div>
                 <div style={{
-                  fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 700,
+                  fontFamily: FF.mono, fontSize: 10, fontWeight: 700,
                   letterSpacing: '0.04em', color: COLORS.streak, marginTop: 2,
                 }}>{g.items.length} {errPlural(g.items.length)}</div>
               </div>
@@ -204,7 +204,7 @@ export default function ErrorReview() {
                       position: 'absolute', top: 0, bottom: 0, left: 0, width: 4, background: COLORS.streak,
                     }} />
                     <div style={{
-                      fontFamily: "'Nunito',sans-serif", fontSize: 12.5, fontWeight: 700,
+                      fontFamily: FF.body, fontSize: 12.5, fontWeight: 700,
                       color: 'var(--text)', lineHeight: 1.45, marginBottom: 8,
                     }}>{w.q.q}</div>
                     <div style={{
@@ -213,7 +213,7 @@ export default function ErrorReview() {
                       background: COLORS.winSoft,
                       border: `1px solid ${COLORS.win}`,
                       borderRadius: 7,
-                      fontFamily: "'Nunito',sans-serif", fontSize: 11, fontWeight: 700,
+                      fontFamily: FF.body, fontSize: 11, fontWeight: 700,
                       color: COLORS.win, lineHeight: 1.4,
                     }}>
                       <Check size={12} strokeWidth={2.6} style={{ flexShrink: 0, marginTop: 1 }} />
@@ -230,7 +230,7 @@ export default function ErrorReview() {
                         background: 'var(--bg-card)',
                         border: '1.5px solid rgba(15,15,16,0.12)',
                         borderRadius: 8,
-                        fontFamily: "'Nunito',sans-serif", fontSize: 11, fontWeight: 600,
+                        fontFamily: FF.body, fontSize: 11, fontWeight: 600,
                         color: 'var(--text-secondary)', lineHeight: 1.55,
                       }}>
                         <Lightbulb size={12} color={COLORS.streak} strokeWidth={2.4} style={{ flexShrink: 0, marginTop: 2 }} />

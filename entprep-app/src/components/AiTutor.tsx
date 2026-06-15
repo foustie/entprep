@@ -291,7 +291,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
               color: 'var(--text)', letterSpacing: '-0.02em', lineHeight: 1.1,
             }}>{t.tutor.name}</div>
             <div style={{
-              fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 800,
+              fontFamily: FF.mono, fontSize: 9, fontWeight: 800,
               letterSpacing: '0.12em', textTransform: 'uppercase',
               color: COLORS.win, marginTop: 1,
             }}>{t.tutor.online} · {isPremium ? 'PRO' : getTutorRemaining() + '/10'}</div>
@@ -319,14 +319,14 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
             background: 'var(--bg-card)',
             border: '2px solid var(--ink)',
             boxShadow: '0 2px 0 0 var(--ink)',
-            fontFamily: "'Nunito',sans-serif", fontSize: 13.5, fontWeight: 600,
+            fontFamily: FF.body, fontSize: 13.5, fontWeight: 600,
             color: 'var(--text)', lineHeight: 1.55,
           }}>
             <div style={{ marginBottom: 8 }}>
               {t.tutor.welcome}
             </div>
             <div style={{
-              fontFamily: "'JetBrains Mono',monospace", fontSize: 9.5, fontWeight: 800,
+              fontFamily: FF.mono, fontSize: 9.5, fontWeight: 800,
               letterSpacing: '0.1em', textTransform: 'uppercase',
               color: 'var(--text-muted)',
             }}>{t.tutor.welcomeHint}</div>
@@ -354,7 +354,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
                 background: 'var(--bg-card)',
                 border: '1.5px solid var(--ink)',
                 boxShadow: '0 2px 0 0 rgba(15,15,16,0.15)',
-                fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 700,
+                fontFamily: FF.body, fontSize: 12, fontWeight: 700,
                 color: 'var(--text)', cursor: 'pointer',
                 whiteSpace: 'nowrap',
               }}>
@@ -395,7 +395,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
                 background: 'var(--bg-card)',
                 border: '2px solid var(--ink)',
                 color: 'var(--text)',
-                fontFamily: "'Nunito',sans-serif",
+                fontFamily: FF.body,
                 fontSize: 14, fontWeight: 600, resize: 'none',
                 lineHeight: 1.4,
               }}
@@ -436,7 +436,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
           lineHeight: 1.1,
         }}>{t.tutor.pickerTitle}</div>
         <div style={{
-          fontFamily: "'Nunito',sans-serif", fontSize: 12.5, fontWeight: 700,
+          fontFamily: FF.body, fontSize: 12.5, fontWeight: 700,
           color: 'var(--text-secondary)', margin: '0 0 18px',
         }}>{t.tutor.pickerSubtitle}</div>
 
@@ -469,7 +469,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
                   </div>
                   <span style={{
                     flex: 1,
-                    fontFamily: "'Nunito',sans-serif", fontSize: 13.5, fontWeight: 800,
+                    fontFamily: FF.body, fontSize: 13.5, fontWeight: 800,
                     color: 'var(--text)',
                   }}>{subName}</span>
                   <ChevronRight size={15} color="var(--text-muted)" strokeWidth={2.4} style={{
@@ -492,7 +492,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
                             background: 'transparent', border: 'none',
                             borderBottom: '1px solid rgba(15,15,16,0.06)',
                             textAlign: 'left', cursor: 'pointer',
-                            fontFamily: "'Nunito',sans-serif", fontSize: 12.5, fontWeight: 700,
+                            fontFamily: FF.body, fontSize: 12.5, fontWeight: 700,
                             color: 'var(--text)',
                           }}>
                             <span style={{
@@ -510,7 +510,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
                             background: 'transparent', border: 'none',
                             borderBottom: '1px solid rgba(15,15,16,0.06)',
                             textAlign: 'left', cursor: 'pointer',
-                            fontFamily: "'Nunito',sans-serif", fontSize: 12.5, fontWeight: 700,
+                            fontFamily: FF.body, fontSize: 12.5, fontWeight: 700,
                             color: 'var(--text)',
                           }}>
                             <span style={{
@@ -568,7 +568,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
             color: 'var(--text)', letterSpacing: '-0.02em', lineHeight: 1.1,
           }}>{t.tutor.name}</div>
           <div style={{
-            fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 800,
+            fontFamily: FF.mono, fontSize: 9, fontWeight: 800,
             letterSpacing: '0.12em', textTransform: 'uppercase',
             color: COLORS.win, marginTop: 1,
           }}>{t.tutor.online} · {isPremium ? 'PRO' : getTutorRemaining() + '/' + 10}</div>
@@ -601,7 +601,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
             color: '#ec4899', marginBottom: 6,
           }}>💜 {t.tutor.supportTitle}</div>
           <div style={{
-            fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 600,
+            fontFamily: FF.body, fontSize: 12, fontWeight: 600,
             color: 'var(--text-secondary)', marginBottom: 10, lineHeight: 1.5,
           }}>
             {t.tutor.supportText}
@@ -609,7 +609,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
           <div style={{
             padding: '10px 14px', borderRadius: 10,
             background: 'var(--ink)',
-            fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 800,
+            fontFamily: FF.mono, fontSize: 13, fontWeight: 800,
             color: '#fff', textAlign: 'center', letterSpacing: '0.04em',
           }}>
             Kaspi · 8 747 356 4629
@@ -654,7 +654,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
               border: '2px solid var(--ink)',
               boxShadow: isUser ? '0 2px 0 0 var(--ink)' : '0 2px 0 0 var(--ink)',
               color: isUser ? '#fff' : 'var(--text)',
-              fontFamily: "'Nunito',sans-serif",
+              fontFamily: FF.body,
               fontSize: 13.5, lineHeight: 1.55, whiteSpace: 'pre-wrap', fontWeight: 600,
               borderBottomRightRadius: isUser ? 6 : 16,
               borderBottomLeftRadius: isUser ? 16 : 6,
@@ -745,7 +745,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
               background: 'var(--bg-card)',
               border: '2px solid var(--ink)',
               color: 'var(--text)',
-              fontFamily: "'Nunito',sans-serif",
+              fontFamily: FF.body,
               fontSize: 14, fontWeight: 600, resize: 'none',
               lineHeight: 1.4,
               maxHeight: 100,

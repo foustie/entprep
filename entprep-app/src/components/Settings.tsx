@@ -23,7 +23,7 @@ function Section({ icon, label, children }: { icon: React.ReactNode; label: stri
   return (
     <div style={{ marginBottom: 22 }}>
       <div style={{
-        fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
+        fontFamily: FF.mono, fontSize: 10, fontWeight: 800,
         letterSpacing: '0.16em', textTransform: 'uppercase',
         color: 'var(--text-muted)', marginBottom: 8, padding: '0 4px',
         display: 'flex', alignItems: 'center', gap: 6,
@@ -152,7 +152,7 @@ export default function Settings() {
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{t.settings.nickname}</div>
                   {!editNick && (
-                    <div style={{ fontSize: 12, color: needsNickname ? COLORS.yellow : 'var(--text-secondary)', fontFamily: "'JetBrains Mono',monospace", marginTop: 2 }}>
+                    <div style={{ fontSize: 12, color: needsNickname ? COLORS.yellow : 'var(--text-secondary)', fontFamily: FF.mono, marginTop: 2 }}>
                       @{profile.nickname}
                       {needsNickname && <span style={{ fontSize: 10, color: COLORS.yellow, marginLeft: 6 }}>{t.settings.chooseNickname}</span>}
                     </div>
@@ -175,7 +175,7 @@ export default function Settings() {
                     onChange={e => { setNickInput(e.target.value.replace(/[^a-zA-Z0-9_]/g, '')); setNickError(''); }}
                     placeholder="my_nickname"
                     maxLength={20}
-                    style={{ flex: 1, padding: '10px 12px', background: 'var(--bg-subtle-2)', border: nickError ? `1.5px solid ${COLORS.red}` : '1px solid var(--border-stronger)', borderRadius: 10, color: 'var(--text)', fontSize: 13, fontFamily: "'JetBrains Mono',monospace" }}
+                    style={{ flex: 1, padding: '10px 12px', background: 'var(--bg-subtle-2)', border: nickError ? `1.5px solid ${COLORS.red}` : '1px solid var(--border-stronger)', borderRadius: 10, color: 'var(--text)', fontSize: 13, fontFamily: FF.mono }}
                   />
                   <button
                     onClick={async () => {
@@ -206,7 +206,7 @@ export default function Settings() {
                 {nickError && <div style={{ fontSize: 11, color: COLORS.red }}>{nickError}</div>}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 2 }}>
                   <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{t.settings.nickHint}</div>
-                  <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono',monospace", color: nickInput.length >= 18 ? COLORS.yellow : 'var(--text-muted)' }}>{nickInput.length}/20</div>
+                  <div style={{ fontSize: 10, fontFamily: FF.mono, color: nickInput.length >= 18 ? COLORS.yellow : 'var(--text-muted)' }}>{nickInput.length}/20</div>
                 </div>
               </div>
             )}
@@ -337,7 +337,7 @@ export default function Settings() {
               <div style={{ marginBottom: 10 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-secondary)', marginBottom: 4 }}>
                   <span>{t.settings.targetScore}</span>
-                  <span style={{ color: 'var(--text)', fontWeight: 700, fontFamily: "'JetBrains Mono',monospace" }}>{goalTarget}/140</span>
+                  <span style={{ color: 'var(--text)', fontWeight: 700, fontFamily: FF.mono }}>{goalTarget}/140</span>
                 </div>
                 <input type="range" min={50} max={140} value={goalTarget} onChange={e => setGoalTarget(+e.target.value)} aria-label={t.settings.targetScore} style={{ display: 'block', width: '100%', boxSizing: 'border-box', height: 6, background: 'var(--border)', borderRadius: 3, outline: 'none', WebkitAppearance: 'none', appearance: 'none', margin: 0, padding: 0 }} />
               </div>
@@ -370,7 +370,7 @@ export default function Settings() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>
               <Target size={15} color={COLORS.teal} />{t.settings.dailyGoal}
             </div>
-            <span style={{ fontSize: 13, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace", color: COLORS.teal }}>{st.dailyGoal || 3} {t.settings.dailyGoalUnit}</span>
+            <span style={{ fontSize: 13, fontWeight: 700, fontFamily: FF.mono, color: COLORS.teal }}>{st.dailyGoal || 3} {t.settings.dailyGoalUnit}</span>
           </div>
           <input type="range" min={1} max={10} value={st.dailyGoal || 3} onChange={e => updSt({ ...st, dailyGoal: +e.target.value })} aria-label={t.settings.dailyGoal} style={{ display: 'block', width: '100%', boxSizing: 'border-box', height: 6, background: 'var(--border)', borderRadius: 3, outline: 'none', WebkitAppearance: 'none', appearance: 'none', margin: 0, padding: 0 }} />
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
@@ -411,7 +411,7 @@ export default function Settings() {
                 placeholder="ENT-XXXX"
                 aria-label={t.teacher.classCode}
                 maxLength={8}
-                style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border-md)', background: 'var(--bg-subtle)', color: 'var(--text)', fontSize: 13, fontFamily: "'JetBrains Mono',monospace", letterSpacing: 1 }}
+                style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border-md)', background: 'var(--bg-subtle)', color: 'var(--text)', fontSize: 13, fontFamily: FF.mono, letterSpacing: 1 }}
               />
               <button
                 disabled={classJoining || classCode.length < 6}
@@ -528,7 +528,7 @@ export default function Settings() {
           })().map(([l, v], i) => (
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
               <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{l}</span>
-              <span style={{ fontSize: 11, color: 'var(--text)', fontWeight: 600, fontFamily: "'JetBrains Mono',monospace" }}>{v}</span>
+              <span style={{ fontSize: 11, color: 'var(--text)', fontWeight: 600, fontFamily: FF.mono }}>{v}</span>
             </div>
           ))}
         </div>

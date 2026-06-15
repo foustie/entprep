@@ -55,7 +55,7 @@ export default function MultipleAnswerCard({
           padding: '4px 10px', borderRadius: 999,
           background: COLORS.streakSoft,
           border: `1.5px solid ${COLORS.streak}`,
-          fontFamily: "'JetBrains Mono',monospace", fontSize: 9.5, fontWeight: 800,
+          fontFamily: FF.mono, fontSize: 9.5, fontWeight: 800,
           letterSpacing: '0.1em', textTransform: 'uppercase',
           color: COLORS.streak,
         }}>
@@ -63,7 +63,7 @@ export default function MultipleAnswerCard({
         </span>
         {!showResult && (
           <span style={{
-            fontFamily: "'Nunito',sans-serif", fontSize: 11, fontWeight: 700,
+            fontFamily: FF.body, fontSize: 11, fontWeight: 700,
             color: 'var(--text-muted)',
           }}>{t.test.selected}: {selected.size}</span>
         )}

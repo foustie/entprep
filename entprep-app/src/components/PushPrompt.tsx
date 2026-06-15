@@ -73,7 +73,7 @@ export default function PushPrompt() {
         }}>{t.push?.promptTitle || 'Не забывай заниматься!'}</div>
 
         <div style={{
-          fontFamily: "'Nunito',sans-serif", fontSize: 12.5, fontWeight: 700,
+          fontFamily: FF.body, fontSize: 12.5, fontWeight: 700,
           color: 'var(--text-secondary)', marginBottom: 18, lineHeight: 1.5,
         }}>{t.push?.promptDesc || 'Включи уведомления, чтобы мы напомнили о серии и ошибках'}</div>
 
@@ -103,7 +103,7 @@ export default function PushPrompt() {
                 <b.Icon size={15} color={b.color} strokeWidth={2.4} />
               </div>
               <span style={{
-                fontFamily: "'Nunito',sans-serif", fontSize: 13, fontWeight: 700,
+                fontFamily: FF.body, fontSize: 13, fontWeight: 700,
                 color: 'var(--text)',
               }}>{b.text}</span>
             </div>
@@ -129,7 +129,7 @@ export default function PushPrompt() {
           width: '100%', padding: '11px', marginTop: 10,
           background: 'transparent', border: 'none',
           color: 'var(--text-muted)',
-          fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 700,
+          fontFamily: FF.body, fontSize: 12, fontWeight: 700,
           cursor: 'pointer',
           letterSpacing: '0.02em',
         }}>

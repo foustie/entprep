@@ -1,4 +1,4 @@
-import { COLORS, scoreColor } from '../../constants/styles';
+import { COLORS, scoreColor, FF } from '../../constants/styles';
 
 interface ChartDataPoint {
   score: number;
@@ -55,9 +55,9 @@ export default function MiniChart({ data, color = COLORS.teal, width = 260, heig
         <circle key={i} cx={p.x} cy={p.y} r={3} fill={dotColor(p.v)} stroke="var(--bg)" strokeWidth={1.5} />
       ))}
       <text x={pts[0].x} y={pts[0].y - 7} textAnchor="middle" fontSize={9} fontWeight={700}
-        fontFamily="'JetBrains Mono',monospace" fill="var(--text-secondary)">{scores[0]}%</text>
+        fontFamily={FF.mono} fill="var(--text-secondary)">{scores[0]}%</text>
       <text x={pts[pts.length - 1].x} y={pts[pts.length - 1].y - 7} textAnchor="middle" fontSize={9} fontWeight={700}
-        fontFamily="'JetBrains Mono',monospace" fill={dotColor(scores[scores.length - 1])}>{scores[scores.length - 1]}%</text>
+        fontFamily={FF.mono} fill={dotColor(scores[scores.length - 1])}>{scores[scores.length - 1]}%</text>
     </svg>
   );
 }

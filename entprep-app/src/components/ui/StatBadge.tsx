@@ -28,7 +28,7 @@ export default function StatBadge({ value, label, color, Icon, style }: StatBadg
         {value}
       </div>
       <div style={{
-        fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 800,
+        fontFamily: FF.mono, fontSize: 9, fontWeight: 800,
         letterSpacing: '0.1em', textTransform: 'uppercase',
         color: 'var(--text-muted)', marginTop: 5,
         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',

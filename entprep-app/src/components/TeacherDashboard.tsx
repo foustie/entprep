@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { CARD, CARD_COMPACT, COLORS, TINT, TYPE, SECTION_LABEL, scoreColor, R } from '../constants/styles';
+import { CARD, CARD_COMPACT, COLORS, TINT, TYPE, SECTION_LABEL, scoreColor, R, FF } from '../constants/styles';
 import { SUBJECT_META } from '../config/subjects';
 import { TOPIC_MAP } from '../config/topics';
 import { useAuth } from '../contexts/AuthContext';
@@ -297,7 +297,7 @@ export default function TeacherDashboard({ onBack }: Props) {
         <div style={{ marginTop: 16, padding: '12px 14px', background: TINT.teal.bgLight, borderRadius: R.md, border: `1px solid ${TINT.teal.borderLight}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <div style={{ fontSize: 10, color: COLORS.teal, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>{tt.classCode}</div>
-            <div style={{ fontSize: 20, fontWeight: 800, fontFamily: "'JetBrains Mono',monospace", color: 'var(--text)', marginTop: 2 }}>{cls.invite_code}</div>
+            <div style={{ fontSize: 20, fontWeight: 800, fontFamily: FF.mono, color: 'var(--text)', marginTop: 2 }}>{cls.invite_code}</div>
           </div>
           <button onClick={copyCode} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '8px 14px', borderRadius: R.sm, background: COLORS.teal, color: '#fff', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
             {copied ? <><Check size={14} /> {tt.copied}</> : <><Copy size={14} /> {tt.copy}</>}
@@ -473,7 +473,7 @@ export default function TeacherDashboard({ onBack }: Props) {
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 0 8px' }}>
                         <Target size={14} color={COLORS.teal} />
                         <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{tt.predictedEnt}</span>
-                        <span style={{ fontSize: 16, fontWeight: 800, fontFamily: "'JetBrains Mono',monospace", color: scoreColor(Math.round(st.predictedScore / 1.4)) }}>
+                        <span style={{ fontSize: 16, fontWeight: 800, fontFamily: FF.mono, color: scoreColor(Math.round(st.predictedScore / 1.4)) }}>
                           {st.predictedScore}<span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)' }}>/140</span>
                         </span>
                       </div>
@@ -494,7 +494,7 @@ export default function TeacherDashboard({ onBack }: Props) {
                               <div style={{ width: 50, height: 4, borderRadius: 2, background: 'var(--bg-subtle)', overflow: 'hidden' }}>
                                 <div style={{ height: '100%', width: `${wt.pct}%`, background: scoreColor(wt.pct), borderRadius: 2 }} />
                               </div>
-                              <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace", color: scoreColor(wt.pct), width: 32, textAlign: 'right' }}>
+                              <span style={{ fontSize: 11, fontWeight: 700, fontFamily: FF.mono, color: scoreColor(wt.pct), width: 32, textAlign: 'right' }}>
                                 {wt.pct}%
                               </span>
                             </div>

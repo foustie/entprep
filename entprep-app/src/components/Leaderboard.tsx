@@ -210,16 +210,16 @@ export default function Leaderboard() {
         {/* Name + "You" badge */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
-            fontFamily: "'Nunito',sans-serif", fontSize: 13.5, fontWeight: 800,
+            fontFamily: FF.body, fontSize: 13.5, fontWeight: 800,
             color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis',
             whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6,
           }}>
             {entry.nickname && !entry.nickname.startsWith('user_') ? (
-              <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 800 }}>@{entry.nickname}</span>
+              <span style={{ fontFamily: FF.mono, fontWeight: 800 }}>@{entry.nickname}</span>
             ) : entry.user_name}
             {isMe && (
               <span style={{
-                fontFamily: "'JetBrains Mono',monospace",
+                fontFamily: FF.mono,
                 fontSize: 8.5, fontWeight: 800,
                 letterSpacing: '0.12em', textTransform: 'uppercase',
                 color: '#fff', background: COLORS.streak,
@@ -230,7 +230,7 @@ export default function Leaderboard() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
             <Activity size={10} color="var(--text-muted)" strokeWidth={2.4} />
             <span style={{
-              fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 700,
+              fontFamily: FF.mono, fontSize: 10, fontWeight: 700,
               color: 'var(--text-muted)',
             }}>{pluralTests(entry.testCount, t.leaderboard.test1, t.leaderboard.test2, t.leaderboard.test5)}</span>
           </div>
@@ -268,7 +268,7 @@ export default function Leaderboard() {
         </div>
         <div style={{ minWidth: 0 }}>
           <div style={{
-            fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 800,
+            fontFamily: FF.mono, fontSize: 9, fontWeight: 800,
             letterSpacing: '0.14em', textTransform: 'uppercase',
             color: 'var(--text-muted)', marginBottom: 2,
           }}>{t.leaderboard.subtitle}</div>

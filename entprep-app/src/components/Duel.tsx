@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, memo } from 'react';
-import { CARD_COMPACT, TYPE, COLORS } from '../constants/styles';
+import { CARD_COMPACT, TYPE, COLORS, FF } from '../constants/styles';
 import { SubjectChip } from './ui/SubjectIcon';
 import { SUBJECT_META } from '../config/subjects';
 import { ALL_PROFILES, SUBS } from '../config/questionPools';
@@ -509,7 +509,7 @@ export default function Duel() {
                 width: '100%', padding: '16px', textAlign: 'center',
                 background: 'var(--bg-card)', border: '1.5px solid var(--border)',
                 borderRadius: 14, color: 'var(--text)', fontSize: 24,
-                fontFamily: "'JetBrains Mono',monospace", fontWeight: 700,
+                fontFamily: FF.mono, fontWeight: 700,
                 letterSpacing: 6, boxSizing: 'border-box',
               }}
             />
@@ -554,7 +554,7 @@ export default function Duel() {
             border: '2px dashed var(--border)', borderRadius: 16, marginBottom: 16,
           }}>
             <div style={{
-              fontSize: 36, fontWeight: 800, fontFamily: "'JetBrains Mono',monospace",
+              fontSize: 36, fontWeight: 800, fontFamily: FF.mono,
               letterSpacing: 8, color: 'var(--text)',
             }}>
               {duelCode}
@@ -609,7 +609,7 @@ export default function Duel() {
           {/* VS */}
           <div style={{
             fontSize: vsCountdown > 0 ? 48 : 36, fontWeight: 900,
-            fontFamily: "var(--ff-display, 'Unbounded', sans-serif)",
+            fontFamily: FF.display,
             background: `linear-gradient(135deg,${COLORS.red},#f97316)`,
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
             animation: 'firePulse 1s ease-in-out infinite',
@@ -640,7 +640,7 @@ export default function Duel() {
           <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>
             {t.duel.youFinished}
           </div>
-          <div style={{ fontSize: 24, fontWeight: 800, fontFamily: "'JetBrains Mono',monospace", color: COLORS.green, marginBottom: 16 }}>
+          <div style={{ fontSize: 24, fontWeight: 800, fontFamily: FF.mono, color: COLORS.green, marginBottom: 16 }}>
             {myScore}/{TOTAL_QUESTIONS}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: 'var(--text-secondary)' }}>
@@ -668,7 +668,7 @@ export default function Duel() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', marginBottom: 8 }}>
           {/* My score */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <div style={{ fontSize: 20, fontWeight: 800, fontFamily: "'JetBrains Mono',monospace", color: COLORS.green }}>
+            <div style={{ fontSize: 20, fontWeight: 800, fontFamily: FF.mono, color: COLORS.green }}>
               {myScore}
             </div>
             <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{t.you}</div>
@@ -679,7 +679,7 @@ export default function Duel() {
             <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)' }}>
               {currentQ + 1}/{TOTAL_QUESTIONS}
             </div>
-            <div style={{ fontSize: 20, fontWeight: 800, fontFamily: "'JetBrains Mono',monospace", color: timerColor }}>
+            <div style={{ fontSize: 20, fontWeight: 800, fontFamily: FF.mono, color: timerColor }}>
               {timer}
             </div>
           </div>
@@ -687,7 +687,7 @@ export default function Duel() {
           {/* Opponent score */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{t.duel.opponent}</div>
-            <div style={{ fontSize: 20, fontWeight: 800, fontFamily: "'JetBrains Mono',monospace", color: COLORS.red }}>
+            <div style={{ fontSize: 20, fontWeight: 800, fontFamily: FF.mono, color: COLORS.red }}>
               {oppScore}
             </div>
           </div>
@@ -757,7 +757,7 @@ export default function Duel() {
                   width: 24, height: 24, borderRadius: 8, flexShrink: 0,
                   background: answerResult && i === answerResult.correctIdx ? COLORS.green : 'var(--bg-secondary)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 11, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace",
+                  fontSize: 11, fontWeight: 700, fontFamily: FF.mono,
                   color: answerResult && i === answerResult.correctIdx ? '#fff' : 'var(--text-secondary)',
                 }}>
                   {String.fromCharCode(65 + i)}
@@ -799,21 +799,21 @@ export default function Duel() {
             <div style={{ textAlign: 'center' }}>
               <PlayerAvatar profile={myProfile} size={44} />
               <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginTop: 6 }}>{t.you}</div>
-              <div style={{ fontSize: 28, fontWeight: 800, fontFamily: "'JetBrains Mono',monospace", color: COLORS.green }}>
+              <div style={{ fontSize: 28, fontWeight: 800, fontFamily: FF.mono, color: COLORS.green }}>
                 {myFinalScore}
               </div>
               <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{t.from} {TOTAL_QUESTIONS}</div>
             </div>
             <div style={{
               fontSize: 14, fontWeight: 800, color: 'var(--text-muted)',
-              fontFamily: "var(--ff-display, 'Unbounded', sans-serif)",
+              fontFamily: FF.display,
             }}>VS</div>
             <div style={{ textAlign: 'center' }}>
               <PlayerAvatar profile={oppProfileFinal} size={44} />
               <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginTop: 6 }}>
                 {oppProfileFinal?.nickname && !oppProfileFinal.nickname.startsWith('user_') ? `@${oppProfileFinal.nickname}` : (oppProfileFinal?.display_name || t.duel.opponent)}
               </div>
-              <div style={{ fontSize: 28, fontWeight: 800, fontFamily: "'JetBrains Mono',monospace", color: COLORS.red }}>
+              <div style={{ fontSize: 28, fontWeight: 800, fontFamily: FF.mono, color: COLORS.red }}>
                 {oppFinalScore}
               </div>
               <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{t.from} {TOTAL_QUESTIONS}</div>
@@ -846,7 +846,7 @@ export default function Duel() {
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           }}>
             <Zap size={18} color={COLORS.amber} />
-            <span style={{ fontSize: 16, fontWeight: 700, color: COLORS.amber, fontFamily: "'JetBrains Mono',monospace" }}>
+            <span style={{ fontSize: 16, fontWeight: 700, color: COLORS.amber, fontFamily: FF.mono }}>
               +{totalXP} XP
             </span>
             {bonusXP > 0 && (

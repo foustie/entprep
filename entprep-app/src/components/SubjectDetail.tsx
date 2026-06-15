@@ -124,7 +124,7 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
             lineHeight: 1.1,
           }}>{(t.subjects as Record<string, string>)[sid] || sub.name}</div>
           <div style={{
-            fontFamily: "'JetBrains Mono',monospace",
+            fontFamily: FF.mono,
             fontSize: 10, fontWeight: 700,
             letterSpacing: '0.08em',
             color: 'var(--text-muted)',
@@ -180,7 +180,7 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
 
       {/* Topics / Sections */}
       <div style={{
-        fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
+        fontFamily: FF.mono, fontSize: 10, fontWeight: 800,
         letterSpacing: '0.16em', textTransform: 'uppercase',
         color: 'var(--text-muted)', marginBottom: 8, padding: '0 4px',
       }}>{hasSubtopics ? t.subjectDetail.sectionsTitle : t.subjectDetail.topicsTitle}</div>
@@ -230,7 +230,7 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
                     border: '1.5px solid rgba(15,15,16,0.12)',
                     display: "flex", alignItems: "center", justifyContent: "center",
                     flexShrink: 0,
-                    fontFamily: "'JetBrains Mono',monospace",
+                    fontFamily: FF.mono,
                     fontSize: 13, fontWeight: 800,
                     letterSpacing: '-0.02em',
                     color: sub.color,
@@ -239,14 +239,14 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{
-                      fontFamily: "'Nunito',sans-serif",
+                      fontFamily: FF.body,
                       fontSize: 13.5, fontWeight: 800,
                       color: "var(--text)",
                       lineHeight: 1.2,
                       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     }}>{isKk && tp.name_kk ? tp.name_kk : tp.name}</div>
                     <div style={{
-                      fontFamily: "'JetBrains Mono',monospace",
+                      fontFamily: FF.mono,
                       fontSize: 10, fontWeight: 700,
                       color: "var(--text-muted)", marginTop: 2,
                       letterSpacing: '0.04em',
@@ -340,13 +340,13 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
                         }} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{
-                            fontFamily: "'Nunito',sans-serif",
+                            fontFamily: FF.body,
                             fontSize: 12.5, fontWeight: 700,
                             color: "var(--text)",
                             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                           }}>{isKk && st.name_kk ? st.name_kk : st.name}</div>
                           <div style={{
-                            fontFamily: "'JetBrains Mono',monospace",
+                            fontFamily: FF.mono,
                             fontSize: 9.5, fontWeight: 700,
                             color: "var(--text-muted)", marginTop: 2,
                             letterSpacing: '0.04em',
@@ -430,12 +430,12 @@ function ActionRow({
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
-          fontFamily: "'Nunito',sans-serif",
+          fontFamily: FF.body,
           fontSize: 14, fontWeight: 800,
           color: 'var(--text)', lineHeight: 1.2,
         }}>{title}</div>
         <div style={{
-          fontFamily: "'Nunito',sans-serif",
+          fontFamily: FF.body,
           fontSize: 11.5, fontWeight: 600,
           color: 'var(--text-secondary)', marginTop: 2,
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
@@ -453,7 +453,7 @@ function ActionRow({
       {badgeText && (
         <span style={{
           flexShrink: 0,
-          fontFamily: "'JetBrains Mono',monospace",
+          fontFamily: FF.mono,
           fontSize: 9, fontWeight: 800,
           letterSpacing: '0.08em',
           color: 'var(--text-muted)',

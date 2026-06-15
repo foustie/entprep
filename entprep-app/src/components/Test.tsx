@@ -310,7 +310,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
               boxShadow: '0 3px 0 0 var(--ink)',
               cursor: aiLoad[index] ? 'wait' : 'pointer',
               color: 'var(--text)',
-              fontFamily: "'Nunito',sans-serif",
+              fontFamily: FF.body,
               fontSize: 12.5, fontWeight: 700,
               textAlign: 'left',
               ...(isFirstAiExposure && !aiLoad[index] ? { animation: 'pulse 2s ease-in-out 3' } : {}),
@@ -333,7 +333,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
             }} style={{
               background: 'none', border: 'none', padding: '4px 0', cursor: 'pointer',
               color: COLORS.streak,
-              fontFamily: "'Nunito',sans-serif", fontSize: 11.5, fontWeight: 700,
+              fontFamily: FF.body, fontSize: 11.5, fontWeight: 700,
               display: 'inline-flex', alignItems: 'center', gap: 5, alignSelf: 'flex-start',
             }}>
               <Sparkles size={12} strokeWidth={2.4} />{t.test.aiTutorNudge || 'Разобрать с AI Tutor'}
@@ -365,12 +365,12 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
               padding: '12px 14px',
             }}>
               <div style={{
-                fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 800,
+                fontFamily: FF.mono, fontSize: 9, fontWeight: 800,
                 letterSpacing: '0.14em', textTransform: 'uppercase',
                 color: COLORS.streak, marginBottom: 6,
               }}>{t.test.diyarSays}</div>
               <div style={{
-                fontFamily: "'Nunito',sans-serif", fontSize: 13, fontWeight: 600,
+                fontFamily: FF.body, fontSize: 13, fontWeight: 600,
                 color: 'var(--text)', lineHeight: 1.55, whiteSpace: 'pre-wrap',
               }}>
                 {aiExpanded[index] ? aiText[index].detailed : aiText[index].short}
@@ -380,7 +380,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
                   display: 'inline-flex', alignItems: 'center', gap: 4,
                   marginTop: 8, background: 'none', border: 'none', padding: 0, cursor: 'pointer',
                   color: COLORS.streak,
-                  fontFamily: "'Nunito',sans-serif", fontSize: 11, fontWeight: 700,
+                  fontFamily: FF.body, fontSize: 11, fontWeight: 700,
                 }}>
                   {aiExpanded[index] ? <><ChevronUp size={12} strokeWidth={2.4} />{t.test.brief}</> : <><ChevronDown size={12} strokeWidth={2.4} />{t.test.detailed}</>}
                 </button>
@@ -397,7 +397,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
           borderRadius: 12,
           cursor: 'pointer',
           color: 'var(--text-secondary)',
-          fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 700,
+          fontFamily: FF.body, fontSize: 12, fontWeight: 700,
           textAlign: 'left',
         }}>
           <span style={{
@@ -468,11 +468,11 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
         <ScoreRing value={pct} label={`${pct}%`} sublabel={`${cc}/${tot} ${t.correct}`} />
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 16 }}>
           <div style={{ background: 'rgba(255,255,255,0.6)', border: '1.5px solid var(--ink)', borderRadius: 12, padding: "10px 8px" }}>
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: "'JetBrains Mono',monospace", color: 'var(--ink)', opacity: 0.8, marginBottom: 3 }}>{t.test.timeLabel}</div>
+            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: FF.mono, color: 'var(--ink)', opacity: 0.8, marginBottom: 3 }}>{t.test.timeLabel}</div>
             <div style={{ fontSize: 16, fontWeight: 900, fontFamily: FF.display, letterSpacing: '-0.025em', color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' }}>{fm(timerSec - tl)}</div>
           </div>
           <div style={{ background: 'rgba(255,255,255,0.6)', border: '1.5px solid var(--ink)', borderRadius: 12, padding: "10px 8px" }}>
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: "'JetBrains Mono',monospace", color: 'var(--ink)', opacity: 0.8, marginBottom: 3 }}>XP</div>
+            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: FF.mono, color: 'var(--ink)', opacity: 0.8, marginBottom: 3 }}>XP</div>
             <div style={{ fontSize: 16, fontWeight: 900, fontFamily: FF.display, letterSpacing: '-0.025em', color: '#C77D00', fontVariantNumeric: 'tabular-nums' }}>+{calcTestXP({ su: sid, sc: pct, dt: '', co: cc, to: tot })}</div>
           </div>
         </div>
@@ -496,7 +496,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
             <Trophy size={16} strokeWidth={2.5} />
             <span style={{ fontFamily: FF.display, fontSize: 12, fontWeight: 900, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{t.test.newRecord}</span>
           </div>
-          {record.prevBest > 0 && <div style={{ fontSize: 10.5, fontWeight: 700, fontFamily: "'Nunito',sans-serif", marginTop: 4, opacity: 0.8 }}>
+          {record.prevBest > 0 && <div style={{ fontSize: 10.5, fontWeight: 700, fontFamily: FF.body, marginTop: 4, opacity: 0.8 }}>
             {t.test.was} {record.prevBest}{t.test.became} {pct}% (+{record.improvement}%)
           </div>}
         </div>}
@@ -635,7 +635,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
     <div style={{ marginBottom: 14 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: 'baseline', marginBottom: 6 }}>
         <span style={{
-          fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
+          fontFamily: FF.mono, fontSize: 10, fontWeight: 800,
           letterSpacing: '0.12em', textTransform: 'uppercase',
           color: "var(--text-muted)",
         }}>{t.test.questionN} {cur + 1} {t.test.of} {tot}</span>

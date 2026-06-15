@@ -110,7 +110,7 @@ export default function Calc() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '8px 0 14px' }}>
         <Calculator size={18} color="var(--text-muted)" strokeWidth={2.4} />
         <div style={{
-          fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
+          fontFamily: FF.mono, fontSize: 10, fontWeight: 800,
           letterSpacing: '0.14em', textTransform: 'uppercase',
           color: 'var(--text-muted)',
         }}>{t.calc.title} · {UNIS.length} {pluralizeForms(UNIS.length, t.calc.uniWord)}</div>
@@ -140,7 +140,7 @@ export default function Calc() {
           }}>
             <div>
               <div style={{
-                fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
+                fontFamily: FF.mono, fontSize: 10, fontWeight: 800,
                 letterSpacing: '0.14em', textTransform: 'uppercase',
                 color: 'rgba(255,255,255,0.5)', marginBottom: 4,
               }}>{hasPrognosis && !manualMode ? t.calc.yourPrognosis : t.calc.entScore}</div>
@@ -213,7 +213,7 @@ export default function Calc() {
               </div>
               <div style={{
                 display: 'flex', justifyContent: 'space-between',
-                fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 700,
+                fontFamily: FF.mono, fontSize: 10, fontWeight: 700,
                 color: 'rgba(255,255,255,0.4)', marginTop: 6, padding: '0 2px',
               }}><span>50</span><span>100</span><span>140</span></div>
               {hasPrognosis && (
@@ -225,7 +225,7 @@ export default function Calc() {
                     border: '1.5px solid rgba(255,255,255,0.12)',
                     borderRadius: 10,
                     color: 'rgba(255,255,255,0.75)',
-                    fontFamily: "'Nunito',sans-serif", fontSize: 11, fontWeight: 700,
+                    fontFamily: FF.body, fontSize: 11, fontWeight: 700,
                     cursor: 'pointer',
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5,
                   }}
@@ -243,7 +243,7 @@ export default function Calc() {
                 border: '1.5px solid rgba(255,255,255,0.14)',
                 borderRadius: 10,
                 color: '#fff',
-                fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 700,
+                fontFamily: FF.body, fontSize: 12, fontWeight: 700,
                 cursor: 'pointer',
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
               }}
@@ -270,7 +270,7 @@ export default function Calc() {
               color: 'var(--ink)', letterSpacing: '-0.02em', marginBottom: 2,
             }}>{t.calc.takeTestCta}</div>
             <div style={{
-              fontFamily: "'Nunito',sans-serif", fontSize: 11, fontWeight: 700,
+              fontFamily: FF.body, fontSize: 11, fontWeight: 700,
               color: 'var(--ink)', opacity: 0.6,
             }}>{t.calc.takeTestCtaSub}</div>
           </div>
@@ -293,7 +293,7 @@ export default function Calc() {
       {(topMatches.safe || topMatches.realistic || topMatches.dream) && (
         <>
           <div style={{
-            fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
+            fontFamily: FF.mono, fontSize: 10, fontWeight: 800,
             letterSpacing: '0.16em', textTransform: 'uppercase',
             color: 'var(--text-muted)', marginBottom: 8, padding: '0 4px',
           }}>{t.calc.topChances}</div>
@@ -321,7 +321,7 @@ export default function Calc() {
             background: 'var(--bg-card)',
             border: '2px solid var(--ink)',
             borderRadius: 12,
-            fontFamily: "'Nunito',sans-serif", fontSize: 13, fontWeight: 600,
+            fontFamily: FF.body, fontSize: 13, fontWeight: 600,
             color: 'var(--text)', outline: 'none',
           }}
         />
@@ -343,7 +343,7 @@ export default function Calc() {
           return (
             <button key={k} onClick={() => setTp(k)} style={{
               padding: '7px 14px', borderRadius: 999,
-              fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 800,
+              fontFamily: FF.body, fontSize: 12, fontWeight: 800,
               cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
               border: '1.5px solid var(--ink)',
               background: active ? 'var(--ink)' : 'var(--bg-card)',
@@ -362,7 +362,7 @@ export default function Calc() {
         marginBottom: 10, padding: '0 4px',
       }}>
         <div style={{
-          fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
+          fontFamily: FF.mono, fontSize: 10, fontWeight: 800,
           letterSpacing: '0.14em', textTransform: 'uppercase',
           color: 'var(--text-muted)',
         }}>
@@ -371,7 +371,7 @@ export default function Calc() {
         {favs.length > 0 && (
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 4,
-            fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
+            fontFamily: FF.mono, fontSize: 10, fontWeight: 800,
             letterSpacing: '0.1em', textTransform: 'uppercase',
             color: COLORS.xp,
           }}>
@@ -404,7 +404,7 @@ export default function Calc() {
             color: 'var(--text)', letterSpacing: '-0.02em', marginBottom: 4,
           }}>{t.calc.nothingFound}</div>
           <div style={{
-            fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 600,
+            fontFamily: FF.body, fontSize: 12, fontWeight: 600,
             color: 'var(--text-muted)',
           }}>{t.calc.nothingFoundHint}</div>
         </div>
@@ -447,17 +447,17 @@ function MatchRow({
       }}><UniIcon tp={u.tp} size={20} color={color} /></div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
-          fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 800,
+          fontFamily: FF.mono, fontSize: 9, fontWeight: 800,
           letterSpacing: '0.14em', textTransform: 'uppercase',
           color, marginBottom: 2,
         }}>{label} · {minLabel} {u.min}</div>
         <div style={{
-          fontFamily: "'Nunito',sans-serif", fontSize: 14, fontWeight: 800,
+          fontFamily: FF.body, fontSize: 14, fontWeight: 800,
           color: 'var(--text)', lineHeight: 1.15,
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>{u.n}</div>
         <div style={{
-          fontFamily: "'Nunito',sans-serif", fontSize: 11, fontWeight: 600,
+          fontFamily: FF.body, fontSize: 11, fontWeight: 600,
           color: 'var(--text-muted)', marginTop: 2,
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>{u.c} · {u.sp}</div>
@@ -509,11 +509,11 @@ function UniCard({
         <span style={{ flexShrink: 0, lineHeight: 1, display: 'inline-flex', marginTop: 1 }}><UniIcon tp={u.tp} size={18} color={clr} /></span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
-            fontFamily: "'Nunito',sans-serif", fontSize: 13, fontWeight: 800,
+            fontFamily: FF.body, fontSize: 13, fontWeight: 800,
             color: 'var(--text)', lineHeight: 1.2,
           }}>{u.n}</div>
           <div style={{
-            fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 700,
+            fontFamily: FF.mono, fontSize: 10, fontWeight: 700,
             color: 'var(--text-muted)', marginTop: 2,
           }}>{u.c} · {minLabel} {u.min} · {yourLabel} {sc}</div>
         </div>
@@ -546,7 +546,7 @@ function UniCard({
         <div style={{ height: '100%', width: `${prog}%`, background: clr, transition: 'width 0.3s' }} />
       </div>
       <div style={{
-        fontFamily: "'Nunito',sans-serif", fontSize: 11, fontWeight: 600,
+        fontFamily: FF.body, fontSize: 11, fontWeight: 600,
         color: 'var(--text-secondary)', lineHeight: 1.35,
       }}>{u.sp}</div>
     </div>

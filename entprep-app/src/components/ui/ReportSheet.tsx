@@ -50,7 +50,7 @@ export default function ReportSheet({ visible, questionText, options, comment, l
           background: 'var(--bg-subtle)',
           border: '1.5px solid rgba(15,15,16,0.1)',
           borderRadius: 10,
-          fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 600,
+          fontFamily: FF.body, fontSize: 12, fontWeight: 600,
           color: 'var(--text-secondary)', lineHeight: 1.5,
         }}>{questionText}</div>
       )}
@@ -58,7 +58,7 @@ export default function ReportSheet({ visible, questionText, options, comment, l
       {options && options.length > 0 && (
         <div style={{ marginBottom: 12 }}>
           <div style={{
-            fontFamily: "'JetBrains Mono',monospace", fontSize: 9.5, fontWeight: 800,
+            fontFamily: FF.mono, fontSize: 9.5, fontWeight: 800,
             letterSpacing: '0.14em', textTransform: 'uppercase',
             color: 'var(--text-muted)', marginBottom: 6,
           }}>
@@ -74,7 +74,7 @@ export default function ReportSheet({ visible, questionText, options, comment, l
                   border: '1.5px solid var(--ink)',
                   boxShadow: active ? `0 2px 0 0 ${COLORS.streak}` : '0 2px 0 0 rgba(15,15,16,0.18)',
                   borderRadius: 10,
-                  fontFamily: "'Nunito',sans-serif", fontSize: 11.5, fontWeight: 800,
+                  fontFamily: FF.body, fontSize: 11.5, fontWeight: 800,
                   color: active ? '#fff' : 'var(--text)',
                   cursor: 'pointer', textAlign: 'left',
                   whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
@@ -103,7 +103,7 @@ export default function ReportSheet({ visible, questionText, options, comment, l
           border: '2px solid var(--ink)',
           borderRadius: 10,
           color: 'var(--text)',
-          fontFamily: "'Nunito',sans-serif", fontSize: 12.5, fontWeight: 600,
+          fontFamily: FF.body, fontSize: 12.5, fontWeight: 600,
           resize: 'vertical', marginBottom: 12, outline: 'none',
         }}
       />
@@ -121,7 +121,7 @@ export default function ReportSheet({ visible, questionText, options, comment, l
               border: '2px solid var(--ink)',
               boxShadow: '0 2px 0 0 var(--ink)',
               borderRadius: 10,
-              fontFamily: "'Nunito',sans-serif", fontSize: 13, fontWeight: 700,
+              fontFamily: FF.body, fontSize: 13, fontWeight: 700,
               color: 'var(--text)',
               cursor: loading ? 'wait' : 'pointer', textAlign: 'left',
             }}

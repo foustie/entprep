@@ -359,7 +359,7 @@ export default function FullENT({ finish }: FullENTProps) {
             letterSpacing: '-0.035em',
           }}>{t.fullent.title}</h1>
           <p style={{
-            fontFamily: "'Nunito',sans-serif", fontSize: 13.5, fontWeight: 700,
+            fontFamily: FF.body, fontSize: 13.5, fontWeight: 700,
             color: 'var(--ink)', opacity: 0.65, margin: 0, lineHeight: 1.45,
           }}>{t.fullent.subtitle}</p>
 
@@ -383,7 +383,7 @@ export default function FullENT({ finish }: FullENTProps) {
               }}>
                 <span style={{ fontSize: 12, fontWeight: 900, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' }}>{s.n}</span>
                 <span style={{
-                  fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 700,
+                  fontFamily: FF.mono, fontSize: 9, fontWeight: 700,
                   letterSpacing: '0.08em', textTransform: 'uppercase',
                   color: 'var(--ink)', opacity: 0.55,
                 }}>{s.l}</span>
@@ -395,7 +395,7 @@ export default function FullENT({ finish }: FullENTProps) {
 
       {/* Sections grid */}
       <div style={{
-        fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
+        fontFamily: FF.mono, fontSize: 10, fontWeight: 800,
         letterSpacing: '0.16em', textTransform: 'uppercase',
         color: 'var(--text-muted)', marginBottom: 8, padding: '0 4px',
       }}>{t.fullent.sectionsHeader}</div>
@@ -415,16 +415,16 @@ export default function FullENT({ finish }: FullENTProps) {
             <SubjectChip sid={s.sid} size={40} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{
-                fontFamily: "'Nunito',sans-serif", fontSize: 14, fontWeight: 800,
+                fontFamily: FF.body, fontSize: 14, fontWeight: 800,
                 color: "var(--text)",
               }}>{subName(s.sid)}</div>
               <div style={{
-                fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 700,
+                fontFamily: FF.mono, fontSize: 10, fontWeight: 700,
                 letterSpacing: '0.04em',
                 color: "var(--text-muted)", marginTop: 2,
               }}>{s.cnt} {t.fullent.sectionInfo} {s.maxPts} {t.fullent.sectionInfoSuffix} {s.threshold} {t.home.pointsShort}</div>
               {isProfile && <div style={{
-                fontFamily: "'Nunito',sans-serif", fontSize: 10, fontWeight: 700,
+                fontFamily: FF.body, fontSize: 10, fontWeight: 700,
                 color: COLORS.streak, marginTop: 3,
               }}>{t.fullent.profileBlocksDesc}</div>}
             </div>
@@ -450,7 +450,7 @@ export default function FullENT({ finish }: FullENTProps) {
           <AlertTriangle size={14} strokeWidth={2.5} />{t.fullent.important}
         </div>
         <div style={{
-          fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 600,
+          fontFamily: FF.body, fontSize: 12, fontWeight: 600,
           color: "var(--ink)", lineHeight: 1.55,
         }}>{t.fullent.importantDesc}</div>
       </div>
@@ -517,7 +517,7 @@ export default function FullENT({ finish }: FullENTProps) {
                 border: '1.5px solid var(--ink)',
                 borderRadius: 12, padding: "10px 8px",
               }}>
-                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink)', opacity: 0.55, marginBottom: 3 }}>{t.correct}</div>
+                <div style={{ fontFamily: FF.mono, fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink)', opacity: 0.55, marginBottom: 3 }}>{t.correct}</div>
                 <div style={{ fontFamily: FF.display, fontSize: 14, fontWeight: 900, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.025em' }}>{totalCorrect}/120</div>
               </div>
               <div style={{
@@ -525,7 +525,7 @@ export default function FullENT({ finish }: FullENTProps) {
                 border: '1.5px solid var(--ink)',
                 borderRadius: 12, padding: "10px 8px",
               }}>
-                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink)', opacity: 0.55, marginBottom: 3 }}>{t.test.timeLabel}</div>
+                <div style={{ fontFamily: FF.mono, fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink)', opacity: 0.55, marginBottom: 3 }}>{t.test.timeLabel}</div>
                 <div style={{ fontFamily: FF.display, fontSize: 14, fontWeight: 900, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.025em' }}>{fm(elapsed)}</div>
               </div>
               <div style={{
@@ -533,7 +533,7 @@ export default function FullENT({ finish }: FullENTProps) {
                 border: '1.5px solid var(--ink)',
                 borderRadius: 12, padding: "10px 8px",
               }}>
-                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink)', opacity: 0.55, marginBottom: 3 }}>XP</div>
+                <div style={{ fontFamily: FF.mono, fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink)', opacity: 0.55, marginBottom: 3 }}>XP</div>
                 <div style={{ fontFamily: FF.display, fontSize: 14, fontWeight: 900, color: '#C77D00', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.025em' }}>+{calcTestXP({ type: 'fullent', su: 'fullent', sc: 0, dt: '', sections: res.map(r => ({ pts: r.pts })) })}</div>
               </div>
             </div>
@@ -569,7 +569,7 @@ export default function FullENT({ finish }: FullENTProps) {
                 </div>
               </div>
               <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: 17, fontWeight: 800, fontFamily: "'JetBrains Mono',monospace", color: r.passed ? COLORS.green : COLORS.red }}>{r.pts}/{r.maxPts}</div>
+                <div style={{ fontSize: 17, fontWeight: 800, fontFamily: FF.mono, color: r.passed ? COLORS.green : COLORS.red }}>{r.pts}/{r.maxPts}</div>
                 <div style={{ fontSize: 10, color: r.passed ? COLORS.green : COLORS.red, display: "flex", alignItems: "center", gap: 3, justifyContent: "flex-end" }}>
                   {r.passed ? <><Check size={11} />{t.fullent.threshold}</> : `${t.fullent.thresholdFailed} ${r.threshold})`}
                 </div>
@@ -638,7 +638,7 @@ export default function FullENT({ finish }: FullENTProps) {
         <button onClick={() => setPaused(p => !p)} style={{ ...CARD_COMPACT, background: paused ? "rgba(234,179,8,0.12)" : "var(--bg-card)", border: `1px solid ${paused ? "rgba(234,179,8,0.3)" : "var(--border)"}`, padding: "7px 9px", cursor: "pointer", color: paused ? COLORS.yellow : "var(--text-muted)", fontSize: 10, display: "inline-flex", alignItems: "center", gap: 3 }}>
           {paused ? <><Play size={12} />{t.fullent.resume}</> : <><Pause size={12} />{t.fullent.pause}</>}
         </button>
-        <div role="timer" aria-live="off" aria-label={`${t.fullent.timeRemaining}: ${fm(timeLeft)}`} style={{ ...CARD_COMPACT, background: timeLeft < 600 ? "rgba(239,68,68,0.12)" : "var(--bg-card)", border: `1px solid ${timeLeft < 600 ? "rgba(239,68,68,0.25)" : "var(--border)"}`, padding: "7px 11px", fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color: timeLeft < 600 ? COLORS.red : "var(--text)" }}>{fm(timeLeft)}</div>
+        <div role="timer" aria-live="off" aria-label={`${t.fullent.timeRemaining}: ${fm(timeLeft)}`} style={{ ...CARD_COMPACT, background: timeLeft < 600 ? "rgba(239,68,68,0.12)" : "var(--bg-card)", border: `1px solid ${timeLeft < 600 ? "rgba(239,68,68,0.25)" : "var(--border)"}`, padding: "7px 11px", fontFamily: FF.mono, fontSize: 13, fontWeight: 700, color: timeLeft < 600 ? COLORS.red : "var(--text)" }}>{fm(timeLeft)}</div>
       </div>
       {paused && !offline && <div style={{ ...CARD, background: COLORS.xpSofter, padding: "48px 20px", textAlign: "center", marginBottom: 16, animation: "slideUp 0.3s cubic-bezier(0.16,1,0.3,1)" }}>
         <Pause size={40} color='var(--ink)' style={{ marginBottom: 12 }} />

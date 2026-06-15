@@ -3,7 +3,7 @@ import { SUBS, ALL_PROFILES } from '../config/questionPools';
 import { resolveQuestion } from '../utils/questionStore';
 import { reviewCard, getDueCards } from '../utils/srEngine';
 import { scoreQuestion } from '../utils/scoringEngine';
-import { CARD_COMPACT, COLORS, TINT } from '../constants/styles';
+import { CARD_COMPACT, COLORS, TINT, FF } from '../constants/styles';
 import { useApp } from '../contexts/AppContext';
 import { useNav } from '../contexts/NavigationContext';
 import { useT } from '../locales';
@@ -116,7 +116,7 @@ export default function ReviewSession({ cards, onFinish }: ReviewSessionProps) {
         }}>
           <RotateCcw size={28} color={COLORS.purple} style={{ marginBottom: 12 }} />
           <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{review.summary}</div>
-          <div style={{ fontSize: 28, fontWeight: 800, color: COLORS.purple, fontFamily: "'JetBrains Mono',monospace" }}>
+          <div style={{ fontSize: 28, fontWeight: 800, color: COLORS.purple, fontFamily: FF.mono }}>
             {results.length}
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 16 }}>{review.reviewed}</div>

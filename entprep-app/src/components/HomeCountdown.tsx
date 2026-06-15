@@ -1,4 +1,4 @@
-import { COLORS, TINT } from '../constants/styles';
+import { COLORS, TINT, FF } from '../constants/styles';
 import { useT } from '../locales';
 import { Trophy, Clock } from 'lucide-react';
 import type { EntCountdown } from '../config/ent';
@@ -58,7 +58,7 @@ export default function HomeCountdown({ countdown, timeStr, goalApprox }: Props)
                 background: 'var(--bg-card)',
                 border: `1px solid ${colors.border}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 22, fontWeight: 800, fontFamily: "'JetBrains Mono',monospace",
+                fontSize: 22, fontWeight: 800, fontFamily: FF.mono,
                 color: countdown.urgent ? colors.text : 'var(--text)',
                 boxShadow: countdown.urgent ? `0 0 12px ${colors.icon}20` : 'none',
               }}>{v}</div>

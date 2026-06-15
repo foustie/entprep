@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, memo } from 'react';
-import { CARD_COMPACT, TYPE, COLORS } from '../constants/styles';
+import { CARD_COMPACT, TYPE, COLORS, FF } from '../constants/styles';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useNav } from '../contexts/NavigationContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -192,7 +192,7 @@ export default function Friends() {
                 borderRadius: 12,
                 color: 'var(--text)',
                 fontSize: 14,
-                fontFamily: "'JetBrains Mono',monospace",
+                fontFamily: FF.mono,
               }}
             />
             <button
@@ -259,7 +259,7 @@ export default function Friends() {
         <div style={{ flex: 1 }}>
           <h1 style={{ ...TYPE.h2, margin: 0 }}>{t.friends.title}</h1>
           <p style={{ ...TYPE.caption, margin: '2px 0 0' }}>
-            {profile && <span style={{ fontFamily: "'JetBrains Mono',monospace", color: 'var(--text-secondary)' }}>@{profile.nickname}</span>}
+            {profile && <span style={{ fontFamily: FF.mono, color: 'var(--text-secondary)' }}>@{profile.nickname}</span>}
           </p>
         </div>
         <button
@@ -337,7 +337,7 @@ export default function Friends() {
                       <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {u.display_name || u.nickname}
                       </div>
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: "'JetBrains Mono',monospace" }}>@{u.nickname}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: FF.mono }}>@{u.nickname}</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 8 }}>
                       <LevelBadge level={u.level} />
@@ -391,7 +391,7 @@ export default function Friends() {
                   <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {req.profile.display_name || req.profile.nickname}
                   </div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: "'JetBrains Mono',monospace" }}>@{req.profile.nickname}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: FF.mono }}>@{req.profile.nickname}</div>
                 </div>
                 <div style={{ display: 'flex', gap: 6, marginLeft: 8 }}>
                   <button onClick={() => handleRespond(req.id, 'accepted')} aria-label={t.friends.friendAdded} style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
@@ -466,7 +466,7 @@ function LevelBadge({ level }: { level: number }) {
       fontSize: 10,
       fontWeight: 700,
       color: COLORS.amber,
-      fontFamily: "'JetBrains Mono',monospace",
+      fontFamily: FF.mono,
     }}>
       <Award size={11} />
       {level}
@@ -493,14 +493,14 @@ const FriendCard = memo(function FriendCard({ friendship, index, onRemove, onDue
           {p.display_name || p.nickname}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
-          <span style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: "'JetBrains Mono',monospace" }}>@{p.nickname}</span>
+          <span style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: FF.mono }}>@{p.nickname}</span>
           <span style={{ fontSize: 10, color: 'var(--text-dim)' }}>{formatLastActive(p.last_active)}</span>
         </div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 8 }}>
         <LevelBadge level={p.level} />
         {p.streak > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 2, padding: '3px 7px', background: 'rgba(239,68,68,0.08)', borderRadius: 8, fontSize: 10, fontWeight: 700, color: COLORS.red, fontFamily: "'JetBrains Mono',monospace" }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 2, padding: '3px 7px', background: 'rgba(239,68,68,0.08)', borderRadius: 8, fontSize: 10, fontWeight: 700, color: COLORS.red, fontFamily: FF.mono }}>
             <Zap size={10} />{p.streak}
           </div>
         )}

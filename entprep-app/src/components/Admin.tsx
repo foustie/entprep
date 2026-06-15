@@ -5,7 +5,7 @@ import { TOPIC_MAP, getTopicQuestions } from '../config/topics';
 import { SUBJECT_META } from '../config/subjects';
 import { API_BASE } from '../config/app';
 import { supabase } from '../config/supabase';
-import { CARD_COMPACT, TYPE } from '../constants/styles';
+import { CARD_COMPACT, TYPE, FF } from '../constants/styles';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useAuth } from '../contexts/AuthContext';
 import { useNav } from '../contexts/NavigationContext';
@@ -624,7 +624,7 @@ export default function Admin() {
               value={premiumEmail}
               onChange={e => setPremiumEmail(e.target.value)}
               placeholder="user@example.com"
-              style={{ width: '100%', padding: '12px 14px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, color: 'var(--text)', fontSize: 13, fontFamily: "'JetBrains Mono',monospace", boxSizing: 'border-box' }}
+              style={{ width: '100%', padding: '12px 14px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, color: 'var(--text)', fontSize: 13, fontFamily: FF.mono, boxSizing: 'border-box' }}
             />
           </div>
 

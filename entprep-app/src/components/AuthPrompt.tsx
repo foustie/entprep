@@ -211,7 +211,7 @@ export default function AuthPrompt({ onFinish }: AuthPromptProps) {
       }}>
         {/* Eyebrow */}
         <div style={{
-          fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
+          fontFamily: FF.mono, fontSize: 10, fontWeight: 800,
           letterSpacing: '0.18em', textTransform: 'uppercase',
           color: COLORS.streak, textAlign: 'center', marginBottom: 8,
         }}>{t.authPrompt.eyebrow}</div>
@@ -222,7 +222,7 @@ export default function AuthPrompt({ onFinish }: AuthPromptProps) {
           color: 'var(--text)', margin: '0 0 6px', textAlign: 'center', lineHeight: 1.1,
         }}>{t.authPrompt.createAccount}</h2>
         <p style={{
-          fontFamily: "'Nunito',sans-serif", fontSize: 13, fontWeight: 700,
+          fontFamily: FF.body, fontSize: 13, fontWeight: 700,
           color: 'var(--text-secondary)', margin: '0 0 22px', textAlign: 'center',
         }}>
           {t.authPrompt.freeAndFast}
@@ -247,7 +247,7 @@ export default function AuthPrompt({ onFinish }: AuthPromptProps) {
                 <cfg.Icon size={17} color={cfg.color} strokeWidth={2.2} />
               </div>
               <span style={{
-                fontFamily: "'Nunito',sans-serif", fontSize: 13, fontWeight: 700,
+                fontFamily: FF.body, fontSize: 13, fontWeight: 700,
                 color: 'var(--text)', lineHeight: 1.35,
               }}>{benefitTexts[i]}</span>
             </div>
@@ -280,13 +280,13 @@ export default function AuthPrompt({ onFinish }: AuthPromptProps) {
                   color: 'var(--ink)', marginBottom: 3, lineHeight: 1.2,
                 }}>{t.authPrompt.inAppWarningTitle}</div>
                 <div style={{
-                  fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 600,
+                  fontFamily: FF.body, fontSize: 12, fontWeight: 600,
                   color: 'var(--ink-soft)', lineHeight: 1.35,
                 }}>{t.authPrompt.inAppWarningText}</div>
               </div>
             </div>
             <div style={{
-              fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 700,
+              fontFamily: FF.mono, fontSize: 10, fontWeight: 700,
               color: 'var(--ink-soft)', lineHeight: 1.35, paddingLeft: 36,
             }}>
               {os === 'ios' ? t.authPrompt.inAppTipIos : t.authPrompt.inAppTipAndroid}
@@ -299,7 +299,7 @@ export default function AuthPrompt({ onFinish }: AuthPromptProps) {
                   background: '#fff', border: '1.5px solid var(--ink)',
                   borderRadius: 9, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  fontFamily: "'Nunito',sans-serif", fontSize: 11, fontWeight: 800,
+                  fontFamily: FF.body, fontSize: 11, fontWeight: 800,
                   color: 'var(--ink)',
                 }}
               >
@@ -314,7 +314,7 @@ export default function AuthPrompt({ onFinish }: AuthPromptProps) {
                     background: 'var(--ink)', border: '1.5px solid var(--ink)',
                     borderRadius: 9, cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                    fontFamily: "'Nunito',sans-serif", fontSize: 11, fontWeight: 800,
+                    fontFamily: FF.body, fontSize: 11, fontWeight: 800,
                     color: '#fff',
                   }}
                 >
@@ -338,7 +338,7 @@ export default function AuthPrompt({ onFinish }: AuthPromptProps) {
             boxShadow: '0 3px 0 0 var(--ink)',
             cursor: loading ? 'wait' : 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-            fontFamily: "'Nunito',sans-serif", fontSize: 14, fontWeight: 800,
+            fontFamily: FF.body, fontSize: 14, fontWeight: 800,
             color: 'var(--ink)',
             opacity: loading ? 0.6 : 1,
             marginBottom: 10,
@@ -357,7 +357,7 @@ export default function AuthPrompt({ onFinish }: AuthPromptProps) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '6px 0' }}>
           <div style={{ flex: 1, height: 1.5, background: 'rgba(15,15,16,0.12)' }} />
           <span style={{
-            fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 800,
+            fontFamily: FF.mono, fontSize: 9, fontWeight: 800,
             letterSpacing: '0.14em', textTransform: 'uppercase',
             color: 'var(--text-muted)',
           }}>{t.or}</span>
@@ -376,7 +376,7 @@ export default function AuthPrompt({ onFinish }: AuthPromptProps) {
             boxShadow: '0 3px 0 0 ' + COLORS.streak,
             cursor: loading ? 'wait' : 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-            fontFamily: "'Nunito',sans-serif", fontSize: 14, fontWeight: 800,
+            fontFamily: FF.body, fontSize: 14, fontWeight: 800,
             color: '#fff',
             opacity: loading ? 0.7 : 1,
           }}
@@ -394,7 +394,7 @@ export default function AuthPrompt({ onFinish }: AuthPromptProps) {
         style={{
           background: 'none', border: 'none',
           color: 'var(--text-muted)',
-          fontFamily: "'Nunito',sans-serif", fontSize: 13, fontWeight: 700,
+          fontFamily: FF.body, fontSize: 13, fontWeight: 700,
           cursor: 'pointer', padding: 10,
           alignSelf: 'center',
           letterSpacing: '0.02em',

@@ -1,4 +1,4 @@
-import { COLORS } from '../constants/styles';
+import { COLORS, FF } from '../constants/styles';
 import { useT } from '../locales';
 import { Flame, Snowflake, Zap } from 'lucide-react';
 
@@ -28,7 +28,7 @@ export default function HomeHeaderBar({ streak, todayXP, practicedToday }: Props
         }
         <span style={{
           fontSize: 14, fontWeight: 700,
-          fontFamily: "'JetBrains Mono',monospace",
+          fontFamily: FF.mono,
           color: streak.frozenToday ? COLORS.blue : streakAtRisk ? COLORS.red : streak.current > 0 ? COLORS.amber : 'var(--text-muted)',
         }}>
           {streak.current}

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { CARD_COMPACT, COLORS, TYPE, SECTION_LABEL, SP, FS, R } from '../constants/styles';
+import { CARD_COMPACT, COLORS, TYPE, SECTION_LABEL, SP, FS, R, FF } from '../constants/styles';
 import { useApp } from '../contexts/AppContext';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useT } from '../locales';
@@ -77,7 +77,7 @@ function WeeklyChart({ sid }: { sid: string }) {
         return (
           <g key={v}>
             <line x1={pad.left} y1={y} x2={W - pad.right} y2={y} stroke="var(--border)" strokeWidth={1} strokeDasharray="3 3" />
-            <text x={pad.left - 5} y={y + 3} textAnchor="end" fontSize={8} fontFamily="'JetBrains Mono',monospace" fill="var(--text-muted)">{v}</text>
+            <text x={pad.left - 5} y={y + 3} textAnchor="end" fontSize={8} fontFamily={FF.mono} fill="var(--text-muted)">{v}</text>
           </g>
         );
       })}
@@ -103,7 +103,7 @@ function WeeklyChart({ sid }: { sid: string }) {
               </>
             )}
             {i % 2 === 1 && (
-              <text x={x + barW / 2} y={H - 5} textAnchor="middle" fontSize={7.5} fontFamily="'JetBrains Mono',monospace" fill="var(--text-muted)">{label}</text>
+              <text x={x + barW / 2} y={H - 5} textAnchor="middle" fontSize={7.5} fontFamily={FF.mono} fill="var(--text-muted)">{label}</text>
             )}
           </g>
         );
@@ -216,7 +216,7 @@ function TimeDonut({ sid }: { sid: string }) {
           <circle cx={55} cy={55} r={RADIUS + 5} fill="none" stroke="var(--ink)" strokeWidth={1.5} />
           <circle cx={55} cy={55} r={RADIUS - 5} fill="none" stroke="var(--ink)" strokeWidth={1.5} />
         </g>
-        <text x={55} y={53} textAnchor="middle" fontSize={13} fontWeight={700} fontFamily="'JetBrains Mono',monospace" fill="var(--text)">
+        <text x={55} y={53} textAnchor="middle" fontSize={13} fontWeight={700} fontFamily={FF.mono} fill="var(--text)">
           {fmtAvg(data.totalAvgSec, t.analytics.minShort, t.analytics.secShort)}
         </text>
         <text x={55} y={66} textAnchor="middle" fontSize={7} fill="var(--text-muted)">

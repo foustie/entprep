@@ -306,7 +306,7 @@ function XPSection({ hist }: { hist: TestResult[] }) {
         <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600, color: "var(--text)" }}>
           <Zap size={15} color={lvl.color} />{t.progress.levelLabel} {lvl.level}: {(t.levels as Record<number, string>)[lvl.level] || lvl.name}
         </div>
-        <span style={{ fontSize: 11, color: lvl.color, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace" }}>{totalXP} XP</span>
+        <span style={{ fontSize: 11, color: lvl.color, fontWeight: 700, fontFamily: FF.mono }}>{totalXP} XP</span>
       </div>
       <ProgressBar value={lvl.progress * 100} max={100} gradient={`linear-gradient(90deg,${lvl.color},${lvl.color}88)`} height={6} />
       {lvl.level < 6 && nextLvl && (
@@ -381,7 +381,7 @@ function Leaderboard({ subjects, names }: { subjects: string[]; names: Record<st
                 <span style={{ fontSize: 12, width: 20, textAlign: "center" }}>{i < 3 ? medals[i] : <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{i + 1}</span>}</span>
                 <span style={{ fontSize: 11, color: isMe ? COLORS.teal : "var(--text-body)", fontWeight: isMe ? 600 : 400 }}>{r.user_name}{isMe && ` ${t.progress.youLabel}`}</span>
               </div>
-              <span style={{ fontSize: 12, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace", color: scoreColor(r.score) }}>{r.score}%</span>
+              <span style={{ fontSize: 12, fontWeight: 700, fontFamily: FF.mono, color: scoreColor(r.score) }}>{r.score}%</span>
             </div>
           );
         })
@@ -470,7 +470,7 @@ export default function Progress() {
         <Leaderboard subjects={subjects} names={names} />
         {subjects.some(sid => hist.some(h => h.su === sid && h.type !== 'rush')) && (<>
         <div style={{
-          fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
+          fontFamily: FF.mono, fontSize: 10, fontWeight: 800,
           letterSpacing: '0.16em', textTransform: 'uppercase',
           color: 'var(--text-muted)', marginBottom: 8, padding: '0 4px',
         }}>{t.progress.bySubjects}</div>
@@ -505,12 +505,12 @@ export default function Progress() {
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{
-                    fontFamily: "'Nunito',sans-serif", fontSize: 13, fontWeight: 800,
+                    fontFamily: FF.body, fontSize: 13, fontWeight: 800,
                     color: 'var(--text)', lineHeight: 1.15,
                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                   }}>{names[sid]}</div>
                   <div style={{
-                    fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 700,
+                    fontFamily: FF.mono, fontSize: 9, fontWeight: 700,
                     letterSpacing: '0.1em', textTransform: 'uppercase',
                     color: 'var(--text-muted)', marginTop: 2,
                   }}>{tests.length} {pluralizeForms(tests.length, t.progress.testsWord)}</div>
@@ -527,7 +527,7 @@ export default function Progress() {
                   background: 'var(--bg-subtle)',
                   border: '1.5px dashed rgba(15,15,16,0.12)',
                   borderRadius: 8,
-                  fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 700,
+                  fontFamily: FF.mono, fontSize: 9, fontWeight: 700,
                   letterSpacing: '0.08em', textTransform: 'uppercase',
                   color: 'var(--text-muted)',
                 }}>
@@ -542,7 +542,7 @@ export default function Progress() {
                   borderRadius: 8, textAlign: 'center',
                 }}>
                   <div style={{
-                    fontFamily: "'JetBrains Mono',monospace", fontSize: 8, fontWeight: 800,
+                    fontFamily: FF.mono, fontSize: 8, fontWeight: 800,
                     letterSpacing: '0.12em', textTransform: 'uppercase',
                     color: 'var(--text-muted)', marginBottom: 2,
                   }}>{t.progress.avgShort}</div>
@@ -559,7 +559,7 @@ export default function Progress() {
                   borderRadius: 8, textAlign: 'center',
                 }}>
                   <div style={{
-                    fontFamily: "'JetBrains Mono',monospace", fontSize: 8, fontWeight: 800,
+                    fontFamily: FF.mono, fontSize: 8, fontWeight: 800,
                     letterSpacing: '0.12em', textTransform: 'uppercase',
                     color: COLORS.win, marginBottom: 2,
                     display: 'inline-flex', alignItems: 'center', gap: 3,
@@ -579,7 +579,7 @@ export default function Progress() {
         {hist.filter(t => t.type === "fullent").length > 0 && <>
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 5,
-            fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
+            fontFamily: FF.mono, fontSize: 10, fontWeight: 800,
             letterSpacing: '0.16em', textTransform: 'uppercase',
             color: 'var(--text-muted)', margin: '0 0 10px', padding: '0 4px',
           }}>
@@ -606,7 +606,7 @@ export default function Progress() {
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                   <div style={{
-                    fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 700,
+                    fontFamily: FF.mono, fontSize: 10, fontWeight: 700,
                     color: 'var(--text-muted)', letterSpacing: '0.04em',
                   }}>{t.dt}</div>
                   <div style={{
@@ -628,12 +628,12 @@ export default function Progress() {
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                           {s.sid && <SubjectIcon sid={s.sid} size={13} color={SUBJECT_META[s.sid]?.color} strokeWidth={2.2} />}
                           <span style={{
-                            fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 700,
+                            fontFamily: FF.body, fontSize: 12, fontWeight: 700,
                             color: 'var(--text)',
                           }}>{s.label}</span>
                         </div>
                         <div style={{
-                          fontFamily: "'JetBrains Mono',monospace", fontSize: 11, fontWeight: 800,
+                          fontFamily: FF.mono, fontSize: 11, fontWeight: 800,
                           color: s.passed ? COLORS.win : COLORS.streak,
                           fontVariantNumeric: 'tabular-nums',
                           display: 'inline-flex', alignItems: 'center', gap: 4,
@@ -660,7 +660,7 @@ export default function Progress() {
             <div style={{ marginTop: 28 }}>
               <div style={{
                 display: 'inline-flex', alignItems: 'center', gap: 5,
-                fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
+                fontFamily: FF.mono, fontSize: 10, fontWeight: 800,
                 letterSpacing: '0.16em', textTransform: 'uppercase',
                 color: 'var(--text-muted)', marginBottom: 10, padding: '0 4px',
               }}>
@@ -695,7 +695,7 @@ export default function Progress() {
         <div style={{ marginTop: 28 }}>
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 5,
-            fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
+            fontFamily: FF.mono, fontSize: 10, fontWeight: 800,
             letterSpacing: '0.16em', textTransform: 'uppercase',
             color: 'var(--text-muted)', marginBottom: 10, padding: '0 4px',
           }}>
@@ -725,7 +725,7 @@ export default function Progress() {
                 background: 'var(--bg-card)',
                 border: '2px dashed rgba(15,15,16,0.14)',
                 borderRadius: 12,
-                fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 700,
+                fontFamily: FF.body, fontSize: 12, fontWeight: 700,
                 color: 'var(--text-muted)',
               }}>{t.progress.noResultsFound}</div>
             : <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -756,12 +756,12 @@ export default function Progress() {
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{
-                          fontFamily: "'Nunito',sans-serif", fontSize: 13, fontWeight: 800,
+                          fontFamily: FF.body, fontSize: 13, fontWeight: 800,
                           color: 'var(--text)', lineHeight: 1.15,
                           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                         }}>{names[ti.su] || ti.su}</div>
                         <div style={{
-                          fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 700,
+                          fontFamily: FF.mono, fontSize: 10, fontWeight: 700,
                           color: 'var(--text-muted)', marginTop: 2,
                         }}>{ti.dt}{ti.tp ? ` · ${ti.tp}` : ''} · {ti.co}/{ti.to}</div>
                       </div>

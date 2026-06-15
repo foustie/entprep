@@ -58,7 +58,7 @@ export default function UpdatePrompt() {
             color: 'var(--text)', letterSpacing: '-0.02em', lineHeight: 1.15,
           }}>{t.pwa.updateAvailable}</div>
           <div style={{
-            fontFamily: "'Nunito',sans-serif", fontSize: 11.5, fontWeight: 700,
+            fontFamily: FF.body, fontSize: 11.5, fontWeight: 700,
             color: 'var(--text-muted)', marginTop: 2,
           }}>{t.pwa.newVersion}</div>
         </div>
@@ -69,7 +69,7 @@ export default function UpdatePrompt() {
           border: '1.5px solid rgba(15,15,16,0.14)',
           color: 'var(--text-muted)',
           borderRadius: 10, padding: '9px 16px',
-          fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 800,
+          fontFamily: FF.body, fontSize: 12, fontWeight: 800,
           cursor: 'pointer',
         }}>{t.pwa.later}</button>
         <button onClick={handleUpdate} style={{

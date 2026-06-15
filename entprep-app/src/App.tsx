@@ -375,7 +375,7 @@ function AppContent() {
         return (
           <button key={ni.id} onClick={() => changeTab(ni.id)} aria-label={label} aria-current={active ? "page" : undefined} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: "4px 0 0", position: "relative" }}>
             <ni.Icon size={22} strokeWidth={active ? 2.6 : 2} color={active ? COLORS.streak : "var(--text-muted)"} />
-            <span style={{ fontSize: 10, fontWeight: 800, fontFamily: "'Nunito',sans-serif", letterSpacing: '0.1em', textTransform: 'uppercase', color: active ? COLORS.streak : "var(--text-muted)", marginTop: 5, transition: 'color 0.15s' }}>{label}</span>
+            <span style={{ fontSize: 10, fontWeight: 800, fontFamily: FF.body, letterSpacing: '0.1em', textTransform: 'uppercase', color: active ? COLORS.streak : "var(--text-muted)", marginTop: 5, transition: 'color 0.15s' }}>{label}</span>
             <div style={{ width: 22, height: 3, borderRadius: 2, background: active ? COLORS.streak : 'transparent', marginTop: 4, transition: 'background 0.15s' }} />
           </button>
         );

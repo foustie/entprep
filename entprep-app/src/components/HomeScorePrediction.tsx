@@ -1,5 +1,5 @@
 import { UNIS } from '../data/universities';
-import { CARD_COMPACT, COLORS } from '../constants/styles';
+import { CARD_COMPACT, COLORS, FF } from '../constants/styles';
 import { useNav } from '../contexts/NavigationContext';
 import { useT } from '../locales';
 import { pluralizeForms } from '../utils/formatters';
@@ -59,7 +59,7 @@ export default function HomeScorePrediction({ hist }: Props) {
             </div>
             <div style={{
               fontSize: 22, fontWeight: 800,
-              fontFamily: "'JetBrains Mono',monospace",
+              fontFamily: FF.mono,
               color: scoreColor,
               lineHeight: 1,
             }}>
@@ -100,7 +100,7 @@ export default function HomeScorePrediction({ hist }: Props) {
             }}>
               <span style={{ color: COLORS.green, fontSize: 11, flexShrink: 0 }}>&#10003;</span>
               <span style={{ flex: 1, color: 'var(--text)', fontWeight: 500 }}>{u.n}</span>
-              <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: "'JetBrains Mono',monospace" }}>
+              <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: FF.mono }}>
                 {t.home.from} {u.min}
               </span>
             </div>
@@ -114,7 +114,7 @@ export default function HomeScorePrediction({ hist }: Props) {
             }}>
               <span style={{ color: COLORS.red, fontSize: 11, flexShrink: 0 }}>&#10007;</span>
               <span style={{ flex: 1, color: 'var(--text-secondary)', fontWeight: 500 }}>{u.n}</span>
-              <span style={{ fontSize: 10, color: COLORS.amber, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace" }}>
+              <span style={{ fontSize: 10, color: COLORS.amber, fontWeight: 700, fontFamily: FF.mono }}>
                 +{u.min - predicted}
               </span>
             </div>

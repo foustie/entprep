@@ -68,7 +68,7 @@ export default function Challenge({ data }: ChallengeProps) {
             <Swords size={32} strokeWidth={2.4} />
           </div>
           <div style={{
-            fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
+            fontFamily: FF.mono, fontSize: 10, fontWeight: 800,
             letterSpacing: '0.18em', textTransform: 'uppercase',
             color: COLORS.streak, marginBottom: 6,
           }}>{t.challenge.duelEyebrow}</div>
@@ -77,7 +77,7 @@ export default function Challenge({ data }: ChallengeProps) {
             color: 'var(--ink)', letterSpacing: '-0.035em', margin: '0 0 8px', lineHeight: 1.05,
           }}>{t.challenge.challenged}</h2>
           <div style={{
-            fontFamily: "'Nunito',sans-serif", fontSize: 13, fontWeight: 700,
+            fontFamily: FF.body, fontSize: 13, fontWeight: 700,
             color: 'var(--ink)', opacity: 0.7, lineHeight: 1.5, marginBottom: 22,
           }}>
             {t.challenge.friendScored}{' '}
@@ -105,7 +105,7 @@ export default function Challenge({ data }: ChallengeProps) {
               <SubjectIcon sid={subjectId} size={16} color={subColor} strokeWidth={2.2} />
             </div>
             <span style={{
-              fontFamily: "'Nunito',sans-serif", fontSize: 14, fontWeight: 800,
+              fontFamily: FF.body, fontSize: 14, fontWeight: 800,
               color: 'var(--text)',
             }}>{subName}</span>
           </div>
@@ -135,7 +135,7 @@ export default function Challenge({ data }: ChallengeProps) {
             background: 'transparent',
             color: 'var(--ink)', opacity: 0.65,
             border: 'none',
-            fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 800,
+            fontFamily: FF.body, fontSize: 12, fontWeight: 800,
             cursor: 'pointer',
             letterSpacing: '0.02em',
           }}>

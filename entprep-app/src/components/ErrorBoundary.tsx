@@ -69,7 +69,7 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
           </div>
           {this.state.error && (
             <div style={{ ...CARD_COMPACT, background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.18)', padding: '10px 14px', marginBottom: 20, maxWidth: 340 }}>
-              <div style={{ fontSize: 10, color: COLORS.red, fontFamily: "'JetBrains Mono',monospace", wordBreak: 'break-all' }}>
+              <div style={{ fontSize: 10, color: COLORS.red, fontFamily: FF.mono, wordBreak: 'break-all' }}>
                 {String(this.state.error?.message || this.state.error)}
               </div>
             </div>
@@ -77,7 +77,7 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
           {import.meta.env.DEV && this.state.componentStack && (
             <div style={{ ...CARD_COMPACT, background: 'rgba(255,90,54,0.06)', border: '1px solid rgba(255,90,54,0.18)', padding: '10px 14px', marginBottom: 20, maxWidth: 340, textAlign: 'left' }}>
               <div style={{ fontSize: 9, color: COLORS.teal, fontWeight: 600, marginBottom: 4 }}>Component Stack:</div>
-              <pre style={{ fontSize: 8, color: 'var(--text-secondary)', fontFamily: "'JetBrains Mono',monospace", whiteSpace: 'pre-wrap', wordBreak: 'break-all', margin: 0, maxHeight: 200, overflow: 'auto' }}>
+              <pre style={{ fontSize: 8, color: 'var(--text-secondary)', fontFamily: FF.mono, whiteSpace: 'pre-wrap', wordBreak: 'break-all', margin: 0, maxHeight: 200, overflow: 'auto' }}>
                 {this.state.componentStack}
               </pre>
             </div>
