@@ -592,7 +592,9 @@ export default function Progress() {
             // Legacy history rows persisted `sections` as a Record; newer ones as an array.
             // Normalize to an array (mirrors computeBadges / calcTestXP) so .map never throws.
             const feSections: FeSection[] = Array.isArray(fe.sections) ? fe.sections : fe.sections ? Object.values(fe.sections) : [];
-            const sc = fe.score || 0;
+            // Total ENT points = sum of section points (single source of truth). The result never
+            // stored a top-level `score`, so reading fe.score always showed 0/140 — derive it instead.
+            const sc = Math.round(feSections.reduce((s, x) => s + (x.pts ?? 0), 0) * 10) / 10;
             const scColor = sc >= 100 ? COLORS.win : sc >= 70 ? COLORS.xp : COLORS.streak;
             const scBg = sc >= 100 ? COLORS.winSoft : sc >= 70 ? COLORS.xpSoft : COLORS.streakSoft;
             return (
