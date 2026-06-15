@@ -12,10 +12,11 @@ import { getRecommendation, getAndySpeech } from '../utils/recommendationEngine'
 import { SUBJECT_META } from '../config/subjects';
 import { getPersonalBests, getGoalProgress } from '../utils/competitionHelpers';
 import { prefetchCounts, getPoolSize } from '../utils/questionStore';
+import { pluralizeForms } from '../utils/formatters';
 import HomeSubjectGrid from './HomeSubjectGrid';
 import SendToMomSheet from './SendToMomSheet';
 import SubjectIcon from './ui/SubjectIcon';
-import { ArrowRight, GraduationCap, Trophy, ChevronDown, ChevronUp, X, KeyRound, Target, Flame, Zap, MessageSquare, BookOpen } from 'lucide-react';
+import { ArrowRight, GraduationCap, Trophy, ChevronDown, ChevronUp, X, KeyRound, Target, Flame, Zap, MessageSquare, BookOpen, Sparkles } from 'lucide-react';
 import type { SubjectConfig } from '../types';
 import type { EntCountdown } from '../config/ent';
 
@@ -110,6 +111,9 @@ export default function CoachHome() {
     () => !!localStorage.getItem('entprep_auth_nudge_dismissed'),
   );
   const showAuthNudge = !user && !authNudgeDismissed;
+  const [diyarPromoDismissed, setDiyarPromoDismissed] = useState(
+    () => !!localStorage.getItem('entprep_diyar_promo_dismissed'),
+  );
 
   // Mark animation played
   const didMarkRef = useRef(false);
@@ -141,15 +145,67 @@ export default function CoachHome() {
   // AI Tutor message — dynamic based on weakest area
   const aiSubjectName = rec.subject
     ? (t.subjects as Record<string, string>)[rec.subject] || rec.subject
-    : 'ЕНТ';
+    : t.home.entShort;
   const aiMessage = rec.type === 'weak_subject' || rec.type === 'weak_topic'
-    ? `Слабое место — ${aiSubjectName}. Разберём?`
+    ? t.home.aiTutorWeak.replace('{subject}', aiSubjectName)
     : rec.type === 'error_review'
-    ? 'Вижу новые ошибки. Разберём по одной?'
-    : 'Спроси что угодно. Разберу шаг за шагом.';
+    ? t.home.aiTutorErrors
+    : t.home.aiTutorDefault;
 
   return (
     <div style={{ padding: `0 var(--content-padding) ${bp === 'desktop' ? 40 : 80}px`, overscrollBehavior: 'none' }}>
+
+      {/* ═══ Дияр cross-promo (Aluna referral) ═══ */}
+      {!diyarPromoDismissed && (
+        <div style={{
+          position: 'relative', width: '100%',
+          marginTop: 6, marginBottom: 14,
+          padding: '14px 16px',
+          background: 'var(--bg-card)',
+          border: '2px solid var(--ink)',
+          borderRadius: 16,
+          boxShadow: '0 4px 0 0 var(--ink)',
+        }}>
+          <button
+            onClick={() => { localStorage.setItem('entprep_diyar_promo_dismissed', '1'); setDiyarPromoDismissed(true); }}
+            aria-label={t.close}
+            style={{
+              position: 'absolute', top: 4, right: 4,
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              width: 44, height: 44, padding: 11,
+              background: 'transparent', border: 'none', cursor: 'pointer',
+              color: 'var(--text-muted)',
+            }}
+          >
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              width: 22, height: 22, borderRadius: '50%', background: 'var(--bg-subtle)',
+            }}>
+              <X size={11} strokeWidth={2.5} aria-hidden="true" />
+            </span>
+          </button>
+          <div style={{ display: 'flex', gap: 10, paddingRight: 22 }}>
+            <Sparkles size={18} color={COLORS.streak} strokeWidth={2.4} style={{ flexShrink: 0, marginTop: 1 }} aria-hidden="true" />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontFamily: FF.body, fontSize: 13, fontWeight: 600, lineHeight: 1.45, color: 'var(--text-body)' }}>
+                {t.home.diyarPromoText}
+              </div>
+              <a
+                href="https://aluna.beauty/?ref=entprep"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-block', marginTop: 10, padding: '8px 18px',
+                  background: 'var(--ink)', color: '#fff', borderRadius: 10,
+                  textDecoration: 'none', fontFamily: FF.body, fontSize: 12.5, fontWeight: 700,
+                }}
+              >
+                {t.home.diyarPromoCta}
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ═══ Auth nudge — v2 ink chip ═══ */}
       {showAuthNudge && (
@@ -181,13 +237,21 @@ export default function CoachHome() {
             }}
             aria-label={t.close}
             style={{
+              flexShrink: 0,
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              width: 22, height: 22, borderRadius: '50%',
-              background: 'var(--bg-subtle)', border: 'none', cursor: 'pointer',
+              // ~44px hit area without enlarging the visible 22px chip: pad + negative margin
+              width: 44, height: 44, padding: 11, margin: -11,
+              background: 'transparent', border: 'none', cursor: 'pointer',
               color: COLORS.textMuted,
             }}
           >
-            <X size={11} strokeWidth={2.5} />
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              width: 22, height: 22, borderRadius: '50%',
+              background: 'var(--bg-subtle)',
+            }}>
+              <X size={11} strokeWidth={2.5} aria-hidden="true" />
+            </span>
           </button>
         </div>
       )}
@@ -195,6 +259,7 @@ export default function CoachHome() {
       {/* ═══ UNIFIED HERO — prognosis + mission (one focal) ═══ */}
       <Stagger index={1}>
         <HomeHero
+          t={t}
           prognosis={prognosis}
           grantTarget={grantTarget}
           rec={rec}
@@ -231,7 +296,7 @@ export default function CoachHome() {
             onMouseLeave={e => { e.currentTarget.style.borderColor = COLORS.cardBorder; e.currentTarget.style.color = COLORS.textSecondary; }}
           >
             <MessageSquare size={13} strokeWidth={2.3} />
-            <span>отправь прогноз маме</span>
+            <span>{t.home.sendPrognosisToMom}</span>
             <ArrowRight size={13} strokeWidth={2.5} />
           </button>
         </Stagger>
@@ -276,7 +341,7 @@ export default function CoachHome() {
             background: COLORS.streak,
             border: `2px solid ${COLORS.xp}`,
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: FF.display,
+            fontFamily: FF.brand,
             fontWeight: 900, fontSize: 18, letterSpacing: '-0.04em',
             color: '#fff',
           }}>
@@ -297,7 +362,7 @@ export default function CoachHome() {
               letterSpacing: '0.14em', textTransform: 'uppercase',
               color: COLORS.xp, marginBottom: 2,
             }}>
-              AI-репетитор · 10 в день
+              {t.home.aiTutorEyebrow}
             </div>
             <div style={{
               fontFamily: FF.body,
@@ -443,9 +508,10 @@ function useCountUp(target: number, durationMs = 850): number {
 }
 
 function HomeHero({
-  prognosis, grantTarget, rec, streak, todayTestCount, dailyGoal, countdownDays,
+  t, prognosis, grantTarget, rec, streak, todayTestCount, dailyGoal, countdownDays,
   onStart, subName,
 }: {
+  t: ReturnType<typeof useT>;
   prognosis: number | null;
   grantTarget: number;
   rec: RecType;
@@ -474,16 +540,16 @@ function HomeHero({
   const subjectName = subName(subjectId);
 
   const missionTitle =
-    rec.type === 'full_ent' ? 'Пробный ЕНТ'
-    : rec.type === 'error_review' ? 'Разбор ошибок'
+    rec.type === 'full_ent' ? t.home.missionTrialEnt
+    : rec.type === 'error_review' ? t.home.missionErrorReview
     : subjectName;
   const missionReason =
-    rec.type === 'weak_subject' ? 'слабое место'
-    : rec.type === 'weak_topic' ? (rec.topic ? `тема: ${rec.topic}` : 'подтянем тему')
-    : rec.type === 'error_review' ? 'новые ошибки'
-    : rec.type === 'not_practiced' ? 'давно не был'
-    : rec.type === 'full_ent' ? '120 вопросов · 4 ч'
-    : 'пора начинать';
+    rec.type === 'weak_subject' ? t.home.reasonWeakSpot
+    : rec.type === 'weak_topic' ? (rec.topic ? t.home.reasonTopic.replace('{topic}', rec.topic) : t.home.reasonPullTopic)
+    : rec.type === 'error_review' ? t.home.reasonNewErrors
+    : rec.type === 'not_practiced' ? t.home.reasonLongAway
+    : rec.type === 'full_ent' ? t.home.reasonFullEnt
+    : t.home.reasonTimeToStart;
 
   return (
     <div style={{
@@ -514,10 +580,10 @@ function HomeHero({
         display: 'flex', alignItems: 'center', gap: 6,
         marginBottom: 14,
       }}>
-        <StatChip icon={Flame} value={streak} unit={pluralDay(streak)} color={COLORS.streak} highlight={streak > 0} />
-        <StatChip icon={Target} value={`${todayTestCount}/${dailyGoal}`} unit="цель" color={INK} highlight={todayTestCount >= dailyGoal && dailyGoal > 0} highlightColor={COLORS.win} />
+        <StatChip icon={Flame} value={streak} unit={pluralizeForms(streak, t.home.dayForms)} color={COLORS.streak} highlight={streak > 0} />
+        <StatChip icon={Target} value={`${todayTestCount}/${dailyGoal}`} unit={t.home.goalLabel} color={INK} highlight={todayTestCount >= dailyGoal && dailyGoal > 0} highlightColor={COLORS.win} />
         {countdownDays != null && countdownDays > 0 && (
-          <StatChip icon={Zap} value={countdownDays} unit="до ент" color={INK} />
+          <StatChip icon={Zap} value={countdownDays} unit={t.home.beforeEntLabel} color={INK} />
         )}
       </div>
 
@@ -529,7 +595,7 @@ function HomeHero({
             letterSpacing: '0.14em', textTransform: 'uppercase',
             color: INK, opacity: 0.55, marginBottom: 8,
           }}>
-            пора начать
+            {t.home.heroEyebrowStart}
           </div>
           <div style={{
             fontFamily: FF.display,
@@ -537,7 +603,7 @@ function HomeHero({
             letterSpacing: '-0.035em', lineHeight: 1.02,
             color: INK,
           }}>
-            Пройди первый тест —<br />посчитаем твой прогноз на ЕНТ.
+            {t.home.heroHeadlineLine1}<br />{t.home.heroHeadlineLine2}
           </div>
         </div>
       )}
@@ -550,7 +616,7 @@ function HomeHero({
             letterSpacing: '0.14em', textTransform: 'uppercase',
             color: INK, opacity: 0.55, marginBottom: 2,
           }}>
-            твой прогноз на ЕНТ
+            {t.home.prognosisEyebrow}
           </div>
           <div style={{ marginBottom: 10 }}>
             <span style={{
@@ -606,7 +672,7 @@ function HomeHero({
               {reached ? (
                 <><span style={{ fontVariantNumeric: 'tabular-nums' }}>+{delta}</span><span>✓</span></>
               ) : (
-                <><span>ещё</span><span style={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.01em' }}>{Math.abs(delta)}</span></>
+                <><span>{t.home.deltaMore}</span><span style={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.01em' }}>{Math.abs(delta)}</span></>
               )}
             </div>
           </div>
@@ -659,7 +725,7 @@ function HomeHero({
             letterSpacing: '0.14em', textTransform: 'uppercase',
             color: 'var(--ink-soft)', marginBottom: 1,
           }}>
-            следующий шаг
+            {t.home.nextStep}
           </div>
           <div style={{
             fontFamily: FF.display, fontSize: 16, fontWeight: 900,
@@ -728,14 +794,5 @@ function StatChip({
       </span>
     </div>
   );
-}
-
-function pluralDay(n: number): string {
-  const r100 = n % 100;
-  const r10 = n % 10;
-  if (r100 >= 11 && r100 <= 14) return 'дней';
-  if (r10 === 1) return 'день';
-  if (r10 >= 2 && r10 <= 4) return 'дня';
-  return 'дней';
 }
 

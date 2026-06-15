@@ -11,6 +11,7 @@ import BlockIndicator from './ui/BlockIndicator';
 import PointsBadge from './ui/PointsBadge';
 import { CARD, CARD_COMPACT, TYPE, COLORS, FF } from '../constants/styles';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useApp } from '../contexts/AppContext';
 import { useNav } from '../contexts/NavigationContext';
 import { formatTimeHMS } from '../utils/formatters';
@@ -83,9 +84,9 @@ export default function FullENT({ finish }: FullENTProps) {
       { sid: prof[0], label: (t.subjects as Record<string, string>)[prof[0]] || p1?.name || prof[0], icon: p1?.icon || "\uD83D\uDD2C", cnt: ENT_CONFIG.profileCnt, maxPts: calcMaxPts(prof0Qs), threshold: ENT_CONFIG.profileThreshold, ptsPerQ: ENT_CONFIG.profilePtsPerQ, qs: prof0Qs },
       { sid: prof[1], label: (t.subjects as Record<string, string>)[prof[1]] || p2?.name || prof[1], icon: p2?.icon || "\uD83D\uDCBB", cnt: ENT_CONFIG.profileCnt, maxPts: calcMaxPts(prof1Qs), threshold: ENT_CONFIG.profileThreshold, ptsPerQ: ENT_CONFIG.profilePtsPerQ, qs: prof1Qs },
     ];
-    if (secs.some(s => s.qs.length === 0)) { toast.error('Недостаточно вопросов для выбранного профиля'); goHome(); return; }
+    if (secs.some(s => s.qs.length === 0)) { toast.error(t.fullent.notEnoughQuestions); goHome(); return; }
     setSections(secs);
-    } catch (err) { console.error('FullENT load error:', err); toast.error('Не удалось загрузить вопросы. Попробуйте позже.'); goHome(); }
+    } catch (err) { console.error('FullENT load error:', err); toast.error(t.fullent.loadFailed); goHome(); }
     finally { setSectionsLoading(false); }
   })(); return () => { cancelled = true; if (paywallTimerRef.current) clearTimeout(paywallTimerRef.current); } }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -104,12 +105,18 @@ export default function FullENT({ finish }: FullENTProps) {
   const [passageOpen, setPassageOpen] = useState(true);
   const [focused, setFocused] = useState(-1);
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
+  const finishConfirmRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(finishConfirmRef, showFinishConfirm, () => setShowFinishConfirm(false));
   // Reset passage to open when navigating to a new question
   useEffect(() => { setPassageOpen(true); }, [curSec, curQ]);
   // Reset focus when question changes
   useEffect(() => { setFocused(-1); }, [curSec, curQ]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const paywallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // The timer interval is NOT re-created when `answers` changes (its effect deps are
+  // [phase, paused, offline]), so it would otherwise call a finishENT closure captured
+  // at test start with empty answers. This ref always points at the latest finishENT.
+  const finishRef = useRef<() => void>(() => {});
 
   // ── Per-question answer-time tracking ──────────────────────────────────────
   // Questions can be revisited, so we accumulate CUMULATIVE facing time per
@@ -134,7 +141,7 @@ export default function FullENT({ finish }: FullENTProps) {
     // Always clear previous interval first to prevent double-tick
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     if (phase !== "test" || paused || offline) return;
-    timerRef.current = setInterval(() => setTimeLeft(p => { if (p <= 1) { clearInterval(timerRef.current!); timerRef.current = null; finishENT(); return 0; } return p - 1; }), 1000);
+    timerRef.current = setInterval(() => setTimeLeft(p => { if (p <= 1) { clearInterval(timerRef.current!); timerRef.current = null; finishRef.current(); return 0; } return p - 1; }), 1000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [phase, paused, offline]);
 
@@ -219,6 +226,9 @@ export default function FullENT({ finish }: FullENTProps) {
     if (!isPremium) paywallTimerRef.current = setTimeout(() => openPaywall('fullent'), 3000);
   };
 
+  // Point the timer's finish-ref at the freshest closure on every render.
+  finishRef.current = finishENT;
+
   const calcResults = (): SectionResult[] => {
     return sections!.map((s, si) => {
       const sa = answers[si] || {};
@@ -284,9 +294,9 @@ export default function FullENT({ finish }: FullENTProps) {
     return (
       <div style={{ padding: `0 var(--content-padding) ${isDesktop ? 40 : 100}px` }}>
         {/* Loading message */}
-        <div style={{ textAlign: 'center', padding: '24px 0 16px', fontSize: 14, color: 'var(--text-secondary)', fontWeight: 600 }}>
-          Загружаем 120 вопросов...
-        </div>
+        <h1 style={{ textAlign: 'center', padding: '24px 0 16px', fontSize: 14, color: 'var(--text-secondary)', fontWeight: 600, margin: 0 }}>
+          {t.fullent.loadingQuestions}
+        </h1>
         {/* Hero skeleton */}
         <div style={{ ...shimmerStyle, borderRadius: 22, height: 140, marginBottom: 20 }} />
         {/* Section card skeletons */}
@@ -359,10 +369,10 @@ export default function FullENT({ finish }: FullENTProps) {
             flexWrap: 'wrap', marginTop: 16,
           }}>
             {[
-              { n: '120', l: 'вопросов' },
-              { n: '5', l: 'предметов' },
-              { n: '4 ч', l: 'лимит' },
-              { n: '140', l: 'макс' },
+              { n: '120', l: t.fullent.specQuestions },
+              { n: '5', l: t.fullent.specSubjects },
+              { n: t.fullent.specTimeValue, l: t.fullent.specTimeLimit },
+              { n: '140', l: t.fullent.specMax },
             ].map((s, i) => (
               <div key={i} style={{
                 display: 'inline-flex', alignItems: 'baseline', gap: 4,
@@ -388,7 +398,7 @@ export default function FullENT({ finish }: FullENTProps) {
         fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
         letterSpacing: '0.16em', textTransform: 'uppercase',
         color: 'var(--text-muted)', marginBottom: 8, padding: '0 4px',
-      }}>разделы</div>
+      }}>{t.fullent.sectionsHeader}</div>
       <div style={{ display: "grid", gridTemplateColumns: bp === 'mobile' ? '1fr' : 'repeat(2, 1fr)', gap: 8, marginBottom: 18 }}>
         {sections.map((s, i) => {
           const isProfile = s.cnt === ENT_CONFIG.profileCnt;
@@ -579,7 +589,7 @@ export default function FullENT({ finish }: FullENTProps) {
                 <div key={qi} style={{ ...CARD_COMPACT, padding: "10px 12px", marginBottom: 4, borderLeft: `3px solid ${borderColor}` }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div style={{ fontSize: 11, color: "var(--text-body)", marginBottom: 3, fontWeight: 500, flex: 1 }}>{qi + 1}. {qq.q}</div>
-                    {sr && qt !== 'single' && <span style={{ fontSize: 9, fontWeight: 700, color: borderColor, flexShrink: 0, marginLeft: 6 }}>{sr.pts}/{sr.maxPts} б.</span>}
+                    {sr && qt !== 'single' && <span style={{ fontSize: 9, fontWeight: 700, color: borderColor, flexShrink: 0, marginLeft: 6 }}>{sr.pts}/{sr.maxPts} {t.test.pointsShort}</span>}
                   </div>
                   {qt === 'single' && (ua !== undefined ? (<div style={{ fontSize: 10, color: ok ? COLORS.green : COLORS.red, display: "flex", alignItems: "center", gap: 3 }}>
                     {ok ? <Check size={11} /> : <X size={11} />} {qq.o[ua as number]}{!ok && <span style={{ color: COLORS.green }}> → {qq.o[getSingleCorrect(qq)]}</span>}
@@ -624,11 +634,11 @@ export default function FullENT({ finish }: FullENTProps) {
     <div style={{ padding: `0 var(--content-padding) ${isDesktop ? 40 : 100}px` }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
         <BackButton onClick={goHome} label={t.test.exit} style={{ padding: "7px 11px" }} />
-        <div style={{ fontSize: 11, color: "var(--text-secondary)" }}>{totalAnswered}/120</div>
+        <div aria-label={`${t.fullent.answeredCount}: ${totalAnswered}/120`} style={{ fontSize: 11, color: "var(--text-secondary)" }}>{totalAnswered}/120</div>
         <button onClick={() => setPaused(p => !p)} style={{ ...CARD_COMPACT, background: paused ? "rgba(234,179,8,0.12)" : "var(--bg-card)", border: `1px solid ${paused ? "rgba(234,179,8,0.3)" : "var(--border)"}`, padding: "7px 9px", cursor: "pointer", color: paused ? COLORS.yellow : "var(--text-muted)", fontSize: 10, display: "inline-flex", alignItems: "center", gap: 3 }}>
           {paused ? <><Play size={12} />{t.fullent.resume}</> : <><Pause size={12} />{t.fullent.pause}</>}
         </button>
-        <div style={{ ...CARD_COMPACT, background: timeLeft < 600 ? "rgba(239,68,68,0.12)" : "var(--bg-card)", border: `1px solid ${timeLeft < 600 ? "rgba(239,68,68,0.25)" : "var(--border)"}`, padding: "7px 11px", fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color: timeLeft < 600 ? COLORS.red : "var(--text)" }}>{fm(timeLeft)}</div>
+        <div role="timer" aria-live="off" aria-label={`${t.fullent.timeRemaining}: ${fm(timeLeft)}`} style={{ ...CARD_COMPACT, background: timeLeft < 600 ? "rgba(239,68,68,0.12)" : "var(--bg-card)", border: `1px solid ${timeLeft < 600 ? "rgba(239,68,68,0.25)" : "var(--border)"}`, padding: "7px 11px", fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700, color: timeLeft < 600 ? COLORS.red : "var(--text)" }}>{fm(timeLeft)}</div>
       </div>
       {paused && !offline && <div style={{ ...CARD, background: COLORS.xpSofter, padding: "48px 20px", textAlign: "center", marginBottom: 16, animation: "slideUp 0.3s cubic-bezier(0.16,1,0.3,1)" }}>
         <Pause size={40} color='var(--ink)' style={{ marginBottom: 12 }} />
@@ -663,7 +673,7 @@ export default function FullENT({ finish }: FullENTProps) {
       </div>
       {showGrid && <div style={{ display: "grid", gridTemplateColumns: "repeat(10,1fr)", gap: 4, marginBottom: 12 }}>
         {sec!.qs.map((_qq, i) => { const a = (answers[curSec] || {})[i]; const hasAnswer = a !== undefined; return (
-          <button key={i} onClick={() => goQ(i)} style={{ background: i === curQ ? "rgba(255,90,54,0.15)" : hasAnswer ? "rgba(255,90,54,0.08)" : "var(--bg-card)", border: `1px solid ${i === curQ ? "rgba(255,90,54,0.35)" : "var(--border-light)"}`, borderRadius: 6, padding: "5px 0", cursor: "pointer", fontSize: 10, color: i === curQ ? COLORS.teal : hasAnswer ? COLORS.teal : "var(--text-muted)", fontWeight: 600 }}>{i + 1}</button>
+          <button key={i} onClick={() => goQ(i)} aria-current={i === curQ ? 'true' : undefined} aria-label={`${t.fullent.questionNumber} ${i + 1}${hasAnswer ? `, ${t.fullent.answeredWord}` : ''}`} style={{ background: i === curQ ? "rgba(255,90,54,0.15)" : hasAnswer ? "rgba(255,90,54,0.08)" : "var(--bg-card)", border: `1px solid ${i === curQ ? "rgba(255,90,54,0.35)" : "var(--border-light)"}`, borderRadius: 6, padding: "5px 0", cursor: "pointer", fontSize: 10, color: i === curQ ? COLORS.teal : hasAnswer ? COLORS.teal : "var(--text-muted)", fontWeight: 600 }}>{i + 1}</button>
         ); })}
       </div>}
       <ProgressBar value={curQ + 1} max={sec!.qs.length} gradient={`linear-gradient(90deg,${COLORS.accent},${COLORS.amber})`} style={{ marginBottom: 12 }} />
@@ -722,10 +732,10 @@ export default function FullENT({ finish }: FullENTProps) {
       </div>
       <button onClick={() => setShowFinishConfirm(true)} style={{ width: "100%", padding: "13px", marginTop: 10, background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)", borderRadius: 12, color: COLORS.red, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>{t.fullent.finishEarly}</button>
       {showFinishConfirm && <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => setShowFinishConfirm(false)}>
-        <div style={{ background: "var(--bg-card)", borderRadius: 18, padding: 24, maxWidth: 320, width: "100%", textAlign: "center" }} onClick={e => e.stopPropagation()}>
+        <div ref={finishConfirmRef} role="dialog" aria-modal="true" aria-label={t.fullent.finishEarlyConfirm} tabIndex={-1} style={{ background: "var(--bg-card)", borderRadius: 18, padding: 24, maxWidth: 320, width: "100%", textAlign: "center" }} onClick={e => e.stopPropagation()}>
           <Flag size={28} color={COLORS.red} style={{ marginBottom: 10 }} />
           <p style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", marginBottom: 6 }}>{t.fullent.finishEarlyConfirm}</p>
-          <p style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 18 }}>{totalAnswered}/120 отвечено</p>
+          <p style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 18 }}>{totalAnswered}/120 {t.fullent.answeredWord}</p>
           <div style={{ display: "flex", gap: 8 }}>
             <button onClick={() => setShowFinishConfirm(false)} style={{ flex: 1, padding: 12, background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: "pointer", color: "var(--text)" }}>{t.fullent.resume}</button>
             <button onClick={() => { setShowFinishConfirm(false); finishENT(); }} style={{ flex: 1, padding: 12, background: COLORS.red, border: "none", borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#fff" }}>{t.fullent.finishEarly}</button>

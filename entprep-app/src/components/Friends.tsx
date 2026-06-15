@@ -182,6 +182,7 @@ export default function Friends() {
               value={nicknameInput}
               onChange={e => { setNicknameInput(e.target.value.replace(/[^a-zA-Z0-9_]/g, '')); setNicknameError(''); }}
               placeholder="my_nickname"
+              aria-label={t.friends.chooseNickname}
               maxLength={20}
               style={{
                 flex: 1,
@@ -295,6 +296,7 @@ export default function Friends() {
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           placeholder={t.friends.searchPlaceholder}
+          aria-label={t.friends.searchPlaceholder}
           style={{
             width: '100%',
             padding: '12px 12px 12px 36px',
@@ -422,13 +424,14 @@ export default function Friends() {
 
 function Avatar({ url, name, size }: { url: string | null; name: string; size: number }) {
   const initials = name.slice(0, 2).toUpperCase();
-  if (url) {
+  const [failed, setFailed] = useState(false);
+  if (url && !failed) {
     return (
       <img
         src={url}
         alt={name}
         style={{ width: size, height: size, borderRadius: size * 0.3, objectFit: 'cover', flexShrink: 0 }}
-        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+        onError={() => setFailed(true)}
       />
     );
   }

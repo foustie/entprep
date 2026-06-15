@@ -35,18 +35,23 @@ export default function ProfileTab() {
   const submitRecover = async () => {
     const id = recoverOrderId.trim();
     if (!/^\d+$/.test(id)) {
-      toast.error('Введите номер заказа (только цифры)');
+      toast.error(t.profile.recoverOrderError);
       return;
     }
     setRecoverBusy(true);
     try {
       const result = await reconcileMyOrder(id);
       await refreshUser();
-      toast.success(`Премиум активирован до ${new Date(result.premiumUntil).toLocaleDateString('ru-RU')}`);
+      toast.success(
+        t.profile.recoverSuccess.replace(
+          '{date}',
+          new Date(result.premiumUntil).toLocaleDateString(st.lang === 'kk' ? 'kk-KZ' : 'ru-RU'),
+        ),
+      );
       setRecoverOpen(false);
       setRecoverOrderId('');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Ошибка');
+      toast.error(err instanceof Error ? err.message : t.profile.recoverGenericError);
     } finally {
       setRecoverBusy(false);
     }
@@ -152,7 +157,7 @@ export default function ProfileTab() {
                 fontFamily: FF.mono, fontSize: 10, fontWeight: 800,
                 color: '#8A5B00', letterSpacing: '0.05em',
               }}>
-                ур. {lvl.level} · {totalXP} XP
+                {t.profile.levelShort} {lvl.level} · {totalXP} XP
               </span>
             </div>
           </div>
@@ -179,7 +184,7 @@ export default function ProfileTab() {
                   cursor: 'pointer',
                 }}
               >
-                ✎ выбери ник
+                ✎ {t.profile.chooseNick}
               </button>
             ) : (
               <div style={{
@@ -243,7 +248,7 @@ export default function ProfileTab() {
                   cursor: 'pointer', padding: '4px 8px',
                 }}
               >
-                Оплатил, но PRO не активирован? Восстановить
+                {t.profile.recoverPrompt}
               </button>
             ) : (
               <div style={{
@@ -258,7 +263,7 @@ export default function ProfileTab() {
                   fontFamily: FF.body, fontSize: 12, fontWeight: FW.semibold,
                   color: COLORS.textSecondary, lineHeight: 1.4,
                 }}>
-                  Номер заказа из письма Lemon Squeezy («Order #12345»):
+                  {t.profile.recoverOrderHint}
                 </div>
                 <input
                   type="text"
@@ -293,7 +298,7 @@ export default function ProfileTab() {
                       opacity: !recoverOrderId || recoverBusy ? 0.6 : 1,
                     }}
                   >
-                    {recoverBusy ? 'Проверка…' : 'Восстановить'}
+                    {recoverBusy ? t.profile.recoverChecking : t.profile.recoverSubmit}
                   </button>
                   <button
                     onClick={() => { setRecoverOpen(false); setRecoverOrderId(''); }}
@@ -307,7 +312,7 @@ export default function ProfileTab() {
                       cursor: 'pointer',
                     }}
                   >
-                    Отмена
+                    {t.profile.recoverCancel}
                   </button>
                 </div>
               </div>

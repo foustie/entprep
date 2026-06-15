@@ -1,6 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { FF } from '../../constants/styles';
 
 interface BottomSheetProps {
@@ -14,16 +15,8 @@ export default function BottomSheet({ visible, onClose, children }: BottomSheetP
   const isDesktop = bp === 'desktop';
   const sheetRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!visible) return;
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', handleKey);
-    // Focus the sheet on open for accessibility
-    sheetRef.current?.focus();
-    return () => document.removeEventListener('keydown', handleKey);
-  }, [visible, onClose]);
+  // Dialog a11y: move focus into the sheet, trap Tab, Escape to close, restore focus on close.
+  useFocusTrap(sheetRef, visible, onClose);
 
   if (!visible) return null;
   return createPortal(

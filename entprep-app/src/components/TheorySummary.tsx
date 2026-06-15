@@ -5,6 +5,7 @@ import { CARD_COMPACT, TYPE, COLORS } from '../constants/styles';
 import { useNav } from '../contexts/NavigationContext';
 import { useApp } from '../contexts/AppContext';
 import { useT } from '../locales';
+import { pluralizeForms } from '../utils/formatters';
 import BackButton from './ui/BackButton';
 import SubjectIcon from './ui/SubjectIcon';
 import { Play, MessageCircle, BookOpen, ChevronRight, ChevronDown } from 'lucide-react';
@@ -106,8 +107,8 @@ export default function TheorySummary({ sid, topicId }: Props) {
             <BookOpen size={22} color={sub?.color || COLORS.teal} />
           </div>
           <div>
-            <div style={{ ...TYPE.h2, fontSize: 16 }}>{name}</div>
-            <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{isKk ? 'Конспект' : 'Конспект по теме'}</div>
+            <h1 style={{ ...TYPE.h2, fontSize: 16, margin: 0 }}>{name}</h1>
+            <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{t.theory.topicSummary}</div>
           </div>
         </div>
 
@@ -128,27 +129,28 @@ export default function TheorySummary({ sid, topicId }: Props) {
                 }}
               >
                 <Play size={16} />
-                {isKk ? 'Тест тапсыру' : 'Проверь себя'}
+                {t.theory.checkYourself}
               </button>
               <a
-                href={`https://wa.me/77052340280?text=${encodeURIComponent(`Конспект: ${name}. Предложение: `)}`}
+                href={`https://wa.me/77052340280?text=${encodeURIComponent(t.theory.fixMessage.replace('{topic}', name))}`}
                 target="_blank" rel="noopener noreferrer"
+                aria-label={t.theory.fix}
                 style={{
                   padding: '14px 18px', borderRadius: 12,
-                  background: 'var(--bg-card)', border: '1px solid var(--border-light)',
-                  color: 'var(--text-secondary)', fontSize: 11, fontWeight: 600,
+                  background: 'var(--bg-card)', border: '1px solid var(--border-md)',
+                  color: 'var(--text)', fontSize: 12, fontWeight: 700,
                   cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none',
                 }}
               >
-                <MessageCircle size={14} />
-                {isKk ? 'Түзету' : 'Исправить'}
+                <MessageCircle size={14} aria-hidden="true" />
+                {t.theory.fix}
               </a>
             </div>
           </>
         ) : (
           <div style={{ ...CARD_COMPACT, padding: '40px 20px', textAlign: 'center' }}>
             <BookOpen size={32} color="var(--text-muted)" style={{ marginBottom: 10, opacity: 0.5 }} />
-            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{isKk ? 'Конспект әзірленуде' : 'Конспект скоро появится'}</div>
+            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{t.theory.summarySoon}</div>
           </div>
         )}
       </div>
@@ -166,22 +168,22 @@ export default function TheorySummary({ sid, topicId }: Props) {
           <SubjectIcon sid={sid} size={24} color={sub?.color || COLORS.teal} />
         </div>
         <div>
-          <div style={{ ...TYPE.h2, fontSize: 18 }}>{isKk ? 'Конспекттер' : 'Теория'}</div>
+          <h1 style={{ ...TYPE.h2, fontSize: 18, margin: 0 }}>{t.theory.title}</h1>
           <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
             {(t.subjects as Record<string, string>)[sid] || sub?.name}
-            {allSummaries && ` • ${Object.keys(allSummaries).length} ${isKk ? 'тақырып' : 'тем'}`}
+            {allSummaries && ` • ${Object.keys(allSummaries).length} ${pluralizeForms(Object.keys(allSummaries).length, t.theory.topicsWord)}`}
           </div>
         </div>
       </div>
 
       {loading ? (
         <div style={{ ...CARD_COMPACT, padding: '40px 20px', textAlign: 'center' }}>
-          <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{isKk ? 'Жүктелуде...' : 'Загрузка...'}</div>
+          <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{t.loading}</div>
         </div>
       ) : !allSummaries || !topics ? (
         <div style={{ ...CARD_COMPACT, padding: '40px 20px', textAlign: 'center' }}>
           <BookOpen size={32} color="var(--text-muted)" style={{ marginBottom: 10, opacity: 0.5 }} />
-          <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{isKk ? 'Конспекттер әзірленуде' : 'Конспекты по этому предмету скоро появятся'}</div>
+          <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{t.theory.subjectSummariesSoon}</div>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -216,7 +218,7 @@ export default function TheorySummary({ sid, topicId }: Props) {
                   <div style={{ marginLeft: 11, flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{sectionName}</div>
                     <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
-                      {hasSubs ? `${subsWithSummaries.length} ${isKk ? 'конспект' : 'конспектов'}` : (isKk ? 'Конспект' : 'Конспект')}
+                      {hasSubs ? `${subsWithSummaries.length} ${pluralizeForms(subsWithSummaries.length, t.theory.summariesWord)}` : t.theory.summary}
                     </div>
                   </div>
                   {hasSubs

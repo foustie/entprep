@@ -22,6 +22,10 @@ export default function Chip({
 }: ChipProps) {
   const base: React.CSSProperties = {
     padding: '7px 14px',
+    minHeight: 44,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: 999,
     fontFamily: "'Nunito',sans-serif",
     fontSize: 12,
@@ -37,7 +41,12 @@ export default function Chip({
   };
 
   return (
-    <button onClick={onClick} style={{ ...base, ...style }}>
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      style={{ ...base, ...style }}
+    >
       {children}
     </button>
   );

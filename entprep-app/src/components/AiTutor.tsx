@@ -59,7 +59,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
   const handleSendRef = useRef<(text?: string) => void>(() => {});
 
   const handleCameraClick = () => {
-    if (!user) { toast.warning(isKk ? 'Кіру қажет' : 'Войдите в аккаунт'); return; }
+    if (!user) { toast.warning(t.test.loginRequired); return; }
     if (!isPremium) { trackEvent('AI Tutor Camera Paywall'); setShowPaywall(true); return; }
     fileInputRef.current?.click();
   };
@@ -70,18 +70,18 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
     if (!file) return;
     const MAX_SIZE = 3 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
-      toast.warning(isKk ? 'Сурет тым үлкен (3 МБ-тан көп)' : 'Фото слишком большое (больше 3 МБ)');
+      toast.warning(t.tutor.photoTooLarge);
       return;
     }
     if (!/^image\/(jpeg|jpg|png|webp|heic|heif)$/i.test(file.type)) {
-      toast.warning(isKk ? 'JPG, PNG немесе WebP жүктеңіз' : 'Загрузите JPG, PNG или WebP');
+      toast.warning(t.tutor.photoBadFormat);
       return;
     }
     const reader = new FileReader();
     reader.onload = () => {
       const dataUrl = typeof reader.result === 'string' ? reader.result : '';
       if (!dataUrl) return;
-      const caption = isKk ? 'Тапсырманы шеш' : 'Реши эту задачу';
+      const caption = t.tutor.photoCaption;
       const userMsg: TutorMessage = {
         role: 'user',
         content: caption + '\n\n![image](' + dataUrl + ')',
@@ -89,9 +89,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
       };
       setMessages(prev => [...prev, userMsg, {
         role: 'assistant',
-        content: isKk
-          ? 'Фото қабылдандым. Суреттен оқу жақын арада қосылады 💜'
-          : 'Фото получил. Разбор по изображению подключим скоро 💜',
+        content: t.tutor.photoReceived,
         timestamp: Date.now(),
       }]);
       trackEvent('AI Tutor Photo Sent', { size: file.size });
@@ -148,7 +146,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
       await new Promise(r => setTimeout(r, 0));
     }
     sendingRef.current = true;
-    if (!user) { toast.error(isKk ? 'Кіру қажет' : 'Войдите в аккаунт'); sendingRef.current = false; return; }
+    if (!user) { toast.error(t.test.loginRequired); sendingRef.current = false; return; }
     if (!isPremium && !consumeTutorLimit()) {
       trackEvent('AI Tutor Limit Hit');
       setShowPaywall(true);
@@ -184,7 +182,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
       });
       trackEvent('tutor_message', { subject, mode });
     } catch (e: unknown) {
-      const errMsg = e instanceof Error ? e.message : 'Ошибка';
+      const errMsg = e instanceof Error ? e.message : t.tutor.errorWord;
       // Replace placeholder with error message
       setMessages(prev => {
         const updated = [...prev];
@@ -193,7 +191,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
             role: 'assistant',
             content: errMsg.includes('Лимит')
               ? errMsg.replace(/^Error:\s*/, '')
-              : (isKk ? 'Қате орын алды. Қайтадан жіберіп көріңіз.' : `Ошибка: ${errMsg}. Попробуй ещё раз.`),
+              : t.tutor.sendError.replace('{err}', errMsg),
             timestamp: Date.now(),
           };
         }
@@ -233,7 +231,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
     setTopicId(tid);
     setShowSubjectPicker(false);
     const name = getTopicName(sid, tid);
-    handleSend(isKk ? `Тақырыпты түсіндір: ${name}` : `Объясни мне тему: ${name}`);
+    handleSend(t.tutor.explainTopicPrompt.replace('{topic}', name));
   };
 
   const padBottom = bp === 'desktop' ? 40 : 100;
@@ -245,20 +243,20 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
   if (messages.length === 0 && !showSubjectPicker) {
     const suggestions: { label: string; onClick: () => void }[] = [
       {
-        label: isKk ? 'Тақырыпты түсіндір' : 'Объясни тему',
+        label: t.tutor.sgExplainTopic,
         onClick: () => setShowSubjectPicker(true),
       },
       {
-        label: isKk ? 'Жоспар құр' : 'Составь план',
-        onClick: () => handleQuickAction('plan', '', '', isKk ? 'Маған ҰБТ-ға дайындық жоспарын құр' : 'Составь мне план подготовки к ЕНТ'),
+        label: t.tutor.sgMakePlan,
+        onClick: () => handleQuickAction('plan', '', '', t.tutor.sgMakePlanMsg),
       },
       {
-        label: isKk ? 'Қателерді талда' : 'Разбери ошибки',
-        onClick: () => handleQuickAction('errors', '', '', isKk ? 'Менің қателерімді талда' : 'Проанализируй мои ошибки и найди паттерн'),
+        label: t.tutor.sgReviewErrors,
+        onClick: () => handleQuickAction('errors', '', '', t.tutor.sgReviewErrorsMsg),
       },
       {
-        label: isKk ? 'Мен қорқамын' : 'Мне страшно',
-        onClick: () => handleQuickAction('support', '', '', isKk ? 'Мен ҰБТ-дан қорқамын' : 'Я боюсь ЕНТ. Мне нужна поддержка'),
+        label: t.tutor.sgScared,
+        onClick: () => handleQuickAction('support', '', '', t.tutor.sgScaredMsg),
       },
     ];
 
@@ -276,7 +274,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
             width: 38, height: 38, borderRadius: 11,
             background: COLORS.streak, border: `2px solid ${COLORS.xp}`,
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            color: '#fff', fontFamily: FF.display,
+            color: '#fff', fontFamily: FF.brand,
             fontWeight: 900, fontSize: 16, letterSpacing: '-0.04em',
             flexShrink: 0,
           }}>
@@ -291,12 +289,12 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
             <div style={{
               fontFamily: FF.display, fontSize: 13, fontWeight: 900,
               color: 'var(--text)', letterSpacing: '-0.02em', lineHeight: 1.1,
-            }}>Дияр</div>
+            }}>{t.tutor.name}</div>
             <div style={{
               fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 800,
               letterSpacing: '0.12em', textTransform: 'uppercase',
               color: COLORS.win, marginTop: 1,
-            }}>онлайн · {isPremium ? 'PRO' : getTutorRemaining() + '/10'}</div>
+            }}>{t.tutor.online} · {isPremium ? 'PRO' : getTutorRemaining() + '/10'}</div>
           </div>
         </div>
 
@@ -310,7 +308,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
             width: 28, height: 28, borderRadius: 8,
             background: COLORS.streak, border: '1.5px solid var(--ink)',
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            color: '#fff', fontFamily: FF.display,
+            color: '#fff', fontFamily: FF.brand,
             fontWeight: 900, fontSize: 12, letterSpacing: '-0.04em',
             flexShrink: 0, marginBottom: 2,
           }}>Д</div>
@@ -325,15 +323,13 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
             color: 'var(--text)', lineHeight: 1.55,
           }}>
             <div style={{ marginBottom: 8 }}>
-              {isKk
-                ? 'Сәлем! Мен — Дияр. ҰБТ сұрақтарын бірге талдаймыз, тапсырма шешемін, жоспар құрамын. Қысқасы — нағыз репетитор, тек тегін және 24/7.'
-                : 'Привет! Я Дияр — твой AI-репетитор. Разберу любую задачу по шагам, объясню тему простыми словами, составлю план подготовки. Можно скинуть фото задачи — решу. 24/7, бесплатно.'}
+              {t.tutor.welcome}
             </div>
             <div style={{
               fontFamily: "'JetBrains Mono',monospace", fontSize: 9.5, fontWeight: 800,
               letterSpacing: '0.1em', textTransform: 'uppercase',
               color: 'var(--text-muted)',
-            }}>{isKk ? 'Пиши не стесняйся ↓' : 'Спроси что-нибудь ↓'}</div>
+            }}>{t.tutor.welcomeHint}</div>
           </div>
         </div>
 
@@ -380,7 +376,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
                 {recording ? <MicOff size={17} strokeWidth={2.4} /> : <Mic size={17} strokeWidth={2.4} />}
               </button>
             )}
-            <button onClick={handleCameraClick} style={iconBtnStyle('var(--bg-card)', 'var(--text-muted)')} aria-label="camera">
+            <button onClick={handleCameraClick} style={iconBtnStyle('var(--bg-card)', 'var(--text-muted)')} aria-label={t.tutor.cameraLabel}>
               <Camera size={17} strokeWidth={2.4} />
               {!isPremium && <span style={proDotStyle} />}
             </button>
@@ -392,7 +388,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
               onBeforeInput={e => { if ((e as unknown as { inputType: string }).inputType === 'insertLineBreak') { e.preventDefault(); handleSend(); } }}
               enterKeyHint="send"
               inputMode="text"
-              placeholder={isKk ? 'Кез келген сұрақ қой...' : 'Задай любой вопрос...'}
+              placeholder={t.tutor.inputPlaceholderAny}
               rows={1}
               style={{
                 flex: 1, padding: '11px 14px', borderRadius: 12,
@@ -404,7 +400,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
                 lineHeight: 1.4,
               }}
             />
-            <button onClick={() => handleSend()} disabled={!input.trim()} style={{
+            <button onClick={() => handleSend()} disabled={!input.trim()} aria-label={t.tutor.sendLabel} style={{
               width: 44, height: 44, borderRadius: 12, flexShrink: 0,
               background: input.trim()
                 ? `linear-gradient(180deg, #FF6A47 0%, ${COLORS.streak} 100%)`
@@ -415,7 +411,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
               cursor: input.trim() ? 'pointer' : 'default',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <Send size={17} strokeWidth={2.6} />
+              <Send size={17} strokeWidth={2.6} aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -438,11 +434,11 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
           fontFamily: FF.display, fontSize: 22, fontWeight: 900,
           color: 'var(--text)', letterSpacing: '-0.035em', margin: '0 0 6px',
           lineHeight: 1.1,
-        }}>{isKk ? 'Пәнді таңда' : 'Выбери тему'}</div>
+        }}>{t.tutor.pickerTitle}</div>
         <div style={{
           fontFamily: "'Nunito',sans-serif", fontSize: 12.5, fontWeight: 700,
           color: 'var(--text-secondary)', margin: '0 0 18px',
-        }}>{isKk ? 'Дияр объяснит по Сократу' : 'Дияр объяснит пошагово'}</div>
+        }}>{t.tutor.pickerSubtitle}</div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {allSubs.map(s => {
@@ -554,7 +550,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
           background: COLORS.streak,
           border: `2px solid ${COLORS.xp}`,
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-          color: '#fff', fontFamily: FF.display,
+          color: '#fff', fontFamily: FF.brand,
           fontWeight: 900, fontSize: 16, letterSpacing: '-0.04em',
           flexShrink: 0,
         }}>
@@ -570,14 +566,14 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
           <div style={{
             fontFamily: FF.display, fontSize: 13, fontWeight: 900,
             color: 'var(--text)', letterSpacing: '-0.02em', lineHeight: 1.1,
-          }}>Дияр</div>
+          }}>{t.tutor.name}</div>
           <div style={{
             fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 800,
             letterSpacing: '0.12em', textTransform: 'uppercase',
             color: COLORS.win, marginTop: 1,
-          }}>онлайн · {isPremium ? 'PRO' : getTutorRemaining() + '/' + 10}</div>
+          }}>{t.tutor.online} · {isPremium ? 'PRO' : getTutorRemaining() + '/' + 10}</div>
         </div>
-        <button onClick={() => setShowSupport(s => !s)} style={{
+        <button onClick={() => setShowSupport(s => !s)} aria-label={t.tutor.supportTitle} aria-pressed={showSupport} style={{
           width: 34, height: 34, borderRadius: 10,
           background: showSupport ? 'rgba(236,72,153,0.12)' : 'transparent',
           border: showSupport ? '1.5px solid rgba(236,72,153,0.35)' : '1.5px solid rgba(15,15,16,0.12)',
@@ -585,7 +581,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
           color: showSupport ? '#ec4899' : 'var(--text-muted)',
           flexShrink: 0,
         }}>
-          <Heart size={15} fill={showSupport ? '#ec4899' : 'none'} strokeWidth={2.2} />
+          <Heart size={15} fill={showSupport ? '#ec4899' : 'none'} strokeWidth={2.2} aria-hidden="true" />
         </button>
       </div>
 
@@ -603,14 +599,12 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
             fontFamily: FF.display, fontSize: 11, fontWeight: 900,
             letterSpacing: '0.06em', textTransform: 'uppercase',
             color: '#ec4899', marginBottom: 6,
-          }}>💜 поддержать</div>
+          }}>💜 {t.tutor.supportTitle}</div>
           <div style={{
             fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 600,
             color: 'var(--text-secondary)', marginBottom: 10, lineHeight: 1.5,
           }}>
-            {isKk
-              ? 'Мен, Дияр, 17 жастамын. Әр AI хабарлама маған ақша тұрады. Бірақ мен мұны тегін қалдырғым келеді.'
-              : 'Я Дияр, мне 17. Каждое AI-сообщение стоит денег. Но я хочу, чтобы это было бесплатным.'}
+            {t.tutor.supportText}
           </div>
           <div style={{
             padding: '10px 14px', borderRadius: 10,
@@ -643,7 +637,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
                 border: showAvatar ? '1.5px solid var(--ink)' : 'none',
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                 color: showAvatar ? '#fff' : 'transparent',
-                fontFamily: FF.display,
+                fontFamily: FF.brand,
                 fontWeight: 900, fontSize: 12, letterSpacing: '-0.04em',
                 flexShrink: 0, marginBottom: 2,
               }}>
@@ -677,7 +671,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
                     }} />
                   ))}
                 </div>
-              ) : msg.role === 'assistant' ? renderBold(msg.content) : renderUserContent(msg.content)}
+              ) : msg.role === 'assistant' ? renderBold(msg.content) : renderUserContent(msg.content, t.tutor.imageAlt)}
             </div>
           </div>
         );
@@ -690,7 +684,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
             width: 28, height: 28, borderRadius: 8,
             background: COLORS.streak, border: '1.5px solid var(--ink)',
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            color: '#fff', fontFamily: FF.display,
+            color: '#fff', fontFamily: FF.brand,
             fontWeight: 900, fontSize: 12, letterSpacing: '-0.04em',
             flexShrink: 0, marginBottom: 2,
           }}>Д</div>
@@ -731,7 +725,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
           )}
 
           {/* Camera button (premium) */}
-          <button onClick={handleCameraClick} style={iconBtnStyle('var(--bg-card)', 'var(--text-muted)')} aria-label="camera">
+          <button onClick={handleCameraClick} style={iconBtnStyle('var(--bg-card)', 'var(--text-muted)')} aria-label={t.tutor.cameraLabel}>
             <Camera size={17} strokeWidth={2.4} />
             {!isPremium && <span style={proDotStyle} />}
           </button>
@@ -744,7 +738,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
             onBeforeInput={e => { if ((e as unknown as { inputType: string }).inputType === 'insertLineBreak') { e.preventDefault(); handleSend(); } }}
             enterKeyHint="send"
             inputMode="text"
-            placeholder={isPremium ? (isKk ? 'Сұрақ қой...' : 'Спроси что-нибудь...') : (isKk ? `Сұрақ қой... (${getTutorRemaining()}/10)` : `Спроси что-нибудь... (${getTutorRemaining()}/10)`)}
+            placeholder={isPremium ? t.tutor.inputPlaceholder : t.tutor.inputPlaceholderLimit.replace('{n}', String(getTutorRemaining()))}
             rows={1}
             style={{
               flex: 1, padding: '11px 14px', borderRadius: 12,
@@ -758,7 +752,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
             }}
           />
 
-          <button onClick={() => handleSend()} disabled={!input.trim() || loading} style={{
+          <button onClick={() => handleSend()} disabled={!input.trim() || loading} aria-label={t.tutor.sendLabel} style={{
             width: 44, height: 44, borderRadius: 12, flexShrink: 0,
             background: input.trim() && !loading
               ? `linear-gradient(180deg, #FF6A47 0%, ${COLORS.streak} 100%)`
@@ -769,7 +763,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
             cursor: input.trim() && !loading ? 'pointer' : 'default',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <Send size={17} strokeWidth={2.6} />
+            <Send size={17} strokeWidth={2.6} aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -801,14 +795,14 @@ const proDotStyle: React.CSSProperties = {
 };
 
 // Renders a user message — extracts inline `![image](data:...)` and shows thumbnail
-function renderUserContent(content: string): React.ReactNode {
+function renderUserContent(content: string, imageAlt: string): React.ReactNode {
   const match = content.match(/^([\s\S]*?)\n\n!\[image\]\((data:image\/[^)]+)\)\s*$/);
   if (match) {
     const [, text, src] = match;
     return (
       <>
         {text && <div style={{ marginBottom: 8 }}>{text}</div>}
-        <img src={src} alt="задача" style={{
+        <img src={src} alt={imageAlt} style={{
           display: 'block', maxWidth: '100%', borderRadius: 10,
           border: '1.5px solid rgba(255,255,255,0.35)',
         }} />

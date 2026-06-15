@@ -21,10 +21,10 @@
 - ЗАПРЕЩЕНО: сырые hex в TSX (только токены/переменные), teal/коричневый, фиолетовые градиенты, серый-50.
 
 ## Типографика (3 семьи, только через `FF` и `TYPE`)
-- **Unbounded** (`FF.display`, `TYPE.h1/h2/h3/display`) — заголовки и hero-цифры. h1 26px/800 — один на экран; h2 18px/700; h3 14px/700. Межбуквенный минус (-0.02…-0.045em).
+- **Display** (`FF.display`, `TYPE.h1/h2/h3/display`) — заголовки и hero-цифры. h1 26px/800 — один на экран; h2 18px/700; h3 14px/700. Межбуквенный минус (-0.02…-0.045em). Семейство идёт через CSS-переменную `--ff-display`: **RU = Unbounded**, **KK = Rubik** (у Unbounded нет казахских глифов ә/ғ/қ/ң/ө/ұ/ү/һ — переключается по `html:lang(kk)`).
 - **Nunito** (`FF.body`, `TYPE.body/bodySmall/caption`) — весь текст. body 14px/1.65, bodySmall 12px, caption 11px.
 - **JetBrains Mono** (`FF.mono`, `TYPE.eyebrow/statLabel/stat`) — цифры и ярлыки. eyebrow: 10px/800, UPPERCASE, letter-spacing 0.16em (`• ЕНТ 2026 •`). Любое меняющееся число — mono + `fontVariantNumeric: 'tabular-nums'`.
-- ЗАПРЕЩЕНО: inline `'Unbounded',sans-serif` (только `FF.*`), Inter/Roboto/Segoe UI, произвольные размеры (13.5, 15.5…) — бери ближайший из `FS`.
+- ЗАПРЕЩЕНО: inline `'Unbounded',sans-serif` (только `FF.*`/`TYPE.*` — иначе казахские заголовки сломаются, минуя `--ff-display`), Inter/Roboto/Segoe UI, произвольные размеры (13.5, 15.5…) — бери ближайший из `FS`.
 
 ## Сетка и отступы
 - Отступы строго по 4px-сетке: `SP` = 4/8/12/16/20/24/32. Никаких 18, 22, 28-там-где-24.

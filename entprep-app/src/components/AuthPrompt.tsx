@@ -214,7 +214,7 @@ export default function AuthPrompt({ onFinish }: AuthPromptProps) {
           fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
           letterSpacing: '0.18em', textTransform: 'uppercase',
           color: COLORS.streak, textAlign: 'center', marginBottom: 8,
-        }}>• 5 секунд •</div>
+        }}>{t.authPrompt.eyebrow}</div>
 
         <h2 style={{
           fontFamily: FF.display,

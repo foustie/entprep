@@ -216,7 +216,12 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
 
                 {/* Main clickable area */}
                 <div
+                  role="button"
+                  tabIndex={0}
+                  aria-expanded={canExpand ? isExpanded : undefined}
+                  aria-label={isKk && tp.name_kk ? tp.name_kk : tp.name}
                   onClick={canExpand ? () => toggleSection(tp.id) : () => nav("test", sid, tp.id)}
+                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (canExpand) toggleSection(tp.id); else nav("test", sid, tp.id); } }}
                   style={{ display: "flex", alignItems: "center", flex: 1, cursor: "pointer", gap: 11, padding: '11px 12px', minWidth: 0 }}
                 >
                   <div style={{
@@ -282,8 +287,10 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
                   </button>
                 )}
 
-                {/* Expand chevron */}
+                {/* Expand chevron — redundant control mirroring the main row action;
+                    hidden from a11y tree to avoid a duplicate tab stop / announcement */}
                 <div
+                  aria-hidden="true"
                   onClick={canExpand ? () => toggleSection(tp.id) : () => nav("test", sid, tp.id)}
                   style={{
                     cursor: "pointer", display: "flex", alignItems: "center", justifyContent: 'center',

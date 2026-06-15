@@ -20,7 +20,7 @@ export default function OfflineBanner() {
   if (!offline) return null;
 
   return (
-    <div style={{
+    <div role="status" aria-live="polite" style={{
       position: 'fixed', top: 0, left: '50%', transform: 'translateX(-50%)',
       width: '100%', maxWidth: 480, zIndex: 10000,
       background: 'linear-gradient(90deg, #b45309, #d97706)',
@@ -30,7 +30,7 @@ export default function OfflineBanner() {
       willChange: 'opacity,transform',
       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
     }}>
-      <WifiOff size={14} />{t.pwa.offline}
+      <WifiOff size={14} aria-hidden="true" />{t.pwa.offline}
     </div>
   );
 }

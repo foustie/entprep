@@ -1,5 +1,7 @@
 import { SUBJECT_META } from '../../config/subjects';
 import { FF } from '../../constants/styles';
+import { useT } from '../../locales';
+import { pluralizeForms } from '../../utils/formatters';
 import SubjectIcon from './SubjectIcon';
 import type { TestResult } from '../../types';
 
@@ -18,6 +20,7 @@ interface SubjectGrowth {
 }
 
 export default function GrowthStats({ hist }: Props) {
+  const t = useT();
   const tests = hist.filter(h => h.type !== 'fullent' && h.type !== 'rush' && h.su && h.sc != null);
   if (tests.length < 3) return null;
 
@@ -64,7 +67,7 @@ export default function GrowthStats({ hist }: Props) {
         fontSize: 14, fontWeight: 700, fontFamily: FF.body,
         color: 'var(--text)', marginBottom: 12,
       }}>
-        Твой рост
+        {t.analytics.growthTitle}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {growth.map(g => (
@@ -80,7 +83,7 @@ export default function GrowthStats({ hist }: Props) {
                 {g.name}
               </div>
               <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: FF.body }}>
-                {g.firstAvg}% → {g.latestAvg}% · {g.tests} тестов
+                {g.firstAvg}% → {g.latestAvg}% · {g.tests} {pluralizeForms(g.tests, t.analytics.testsForms)}
               </div>
             </div>
             <div style={{

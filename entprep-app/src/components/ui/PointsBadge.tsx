@@ -1,10 +1,12 @@
 import { COLORS } from '../../constants/styles';
+import { useT } from '../../locales';
 
 interface PointsBadgeProps {
   pts: number;
 }
 
 export default function PointsBadge({ pts }: PointsBadgeProps) {
+  const t = useT();
   return (
     <span style={{
       padding: '2px 7px', borderRadius: 6,
@@ -13,7 +15,7 @@ export default function PointsBadge({ pts }: PointsBadgeProps) {
       fontSize: 9, fontWeight: 700,
       whiteSpace: 'nowrap',
     }}>
-      {pts} б.
+      {pts} {t.home.pointsShort}
     </span>
   );
 }

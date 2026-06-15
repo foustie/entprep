@@ -110,7 +110,7 @@ export default function Adaptive() {
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ weak: weakWithTopics, strong: strongData, overall, totalTests, streak, lang: st.lang }),
       });
-      if (res.status === 403) { setPlanError('AI план на сегодня недоступен. Попробуйте завтра.'); setPlanLoading(false); return; }
+      if (res.status === 403) { setPlanError(t.adaptive.planQuotaReached); setPlanLoading(false); return; }
       if (!res.ok) { const err = await res.json().catch(() => ({})); setPlanError((err as Record<string, string>).error || t.adaptive.planError); toast.error(t.adaptive.planError, { action: generatePlan, actionLabel: t.adaptive.retry }); setPlanLoading(false); return; }
       const json = await res.json();
       consumePlanLimit(); // consume limit only on success
@@ -162,30 +162,34 @@ export default function Adaptive() {
     if (!stats) return null;
     return (
       <div style={{ paddingLeft: 50, paddingTop: 6, paddingBottom: 6 }}>
-        {stats.map(t => {
-          const key = `${subjectId}:${t.id}`;
-          const hasSubtopics = calcSubtopicStats(subjectId, t.id, hist) !== null;
+        {stats.map(ts => {
+          const key = `${subjectId}:${ts.id}`;
+          const hasSubtopics = calcSubtopicStats(subjectId, ts.id, hist) !== null;
           const isSectionOpen = expandedSection[key];
           const stStats = subtopicCache[key];
           return (
-            <div key={t.id}>
+            <div key={ts.id}>
               <div
+                role={hasSubtopics ? "button" : undefined}
+                tabIndex={hasSubtopics ? 0 : undefined}
+                aria-expanded={hasSubtopics ? !!isSectionOpen : undefined}
+                onKeyDown={hasSubtopics ? (e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSection(subjectId, ts.id); } }) : undefined}
                 style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 7, cursor: hasSubtopics ? "pointer" : "default" }}
-                onClick={() => hasSubtopics && toggleSection(subjectId, t.id)}
+                onClick={() => hasSubtopics && toggleSection(subjectId, ts.id)}
               >
-                
+
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 3 }}>
-                    <span style={{ fontSize: 12, color: "var(--text-body)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{isKk && t.name_kk ? t.name_kk : t.name}</span>
-                    <span style={{ fontSize: 12, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace", color: t.pct < 0 ? "var(--text-muted)" : scoreColor(t.pct), flexShrink: 0, marginLeft: 6 }}>
-                      {t.pct < 0 ? "\u2014" : t.pct + "%"}
+                    <span style={{ fontSize: 12, color: "var(--text-body)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{isKk && ts.name_kk ? ts.name_kk : ts.name}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace", color: ts.pct < 0 ? "var(--text-muted)" : scoreColor(ts.pct), flexShrink: 0, marginLeft: 6 }}>
+                      {ts.pct < 0 ? "\u2014" : ts.pct + "%"}
                     </span>
                   </div>
                   <div style={{ height: 3, background: "var(--bg-subtle-2)", borderRadius: 2 }}>
-                    {t.pct >= 0 && <div style={{ height: "100%", width: t.pct + "%", background: scoreColor(t.pct), borderRadius: 2, transition: "width 0.3s" }} />}
+                    {ts.pct >= 0 && <div style={{ height: "100%", width: ts.pct + "%", background: scoreColor(ts.pct), borderRadius: 2, transition: "width 0.3s" }} />}
                   </div>
                 </div>
-                {t.weak && <AlertTriangle size={12} color={COLORS.red} style={{ flexShrink: 0 }} />}
+                {ts.weak && <AlertTriangle size={12} color={COLORS.red} style={{ flexShrink: 0 }} />}
                 {hasSubtopics && (
                   <ChevronDown size={12} color="var(--text-muted)" style={{ flexShrink: 0, transition: "transform 0.2s", transform: isSectionOpen ? "rotate(180deg)" : "rotate(0)" }} />
                 )}
@@ -224,7 +228,7 @@ export default function Adaptive() {
     const subjectName = (t.subjects as Record<string, string>)[s.id] || s.name;
     return (
       <div key={s.id} style={{ ...CARD_COMPACT, borderLeft: `4px solid ${stripColor(s.score)}`, padding: "16px 14px", animation: "slideUp 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
-        <div style={{ display: "flex", alignItems: "center", marginBottom: 10, cursor: canExpand ? "pointer" : "default" }} onClick={() => canExpand && toggle(s.id)}>
+        <div role={canExpand ? "button" : undefined} tabIndex={canExpand ? 0 : undefined} aria-expanded={canExpand ? isOpen : undefined} onKeyDown={canExpand ? (e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(s.id); } }) : undefined} style={{ display: "flex", alignItems: "center", marginBottom: 10, cursor: canExpand ? "pointer" : "default" }} onClick={() => canExpand && toggle(s.id)}>
           <div style={{ width: 40, height: 40, borderRadius: 11, background: s.color + "15", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><SubjectIcon sid={s.id} size={20} color={s.color} strokeWidth={2.2} /></div>
           <div style={{ marginLeft: 11, flex: 1 }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>{subjectName}</div>
@@ -300,7 +304,7 @@ export default function Adaptive() {
             <div style={{ ...CARD_COMPACT, border: "1px solid rgba(255,90,54,0.12)", padding: "14px 14px", animation: "slideUp 0.3s ease" }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", marginBottom: 12 }}>{plan.days[openDay].title}</div>
               {(plan.days[openDay].tasks || []).map((task, ti) => (
-                <div key={ti} role={task.type === "test" ? "button" : undefined} tabIndex={task.type === "test" ? 0 : undefined} onClick={() => { if (task.type === "test" && task.subject) nav("test", task.subject, task.topic || null); }} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 12px", marginBottom: 6, borderRadius: 10, background: task.type === "test" ? "rgba(255,90,54,0.06)" : task.type === "review" ? "rgba(255,90,54,0.06)" : "rgba(234,179,8,0.06)", border: `1px solid ${task.type === "test" ? "rgba(255,90,54,0.12)" : task.type === "review" ? "rgba(255,90,54,0.12)" : "rgba(234,179,8,0.12)"}`, cursor: task.type === "test" ? "pointer" : "default", transition: "all 0.2s" }} onMouseEnter={e => { if (task.type === "test") (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,90,54,0.3)"; }} onMouseLeave={e => { if (task.type === "test") (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,90,54,0.12)"; }}>
+                <div key={ti} role={task.type === "test" ? "button" : undefined} tabIndex={task.type === "test" ? 0 : undefined} onClick={() => { if (task.type === "test" && task.subject) nav("test", task.subject, task.topic || null); }} onKeyDown={task.type === "test" ? (e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (task.subject) nav("test", task.subject, task.topic || null); } }) : undefined} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 12px", marginBottom: 6, borderRadius: 10, background: task.type === "test" ? "rgba(255,90,54,0.06)" : task.type === "review" ? "rgba(255,90,54,0.06)" : "rgba(234,179,8,0.06)", border: `1px solid ${task.type === "test" ? "rgba(255,90,54,0.12)" : task.type === "review" ? "rgba(255,90,54,0.12)" : "rgba(234,179,8,0.12)"}`, cursor: task.type === "test" ? "pointer" : "default", transition: "all 0.2s" }} onMouseEnter={e => { if (task.type === "test") (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,90,54,0.3)"; }} onMouseLeave={e => { if (task.type === "test") (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,90,54,0.12)"; }}>
                   <div style={{ marginTop: 2, flexShrink: 0 }}>{taskIcon(task.type)}</div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, color: "var(--text-body)", lineHeight: 1.4 }}>{task.text}</div>
@@ -372,7 +376,7 @@ export default function Adaptive() {
       {renderPlanSection()}
 
       {hasQd && (
-        <div role="button" tabIndex={0} onClick={() => nav("errors")} style={{ ...CARD_COMPACT, border: "1px solid rgba(239,68,68,0.18)", padding: "16px 16px", marginBottom: 28, cursor: "pointer", display: "flex", alignItems: "center", gap: 12, transition: "all 0.2s" }} onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(239,68,68,0.35)"; }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(239,68,68,0.18)"; }}>
+        <div role="button" tabIndex={0} onClick={() => nav("errors")} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); nav("errors"); } }} style={{ ...CARD_COMPACT, border: "1px solid rgba(239,68,68,0.18)", padding: "16px 16px", marginBottom: 28, cursor: "pointer", display: "flex", alignItems: "center", gap: 12, transition: "all 0.2s" }} onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(239,68,68,0.35)"; }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(239,68,68,0.18)"; }}>
           <div style={{ width: 42, height: 42, borderRadius: 12, background: "rgba(239,68,68,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <XCircle size={22} color={COLORS.red} />
           </div>

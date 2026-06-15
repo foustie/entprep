@@ -191,6 +191,37 @@ const ru = {
 
   // ── Home ────────────────────────────────────────────────────────────
   home: {
+    diyarPromoText: 'Привет, это Дияр AI! Я экспериментирую с новым проектом — приложение про цвет и уход, без оценок внешности. Если интересно — загляни и скажи, что думаешь 🙌',
+    diyarPromoCta: 'Посмотреть',
+    entShort: 'ЕНТ',
+    aiTutorEyebrow: 'AI-репетитор · 10 в день',
+    aiTutorWeak: 'Слабое место — {subject}. Разберём?',
+    aiTutorErrors: 'Вижу новые ошибки. Разберём по одной?',
+    aiTutorDefault: 'Спроси что угодно. Разберу шаг за шагом.',
+    sendPrognosisToMom: 'отправь прогноз маме',
+    missionTrialEnt: 'Пробный ЕНТ',
+    missionErrorReview: 'Разбор ошибок',
+    reasonWeakSpot: 'слабое место',
+    reasonTopic: 'тема: {topic}',
+    reasonPullTopic: 'подтянем тему',
+    reasonNewErrors: 'новые ошибки',
+    reasonLongAway: 'давно не был',
+    reasonFullEnt: '120 вопросов · 4 ч',
+    reasonTimeToStart: 'пора начинать',
+    heroEyebrowStart: 'пора начать',
+    heroHeadlineLine1: 'Пройди первый тест —',
+    heroHeadlineLine2: 'посчитаем твой прогноз на ЕНТ.',
+    prognosisEyebrow: 'твой прогноз на ЕНТ',
+    deltaMore: 'ещё',
+    nextStep: 'следующий шаг',
+    dayForms: 'день|дня|дней',
+    entPrediction: 'Прогноз ЕНТ',
+    check: 'Проверить',
+    grants: 'Гранты',
+    from: 'от',
+    reachHint: 'Ещё +{n} баллов — и {uni} на гранте',
+    allUnis: 'Все {n} {word}',
+    universityForms: 'университет|университета|университетов',
     title: 'ENT 2025',
     subtitle: 'Подготовка к ЕНТ',
     questionsAndUnis: 'вузов • 4 часа',
@@ -273,6 +304,12 @@ const ru = {
 
   // ── Settings ────────────────────────────────────────────────────────
   settings: {
+    sectionClass: 'Класс',
+    classJoinButton: 'Войти',
+    classAlreadyJoined: 'Вы уже в классе {class}',
+    classJoined: 'Вы присоединились к {class} ({school})',
+    classJoinNetworkError: 'Ошибка соединения',
+    terms: 'Условия использования',
     title: 'Настройки',
     sectionAccount: 'Аккаунт',
     sectionAppearance: 'Оформление',
@@ -350,6 +387,14 @@ const ru = {
 
   // ── Test ─────────────────────────────────────────────────────────────
   test: {
+    noQuestionsForTopic: 'Нет доступных вопросов по этой теме',
+    continue: 'Продолжить',
+    sessionExpired: 'Сессия истекла. Войдите заново.',
+    aiDailyLimit: 'AI объяснения на сегодня закончились. Приходи завтра!',
+    aiExplainDifferent: 'AI объяснит по-другому',
+    aiExplainRemaining: 'AI объяснит иначе ({n})',
+    diyarSays: 'Дияр говорит',
+    suggestCorrect: 'Какой ответ правильный?',
     // Report reasons
     reportWrongAnswer: 'Неправильный ответ',
     reportBadQuestion: 'Плохой текст вопроса',
@@ -433,6 +478,19 @@ const ru = {
 
   // ── Full ENT ────────────────────────────────────────────────────────
   fullent: {
+    answeredCount: 'Отвечено',
+    timeRemaining: 'Осталось времени',
+    questionNumber: 'Вопрос',
+    notEnoughQuestions: 'Недостаточно вопросов для выбранного профиля',
+    loadFailed: 'Не удалось загрузить вопросы. Попробуйте позже.',
+    loadingQuestions: 'Загружаем 120 вопросов...',
+    answeredWord: 'отвечено',
+    specQuestions: 'вопросов',
+    specSubjects: 'предметов',
+    specTimeValue: '4 ч',
+    specTimeLimit: 'лимит',
+    specMax: 'макс',
+    sectionsHeader: 'разделы',
     title: 'Полный ЕНТ',
     subtitle: '120 заданий • 5 предметов • 4 часа • 140 баллов',
     sectionInfo: 'заданий • Макс.',
@@ -465,6 +523,7 @@ const ru = {
 
   // ── Challenge ───────────────────────────────────────────────────────
   challenge: {
+    duelEyebrow: 'вызов на дуэль',
     goHome: 'На главную',
     challenged: 'Тебя вызвали!',
     friendScored: 'Твой друг набрал',
@@ -476,11 +535,18 @@ const ru = {
 
   // ── Progress ────────────────────────────────────────────────────────
   progress: {
+    bySubjects: 'По предметам',
+    testsWord: 'тест|теста|тестов',
+    needMoreForChart: 'нужен ещё тест для графика',
+    avgShort: 'средний',
+    recordShort: 'рекорд',
     title: 'Прогресс',
     activity: 'Активность',
     streakDays: 'дн.',
     activeDays: 'акт. дн.',
     testCount: 'тест.',
+    legendLess: 'Меньше',
+    legendMore: 'Больше',
     // Badges
     achievements: 'Достижения',
     earned: 'Получено',
@@ -527,6 +593,7 @@ const ru = {
 
   // ── Adaptive ────────────────────────────────────────────────────────
   adaptive: {
+    planQuotaReached: 'AI план на сегодня недоступен. Попробуйте завтра.',
     title: 'АНАЛИЗ',
     subtitle: 'Умная подготовка',
     avgScore: 'Средний балл',
@@ -572,6 +639,29 @@ const ru = {
 
   // ── Calc ─────────────────────────────────────────────────────────────
   calc: {
+    uniWord: 'вуз|вуза|вузов',
+    yourPrognosis: 'твой прогноз на ЕНТ',
+    entScore: 'балл ЕНТ',
+    almostGrant: 'ПОЧТИ ГРАНТ',
+    grant: 'ГРАНТ',
+    medium: 'СРЕДНЕ',
+    tooLow: 'МАЛО',
+    restorePrognosis: 'вернуть прогноз',
+    editScoreManually: 'изменить балл вручную',
+    takeTestCta: 'Пройди тест — посчитаем точно',
+    takeTestCtaSub: 'Пока ставим 80 — можно поменять вручную',
+    testButton: 'тест',
+    topChances: 'твои топ-шансы',
+    matchSafe: 'безопасный',
+    matchRealistic: 'реалистичный',
+    matchDream: 'мечта',
+    minShort: 'мин',
+    yourShort: 'твой',
+    searchPlaceholder: 'поиск специальности, вуза или города...',
+    foundCount: 'найдено {n}',
+    savedCount: '{n} сохранено',
+    nothingFound: 'Ничего не найдено',
+    nothingFoundHint: 'Попробуй другой запрос или убери фильтры',
     title: 'Калькулятор грантов',
     subtitle: 'Узнай свои шансы',
     unisAcross: 'вузов по всему Казахстану',
@@ -643,6 +733,7 @@ const ru = {
 
   // ── Auth ─────────────────────────────────────────────────────────────
   auth: {
+    changePhoto: 'Изменить фото',
     photoUpdated: 'Фото обновлено',
     photoError: 'Ошибка загрузки фото',
     photoPartial: 'Фото обновлено. В рейтинге и у друзей появится позже',
@@ -659,6 +750,7 @@ const ru = {
 
   // ── Auth Prompt ─────────────────────────────────────────────────────
   authPrompt: {
+    eyebrow: '• 5 секунд •',
     benefit1: 'Прогресс сохраняется на всех устройствах',
     benefit2: 'Дуэли 1 на 1 с друзьями',
     benefit3: 'Рейтинг и соревнования',
@@ -733,6 +825,8 @@ const ru = {
 
   // ── Profile Select ──────────────────────────────────────────────────
   profileSelect: {
+    step1of2: 'шаг 1 из 2',
+    selectedCount: 'выбрано {n}/2',
     title: 'Выбери профильные предметы',
     subtitle: 'ЕНТ = 3 обязательных (матграмотность, чтение, история) + 2 профильных на выбор. Каждый профильный — 40 заданий.',
     hint: 'Выбери 2 предмета. Всегда можно изменить в настройках.',
@@ -753,6 +847,18 @@ const ru = {
 
   // ── Paywall ────────────────────────────────────────────────────────
   paywall: {
+    goalReached: 'цель твоя',
+    goalRemaining: 'до цели {target}',
+    hookReachedLead: 'Грант у тебя в кармане.',
+    hookReachedRest: 'Держи темп до ЕНТ — AI закроет слабые места.',
+    hookBehindLead: 'PRO покажет',
+    hookBehindHighlight: 'где теряешь баллы',
+    hookBehindRest: 'и поможет забрать недостающие {n}.',
+    priceRepetitorLabel: 'Репетитор',
+    priceUnitMonth: '/мес',
+    priceUnit3Month: '/3 мес',
+    ctaSeasonLabel: 'Забрать PRO',
+    securePayment: 'Безопасная оплата',
     dailyLimit: 'Лимит AI-разборов исчерпан',
     fullent: 'ЕНТ-симуляция для Premium',
     ai: 'AI-разбор для Premium',
@@ -888,6 +994,8 @@ const ru = {
   // ── Contextual Errors (ErrorBoundary per screen) ──────────────────
   // ── Subject analytics ───────────────────────────────────────────────
   analytics: {
+    growthTitle: 'Твой рост',
+    testsForms: 'тест|теста|тестов',
     title: 'Аналитика',
     weeklyTitle: 'Активность по неделям',
     accuracyTitle: 'Точность по разделам',
@@ -907,6 +1015,7 @@ const ru = {
     timeEmpty: 'Реши ещё {n} вопросов — покажем время по сложности',
   },
   rush: {
+    expand: 'Развернуть',
     title: 'Question Rush',
     tagline: 'Практика на скорость со звёздами',
     pickSubject: 'Выбери предмет',
@@ -1011,6 +1120,10 @@ const ru = {
 
   // ── Teacher Dashboard ─────────────────────────────────────────────
   teacher: {
+    print: 'Печать',
+    testsWord: 'тест|теста|тестов',
+    classNamePlaceholder: '11Б',
+    schoolPlaceholder: 'НИШ Алматы',
     panel: 'Панель учителя',
     loginRequired: 'Войдите в аккаунт чтобы создать класс',
     createClass: 'Создать класс',
@@ -1111,6 +1224,60 @@ const ru = {
     whatsappBtn: 'WhatsApp',
     copyBtn: 'скопировать ссылку',
     close: 'Закрыть',
+  },
+  tutor: {
+    sendLabel: 'Отправить',
+    name: 'Дияр',
+    online: 'онлайн',
+    welcome: 'Привет! Я Дияр — твой AI-репетитор. Разберу любую задачу по шагам, объясню тему простыми словами, составлю план подготовки. Можно скинуть фото задачи — решу. 24/7, бесплатно.',
+    welcomeHint: 'Спроси что-нибудь ↓',
+    inputPlaceholderAny: 'Задай любой вопрос...',
+    inputPlaceholder: 'Спроси что-нибудь...',
+    inputPlaceholderLimit: 'Спроси что-нибудь... ({n}/10)',
+    cameraLabel: 'Фото задачи',
+    imageAlt: 'задача',
+    photoCaption: 'Реши эту задачу',
+    photoReceived: 'Фото получил. Разбор по изображению подключим скоро 💜',
+    photoTooLarge: 'Фото слишком большое (больше 3 МБ)',
+    photoBadFormat: 'Загрузите JPG, PNG или WebP',
+    errorWord: 'Ошибка',
+    sendError: 'Ошибка: {err}. Попробуй ещё раз.',
+    explainTopicPrompt: 'Объясни мне тему: {topic}',
+    pickerTitle: 'Выбери тему',
+    pickerSubtitle: 'Дияр объяснит пошагово',
+    sgExplainTopic: 'Объясни тему',
+    sgMakePlan: 'Составь план',
+    sgMakePlanMsg: 'Составь мне план подготовки к ЕНТ',
+    sgReviewErrors: 'Разбери ошибки',
+    sgReviewErrorsMsg: 'Проанализируй мои ошибки и найди паттерн',
+    sgScared: 'Мне страшно',
+    sgScaredMsg: 'Я боюсь ЕНТ. Мне нужна поддержка',
+    supportTitle: 'поддержать',
+    supportText: 'Я Дияр, мне 17. Каждое AI-сообщение стоит денег. Но я хочу, чтобы это было бесплатным.',
+  },
+  theory: {
+    title: 'Теория',
+    topicSummary: 'Конспект по теме',
+    checkYourself: 'Проверь себя',
+    fix: 'Исправить',
+    fixMessage: 'Конспект: {topic}. Предложение: ',
+    summarySoon: 'Конспект скоро появится',
+    subjectSummariesSoon: 'Конспекты по этому предмету скоро появятся',
+    summary: 'Конспект',
+    topicsWord: 'тема|темы|тем',
+    summariesWord: 'конспект|конспекта|конспектов',
+  },
+  profile: {
+    levelShort: 'ур.',
+    chooseNick: 'выбери ник',
+    recoverPrompt: 'Оплатил, но PRO не активирован? Восстановить',
+    recoverOrderHint: 'Номер заказа из письма Lemon Squeezy («Order #12345»):',
+    recoverSubmit: 'Восстановить',
+    recoverChecking: 'Проверка…',
+    recoverCancel: 'Отмена',
+    recoverOrderError: 'Введите номер заказа (только цифры)',
+    recoverSuccess: 'Премиум активирован до {date}',
+    recoverGenericError: 'Ошибка',
   },
 } as const;
 

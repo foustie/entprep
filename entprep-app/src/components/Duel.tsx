@@ -297,6 +297,17 @@ export default function Duel() {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [phase, currentQ, waitingForOpponent]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ── Auto-skip a broken question (no options) ───────────────────────────────
+  // Runs after commit instead of during render, so we never call setState while
+  // rendering. The submittingRef guard still prevents a double submit.
+  useEffect(() => {
+    if (phase !== 'playing' || waitingForOpponent) return;
+    const q = questions[currentQ];
+    if (q && (!q.o || q.o.length === 0) && duelId && !submittingRef.current) {
+      handleSubmit(null);
+    }
+  }, [phase, currentQ, questions, waitingForOpponent, duelId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Submit answer ──────────────────────────────────────────────────────────
   const handleSubmit = async (answer: number | null) => {
     if (!duelId || submittingRef.current) return;
@@ -486,12 +497,13 @@ export default function Duel() {
 
         {!loading && menuTab === 'join' && (
           <div style={{ maxWidth: 360, margin: '20px auto', textAlign: 'center' }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 12 }}>{t.duel.enterCode}</div>
+            <div id="duel-join-code-label" style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 12 }}>{t.duel.enterCode}</div>
             <input
               type="text"
               value={joinCode}
               onChange={e => { setJoinCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6)); setError(''); }}
               placeholder="ABCDEF"
+              aria-labelledby="duel-join-code-label"
               maxLength={6}
               style={{
                 width: '100%', padding: '16px', textAlign: 'center',
@@ -597,7 +609,7 @@ export default function Duel() {
           {/* VS */}
           <div style={{
             fontSize: vsCountdown > 0 ? 48 : 36, fontWeight: 900,
-            fontFamily: "'Unbounded',sans-serif",
+            fontFamily: "var(--ff-display, 'Unbounded', sans-serif)",
             background: `linear-gradient(135deg,${COLORS.red},#f97316)`,
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
             animation: 'firePulse 1s ease-in-out infinite',
@@ -643,8 +655,7 @@ export default function Duel() {
 
     const q = questions[currentQ];
     if (!q || !q.o || q.o.length === 0) {
-      // Skip broken question — auto-submit null and move on
-      if (q && duelId && !submittingRef.current) handleSubmit(null);
+      // Broken question — the auto-skip effect submits null; keep render pure.
       return <LoadingSpinner />;
     }
 
@@ -795,7 +806,7 @@ export default function Duel() {
             </div>
             <div style={{
               fontSize: 14, fontWeight: 800, color: 'var(--text-muted)',
-              fontFamily: "'Unbounded',sans-serif",
+              fontFamily: "var(--ff-display, 'Unbounded', sans-serif)",
             }}>VS</div>
             <div style={{ textAlign: 'center' }}>
               <PlayerAvatar profile={oppProfileFinal} size={44} />

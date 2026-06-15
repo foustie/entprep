@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { CSSProperties } from 'react';
 import { COLORS, FF, FW, SP, scoreColor } from '../constants/styles';
 import { useT } from '../locales';
+import { pluralizeForms } from '../utils/formatters';
 import { useNav } from '../contexts/NavigationContext';
 import { Trophy } from 'lucide-react';
 import { SubjectChip } from './ui/SubjectIcon';
@@ -23,6 +24,8 @@ export default function HomeSubjectGrid({ mandatory, profile, hist, poolSizes, b
 
   const subName = (id: string) => (t.subjects as Record<string, string>)[id] || id;
 
+  const poolLabel = (pool: number) => `${pool} ${pluralizeForms(pool, t.rush.questionsWord)}`;
+
   const getStats = (s: SubjectConfig) => {
     const tests = hist.filter(h => h.su === s.id);
     const lastScore = tests.length ? tests[tests.length - 1].sc : null;
@@ -42,6 +45,7 @@ export default function HomeSubjectGrid({ mandatory, profile, hist, poolSizes, b
             subject={s}
             name={subName(s.id)}
             stats={getStats(s)}
+            poolLabel={poolLabel}
             onClick={() => nav(s.id === 'reading' ? 'test' : 'topics', s.id)}
           />
         ))}
@@ -58,6 +62,7 @@ export default function HomeSubjectGrid({ mandatory, profile, hist, poolSizes, b
                 subject={s}
                 name={subName(s.id)}
                 stats={getStats(s)}
+                poolLabel={poolLabel}
                 onClick={() => nav('topics', s.id)}
               />
             ))}
@@ -88,11 +93,13 @@ function SubjectRow({
   subject: s,
   name,
   stats,
+  poolLabel,
   onClick,
 }: {
   subject: SubjectConfig;
   name: string;
   stats: { lastScore: number | null; pb: { best: number } | undefined; pool: number };
+  poolLabel: (pool: number) => string;
   onClick: () => void;
 }) {
   const [pressed, setPressed] = useState(false);
@@ -158,7 +165,7 @@ function SubjectRow({
           color: COLORS.textMuted,
           marginTop: 2,
         }}>
-          {pool} вопросов
+          {poolLabel(pool)}
         </span>
       </div>
 

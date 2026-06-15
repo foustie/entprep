@@ -51,6 +51,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Unbounded:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Unbounded:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" />
+    <!-- Kazakh display font: Rubik re-declared as 'RubikKZ' with size-adjust so KK headings match Unbounded's x-height (RU stays Unbounded). Only fetched when KK is active. -->
+    <link rel="stylesheet" href="/rubik-kz.css" />
     <link rel="preload" as="image" type="image/webp" href="/mascot/andy-confident.webp" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/icon-180.png" />
@@ -81,6 +83,7 @@
       (function(){
         try{
           var d=JSON.parse(localStorage.getItem('entprep_data')||'{}');
+          if(d.st&&d.st.lang==='kk'){document.documentElement.lang='kk';}
           if(d.st&&d.st.theme==='light'){
             var s=document.getElementById('splash');
             s.style.background='#FAFAF8';

@@ -62,7 +62,7 @@ export default function ReportSheet({ visible, questionText, options, comment, l
             letterSpacing: '0.14em', textTransform: 'uppercase',
             color: 'var(--text-muted)', marginBottom: 6,
           }}>
-            {(t.test as unknown as Record<string, string>).suggestCorrect || 'Какой ответ правильный?'}
+            {t.test.suggestCorrect}
           </div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {options.map((opt, i) => {
@@ -94,7 +94,8 @@ export default function ReportSheet({ visible, questionText, options, comment, l
           const prefix = comment.match(/^correct:\d\s*/)?.[0] || '';
           onCommentChange(prefix + e.target.value);
         }}
-        placeholder={(t.test as unknown as Record<string, string>).commentOptional || 'Комментарий (необязательно)'}
+        placeholder={t.test.commentOptional}
+        aria-label={t.test.commentOptional}
         rows={2}
         style={{
           width: '100%', padding: '10px 12px',

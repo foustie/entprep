@@ -8,6 +8,7 @@ import { supabase } from '../config/supabase';
 import { ArrowLeft, Users, Copy, Check, TrendingUp, AlertTriangle, ArrowUp, Target, Printer, ChevronRight } from 'lucide-react';
 import Button from './ui/Button';
 import { useT } from '../locales';
+import { pluralizeForms } from '../utils/formatters';
 
 interface WeakTopic {
   tp: string;
@@ -200,7 +201,7 @@ export default function TeacherDashboard({ onBack }: Props) {
           <input
             value={className}
             onChange={e => setClassName(e.target.value)}
-            placeholder="11Б"
+            placeholder={tt.classNamePlaceholder}
             maxLength={20}
             style={{ width: '100%', padding: '12px 14px', borderRadius: R.md, border: '1px solid var(--border-md)', background: 'var(--bg-subtle)', color: 'var(--text)', fontSize: 14, marginBottom: 16, boxSizing: 'border-box' }}
           />
@@ -209,7 +210,7 @@ export default function TeacherDashboard({ onBack }: Props) {
           <input
             value={schoolName}
             onChange={e => setSchoolName(e.target.value)}
-            placeholder="НИШ Алматы"
+            placeholder={tt.schoolPlaceholder}
             maxLength={100}
             style={{ width: '100%', padding: '12px 14px', borderRadius: R.md, border: '1px solid var(--border-md)', background: 'var(--bg-subtle)', color: 'var(--text)', fontSize: 14, marginBottom: 24, boxSizing: 'border-box' }}
           />
@@ -271,7 +272,7 @@ export default function TeacherDashboard({ onBack }: Props) {
           <ArrowLeft size={18} /> {t.back}
         </button>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => window.print()} aria-label="Print" style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 13 }}>
+          <button onClick={() => window.print()} aria-label={tt.print} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 13 }}>
             <Printer size={14} />
           </button>
           <button onClick={loadData} style={{ background: 'none', border: 'none', cursor: 'pointer', color: COLORS.teal, fontSize: 13, fontWeight: 600 }}>
@@ -440,7 +441,7 @@ export default function TeacherDashboard({ onBack }: Props) {
                       {st.nickname}
                     </div>
                     <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>
-                      {tests} тест{tests === 1 ? '' : tests < 5 ? 'а' : 'ов'} • {timeAgo(st.lastActive, tt)}
+                      {tests} {pluralizeForms(tests, tt.testsWord)} • {timeAgo(st.lastActive, tt)}
                     </div>
                   </div>
 

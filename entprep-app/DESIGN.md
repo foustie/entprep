@@ -53,6 +53,9 @@ colors:
   on-surface-dark-variant: "#E2E0D6"
 
 typography:
+  # Display family resolves via CSS var --ff-display: RU = Unbounded, KK = Rubik.
+  # Unbounded has NO Kazakh glyphs (ә ғ қ ң ө ұ ү һ) — html:lang(kk) swaps to Rubik.
+  # Never hardcode 'Unbounded' inline — use FF.display / TYPE.* so the KK switch applies.
   # ── Display (hero numbers / countdowns) ───────────────────────────
   display-xl:
     fontFamily: Unbounded

@@ -198,7 +198,7 @@ export default function Settings() {
                       setNickSaving(false);
                     }}
                     disabled={nickSaving || nickInput.trim().length < 3}
-                    style={{ padding: '10px 16px', background: nickInput.trim().length >= 3 ? COLORS.streak : 'var(--bg-subtle-2)', border: nickInput.trim().length >= 3 ? '2px solid var(--ink)' : 'none', borderBottom: nickInput.trim().length >= 3 ? '3px solid var(--ink)' : 'none', borderRadius: 10, color: '#fff', fontSize: 12, fontWeight: 700, cursor: nickInput.trim().length >= 3 ? 'pointer' : 'default', opacity: nickSaving ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 4 }}
+                    style={{ minHeight: 44, padding: '10px 16px', background: nickInput.trim().length >= 3 ? COLORS.streak : 'var(--bg-subtle-2)', border: nickInput.trim().length >= 3 ? '2px solid var(--ink)' : 'none', borderBottom: nickInput.trim().length >= 3 ? '3px solid var(--ink)' : 'none', borderRadius: 10, color: '#fff', fontSize: 12, fontWeight: 700, cursor: nickInput.trim().length >= 3 ? 'pointer' : 'default', opacity: nickSaving ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
                   >
                     <Check size={14} />{nickSaving ? '...' : 'OK'}
                   </button>
@@ -397,18 +397,19 @@ export default function Settings() {
 
       {/* ════════ CLASS ════════ */}
       {user && (
-        <Section icon={<GraduationCap size={11} />} label="Класс">
+        <Section icon={<GraduationCap size={11} />} label={t.settings.sectionClass}>
           {/* Teacher dashboard hidden — 7 classes, 1 member. Access via direct nav('teacher') */}
           {/* Join class with code */}
           <div style={ROW_LAST}>
             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <BookOpen size={15} /> Код класса
+              <BookOpen size={15} /> {t.teacher.classCode}
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <input
                 value={classCode}
                 onChange={e => { setClassCode(e.target.value.toUpperCase()); setClassMsg(null); }}
                 placeholder="ENT-XXXX"
+                aria-label={t.teacher.classCode}
                 maxLength={8}
                 style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border-md)', background: 'var(--bg-subtle)', color: 'var(--text)', fontSize: 13, fontFamily: "'JetBrains Mono',monospace", letterSpacing: 1 }}
               />
@@ -428,22 +429,22 @@ export default function Settings() {
                     });
                     const data = await res.json();
                     if (!res.ok) {
-                      setClassMsg({ ok: false, text: data.error || 'Ошибка' });
+                      setClassMsg({ ok: false, text: data.error || t.error });
                     } else if (data.already) {
-                      setClassMsg({ ok: true, text: `Вы уже в классе ${data.class.name}` });
+                      setClassMsg({ ok: true, text: t.settings.classAlreadyJoined.replace('{class}', data.class.name) });
                     } else {
-                      setClassMsg({ ok: true, text: `Вы присоединились к ${data.class.name} (${data.class.school})` });
+                      setClassMsg({ ok: true, text: t.settings.classJoined.replace('{class}', data.class.name).replace('{school}', data.class.school) });
                       setClassCode('');
                     }
                   } catch {
-                    setClassMsg({ ok: false, text: 'Ошибка соединения' });
+                    setClassMsg({ ok: false, text: t.settings.classJoinNetworkError });
                   } finally {
                     setClassJoining(false);
                   }
                 }}
                 style={{ padding: '10px 16px', borderRadius: 10, background: COLORS.teal, color: '#fff', border: 'none', fontSize: 12, fontWeight: 600, cursor: classCode.length >= 6 ? 'pointer' : 'default', opacity: classCode.length >= 6 ? 1 : 0.5 }}
               >
-                {classJoining ? '...' : 'Войти'}
+                {classJoining ? '...' : t.settings.classJoinButton}
               </button>
             </div>
             {classMsg && (
@@ -585,7 +586,7 @@ export default function Settings() {
             <Shield size={10} /> {t.settings.privacy}
           </a>
           <a href="/terms.html" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'var(--text-muted)', textDecoration: 'none' }}>
-            <Shield size={10} /> Условия использования
+            <Shield size={10} /> {t.settings.terms}
           </a>
         </div>
       </div>

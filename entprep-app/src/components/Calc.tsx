@@ -5,6 +5,7 @@ import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useNav } from '../contexts/NavigationContext';
 import { useApp } from '../contexts/AppContext';
 import { getGoalProgress } from '../utils/competitionHelpers';
+import { pluralizeForms } from '../utils/formatters';
 import BackButton from './ui/BackButton';
 import { Calculator, Search, Star, ArrowRight, Sparkles, X, Landmark, Stethoscope, GraduationCap, Wrench, Monitor, Sprout, Building2 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -112,7 +113,7 @@ export default function Calc() {
           fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
           letterSpacing: '0.14em', textTransform: 'uppercase',
           color: 'var(--text-muted)',
-        }}>{t.calc.title} · {UNIS.length} вузов</div>
+        }}>{t.calc.title} · {UNIS.length} {pluralizeForms(UNIS.length, t.calc.uniWord)}</div>
       </div>
 
       {/* HERO — dark ink score card */}
@@ -142,7 +143,7 @@ export default function Calc() {
                 fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
                 letterSpacing: '0.14em', textTransform: 'uppercase',
                 color: 'rgba(255,255,255,0.5)', marginBottom: 4,
-              }}>{hasPrognosis && !manualMode ? 'твой прогноз на ЕНТ' : 'балл ЕНТ'}</div>
+              }}>{hasPrognosis && !manualMode ? t.calc.yourPrognosis : t.calc.entScore}</div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
                 <span style={{
                   fontFamily: FF.display, fontSize: 80, fontWeight: 900,
@@ -163,7 +164,7 @@ export default function Calc() {
               letterSpacing: '-0.02em',
               whiteSpace: 'nowrap',
             }}>
-              {sc >= 100 ? (pct < 66 ? 'ПОЧТИ ГРАНТ' : '✓ ГРАНТ') : sc >= 75 ? 'СРЕДНЕ' : 'МАЛО'}
+              {sc >= 100 ? (pct < 66 ? t.calc.almostGrant : `✓ ${t.calc.grant}`) : sc >= 75 ? t.calc.medium : t.calc.tooLow}
             </div>
           </div>
 
@@ -229,7 +230,7 @@ export default function Calc() {
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5,
                   }}
                 >
-                  <Sparkles size={12} strokeWidth={2.4} /> вернуть прогноз {autoPrognosis}
+                  <Sparkles size={12} strokeWidth={2.4} /> {t.calc.restorePrognosis} {autoPrognosis}
                 </button>
               )}
             </>
@@ -247,7 +248,7 @@ export default function Calc() {
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
               }}
             >
-              изменить балл вручную
+              {t.calc.editScoreManually}
             </button>
           )}
         </div>
@@ -267,11 +268,11 @@ export default function Calc() {
             <div style={{
               fontFamily: FF.display, fontSize: 13, fontWeight: 900,
               color: 'var(--ink)', letterSpacing: '-0.02em', marginBottom: 2,
-            }}>Пройди тест — посчитаем точно</div>
+            }}>{t.calc.takeTestCta}</div>
             <div style={{
               fontFamily: "'Nunito',sans-serif", fontSize: 11, fontWeight: 700,
               color: 'var(--ink)', opacity: 0.6,
-            }}>Пока ставим 80 — можно поменять вручную</div>
+            }}>{t.calc.takeTestCtaSub}</div>
           </div>
           <button onClick={goHome} style={{
             flexShrink: 0,
@@ -283,7 +284,7 @@ export default function Calc() {
             cursor: 'pointer',
             display: 'inline-flex', alignItems: 'center', gap: 4,
           }}>
-            тест <ArrowRight size={12} strokeWidth={2.6} />
+            {t.calc.testButton} <ArrowRight size={12} strokeWidth={2.6} />
           </button>
         </div>
       )}
@@ -295,11 +296,11 @@ export default function Calc() {
             fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
             letterSpacing: '0.16em', textTransform: 'uppercase',
             color: 'var(--text-muted)', marginBottom: 8, padding: '0 4px',
-          }}>твои топ-шансы</div>
+          }}>{t.calc.topChances}</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8, marginBottom: 18 }}>
-            {topMatches.safe && <MatchRow label="безопасный" color={COLORS.win} u={topMatches.safe} isFav={favs.includes(topMatches.safe.n)} onFav={() => toggleFav(topMatches.safe!.n)} />}
-            {topMatches.realistic && <MatchRow label="реалистичный" color={COLORS.xp} u={topMatches.realistic} isFav={favs.includes(topMatches.realistic.n)} onFav={() => toggleFav(topMatches.realistic!.n)} />}
-            {topMatches.dream && <MatchRow label="мечта" color={COLORS.streak} u={topMatches.dream} isFav={favs.includes(topMatches.dream.n)} onFav={() => toggleFav(topMatches.dream!.n)} />}
+            {topMatches.safe && <MatchRow label={t.calc.matchSafe} minLabel={t.calc.minShort} color={COLORS.win} u={topMatches.safe} isFav={favs.includes(topMatches.safe.n)} onFav={() => toggleFav(topMatches.safe!.n)} />}
+            {topMatches.realistic && <MatchRow label={t.calc.matchRealistic} minLabel={t.calc.minShort} color={COLORS.xp} u={topMatches.realistic} isFav={favs.includes(topMatches.realistic.n)} onFav={() => toggleFav(topMatches.realistic!.n)} />}
+            {topMatches.dream && <MatchRow label={t.calc.matchDream} minLabel={t.calc.minShort} color={COLORS.streak} u={topMatches.dream} isFav={favs.includes(topMatches.dream.n)} onFav={() => toggleFav(topMatches.dream!.n)} />}
           </div>
         </>
       )}
@@ -308,12 +309,13 @@ export default function Calc() {
       <div style={{
         position: 'relative', marginBottom: 10,
       }}>
-        <Search size={16} color="var(--text-muted)" strokeWidth={2.4} style={{
+        <Search size={16} color="var(--text-muted)" strokeWidth={2.4} aria-hidden="true" style={{
           position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)',
         }} />
         <input
           type="text" value={query} onChange={e => setQuery(e.target.value)}
-          placeholder="поиск специальности, вуза или города..."
+          placeholder={t.calc.searchPlaceholder}
+          aria-label={t.calc.searchPlaceholder}
           style={{
             width: '100%', padding: '12px 38px 12px 38px',
             background: 'var(--bg-card)',
@@ -324,12 +326,13 @@ export default function Calc() {
           }}
         />
         {query && (
-          <button onClick={() => setQuery('')} style={{
-            position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+          <button onClick={() => setQuery('')} aria-label={t.close} style={{
+            position: 'absolute', right: 2, top: '50%', transform: 'translateY(-50%)',
             background: 'transparent', border: 'none', cursor: 'pointer',
-            padding: 6, display: 'flex', alignItems: 'center', color: 'var(--text-muted)',
+            width: 44, height: 44, padding: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)',
           }}>
-            <X size={16} strokeWidth={2.4} />
+            <X size={16} strokeWidth={2.4} aria-hidden="true" />
           </button>
         )}
       </div>
@@ -363,7 +366,7 @@ export default function Calc() {
           letterSpacing: '0.14em', textTransform: 'uppercase',
           color: 'var(--text-muted)',
         }}>
-          найдено {filtered.length}
+          {t.calc.foundCount.replace('{n}', String(filtered.length))}
         </div>
         {favs.length > 0 && (
           <div style={{
@@ -372,7 +375,7 @@ export default function Calc() {
             letterSpacing: '0.1em', textTransform: 'uppercase',
             color: COLORS.xp,
           }}>
-            <Star size={11} fill={COLORS.xp} strokeWidth={0} /> {favs.length} сохранено
+            <Star size={11} fill={COLORS.xp} strokeWidth={0} /> {t.calc.savedCount.replace('{n}', String(favs.length))}
           </div>
         )}
       </div>
@@ -384,7 +387,7 @@ export default function Calc() {
         gap: 8,
       }}>
         {filtered.map((u, i) => (
-          <UniCard key={u.n + i} u={u} sc={sc} chanceTxt={chanceTxt} isFav={favs.includes(u.n)} onFav={() => toggleFav(u.n)} />
+          <UniCard key={u.n + i} u={u} sc={sc} chanceTxt={chanceTxt} minLabel={t.calc.minShort} yourLabel={t.calc.yourShort} isFav={favs.includes(u.n)} onFav={() => toggleFav(u.n)} />
         ))}
       </div>
 
@@ -399,11 +402,11 @@ export default function Calc() {
           <div style={{
             fontFamily: FF.display, fontSize: 14, fontWeight: 900,
             color: 'var(--text)', letterSpacing: '-0.02em', marginBottom: 4,
-          }}>Ничего не найдено</div>
+          }}>{t.calc.nothingFound}</div>
           <div style={{
             fontFamily: "'Nunito',sans-serif", fontSize: 12, fontWeight: 600,
             color: 'var(--text-muted)',
-          }}>Попробуй другой запрос или убери фильтры</div>
+          }}>{t.calc.nothingFoundHint}</div>
         </div>
       )}
     </div>
@@ -412,9 +415,10 @@ export default function Calc() {
 
 // ───────────── Top match row — highlighted card ─────────────
 function MatchRow({
-  label, color, u, isFav, onFav,
+  label, minLabel, color, u, isFav, onFav,
 }: {
   label: string;
+  minLabel: string;
   color: string;
   u: University & { gap: number; chance: Chance };
   isFav: boolean;
@@ -446,7 +450,7 @@ function MatchRow({
           fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 800,
           letterSpacing: '0.14em', textTransform: 'uppercase',
           color, marginBottom: 2,
-        }}>{label} · мин {u.min}</div>
+        }}>{label} · {minLabel} {u.min}</div>
         <div style={{
           fontFamily: "'Nunito',sans-serif", fontSize: 14, fontWeight: 800,
           color: 'var(--text)', lineHeight: 1.15,
@@ -475,11 +479,13 @@ function MatchRow({
 
 // ───────────── Universal uni card (compact) ─────────────
 function UniCard({
-  u, sc, chanceTxt, isFav, onFav,
+  u, sc, chanceTxt, minLabel, yourLabel, isFav, onFav,
 }: {
   u: University & { gap: number; chance: Chance };
   sc: number;
   chanceTxt: Record<Chance, string>;
+  minLabel: string;
+  yourLabel: string;
   isFav: boolean;
   onFav: () => void;
 }) {
@@ -509,7 +515,7 @@ function UniCard({
           <div style={{
             fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 700,
             color: 'var(--text-muted)', marginTop: 2,
-          }}>{u.c} · мин {u.min} · твой {sc}</div>
+          }}>{u.c} · {minLabel} {u.min} · {yourLabel} {sc}</div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
           <div style={{

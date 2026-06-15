@@ -218,7 +218,7 @@ const previewAvatar: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  fontFamily: FF.display,
+  fontFamily: FF.brand,
   fontWeight: 900,
   fontSize: 17,
   border: `3px solid ${COLORS.xp}`,

@@ -191,6 +191,37 @@ const kk: Translations = {
 
   // ── Home ────────────────────────────────────────────────────────────
   home: {
+    diyarPromoText: 'Сәлем, бұл Дияр AI! Жаңа жобамен тәжірибе жасап жүрмін — түс пен күтім туралы қосымша, сыртқы келбетке баға бермейтін. Қызық болса — кіріп көр де, пікіріңді айт 🙌',
+    diyarPromoCta: 'Қарау',
+    entShort: 'ҰБТ',
+    aiTutorEyebrow: 'AI-тәлімгер · күніне 10',
+    aiTutorWeak: 'Әлсіз жерің — {subject}. Талдап көрейік пе?',
+    aiTutorErrors: 'Жаңа қателер байқадым. Бір-бірлеп талдайық па?',
+    aiTutorDefault: 'Кез келген нәрсені сұра. Қадам-қадаммен түсіндіремін.',
+    sendPrognosisToMom: 'болжамды анаңа жібер',
+    missionTrialEnt: 'Сынақ ҰБТ',
+    missionErrorReview: 'Қателерді талдау',
+    reasonWeakSpot: 'әлсіз жер',
+    reasonTopic: 'тақырып: {topic}',
+    reasonPullTopic: 'тақырыпты пысықтайық',
+    reasonNewErrors: 'жаңа қателер',
+    reasonLongAway: 'көптен бері болмадың',
+    reasonFullEnt: '120 сұрақ · 4 сағ',
+    reasonTimeToStart: 'бастайтын кез',
+    heroEyebrowStart: 'бастайтын кез',
+    heroHeadlineLine1: 'Алғашқы тестті өт —',
+    heroHeadlineLine2: 'ҰБТ болжамыңды есептейміз.',
+    prognosisEyebrow: 'ҰБТ болжамың',
+    deltaMore: 'тағы',
+    nextStep: 'келесі қадам',
+    dayForms: 'күн',
+    entPrediction: 'ҰБТ болжамы',
+    check: 'Тексеру',
+    grants: 'Грант бойынша',
+    from: 'бастап',
+    reachHint: 'Тағы {n} балл жинасаң — {uni} грантына өтесің',
+    allUnis: 'Барлық {n} {word}',
+    universityForms: 'университет',
     title: 'ENT 2025',
     subtitle: 'ҰБТ-ға дайындық',
     questionsAndUnis: 'ЖОО • 4 сағат',
@@ -273,6 +304,12 @@ const kk: Translations = {
 
   // ── Settings ────────────────────────────────────────────────────────
   settings: {
+    sectionClass: 'Сынып',
+    classJoinButton: 'Кіру',
+    classAlreadyJoined: 'Сіз {class} сыныбына бұрыннан мүшесіз',
+    classJoined: 'Сіз {class} сыныбына қосылдыңыз ({school})',
+    classJoinNetworkError: 'Байланыс қатесі',
+    terms: 'Пайдалану шарттары',
     title: 'Баптаулар',
     sectionAccount: 'Аккаунт',
     sectionAppearance: 'Безендіру',
@@ -350,6 +387,14 @@ const kk: Translations = {
 
   // ── Test ─────────────────────────────────────────────────────────────
   test: {
+    noQuestionsForTopic: 'Бұл тақырып бойынша қолжетімді сұрақтар жоқ',
+    continue: 'Жалғастыру',
+    sessionExpired: 'Сессия аяқталды. Қайта кіріңіз.',
+    aiDailyLimit: 'Бүгінгі AI түсіндірмелер бітті. Ертең кел!',
+    aiExplainDifferent: 'AI басқаша түсіндірсін',
+    aiExplainRemaining: 'AI түсіндірсін ({n})',
+    diyarSays: 'Дияр айтады',
+    suggestCorrect: 'Қай жауап дұрыс?',
     reportWrongAnswer: 'Қате жауап',
     reportBadQuestion: 'Нашар сұрақ мәтіні',
     reportBadExplanation: 'Нашар түсіндірме',
@@ -426,6 +471,19 @@ const kk: Translations = {
 
   // ── Full ENT ────────────────────────────────────────────────────────
   fullent: {
+    answeredCount: 'Жауап берілді',
+    timeRemaining: 'Қалған уақыт',
+    questionNumber: 'Сұрақ',
+    notEnoughQuestions: 'Таңдалған профиль үшін сұрақтар жеткіліксіз',
+    loadFailed: 'Сұрақтарды жүктеу мүмкін болмады. Кейінірек қайталап көріңіз.',
+    loadingQuestions: '120 сұрақ жүктелуде...',
+    answeredWord: 'жауап берілді',
+    specQuestions: 'сұрақ',
+    specSubjects: 'пән',
+    specTimeValue: '4 сағ',
+    specTimeLimit: 'лимит',
+    specMax: 'макс',
+    sectionsHeader: 'бөлімдер',
     title: 'Толық ҰБТ',
     subtitle: '120 тапсырма • 5 пән • 4 сағат • 140 балл',
     sectionInfo: 'тапсырма • Макс.',
@@ -458,6 +516,7 @@ const kk: Translations = {
 
   // ── Challenge ───────────────────────────────────────────────────────
   challenge: {
+    duelEyebrow: 'дуэльге шақыру',
     goHome: 'Басты бетке',
     challenged: 'Сені шақырды!',
     friendScored: 'Досың жинады',
@@ -469,11 +528,18 @@ const kk: Translations = {
 
   // ── Progress ────────────────────────────────────────────────────────
   progress: {
+    bySubjects: 'Пәндер бойынша',
+    testsWord: 'тест',
+    needMoreForChart: 'график үшін тағы бір тест керек',
+    avgShort: 'орташа',
+    recordShort: 'рекорд',
     title: 'Прогресс',
     activity: 'Белсенділік',
     streakDays: 'күн',
     activeDays: 'белс. күн',
     testCount: 'тест',
+    legendLess: 'Азырақ',
+    legendMore: 'Көбірек',
     achievements: 'Жетістіктер',
     earned: 'Алынған',
     notEarned: 'Алынбаған',
@@ -516,6 +582,7 @@ const kk: Translations = {
 
   // ── Adaptive ────────────────────────────────────────────────────────
   adaptive: {
+    planQuotaReached: 'AI жоспар бүгінге қолжетімсіз. Ертең қайталап көріңіз.',
     title: 'ТАЛДАУ',
     subtitle: 'Ақылды дайындық',
     avgScore: 'Орташа балл',
@@ -559,6 +626,29 @@ const kk: Translations = {
 
   // ── Calc ─────────────────────────────────────────────────────────────
   calc: {
+    uniWord: 'ЖОО',
+    yourPrognosis: 'сенің ҰБТ болжамың',
+    entScore: 'ҰБТ балы',
+    almostGrant: 'ГРАНТҚА АЗ ҚАЛДЫ',
+    grant: 'ГРАНТ',
+    medium: 'ОРТАША',
+    tooLow: 'АЗ',
+    restorePrognosis: 'болжамды қайтару',
+    editScoreManually: 'балды қолмен өзгерту',
+    takeTestCta: 'Тест тапсыр — дәл есептейміз',
+    takeTestCtaSub: 'Әзірге 80 қойдық — қолмен өзгертуге болады',
+    testButton: 'тест',
+    topChances: 'сенің үздік мүмкіндіктерің',
+    matchSafe: 'сенімді',
+    matchRealistic: 'нақты',
+    matchDream: 'арман',
+    minShort: 'мин',
+    yourShort: 'сенікі',
+    searchPlaceholder: 'мамандық, ЖОО немесе қала іздеу...',
+    foundCount: '{n} табылды',
+    savedCount: '{n} сақталды',
+    nothingFound: 'Ештеңе табылмады',
+    nothingFoundHint: 'Басқа сұраныс жаз немесе сүзгілерді алып таста',
     title: 'Грант калькуляторы',
     subtitle: 'Мүмкіндіктеріңізді біліңіз',
     unisAcross: 'бүкіл Қазақстан бойынша ЖОО',
@@ -629,6 +719,7 @@ const kk: Translations = {
 
   // ── Auth ─────────────────────────────────────────────────────────────
   auth: {
+    changePhoto: 'Фотоны өзгерту',
     photoUpdated: 'Фото жаңартылды',
     photoError: 'Фото жүктеу қатесі',
     photoPartial: 'Фото жаңартылды. Рейтингте және достарда кейінірек көрінеді',
@@ -645,6 +736,7 @@ const kk: Translations = {
 
   // ── Auth Prompt ─────────────────────────────────────────────────────
   authPrompt: {
+    eyebrow: '• 5 секунд •',
     benefit1: 'Прогресс барлық құрылғыларда сақталады',
     benefit2: 'Достармен 1-ге-1 дуэльдер',
     benefit3: 'Рейтинг және жарыстар',
@@ -719,6 +811,8 @@ const kk: Translations = {
 
   // ── Profile Select ──────────────────────────────────────────────────
   profileSelect: {
+    step1of2: '2 қадамнан 1-і',
+    selectedCount: 'таңдалды {n}/2',
     title: 'Бейіндік пәндерді таңда',
     subtitle: 'ҰБТ = 3 міндетті (матсауаттылық, оқу, тарих) + 2 бейіндік пән. Әрбір бейіндік — 40 тапсырма.',
     hint: '2 пән таңда. Баптауларда кез келген уақытта өзгертуге болады.',
@@ -739,6 +833,18 @@ const kk: Translations = {
 
   // ── Paywall ────────────────────────────────────────────────────────
   paywall: {
+    goalReached: 'мақсат сенікі',
+    goalRemaining: 'мақсатқа {target}',
+    hookReachedLead: 'Грант қалтаңда.',
+    hookReachedRest: 'ҰБТ-ға дейін қарқынды ұста — AI әлсіз тұстарыңды жабады.',
+    hookBehindLead: 'PRO',
+    hookBehindHighlight: 'қай жерде балл жоғалтатыныңды',
+    hookBehindRest: 'көрсетеді және жетпей тұрған {n} баллды алуға көмектеседі.',
+    priceRepetitorLabel: 'Репетитор',
+    priceUnitMonth: '/ай',
+    priceUnit3Month: '/3 ай',
+    ctaSeasonLabel: 'PRO алу',
+    securePayment: 'Қауіпсіз төлем',
     dailyLimit: 'AI-талдау лимиті таусылды',
     fullent: 'ҰБТ-симуляция Premium үшін',
     ai: 'AI-талдау Premium үшін',
@@ -874,6 +980,8 @@ const kk: Translations = {
   // ── Contextual Errors (ErrorBoundary per screen) ──────────────────
   // ── Subject analytics ───────────────────────────────────────────────
   analytics: {
+    growthTitle: 'Сенің өсуің',
+    testsForms: 'тест',
     title: 'Аналитика',
     weeklyTitle: 'Апталар бойынша белсенділік',
     accuracyTitle: 'Бөлімдер бойынша дәлдік',
@@ -894,6 +1002,7 @@ const kk: Translations = {
   },
 
   rush: {
+    expand: 'Жаю',
     title: 'Question Rush',
     tagline: 'Жұлдыздармен жылдамдыққа жаттығу',
     pickSubject: 'Пәнді таңда',
@@ -997,6 +1106,10 @@ const kk: Translations = {
   },
 
   teacher: {
+    print: 'Басып шығару',
+    testsWord: 'тест',
+    classNamePlaceholder: '11Б',
+    schoolPlaceholder: 'НЗМ Алматы',
     panel: 'Мұғалім панелі',
     loginRequired: 'Сынып жасау үшін аккаунтқа кіріңіз',
     createClass: 'Сынып жасау',
@@ -1096,6 +1209,60 @@ const kk: Translations = {
     whatsappBtn: 'WhatsApp',
     copyBtn: 'сілтемені көшіру',
     close: 'Жабу',
+  },
+  tutor: {
+    sendLabel: 'Жіберу',
+    name: 'Дияр',
+    online: 'онлайн',
+    welcome: 'Сәлем! Мен — Дияр, сенің AI-репетиторыңмын. Кез келген есепті қадаммен талдаймын, тақырыпты қарапайым сөзбен түсіндіремін, дайындық жоспарын құрамын. Есептің суретін жіберсең де болады — шешіп беремін. 24/7, тегін.',
+    welcomeHint: 'Бірдеңе сұра ↓',
+    inputPlaceholderAny: 'Кез келген сұрақ қой...',
+    inputPlaceholder: 'Бірдеңе сұра...',
+    inputPlaceholderLimit: 'Бірдеңе сұра... ({n}/10)',
+    cameraLabel: 'Тапсырманың суреті',
+    imageAlt: 'тапсырма',
+    photoCaption: 'Осы тапсырманы шеш',
+    photoReceived: 'Фотоны қабылдадым. Сурет бойынша талдау жақын арада қосылады 💜',
+    photoTooLarge: 'Сурет тым үлкен (3 МБ-тан көп)',
+    photoBadFormat: 'JPG, PNG немесе WebP жүктеңіз',
+    errorWord: 'Қате',
+    sendError: 'Қате: {err}. Қайтадан жіберіп көр.',
+    explainTopicPrompt: 'Маған тақырыпты түсіндір: {topic}',
+    pickerTitle: 'Тақырыпты таңда',
+    pickerSubtitle: 'Дияр қадаммен түсіндіреді',
+    sgExplainTopic: 'Тақырыпты түсіндір',
+    sgMakePlan: 'Жоспар құр',
+    sgMakePlanMsg: 'Маған ҰБТ-ға дайындық жоспарын құр',
+    sgReviewErrors: 'Қателерді талда',
+    sgReviewErrorsMsg: 'Менің қателерімді талда да, заңдылықты тап',
+    sgScared: 'Мен қорқамын',
+    sgScaredMsg: 'Мен ҰБТ-дан қорқамын. Маған қолдау керек',
+    supportTitle: 'қолдау',
+    supportText: 'Мен — Дияр, 17 жастамын. Әрбір AI-хабарлама ақшаға түседі. Бірақ мен мұны тегін қалдырғым келеді.',
+  },
+  theory: {
+    title: 'Конспекттер',
+    topicSummary: 'Тақырып бойынша конспект',
+    checkYourself: 'Тест тапсыру',
+    fix: 'Түзету',
+    fixMessage: 'Конспект: {topic}. Ұсыныс: ',
+    summarySoon: 'Конспект жақында шығады',
+    subjectSummariesSoon: 'Бұл пән бойынша конспекттер жақында шығады',
+    summary: 'Конспект',
+    topicsWord: 'тақырып',
+    summariesWord: 'конспект',
+  },
+  profile: {
+    levelShort: 'дең.',
+    chooseNick: 'ник таңда',
+    recoverPrompt: 'Төледің, бірақ PRO қосылмады ма? Қалпына келтір',
+    recoverOrderHint: 'Lemon Squeezy хатындағы тапсырыс нөмірі («Order #12345»):',
+    recoverSubmit: 'Қалпына келтіру',
+    recoverChecking: 'Тексерілуде…',
+    recoverCancel: 'Болдырмау',
+    recoverOrderError: 'Тапсырыс нөмірін енгізіңіз (тек сандар)',
+    recoverSuccess: 'Премиум {date} дейін белсендірілді',
+    recoverGenericError: 'Қате',
   },
 } as const;
 

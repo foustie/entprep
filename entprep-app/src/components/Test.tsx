@@ -28,6 +28,7 @@ import MatchingCard from './ui/MatchingCard';
 import { calcTestXP } from '../utils/xpHelpers';
 import ScoreRing from './ui/ScoreRing';
 import PaywallScreen from './ui/PaywallScreen';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useT } from '../locales';
 
 interface TestProps {
@@ -80,6 +81,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
   // qShownAtRef resets when the current question changes; qTimesRef stores seconds spent per index.
   const qShownAtRef = useRef(Date.now());
   const qTimesRef = useRef<Record<number, number>>({});
+  const leaveDlgRef = useRef<HTMLDivElement>(null);
 
   const doLeave = () => {
     setShowLeaveConfirm(false);
@@ -96,7 +98,10 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
     doLeave();
   };
 
-  useEffect(() => { let cancelled = false; (async () => { const questions = customQs ? customQs.map(q => ({ ...q, o: [...q.o] })) : await getQs(sid, sub.cnt, useShuffle, tid, st.lang); if (cancelled) return; if (questions.length === 0) { toast.error('Нет доступных вопросов по этой теме'); doLeave(); return; } const tot = questions.length; const timerSec = tid ? Math.max(5 * 60, Math.round(baseTime * (tot / sub.cnt))) : baseTime; setQs(questions); setTl(timerSec); setLoading(false); })(); return () => { cancelled = true } }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Focus management for the leave-confirm dialog (initial focus, Tab trap, Escape, restore).
+  useFocusTrap(leaveDlgRef, showLeaveConfirm, () => setShowLeaveConfirm(false));
+
+  useEffect(() => { let cancelled = false; (async () => { const questions = customQs ? customQs.map(q => ({ ...q, o: [...q.o] })) : await getQs(sid, sub.cnt, useShuffle, tid, st.lang); if (cancelled) return; if (questions.length === 0) { toast.error(t.test.noQuestionsForTopic); doLeave(); return; } const tot = questions.length; const timerSec = tid ? Math.max(5 * 60, Math.round(baseTime * (tot / sub.cnt))) : baseTime; setQs(questions); setTl(timerSec); setLoading(false); })(); return () => { cancelled = true } }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (loading || !useTmr || offline) { if (tr.current) { clearInterval(tr.current); tr.current = null; } return; } tr.current = setInterval(() => setTl(p => { if (p <= 1) { clearInterval(tr.current!); autoFinished.current = true; setFin(true); return 0; } return p - 1; }), 1000); return () => { if (tr.current) clearInterval(tr.current); }; }, [loading, offline]);
   useEffect(() => { if (!fin || !autoFinished.current || !qs) return; autoFinished.current = false; const tot = qs.length; const timerSec = tid ? Math.max(5 * 60, Math.round(baseTime * (tot / sub.cnt))) : baseTime; const cc = qs.filter((q, i) => ans[i] !== undefined && scoreQuestion(q, ans[i]).correct).length; const qd = buildQd(qs, ans, qTimesRef.current); finish({ su: sid, tp: tid || undefined, co: cc, to: tot, sc: tot ? Math.round(cc / tot * 100) : 0, dt: new Date().toLocaleDateString("ru-RU"), tm: timerSec, qd, _leaderboard: buildLeaderboardData() }); }, [fin]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -164,15 +169,15 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
   /* Leave confirm overlay — replaces window.confirm (broken in iOS PWA) */
   if (showLeaveConfirm) return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: 20 }}>
-      <div style={{ background: 'var(--bg-card)', borderRadius: 16, padding: '24px 20px', maxWidth: 320, width: '100%', textAlign: 'center' }}>
-        <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{t.test.leaveTestConfirm}</div>
+      <div ref={leaveDlgRef} role="dialog" aria-modal="true" aria-label={t.test.leaveTestConfirm} tabIndex={-1} style={{ background: 'var(--bg-card)', borderRadius: 16, padding: '24px 20px', maxWidth: 320, width: '100%', textAlign: 'center' }}>
+        <h2 style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>{t.test.leaveTestConfirm}</h2>
         <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 20 }}>{Object.keys(ans).length}/{qs.length}</div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={() => setShowLeaveConfirm(false)} style={{ flex: 1, padding: '12px 0', borderRadius: 10, border: '1px solid var(--border)', background: 'none', color: 'var(--text)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-            {st.lang === 'kk' ? 'Жалғастыру' : 'Продолжить'}
+            {t.test.continue}
           </button>
           <button onClick={doLeave} style={{ flex: 1, padding: '12px 0', borderRadius: 10, border: 'none', background: COLORS.red, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-            {st.lang === 'kk' ? 'Шығу' : 'Выйти'}
+            {t.test.exit}
           </button>
         </div>
       </div>
@@ -214,14 +219,14 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
     try {
       const { data: { session } } = await supabase!.auth.getSession();
       const token = session?.access_token;
-      if (!token) { setAiLoad(p => ({ ...p, [index]: false })); toast.error('Сессия истекла. Войдите заново.'); return; }
+      if (!token) { setAiLoad(p => ({ ...p, [index]: false })); toast.error(t.test.sessionExpired); return; }
       const qItem = qs[index];
       const res = await fetch(`${API_BASE}/api/ai-explain`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
         body: JSON.stringify({ question: qItem.q, options: qItem.o, userAnswer: ans[index], correctAnswer: qItem.c, explanation: qItem.e, questionType: getQType(qItem), pairs: qItem.pairs, lang: st.lang, subject: sid })
       });
-      if (res.status === 403) { setAiText(p => ({ ...p, [index]: { short: 'AI объяснения на сегодня закончились. Приходи завтра!', detailed: 'AI объяснения на сегодня закончились. Приходи завтра!' } })); setAiLoad(p => ({ ...p, [index]: false })); return; }
+      if (res.status === 403) { setAiText(p => ({ ...p, [index]: { short: t.test.aiDailyLimit, detailed: t.test.aiDailyLimit } })); setAiLoad(p => ({ ...p, [index]: false })); return; }
       const data = await res.json();
       if (data.short) setAiText(p => ({ ...p, [index]: { short: data.short, detailed: data.detailed || data.short } }));
       else if (data.explanation) setAiText(p => ({ ...p, [index]: { short: data.explanation, detailed: data.explanation } }));
@@ -289,8 +294,8 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
   const record = fin && !customQs ? isNewRecord(hist, { su: sid, sc: pct } as TestResult) : { isRecord: false, prevBest: 0, improvement: 0 };
   const aiBtn = (index: number) => {
     const aiButtonLabel = aiLoad[index] ? t.test.thinking : isPremium
-      ? (st.lang === 'kk' ? 'AI толығырақ түсіндірсін' : 'AI объяснит по-другому')
-      : (st.lang === 'kk' ? `AI түсіндірсін (${getExplainRemaining()})` : `AI объяснит иначе (${getExplainRemaining()})`);
+      ? t.test.aiExplainDifferent
+      : t.test.aiExplainRemaining.replace('{n}', String(getExplainRemaining()));
     return (
     <div style={{ marginTop: 10 }}>
       {user ? <>
@@ -314,7 +319,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
                 width: 28, height: 28, borderRadius: 8,
                 background: COLORS.streak, border: '1.5px solid var(--ink)',
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                color: '#fff', fontFamily: FF.display,
+                color: '#fff', fontFamily: FF.brand,
                 fontWeight: 900, fontSize: 12, letterSpacing: '-0.04em', flexShrink: 0,
               }}>Д</span>
               <span style={{ flex: 1 }}>{aiButtonLabel}</span>
@@ -346,7 +351,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
               width: 32, height: 32, borderRadius: 9,
               background: COLORS.streak, border: '1.5px solid var(--ink)',
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              color: '#fff', fontFamily: FF.display,
+              color: '#fff', fontFamily: FF.brand,
               fontWeight: 900, fontSize: 14, letterSpacing: '-0.04em',
               flexShrink: 0, marginBottom: 2,
             }}>Д</div>
@@ -363,7 +368,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
                 fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 800,
                 letterSpacing: '0.14em', textTransform: 'uppercase',
                 color: COLORS.streak, marginBottom: 6,
-              }}>Дияр говорит</div>
+              }}>{t.test.diyarSays}</div>
               <div style={{
                 fontFamily: "'Nunito',sans-serif", fontSize: 13, fontWeight: 600,
                 color: 'var(--text)', lineHeight: 1.55, whiteSpace: 'pre-wrap',
@@ -399,7 +404,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
             width: 26, height: 26, borderRadius: 7,
             background: 'var(--bg-card)', border: '1.5px solid rgba(15,15,16,0.2)',
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            color: 'var(--text-muted)', fontFamily: FF.display,
+            color: 'var(--text-muted)', fontFamily: FF.brand,
             fontWeight: 900, fontSize: 11, letterSpacing: '-0.04em', flexShrink: 0,
           }}>Д</span>
           <span style={{ flex: 1 }}>{t.test.aiLoginHint}</span>
@@ -439,7 +444,8 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
             : pct >= 40 ? t.test.resultTierOk
             : t.test.resultTierLow;
           return (
-            <div style={{
+            <h1 style={{
+              margin: 0,
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -456,17 +462,17 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
               {pct >= 80 && <Sparkles size={22} color={COLORS.xp} fill={COLORS.xp} strokeWidth={2.5} style={{ filter: 'drop-shadow(0 0 3px rgba(255,194,51,0.6))' }} />}
               {tierPhrase}
               {pct >= 80 && <Sparkles size={22} color={COLORS.xp} fill={COLORS.xp} strokeWidth={2.5} style={{ filter: 'drop-shadow(0 0 3px rgba(255,194,51,0.6))' }} />}
-            </div>
+            </h1>
           );
         })()}
         <ScoreRing value={pct} label={`${pct}%`} sublabel={`${cc}/${tot} ${t.correct}`} />
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 16 }}>
           <div style={{ background: 'rgba(255,255,255,0.6)', border: '1.5px solid var(--ink)', borderRadius: 12, padding: "10px 8px" }}>
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: "'JetBrains Mono',monospace", color: 'var(--ink)', opacity: 0.55, marginBottom: 3 }}>{t.test.timeLabel}</div>
+            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: "'JetBrains Mono',monospace", color: 'var(--ink)', opacity: 0.8, marginBottom: 3 }}>{t.test.timeLabel}</div>
             <div style={{ fontSize: 16, fontWeight: 900, fontFamily: FF.display, letterSpacing: '-0.025em', color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' }}>{fm(timerSec - tl)}</div>
           </div>
           <div style={{ background: 'rgba(255,255,255,0.6)', border: '1.5px solid var(--ink)', borderRadius: 12, padding: "10px 8px" }}>
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: "'JetBrains Mono',monospace", color: 'var(--ink)', opacity: 0.55, marginBottom: 3 }}>XP</div>
+            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: "'JetBrains Mono',monospace", color: 'var(--ink)', opacity: 0.8, marginBottom: 3 }}>XP</div>
             <div style={{ fontSize: 16, fontWeight: 900, fontFamily: FF.display, letterSpacing: '-0.025em', color: '#C77D00', fontVariantNumeric: 'tabular-nums' }}>+{calcTestXP({ su: sid, sc: pct, dt: '', co: cc, to: tot })}</div>
           </div>
         </div>
@@ -501,7 +507,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
       <div key={i} style={{ ...CARD_COMPACT, padding: "12px 13px", marginBottom: 6, borderLeft: `3px solid ${borderColor}` }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div style={{ fontSize: 12, color: "var(--text-body)", marginBottom: 3, fontWeight: 500, flex: 1 }}>{i + 1}. {q.q}</div>
-          {sr && qt !== 'single' && <span style={{ fontSize: 10, fontWeight: 700, color: borderColor, flexShrink: 0, marginLeft: 8 }}>{sr.pts}/{sr.maxPts} б.</span>}
+          {sr && qt !== 'single' && <span style={{ fontSize: 10, fontWeight: 700, color: borderColor, flexShrink: 0, marginLeft: 8 }}>{sr.pts}/{sr.maxPts} {t.test.pointsShort}</span>}
         </div>
         {qt === 'single' && (ua !== undefined ? (<div style={{ fontSize: 11, color: ok ? COLORS.green : COLORS.red, display: "flex", alignItems: "center", gap: 4 }}>
           {ok ? <Check size={13} /> : <X size={13} />} {q.o[ua as number]}{!ok && <span style={{ color: COLORS.green }}> → {q.o[getSingleCorrect(q)]}</span>}

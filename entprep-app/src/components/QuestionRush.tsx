@@ -6,6 +6,7 @@ import { shuffleArray, shuffleOptions } from '../utils/questionHelpers';
 import { getQType, getSingleCorrect } from '../types';
 import { clampQdTime, qdDifficulty } from '../utils/qdHelpers';
 import type { Question, TestResult, QuestionDetail } from '../types';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useApp } from '../contexts/AppContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useNav } from '../contexts/NavigationContext';
@@ -95,6 +96,7 @@ export default function QuestionRush({ save }: RushProps) {
   const [elapsed, setElapsed] = useState(0);
 
   const qdRef = useRef<QuestionDetail[]>([]);
+  const proDlgRef = useRef<HTMLDivElement>(null);
   const startTimeRef = useRef(0);
   const advanceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lockedRef = useRef(false);
@@ -268,6 +270,8 @@ export default function QuestionRush({ save }: RushProps) {
     });
   }, [phase, stars, correct, questions.length, subject, save]);
 
+  useFocusTrap(proDlgRef, showPro, () => setShowPro(false));
+
   const toggleDiff = (d: DiffKey) => {
     if (d === 'challenge' && !isPremium && !diffs.has('challenge')) { setShowPro(true); return; }
     setDiffs(prev => { const n = new Set(prev); if (n.has(d)) n.delete(d); else n.add(d); return n; });
@@ -373,7 +377,7 @@ export default function QuestionRush({ save }: RushProps) {
                     </span>
                   </button>
                   {c.subs.length > 0 && (
-                    <button onClick={() => setExpanded(expanded === c.id ? null : c.id)} aria-label="expand" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+                    <button onClick={() => setExpanded(expanded === c.id ? null : c.id)} aria-label={t.rush.expand} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
                       <ChevronDown size={18} color="var(--text-muted)" style={{ transform: expanded === c.id ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
                     </button>
                   )}
@@ -443,7 +447,7 @@ export default function QuestionRush({ save }: RushProps) {
               </button>
             );
           })}
-          <button onClick={() => setSkipDone(v => !v)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '12px 2px', marginTop: 4 }}>
+          <button onClick={() => setSkipDone(v => !v)} role="switch" aria-checked={skipDone} aria-label={t.rush.skipCompleted} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '12px 2px', marginTop: 4 }}>
             <span style={{ textAlign: 'left' }}>
               <span style={{ display: 'block', fontSize: 14, fontWeight: 700, fontFamily: FF.body, color: 'var(--text)' }}>{t.rush.skipCompleted}</span>
               <span style={{ fontSize: 11, fontFamily: FF.body, color: 'var(--text-muted)' }}>{t.rush.skipCompletedDesc}</span>
@@ -497,7 +501,7 @@ export default function QuestionRush({ save }: RushProps) {
 
         {showPro && (
           <div onClick={() => setShowPro(false)} style={{ position: 'fixed', inset: 0, background: 'var(--bg-overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 24 }}>
-            <div onClick={e => e.stopPropagation()} style={{ ...CARD, background: 'var(--bg-modal)', borderRadius: 18, boxShadow: `0 5px 0 0 ${INK}`, padding: '28px 22px', maxWidth: 320, textAlign: 'center', position: 'relative' }}>
+            <div ref={proDlgRef} role="dialog" aria-modal="true" aria-label={t.rush.proTitle} tabIndex={-1} onClick={e => e.stopPropagation()} style={{ ...CARD, background: 'var(--bg-modal)', borderRadius: 18, boxShadow: `0 5px 0 0 ${INK}`, padding: '28px 22px', maxWidth: 320, textAlign: 'center', position: 'relative' }}>
               <button onClick={() => setShowPro(false)} aria-label={t.close} style={{ position: 'absolute', top: 12, right: 12, width: 32, height: 32, borderRadius: 16, border: `2px solid ${INK}`, background: 'var(--bg-subtle)', cursor: 'pointer', color: 'var(--text)' }}><X size={16} /></button>
               <div style={{ width: 56, height: 56, borderRadius: 16, margin: '0 auto 14px', background: COLORS.xpSoft, border: `2px solid ${INK}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Crown size={28} color={INK} /></div>
               <h3 style={{ ...TYPE.h3, fontSize: 18, margin: '0 0 8px' }}>{t.rush.proTitle}</h3>

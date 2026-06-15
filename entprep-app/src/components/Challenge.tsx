@@ -71,7 +71,7 @@ export default function Challenge({ data }: ChallengeProps) {
             fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
             letterSpacing: '0.18em', textTransform: 'uppercase',
             color: COLORS.streak, marginBottom: 6,
-          }}>вызов на дуэль</div>
+          }}>{t.challenge.duelEyebrow}</div>
           <h2 style={{
             fontFamily: FF.display, fontSize: 24, fontWeight: 900,
             color: 'var(--ink)', letterSpacing: '-0.035em', margin: '0 0 8px', lineHeight: 1.05,

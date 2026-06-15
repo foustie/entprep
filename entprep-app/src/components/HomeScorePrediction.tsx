@@ -1,8 +1,8 @@
 import { UNIS } from '../data/universities';
 import { CARD_COMPACT, COLORS } from '../constants/styles';
 import { useNav } from '../contexts/NavigationContext';
-import { useApp } from '../contexts/AppContext';
 import { useT } from '../locales';
+import { pluralizeForms } from '../utils/formatters';
 import { TrendingUp, GraduationCap, ChevronRight, Target } from 'lucide-react';
 import type { TestResult } from '../types';
 import { predictScore } from '../utils/predictScore';
@@ -28,9 +28,7 @@ interface Props {
 
 export default function HomeScorePrediction({ hist }: Props) {
   const { nav } = useNav();
-  const { st } = useApp();
   const t = useT();
-  const isKk = st.lang === 'kk';
 
   const predicted = predictScore(hist);
   if (predicted === null) return null;
@@ -57,7 +55,7 @@ export default function HomeScorePrediction({ hist }: Props) {
           </div>
           <div>
             <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
-              {isKk ? 'ҰБТ болжамы' : 'Прогноз ЕНТ'}
+              {t.home.entPrediction}
             </div>
             <div style={{
               fontSize: 22, fontWeight: 800,
@@ -79,7 +77,7 @@ export default function HomeScorePrediction({ hist }: Props) {
           }}
         >
           <Target size={13} />
-          {isKk ? 'Тексеру' : 'Проверить'}
+          {t.home.check}
         </button>
       </div>
 
@@ -91,7 +89,7 @@ export default function HomeScorePrediction({ hist }: Props) {
             textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6,
           }}>
             <GraduationCap size={11} style={{ verticalAlign: -2, marginRight: 4 }} />
-            {isKk ? 'Грант бойынша' : 'Гранты'}
+            {t.home.grants}
           </div>
 
           {passing.map(u => (
@@ -103,7 +101,7 @@ export default function HomeScorePrediction({ hist }: Props) {
               <span style={{ color: COLORS.green, fontSize: 11, flexShrink: 0 }}>&#10003;</span>
               <span style={{ flex: 1, color: 'var(--text)', fontWeight: 500 }}>{u.n}</span>
               <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: "'JetBrains Mono',monospace" }}>
-                {isKk ? 'бастап' : 'от'} {u.min}
+                {t.home.from} {u.min}
               </span>
             </div>
           ))}
@@ -127,9 +125,9 @@ export default function HomeScorePrediction({ hist }: Props) {
               fontSize: 10, color: 'var(--text-secondary)', marginTop: 6,
               fontStyle: 'italic',
             }}>
-              {isKk
-                ? `Тағы ${reach[0].min - predicted} балл жинасаң — ${reach[0].n} грантына өтесің`
-                : `Ещё +${reach[0].min - predicted} баллов — и ${reach[0].n} на гранте`}
+              {t.home.reachHint
+                .replace('{n}', String(reach[0].min - predicted))
+                .replace('{uni}', reach[0].n)}
             </div>
           )}
         </div>
@@ -145,7 +143,9 @@ export default function HomeScorePrediction({ hist }: Props) {
           cursor: 'pointer', color: COLORS.teal, fontSize: 11, fontWeight: 600,
         }}
       >
-        {isKk ? `Барлық ${UNIS.length} университет` : `Все ${UNIS.length} университетов`}
+        {t.home.allUnis
+          .replace('{n}', String(UNIS.length))
+          .replace('{word}', pluralizeForms(UNIS.length, t.home.universityForms))}
         <ChevronRight size={14} />
       </button>
     </div>

@@ -30,7 +30,7 @@ export default function BrandMark({ size = 30, withWordmark = true }: Props) {
         }}
       />
       {withWordmark && (
-        <span style={{ fontSize: Math.round(size * 0.55), fontWeight: 900, fontFamily: FF.display, letterSpacing: '-0.03em', lineHeight: 1 }}>
+        <span style={{ fontSize: Math.round(size * 0.55), fontWeight: 900, fontFamily: FF.brand, letterSpacing: '-0.03em', lineHeight: 1 }}>
           <span style={{ color: 'var(--text)' }}>ENT</span>
           <span style={{ color: COLORS.streak }}>prep.</span>
         </span>

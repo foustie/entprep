@@ -63,7 +63,7 @@ export default function ProfileSelect({ onConfirm }: ProfileSelectProps) {
           marginBottom: 12,
         }}>
           <Target size={12} strokeWidth={2.8} />
-          <span>шаг 1 из 2</span>
+          <span>{t.profileSelect.step1of2}</span>
         </div>
         <h1 style={{
           margin: 0, marginBottom: 8,
@@ -99,7 +99,7 @@ export default function ProfileSelect({ onConfirm }: ProfileSelectProps) {
           letterSpacing: '0.1em', textTransform: 'uppercase',
         }}>
           {ready && <Check size={12} strokeWidth={3} />}
-          выбрано {sel.length}/2
+          {t.profileSelect.selectedCount.replace('{n}', String(sel.length))}
         </div>
       </div>
 
@@ -253,7 +253,7 @@ export default function ProfileSelect({ onConfirm }: ProfileSelectProps) {
             color: COLORS.textMuted, cursor: 'pointer', padding: 8,
           }}
         >
-          {(t.profileSelect as Record<string, string>).skipForNow || 'Пропустить — выберу позже'}
+          {t.profileSelect.skipForNow}
         </button>
       )}
 

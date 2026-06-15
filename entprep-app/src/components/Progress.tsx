@@ -30,7 +30,7 @@ function ActivityHeatmap({ hist }: { hist: TestResult[] }) {
 
   const today = new Date();
   const days: { date: Date; key: string; count: number }[] = [];
-  for (let i = 83; i >= 0; i--) {
+  for (let i = 181; i >= 0; i--) {
     const d = new Date(today); d.setDate(d.getDate() - i);
     const key = d.toLocaleDateString("ru-RU");
     days.push({ date: d, key, count: counts[key] || 0 });
@@ -86,6 +86,14 @@ function ActivityHeatmap({ hist }: { hist: TestResult[] }) {
             ))}
           </div>
         ))}
+      </div>
+      {/* Intensity legend (Меньше → Больше) */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4, marginTop: 8, fontSize: 9, color: "var(--text-muted)" }}>
+        {t.progress.legendLess}
+        {["var(--bg-subtle)", "rgba(34,197,94,0.2)", "rgba(34,197,94,0.4)", "rgba(34,197,94,0.6)", "rgba(34,197,94,0.85)"].map((c, li) => (
+          <div key={li} style={{ width: 9, height: 9, borderRadius: 2, background: c }} />
+        ))}
+        {t.progress.legendMore}
       </div>
     </div>
   );
@@ -262,7 +270,7 @@ function Badges({ hist, subjects }: { hist: TestResult[]; subjects: string[] }) 
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
         {badges.map(b => (
-          <div key={b.id} role="button" tabIndex={0} onClick={() => { setSelected(selected === b.id ? null : b.id); if (isNew(b)) markSeen(b.id); }} style={{ textAlign: "center", padding: "8px 4px", borderRadius: 8, background: selected === b.id ? (b.earned ? "rgba(245,158,11,0.15)" : "rgba(100,100,100,0.1)") : b.earned ? "rgba(245,158,11,0.06)" : "var(--bg-subtle)", border: selected === b.id ? (b.earned ? "1.5px solid rgba(245,158,11,0.4)" : "1.5px solid var(--border)") : b.earned ? "1px solid rgba(245,158,11,0.15)" : "1px solid transparent", opacity: b.earned ? 1 : 0.35, cursor: "pointer", transition: "all 0.15s", position: "relative", animation: isNew(b) ? "confetti 0.8s ease-out" : undefined }}>
+          <div key={b.id} role="button" tabIndex={0} aria-pressed={selected === b.id} aria-label={b.name} onClick={() => { setSelected(selected === b.id ? null : b.id); if (isNew(b)) markSeen(b.id); }} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelected(selected === b.id ? null : b.id); if (isNew(b)) markSeen(b.id); } }} style={{ textAlign: "center", padding: "8px 4px", borderRadius: 8, background: selected === b.id ? (b.earned ? "rgba(245,158,11,0.15)" : "rgba(100,100,100,0.1)") : b.earned ? "rgba(245,158,11,0.06)" : "var(--bg-subtle)", border: selected === b.id ? (b.earned ? "1.5px solid rgba(245,158,11,0.4)" : "1.5px solid var(--border)") : b.earned ? "1px solid rgba(245,158,11,0.15)" : "1px solid transparent", opacity: b.earned ? 1 : 0.35, cursor: "pointer", transition: "all 0.15s", position: "relative", animation: isNew(b) ? "confetti 0.8s ease-out" : undefined }}>
             <b.Icon size={20} color={b.earned ? b.color : 'var(--text-muted)'} />
             <div style={{ fontSize: 8, color: b.earned ? "var(--text-secondary)" : "var(--text-muted)", marginTop: 2, lineHeight: 1.2 }}>{b.name}</div>
             {isNew(b) && (
@@ -461,11 +469,12 @@ export default function Progress() {
         <XPSection hist={hist} />
         <Badges hist={hist} subjects={subjects} />
         <Leaderboard subjects={subjects} names={names} />
+        {subjects.some(sid => hist.some(h => h.su === sid && h.type !== 'rush')) && (<>
         <div style={{
           fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 800,
           letterSpacing: '0.16em', textTransform: 'uppercase',
           color: 'var(--text-muted)', marginBottom: 8, padding: '0 4px',
-        }}>по предметам</div>
+        }}>{t.progress.bySubjects}</div>
         <div style={{ display: "grid", gridTemplateColumns: bp === 'mobile' ? '1fr' : bp === 'tablet' ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 8, marginBottom: 28 }}>
         {subjects.map(sid => {
           const tests = hist.filter(t => t.su === sid && t.type !== 'rush');
@@ -505,7 +514,7 @@ export default function Progress() {
                     fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 700,
                     letterSpacing: '0.1em', textTransform: 'uppercase',
                     color: 'var(--text-muted)', marginTop: 2,
-                  }}>{tests.length} {tests.length === 1 ? 'тест' : tests.length < 5 ? 'теста' : 'тестов'}</div>
+                  }}>{tests.length} {pluralizeForms(tests.length, t.progress.testsWord)}</div>
                 </div>
               </div>
               {scoreHist.length >= 2 ? (
@@ -523,7 +532,7 @@ export default function Progress() {
                   letterSpacing: '0.08em', textTransform: 'uppercase',
                   color: 'var(--text-muted)',
                 }}>
-                  нужен ещё тест для графика
+                  {t.progress.needMoreForChart}
                 </div>
               )}
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 6 }}>
@@ -537,7 +546,7 @@ export default function Progress() {
                     fontFamily: "'JetBrains Mono',monospace", fontSize: 8, fontWeight: 800,
                     letterSpacing: '0.12em', textTransform: 'uppercase',
                     color: 'var(--text-muted)', marginBottom: 2,
-                  }}>средний</div>
+                  }}>{t.progress.avgShort}</div>
                   <div style={{
                     fontFamily: FF.display, fontSize: 13, fontWeight: 900,
                     color: scoreColor(avgSc), fontVariantNumeric: 'tabular-nums',
@@ -555,7 +564,7 @@ export default function Progress() {
                     letterSpacing: '0.12em', textTransform: 'uppercase',
                     color: COLORS.win, marginBottom: 2,
                     display: 'inline-flex', alignItems: 'center', gap: 3,
-                  }}><Trophy size={9} strokeWidth={2.6} /> рекорд</div>
+                  }}><Trophy size={9} strokeWidth={2.6} /> {t.progress.recordShort}</div>
                   <div style={{
                     fontFamily: FF.display, fontSize: 13, fontWeight: 900,
                     color: COLORS.win, fontVariantNumeric: 'tabular-nums',
@@ -567,6 +576,7 @@ export default function Progress() {
           );
         })}
         </div>
+        </>)}
         {hist.filter(t => t.type === "fullent").length > 0 && <>
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 5,
@@ -577,7 +587,11 @@ export default function Progress() {
             <GraduationCap size={12} strokeWidth={2.4} />{t.progress.fullEnt}
           </div>
           {hist.filter(t => t.type === "fullent").slice(-3).reverse().map((t: TestResult, i: number) => {
-            const fe = t as TestResult & { score?: number; sections?: Array<{ icon?: string; label: string; pts: number; maxPts: number; passed: boolean; sid?: string }> };
+            type FeSection = { icon?: string; label?: string; pts?: number; maxPts?: number; passed?: boolean; sid?: string };
+            const fe = t as TestResult & { score?: number; sections?: FeSection[] | Record<string, FeSection> };
+            // Legacy history rows persisted `sections` as a Record; newer ones as an array.
+            // Normalize to an array (mirrors computeBadges / calcTestXP) so .map never throws.
+            const feSections: FeSection[] = Array.isArray(fe.sections) ? fe.sections : fe.sections ? Object.values(fe.sections) : [];
             const sc = fe.score || 0;
             const scColor = sc >= 100 ? COLORS.win : sc >= 70 ? COLORS.xp : COLORS.streak;
             const scBg = sc >= 100 ? COLORS.winSoft : sc >= 70 ? COLORS.xpSoft : COLORS.streakSoft;
@@ -603,13 +617,13 @@ export default function Progress() {
                     fontVariantNumeric: 'tabular-nums',
                   }}>{sc}/140</div>
                 </div>
-                {fe.sections && (
+                {feSections.length > 0 && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    {fe.sections.map((s, j) => (
+                    {feSections.map((s, j) => (
                       <div key={j} style={{
                         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                         padding: '5px 0',
-                        borderBottom: j < fe.sections!.length - 1 ? '1px solid rgba(15,15,16,0.06)' : 'none',
+                        borderBottom: j < feSections.length - 1 ? '1px solid rgba(15,15,16,0.06)' : 'none',
                       }}>
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                           {s.sid && <SubjectIcon sid={s.sid} size={13} color={SUBJECT_META[s.sid]?.color} strokeWidth={2.2} />}

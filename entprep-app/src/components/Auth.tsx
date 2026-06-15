@@ -143,7 +143,12 @@ export default function Auth({ user, onSignOut }: AuthProps) {
       <div style={{ ...CARD_COMPACT, marginBottom: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginBottom: 12 }}>
           <div
+            role="button"
+            tabIndex={0}
+            aria-label={t.auth.changePhoto}
+            aria-busy={uploading}
             onClick={() => !uploading && fileRef.current?.click()}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!uploading) fileRef.current?.click(); } }}
             style={{ position: 'relative', width: 44, height: 44, cursor: 'pointer', flexShrink: 0 }}
           >
             {avatar ? (

@@ -5,6 +5,7 @@ import { Capacitor } from '@capacitor/core';
 import { X, Sparkles, Zap, ArrowRight, Lock, MessageCircle, Bot, TrendingUp, BookOpen } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useApp } from '../../contexts/AppContext';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useT } from '../../locales/index';
 import { COLORS, FF, FW, SP, TINT } from '../../constants/styles';
 import { getEntCountdown } from '../../config/ent';
@@ -126,13 +127,10 @@ function WebPaywallScreen({ trigger, score, onClose }: PaywallScreenProps) {
   const animatedScore = useCountUp(typeof score === 'number' ? score : 0);
   const grantTarget = st.goal?.target ?? DEFAULT_GRANT;
   const countdown = useMemo(() => getEntCountdown(), []);
+  const dlgRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    (document.activeElement as HTMLElement)?.blur?.();
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  // Focus management: move focus into the dialog, trap Tab, handle Escape, restore on close.
+  useFocusTrap(dlgRef, true, onClose);
 
   // Track paywall view exactly once per mount — funnel anchor for sales drought analysis
   const viewTrackedRef = useRef(false);
@@ -188,8 +186,11 @@ function WebPaywallScreen({ trigger, score, onClose }: PaywallScreenProps) {
         }}
       >
         <div
+          ref={dlgRef}
           role="dialog"
           aria-modal="true"
+          aria-label={trigger === 'tutor_limit' ? pw.tutorTitle : trigger === 'fullent_result' ? pw.resultTitle : pw.explainTitle}
+          tabIndex={-1}
           onClick={(e) => e.stopPropagation()}
           style={{
             background: 'var(--bg-card)',
@@ -303,9 +304,9 @@ function WebPaywallScreen({ trigger, score, onClose }: PaywallScreenProps) {
                 letterSpacing: '0.06em', textTransform: 'uppercase',
               }}>
                 {reachedGrant ? (
-                  <>🎯 цель твоя · +{delta}</>
+                  <>🎯 {pw.goalReached} · +{delta}</>
                 ) : (
-                  <>до цели {grantTarget} · +{Math.abs(delta)}</>
+                  <>{pw.goalRemaining.replace('{target}', String(grantTarget))} · +{Math.abs(delta)}</>
                 )}
               </div>
             </div>
@@ -357,8 +358,8 @@ function WebPaywallScreen({ trigger, score, onClose }: PaywallScreenProps) {
               lineHeight: 1.45, color: COLORS.text,
             }}>
               {reachedGrant
-                ? <>Грант у тебя в кармане. <span style={{ color: COLORS.textSecondary, fontWeight: FW.semibold }}>Держи темп до ЕНТ — AI закроет слабые места.</span></>
-                : <>PRO покажет <span style={{ color: COLORS.streak }}>где теряешь баллы</span> и поможет забрать недостающие {Math.abs(delta)}.</>}
+                ? <>{pw.hookReachedLead} <span style={{ color: COLORS.textSecondary, fontWeight: FW.semibold }}>{pw.hookReachedRest}</span></>
+                : <>{pw.hookBehindLead} <span style={{ color: COLORS.streak }}>{pw.hookBehindHighlight}</span> {pw.hookBehindRest.replace('{n}', String(Math.abs(delta)))}</>}
             </p>
           )}
 
@@ -400,12 +401,12 @@ function WebPaywallScreen({ trigger, score, onClose }: PaywallScreenProps) {
             boxShadow: `0 3px 0 0 ${INK}`,
           }}>
             <div style={priceRow('var(--bg-subtle)', true)}>
-              <span style={priceLabel}>Репетитор</span>
-              <span style={priceValStrike}>15 000 ₸<span style={priceUnit}>/мес</span></span>
+              <span style={priceLabel}>{pw.priceRepetitorLabel}</span>
+              <span style={priceValStrike}>15 000 ₸<span style={priceUnit}>{pw.priceUnitMonth}</span></span>
             </div>
             <div style={priceRow('var(--bg-subtle)', true)}>
               <span style={priceLabel}>iTest</span>
-              <span style={priceValStrike}>4 490 ₸<span style={priceUnit}>/3 мес</span></span>
+              <span style={priceValStrike}>4 490 ₸<span style={priceUnit}>{pw.priceUnit3Month}</span></span>
             </div>
             <div style={{ ...priceRow(TINT.streak.bgLight, false), borderTop: `2px solid ${INK}` }}>
               <span style={{ ...priceLabel, color: COLORS.streak, fontWeight: 900 }}>
@@ -418,7 +419,7 @@ function WebPaywallScreen({ trigger, score, onClose }: PaywallScreenProps) {
                 color: COLORS.streak,
                 letterSpacing: '-0.015em',
               }}>
-                2 990 ₸<span style={{ ...priceUnit, color: COLORS.streak, opacity: 0.8 }}>/мес</span>
+                2 990 ₸<span style={{ ...priceUnit, color: COLORS.streak, opacity: 0.8 }}>{pw.priceUnitMonth}</span>
               </span>
             </div>
           </div>
@@ -427,8 +428,8 @@ function WebPaywallScreen({ trigger, score, onClose }: PaywallScreenProps) {
           <div style={{ marginBottom: SP.sm }}>
             <PrimaryCTA
               href={seasonLink}
-              label={pw.ctaSeason.replace(/\d.*/, '').trim() || 'Забрать PRO'}
-              sub={pw.ctaSeason.match(/\d.+/)?.[0]}
+              label={pw.ctaSeasonLabel}
+              sub={pw.ctaSeason}
               onClose={onClose}
               onTrackClick={() => trackEvent('Paywall Checkout Click', { trigger, plan: 'season' })}
             />
@@ -450,7 +451,7 @@ function WebPaywallScreen({ trigger, score, onClose }: PaywallScreenProps) {
                 textUnderlineOffset: 3,
               }}
             >
-              или {pw.ctaMonthly}
+              {pw.orSeparator} {pw.ctaMonthly}
             </a>
           </div>
 
@@ -463,7 +464,7 @@ function WebPaywallScreen({ trigger, score, onClose }: PaywallScreenProps) {
             marginBottom: canShareToMom || freeExit ? SP.md : 0,
           }}>
             <Lock size={11} strokeWidth={2.3} />
-            <span>Безопасная оплата · Lemon Squeezy</span>
+            <span>{pw.securePayment} · Lemon Squeezy</span>
           </div>
 
           {/* Отправь маме — only for fullent_result */}
@@ -479,7 +480,7 @@ function WebPaywallScreen({ trigger, score, onClose }: PaywallScreenProps) {
                   letterSpacing: '0.14em', textTransform: 'uppercase',
                   color: COLORS.textMuted,
                 }}>
-                  или
+                  {pw.orSeparator}
                 </span>
                 <div style={{ flex: 1, height: 1, background: COLORS.cardBorder }} />
               </div>
@@ -501,7 +502,7 @@ function WebPaywallScreen({ trigger, score, onClose }: PaywallScreenProps) {
                 }}
               >
                 <MessageCircle size={15} strokeWidth={2.3} />
-                отправь маме
+                {t.sendToMom.title}
               </button>
             </>
           )}

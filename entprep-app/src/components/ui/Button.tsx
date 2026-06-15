@@ -74,8 +74,13 @@ export default function Button({
   }
 
   return (
-    <button style={{ ...base, ...style }} disabled={disabled || loading} {...rest}>
-      {loading ? <LoadingDots /> : Icon ? <Icon size={s.icon} /> : null}
+    <button
+      style={{ ...base, ...style }}
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
+      {...rest}
+    >
+      {loading ? <LoadingDots /> : Icon ? <Icon size={s.icon} aria-hidden="true" /> : null}
       {children}
     </button>
   );

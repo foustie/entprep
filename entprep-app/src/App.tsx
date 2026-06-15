@@ -13,7 +13,7 @@ import { useT } from './locales';
 import ErrorBoundary from './components/ErrorBoundary';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import BrandMark from './components/ui/BrandMark';
-import { Home as HomeIcon, User } from 'lucide-react';
+import { Home as HomeIcon, User, BarChart3 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import ProfileSelect from './components/ProfileSelect';
 import CoachHome from './components/CoachHome';
@@ -71,13 +71,14 @@ const QuestionRush = React.lazy(() => import('./components/QuestionRush'));
 
 interface NavItem {
   id: string;
-  key: 'home' | 'profile';
+  key: 'home' | 'profile' | 'progress';
   Icon: LucideIcon;
 }
 
 const NAV_ITEMS: NavItem[] = [
   { id: "home", key: "home", Icon: HomeIcon },
   { id: "profile_tab", key: "profile", Icon: User },
+  { id: "prog", key: "progress", Icon: BarChart3 },
 ];
 
 function AppContent() {

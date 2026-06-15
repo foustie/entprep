@@ -63,6 +63,22 @@ export default function ReviewSession({ cards, onFinish }: ReviewSessionProps) {
     return sub?.color || COLORS.purple;
   }, []);
 
+  // Auto-skip cards whose question failed to resolve (null). Runs in commit phase
+  // so we never call setState during render (avoids the "update during render" warning
+  // and the multi-skip render cascade).
+  useEffect(() => {
+    if (loading || dueCards.length === 0 || fin) return;
+    if (questions.length > 0 && !questions[cur]) {
+      if (cur < dueCards.length - 1) {
+        setCur(c => c + 1);
+        setAns(undefined);
+        setShow(false);
+      } else {
+        setFin(true);
+      }
+    }
+  }, [loading, fin, cur, questions, dueCards.length]);
+
   if (loading) {
     return (
       <div style={{ padding: '40px 20px', textAlign: 'center' }}>
@@ -127,20 +143,8 @@ export default function ReviewSession({ cards, onFinish }: ReviewSessionProps) {
   const card = dueCards[cur];
   const q = questions[cur];
 
-  // Skip null questions (couldn't resolve)
-  if (!q) {
-    const handleSkipNull = () => {
-      if (cur < dueCards.length - 1) {
-        setCur(c => c + 1);
-        setAns(undefined);
-        setShow(false);
-      } else {
-        setFin(true);
-      }
-    };
-    handleSkipNull();
-    return null;
-  }
+  // Skip null questions (couldn't resolve) — the transition is handled by the effect above.
+  if (!q) return null;
 
   const qType = getQType(q);
 
@@ -269,6 +273,7 @@ export default function ReviewSession({ cards, onFinish }: ReviewSessionProps) {
 
       {qType === 'multiple' && (
         <MultipleAnswerCard
+          key={cur}
           question={q}
           onConfirm={confirmMulti}
           showResult={show}
@@ -278,6 +283,7 @@ export default function ReviewSession({ cards, onFinish }: ReviewSessionProps) {
 
       {qType === 'matching' && q.pairs && (
         <MatchingCard
+          key={cur}
           question={q}
           onConfirm={confirmMatch}
           showResult={show}

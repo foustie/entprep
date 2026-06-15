@@ -33,7 +33,7 @@ entprep-app/src/
 │   └── ui/              # 19 reusable UI primitives
 ├── contexts/            # AppContext, AuthContext, NavigationContext, ToastContext
 ├── locales/             # ru.ts (877 lines), kk.ts (855 lines), index.ts (useT hook)
-├── hooks/               # useAsyncData, useBreakpoint
+├── hooks/               # useAsyncData, useBreakpoint, useFocusTrap (modal a11y)
 ├── config/              # 9 files: subjects, ent, questionPools, supabase, sentry, topics, payment, purchases, app
 ├── constants/           # styles, screens, themes
 ├── utils/               # 19 files: questionStore, questionHelpers, questionAssembler, storage, cloudSync, analytics, aiLimits, avatarHelpers, pushHelpers, shareCard, shareHelpers, socialHelpers, duelHelpers, scoringEngine, xpHelpers, adaptiveHelpers, competitionHelpers, formatters, srEngine
@@ -109,8 +109,8 @@ node scripts/dump-questions.mjs && node scripts/compute-quarantine.mjs && VITE_R
 - **Hosting**: Netlify (+ Functions) — **Backend**: Supabase (PostgreSQL)
 - **AI**: Claude Sonnet 4.6 — **Errors**: Sentry — **Analytics**: Plausible
 - **Styling**: Inline styles + themes — **State**: React Context (4 contexts)
-- **Icons**: lucide-react — **Fonts**: Unbounded, JetBrains Mono
-- **PWA**: vite-plugin-pwa — **Testing**: Vitest (345 tests, 22 files)
+- **Icons**: lucide-react — **Fonts**: Unbounded (RU display) / Rubik (KK display, via `--ff-display` var + `html:lang(kk)`) / Nunito (body) / JetBrains Mono (mono)
+- **PWA**: vite-plugin-pwa — **Testing**: Vitest (352 tests, 23 files)
 - **Mobile**: Capacitor (android/ios) — **Payments**: RevenueCat
 
 ## Important Notes
