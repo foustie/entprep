@@ -7,7 +7,7 @@ import { useT } from '../locales';
 
 /**
  * Bottom-sheet modal prompting the student to share prognosis with a parent via WhatsApp.
- * Shows a preview card (prognosis + "мам, PRO 1 990 vs репетитор 30 000").
+ * Shows a preview card (prognosis + "мам, PRO 2 990 vs репетитор 30 000").
  */
 export default function SendToMomSheet({
   prognosis,
@@ -87,7 +87,7 @@ ENT<span style={{ color: COLORS.streak }}>prep.</span>
             <div style={{ ...previewProgressFill, width: `${Math.min(100, (prognosis / maxScore) * 100)}%` }} />
           </div>
           <div style={previewNote}>
-            {tm.note} <b>1 990₸/мес</b>{' '}
+            {tm.note} <b>2 990₸/мес</b>{' '}
             <span style={{ textDecoration: 'line-through', color: COLORS.textMuted }}>
               {tm.noteVs} 30 000₸
             </span>{tm.noteSuffix}

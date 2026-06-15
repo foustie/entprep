@@ -3,7 +3,7 @@
 
 // Plans (reference — actual prices come from stores via RevenueCat)
 export const PLANS = {
-  monthly: { amount: 1990, label: 'monthly' },
+  monthly: { amount: 2990, label: 'monthly' },
   yearly:  { amount: 9990, label: 'yearly' },
 } as const;
 

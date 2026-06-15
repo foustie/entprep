@@ -61,7 +61,7 @@ entprep-app/scripts/             # Build & generation scripts
 |------|------|
 | `utils/questionStore.ts` | Question loading: memory → Supabase → localStorage → static fallback. Language-aware: `getPool(sid, lang?)` resolves `_kk` fields for Kazakh |
 | `config/questionPools.ts` | Central hub — builds `TOTAL_Q`, `ALL_PROFILES`, `SUBS` |
-| `config/payment.ts` | PLANS (1990₸/9990₸), RC_PRODUCT_IDS |
+| `config/payment.ts` | PLANS (2990₸/9990₸), RC_PRODUCT_IDS |
 | `config/purchases.ts` | RevenueCat Capacitor wrapper (lazy-loaded, no-ops on web) |
 | `contexts/AppContext.tsx` | Global state — history, profile, settings, cloud sync |
 | `contexts/AuthContext.tsx` | Supabase auth, premium status (DB + native RC), user profile |

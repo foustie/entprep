@@ -639,7 +639,7 @@ export default function Admin() {
                   color: premiumPlan === p ? '#FF6B35' : 'var(--text-secondary)',
                   fontSize: 12, fontWeight: 600, transition: 'all 0.2s',
                 }}>
-                  {p === 'monthly' ? '1990₸/мес' : '4990₸/год'}
+                  {p === 'monthly' ? '2990₸/мес' : '9990₸/год'}
                 </button>
               ))}
             </div>

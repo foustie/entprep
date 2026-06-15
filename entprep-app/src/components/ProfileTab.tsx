@@ -230,7 +230,7 @@ export default function ProfileTab() {
       {user && !isPremium && (
         <>
           <ProBanner
-            featureText={`${(t.paywall as Record<string, string>)?.feat1 || 'AI без лимита'} · ${(t.paywall as Record<string, string>)?.ctaSeason || '4 990₸ за сезон'}`}
+            featureText={`${(t.paywall as Record<string, string>)?.feat1 || 'AI без лимита'} · ${(t.paywall as Record<string, string>)?.ctaSeason || '9 990₸ за сезон'}`}
             onClick={() => setShowPaywall(true)}
           />
           {/* Self-service recovery — for users who paid with a different email

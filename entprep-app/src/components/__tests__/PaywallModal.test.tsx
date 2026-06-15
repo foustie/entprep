@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import PaywallModal from '../PaywallModal';
 
 vi.mock('../../config/payment', () => ({
-  PLANS: { monthly: { amount: 1990 }, yearly: { amount: 9990 } },
+  PLANS: { monthly: { amount: 2990 }, yearly: { amount: 9990 } },
   RC_PRODUCT_IDS: { monthly: 'entprep_monthly', yearly: 'entprep_yearly' },
 }));
 
@@ -36,7 +36,7 @@ vi.mock('../../locales', () => ({
       aiErrors: 'Личный план подготовки к ЕНТ',
       aiPlan: 'Полная симуляция ЕНТ без ограничений',
       fullEntSim: 'Разбор каждого вопроса с объяснением',
-      monthlyPlan: '1 990 ₸/мес',
+      monthlyPlan: '2 990 ₸/мес',
       yearlyPlan: '9 990 ₸',
       yearlyPlanAuto: '9 990 ₸/год',
       yearlyPlanDesc: 'автопродление раз в год',
@@ -83,7 +83,7 @@ describe('PaywallModal', () => {
 
   it('shows two plan options with fallback prices on web', () => {
     render(<PaywallModal open={true} reason="daily_limit" onClose={() => {}} />);
-    expect(screen.getByText('1 990 ₸/мес')).toBeInTheDocument();
+    expect(screen.getByText('2 990 ₸/мес')).toBeInTheDocument();
     expect(screen.getByText('9 990 ₸/год')).toBeInTheDocument();
   });
 
