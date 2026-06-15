@@ -711,7 +711,7 @@ export default function FullENT({ finish }: FullENTProps) {
           if (picked) { bg = "rgba(255,90,54,0.1)"; bd = "1px solid rgba(255,90,54,0.35)"; tc = COLORS.teal; }
           const isFocused = focused === idx && !locked;
           if (isFocused && !picked) { bd = "1px solid rgba(255,90,54,0.5)"; bg = "rgba(255,90,54,0.08)"; }
-          return (<button key={idx} onClick={() => sel(idx)} role="radio" aria-checked={picked} aria-label={`${t.test.option} ${String.fromCharCode(65 + idx)}: ${opt}`} style={{ display: "flex", alignItems: "center", background: bg, border: bd, borderRadius: 12, padding: "12px 13px", cursor: locked ? "default" : "pointer", textAlign: "left", transition: "all 0.2s", outline: isFocused ? "2px solid rgba(255,90,54,0.4)" : "none", outlineOffset: 1 }}>
+          return (<button key={idx} onClick={() => sel(idx)} role="radio" aria-checked={picked} aria-label={`${t.test.option} ${String.fromCharCode(65 + idx)}: ${opt}`} style={{ display: "flex", alignItems: "center", background: bg, border: bd, borderRadius: 12, padding: "12px 13px", cursor: locked ? "default" : "pointer", textAlign: "left", transition: "all 0.2s", outline: isFocused ? "2px solid rgba(255,90,54,0.4)" : undefined, outlineOffset: 1 }}>
             <div style={{ width: 24, height: 24, borderRadius: 12, border: `2px solid ${tc}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: tc, flexShrink: 0, marginRight: 10 }}>
               {picked ? <Check size={12} /> : String.fromCharCode(65 + idx)}
             </div>

@@ -718,7 +718,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
         else if (picked) { bg = "rgba(255,90,54,0.1)"; bd = "1.5px solid rgba(255,90,54,0.55)"; tc = COLORS.streak; }
         const isFocused = !show && focused === idx;
         if (isFocused && !picked) { bd = "1px solid rgba(255,90,54,0.5)"; bg = "rgba(255,90,54,0.08)"; }
-        return (<button key={`${cur}-${idx}`} onClick={() => sel(idx)} role="radio" aria-checked={picked} aria-label={`${t.test.option} ${String.fromCharCode(65 + idx)}: ${opt}`} style={{ display: "flex", alignItems: "center", background: bg, border: bd, borderRadius: 13, padding: "13px 14px", cursor: show ? "default" : "pointer", textAlign: "left", transition: "all 0.2s", position: "relative", overflow: "hidden", outline: isFocused ? "2px solid rgba(255,90,54,0.4)" : "none", outlineOffset: 1 }}>
+        return (<button key={`${cur}-${idx}`} onClick={() => sel(idx)} role="radio" aria-checked={picked} aria-label={`${t.test.option} ${String.fromCharCode(65 + idx)}: ${opt}`} style={{ display: "flex", alignItems: "center", background: bg, border: bd, borderRadius: 13, padding: "13px 14px", cursor: show ? "default" : "pointer", textAlign: "left", transition: "all 0.2s", position: "relative", overflow: "hidden", outline: isFocused ? "2px solid rgba(255,90,54,0.4)" : undefined, outlineOffset: 1 }}>
           <div style={{ width: 26, height: 26, borderRadius: 13, border: `2px solid ${tc}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: tc, flexShrink: 0, marginRight: 11 }}>
             {show && correct ? <Check size={14} /> : show && picked && !correct ? <X size={14} /> : String.fromCharCode(65 + idx)}
           </div>

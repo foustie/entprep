@@ -40,6 +40,20 @@ function yesterday(): string {
   return d.toISOString().slice(0, 10);
 }
 
+/**
+ * TestResult.dt is stored as ru-RU `dd.mm.yyyy` (see Test.tsx / CoachHome,
+ * `new Date().toLocaleDateString("ru-RU")`). Normalize to ISO `yyyy-mm-dd` so it
+ * sorts chronologically and parses with `new Date()`. Defensive: passes through
+ * already-ISO values and leaves anything unrecognized untouched.
+ */
+function toISO(dt: string): string {
+  if (!dt) return '';
+  const m = dt.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+  if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+  if (/^\d{4}-\d{2}-\d{2}/.test(dt)) return dt.slice(0, 10);
+  return dt;
+}
+
 function topicName(subjectId: string, topicId: string): string {
   const topics = TOPIC_MAP[subjectId];
   if (!topics) return topicId;
@@ -57,7 +71,7 @@ function topicName(subjectId: string, topicId: string): string {
 function lastNTests(hist: TestResult[], sid: string, n: number): TestResult[] {
   return hist
     .filter(t => t.su === sid && t.type !== 'fullent' && t.type !== 'rush')
-    .sort((a, b) => b.dt.localeCompare(a.dt))
+    .sort((a, b) => toISO(b.dt).localeCompare(toISO(a.dt)))
     .slice(0, n);
 }
 
@@ -87,7 +101,7 @@ function yesterdayErrors(hist: TestResult[]): number {
   const yd = yesterday();
   let count = 0;
   for (const t of hist) {
-    if (!t.dt.startsWith(yd) || !t.qd) continue;
+    if (toISO(t.dt) !== yd || !t.qd) continue;
     count += t.qd.filter(q => !q.ok).length;
   }
   return count;
@@ -108,7 +122,7 @@ export function getRecommendation(hist: TestResult[], profileSubjects: string[])
   for (const sid of profileSubjects) {
     const recent = lastNTests(hist, sid, 3);
     const avg = avgScore(recent);
-    const lastDate = recent[0]?.dt.slice(0, 10);
+    const lastDate = recent[0]?.dt ? toISO(recent[0].dt) : undefined;
     const daysSince = lastDate ? daysBetween(lastDate, now) : 999;
 
     // a. Weak subject (avg < 50%)
@@ -199,7 +213,7 @@ export function getDailyPlan(hist: TestResult[], profileSubjects: string[]): Dai
 export function getLastResult(hist: TestResult[]): { subject: string; score: number; date: string; trend: number } | null {
   if (!hist.length) return null;
 
-  const sorted = [...hist].sort((a, b) => b.dt.localeCompare(a.dt));
+  const sorted = [...hist].sort((a, b) => toISO(b.dt).localeCompare(toISO(a.dt)));
   const last = sorted[0];
   const prev = sorted.find(t => t.su === last.su && t.dt !== last.dt);
   const trend = prev ? last.sc - prev.sc : 0;
