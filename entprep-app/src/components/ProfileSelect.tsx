@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import type { CSSProperties } from 'react';
 import { ALL_PROFILES } from '../config/questionPools';
+import { PROFILE_PARTNERS } from '../config/subjects';
 import { COLORS, FF, FW, SP, TINT } from '../constants/styles';
 import { Target, Check, ArrowRight, Trophy } from 'lucide-react';
 import { SubjectChip as SubjectIconChip } from './ui/SubjectIcon';
@@ -23,13 +24,22 @@ export default function ProfileSelect({ onConfirm }: ProfileSelectProps) {
   const t = useT();
   const subName = (id: string) => (t.subjects as Record<string, string>)[id] || id;
 
+  // Valid pick given the current selection — enforces the official ЕНТ pairs.
+  // Before the first pick everything is open; after it, only the first subject's
+  // partners stay selectable (the rest dim).
+  const pairOpen = (id: string): boolean => {
+    if (sel.includes(id)) return true;   // already picked — deselect always allowed
+    if (sel.length === 0) return true;   // nothing picked yet — every subject open
+    if (sel.length >= 2) return false;   // both slots full
+    return (PROFILE_PARTNERS[sel[0]] ?? []).includes(id);  // must pair with the first pick
+  };
+
   const toggle = (id: string) => {
-    if (!ALL_PROFILES.find(p => p.id === id)?.available) return;
-    setSel(prev => {
-      if (prev.includes(id)) return prev.filter(x => x !== id);
-      if (prev.length >= 2) return prev;
-      return [...prev, id];
-    });
+    const sub = ALL_PROFILES.find(p => p.id === id);
+    if (!sub?.available) return;         // locked (coming soon)
+    if (sel.includes(id)) { setSel(prev => prev.filter(x => x !== id)); return; }
+    if (sel.length >= 2 || !pairOpen(id)) return;  // full, or incompatible with first pick
+    setSel(prev => [...prev, id]);
   };
 
   const upcoming = useMemo(() => getUpcomingPeriods(), []);
@@ -110,19 +120,25 @@ export default function ProfileSelect({ onConfirm }: ProfileSelectProps) {
         gap: 10,
         marginBottom: 22,
       }}>
-        {ALL_PROFILES.map(p => (
-          <SubjectChip
-            key={p.id}
-            id={p.id}
-            name={subName(p.id)}
-            color={p.color}
-            pool={p.pool ?? 0}
-            available={p.available}
-            active={sel.includes(p.id)}
-            onToggle={() => toggle(p.id)}
-            t={t}
-          />
-        ))}
+        {ALL_PROFILES.map(p => {
+          const active = sel.includes(p.id);
+          const blocked = p.available && !active && !pairOpen(p.id);
+          return (
+            <SubjectChip
+              key={p.id}
+              id={p.id}
+              name={subName(p.id)}
+              color={p.color}
+              pool={p.pool ?? 0}
+              available={p.available}
+              active={active}
+              blocked={blocked}
+              incompatible={blocked && sel.length === 1}
+              onToggle={() => toggle(p.id)}
+              t={t}
+            />
+          );
+        })}
       </div>
 
       {/* Goal card — xp splash, only when ready */}
@@ -244,7 +260,7 @@ export default function ProfileSelect({ onConfirm }: ProfileSelectProps) {
         <button
           onClick={() => {
             trackEvent('Profile Skipped');
-            onConfirm(['geography', 'english_lang']);
+            onConfirm(['geography', 'english']);
           }}
           style={{
             display: 'block', margin: '12px auto 0',
@@ -269,7 +285,7 @@ export default function ProfileSelect({ onConfirm }: ProfileSelectProps) {
 
 // ── Subject chip (Duolingo-ish 3D button) ──────────────────────────────
 function SubjectChip({
-  id, name, color, pool, available, active, onToggle, t,
+  id, name, color, pool, available, active, blocked, incompatible, onToggle, t,
 }: {
   id: string;
   name: string;
@@ -277,11 +293,13 @@ function SubjectChip({
   pool: number;
   available: boolean;
   active: boolean;
+  blocked: boolean;
+  incompatible: boolean;
   onToggle: () => void;
   t: ReturnType<typeof useT>;
 }) {
   const [pressed, setPressed] = useState(false);
-  const disabled = !available;
+  const disabled = !available || blocked;
 
   const bg = active
     ? TINT.streak.bgLight
@@ -345,7 +363,23 @@ function SubjectChip({
         {name}
       </div>
 
-      {available ? (
+      {!available ? (
+        <div style={{
+          fontFamily: FF.body, fontSize: 10, fontWeight: 700,
+          color: COLORS.textMuted, marginTop: 4,
+          fontStyle: 'italic',
+        }}>
+          {t.profileSelect.soon}
+        </div>
+      ) : incompatible ? (
+        <div style={{
+          fontFamily: FF.body, fontSize: 10, fontWeight: 700,
+          color: COLORS.textMuted, marginTop: 4,
+          fontStyle: 'italic',
+        }}>
+          {t.profileSelect.incompatible}
+        </div>
+      ) : (
         <div style={{
           fontFamily: FF.mono,
           fontSize: 9.5, fontWeight: 700,
@@ -354,14 +388,6 @@ function SubjectChip({
           marginTop: 4,
         }}>
           {pool} {t.profileSelect.questionsLabel}
-        </div>
-      ) : (
-        <div style={{
-          fontFamily: FF.body, fontSize: 10, fontWeight: 700,
-          color: COLORS.textMuted, marginTop: 4,
-          fontStyle: 'italic',
-        }}>
-          {t.profileSelect.soon}
         </div>
       )}
     </button>

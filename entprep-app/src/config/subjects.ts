@@ -14,6 +14,7 @@ export const SUBJECT_META: Record<string, SubjectMeta> = {
   informatics:{name:"Информатика",color:"#06B6D4"},
   law:{name:"Основы права",color:"#D97706"},
   literature:{name:"Литература",color:"#E11D48"},
+  native_lang:{name:"Каз/Рус язык",color:"#0EA5E9"},
 };
 
 export const ALL_PROFILES_BASE: ProfileSubject[] = [
@@ -27,6 +28,7 @@ export const ALL_PROFILES_BASE: ProfileSubject[] = [
   {id:"informatics",name:"Информатика",icon:"💾",color:"#06B6D4",cnt:20,available:true,examCnt:40},
   {id:"law",name:"Основы права",icon:"⚖️",color:"#D97706",cnt:20,available:true,examCnt:40},
   {id:"literature",name:"Литература",icon:"📚",color:"#E11D48",cnt:20,available:false,examCnt:40},
+  {id:"native_lang",name:"Каз/Рус язык",icon:"🇰🇿",color:"#0EA5E9",cnt:20,available:false,examCnt:40},
 ];
 
 export const SUBS_BASE: Record<string, SubjectConfig> = {
@@ -34,3 +36,30 @@ export const SUBS_BASE: Record<string, SubjectConfig> = {
   reading:{id:"reading",name:"Грамотность чтения",icon:"📖",color:"#8B5CF6",cnt:10},
   history:{id:"history",name:"История Казахстана",icon:"🏛️",color:"#0EA5E9",cnt:20},
 };
+
+// Official ЕНТ profile-subject combinations (bidirectional). Onboarding lets a
+// student pick only these pairs — after the first pick, only valid partners stay
+// selectable. The native-language ↔ literature pair is listed for completeness,
+// but both subjects are available:false (locked) until content exists.
+export const PROFILE_PAIRS: [string, string][] = [
+  ['math_profile', 'physics'],
+  ['math_profile', 'informatics'],
+  ['math_profile', 'geography'],
+  ['biology', 'chemistry'],
+  ['biology', 'geography'],
+  ['english', 'world_history'],
+  ['english', 'geography'],
+  ['world_history', 'law'],
+  ['world_history', 'geography'],
+  ['native_lang', 'literature'],
+];
+
+// subject id -> valid partner ids (derived from PROFILE_PAIRS, both directions).
+export const PROFILE_PARTNERS: Record<string, string[]> = PROFILE_PAIRS.reduce(
+  (m, [a, b]) => {
+    (m[a] ??= []).push(b);
+    (m[b] ??= []).push(a);
+    return m;
+  },
+  {} as Record<string, string[]>,
+);

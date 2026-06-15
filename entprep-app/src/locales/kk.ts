@@ -53,6 +53,7 @@ const kk: Translations = {
     informatics: 'Информатика',
     law: 'Құқық негіздері',
     literature: 'Әдебиет',
+    native_lang: 'Қаз/Орыс тілі',
   },
   subjectsShort: {
     geography: 'География',
@@ -65,6 +66,7 @@ const kk: Translations = {
     informatics: 'Информатика',
     law: 'Құқық негіздері',
     literature: 'Әдебиет',
+    native_lang: 'Қаз/Орыс тілі',
   },
   historyLong: 'Қазақстан тарихы',
 
@@ -818,6 +820,7 @@ const kk: Translations = {
     hint: '2 пән таңда. Баптауларда кез келген уақытта өзгертуге болады.',
     questionsLabel: 'сұрақ',
     soon: 'Жақында',
+    incompatible: 'сәйкес емес',
     selected: 'Таңдалды:',
     ofTwo: '/ 2',
     confirmChoice: 'Таңдауды растау',

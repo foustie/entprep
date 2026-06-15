@@ -51,6 +51,7 @@ const ru = {
     informatics: 'Информатика',
     law: 'Основы права',
     literature: 'Литература',
+    native_lang: 'Каз/Рус язык',
   },
   // Short names for profile selection
   subjectsShort: {
@@ -64,6 +65,7 @@ const ru = {
     informatics: 'Информатика',
     law: 'Основы права',
     literature: 'Литература',
+    native_lang: 'Каз/Рус язык',
   },
   // Long name for mandatory history
   historyLong: 'История Казахстана',
@@ -832,6 +834,7 @@ const ru = {
     hint: 'Выбери 2 предмета. Всегда можно изменить в настройках.',
     questionsLabel: 'вопросов',
     soon: 'Скоро',
+    incompatible: 'несовместимо',
     selected: 'Выбрано:',
     ofTwo: '/ 2',
     confirmChoice: 'Подтвердить выбор',
