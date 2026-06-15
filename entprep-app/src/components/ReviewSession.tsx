@@ -240,8 +240,8 @@ export default function ReviewSession({ cards, onFinish }: ReviewSessionProps) {
             let bg = 'var(--bg-card)';
             let border = '1px solid var(--border-light)';
             let textColor = 'var(--text)';
-            if (showResult && isCorrect) { bg = TINT.green.bgLight; border = `1px solid ${TINT.green.border}`; textColor = COLORS.green; }
-            else if (showResult && isSelected && !isCorrect) { bg = TINT.red.bgLight; border = `1px solid ${TINT.red.border}`; textColor = COLORS.red; }
+            if (showResult && isCorrect) { bg = TINT.green.bgLight; border = `1px solid ${TINT.green.border}`; textColor = COLORS.greenText; }
+            else if (showResult && isSelected && !isCorrect) { bg = TINT.red.bgLight; border = `1px solid ${TINT.red.border}`; textColor = COLORS.redText; }
             else if (isSelected) { bg = TINT.purple.bgLight; border = `1px solid ${TINT.purple.border}`; }
 
             return (

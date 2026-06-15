@@ -24,6 +24,12 @@ export const COLORS = {
   textSecondary: "var(--text-secondary)",
   textMuted: "var(--text-muted)",
   textDim: "var(--text-dim)",
+  // A11Y-2: legible colored text on tints/cards — theme-aware (bright on dark, darkened on light).
+  // Use these (not the saturated green/red/amber/streak below) wherever a color is applied to TEXT.
+  greenText: "var(--text-green)",
+  redText: "var(--text-red)",
+  amberText: "var(--text-amber)",
+  streakText: "var(--text-streak)",
 
   // v2 Vibrant Game palette (Apr 20, 2026 redesign) — used in new screens
   streak: "#FF5A36",      // primary action CTA, streak fire, "ты" highlight

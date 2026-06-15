@@ -3,11 +3,13 @@ import { useT } from '../locales';
 import { Trophy, Clock } from 'lucide-react';
 import type { EntCountdown } from '../config/ent';
 
+// `text` is the theme-aware AA-legible variant (see COLORS.*Text); `icon`/`glow` keep the bright
+// saturated hue (graphical elements only need 3:1, and the glow alpha needs a real hex, not a CSS var).
 const PHASE_COLORS: Record<string, { bg: string; border: string; text: string; icon: string }> = {
-  reg_open:    { bg: TINT.red.bgLight,   border: TINT.red.border,   text: COLORS.red,   icon: COLORS.red },
-  before_exam: { bg: TINT.amber.bgLight, border: TINT.amber.border, text: COLORS.amber, icon: COLORS.amber },
-  exam_now:    { bg: TINT.green.bgLight,  border: TINT.green.border,  text: COLORS.green, icon: COLORS.green },
-  before_reg:  { bg: TINT.teal.bgLight,  border: TINT.teal.border,  text: COLORS.teal,  icon: COLORS.teal },
+  reg_open:    { bg: TINT.red.bgLight,   border: TINT.red.border,   text: COLORS.redText,    icon: COLORS.red },
+  before_exam: { bg: TINT.amber.bgLight, border: TINT.amber.border, text: COLORS.amberText,  icon: COLORS.amber },
+  exam_now:    { bg: TINT.green.bgLight,  border: TINT.green.border,  text: COLORS.greenText,  icon: COLORS.green },
+  before_reg:  { bg: TINT.teal.bgLight,  border: TINT.teal.border,  text: COLORS.streakText, icon: COLORS.teal },
 };
 
 interface Props {
@@ -58,7 +60,7 @@ export default function HomeCountdown({ countdown, timeStr, goalApprox }: Props)
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 22, fontWeight: 800, fontFamily: "'JetBrains Mono',monospace",
                 color: countdown.urgent ? colors.text : 'var(--text)',
-                boxShadow: countdown.urgent ? `0 0 12px ${colors.text}20` : 'none',
+                boxShadow: countdown.urgent ? `0 0 12px ${colors.icon}20` : 'none',
               }}>{v}</div>
               <span style={{ fontSize: 9, color: 'var(--text-muted)', marginTop: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>{labels[i]}</span>
             </div>

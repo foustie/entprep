@@ -26,6 +26,11 @@ export const DARK: ThemePalette = {
   'text-muted': '#9A9CA6',   // A11Y-3: was #7B7D87 (3.84:1 on card, AA fail) → 5.75:1
   'text-dim': '#8C8E98',     // A11Y-3: was #5A5C66 (2.36:1 on card, AA+large fail) → 4.82:1
   'text-light': '#CDCFD7',
+  // A11Y-2: theme-aware colored text for use ON tints/cards (kept bright in dark theme; see COLORS.*Text)
+  'text-green': '#27C26A',
+  'text-red': '#F87171',
+  'text-amber': '#FFC233',
+  'text-streak': '#FF7A5C',
   border: 'rgba(255,255,255,0.1)',
   'border-light': 'rgba(255,255,255,0.07)',
   'border-md': 'rgba(255,255,255,0.13)',
@@ -70,6 +75,11 @@ export const LIGHT: ThemePalette = {
   'text-muted': '#5c6a7a',
   'text-dim': '#5F6B7A',        // A11Y-3: was #7a8694 (3.15:1 on page, AA fail) → 4.61:1
   'text-light': '#475569',
+  // A11Y-2: theme-aware colored text for use ON tints/cards (darkened so it reads on near-white; see COLORS.*Text)
+  'text-green': '#166534',
+  'text-red': '#B91C1C',
+  'text-amber': '#92400E',
+  'text-streak': '#B83216',
   border: 'rgba(0,0,0,0.08)',
   'border-light': 'rgba(0,0,0,0.06)',
   'border-md': 'rgba(0,0,0,0.1)',
