@@ -18,7 +18,7 @@ Before touching any component/screen/landing markup, read `entprep-app/docs/desi
 
 ## Project Overview
 
-ENTprep is a TypeScript + React educational web app for Kazakhstan's Unified National Testing (ЕНТ). Practice tests across 13 subjects with **31 773 questions** in Supabase (284 subtopics, 150/subject static fallback), AI explanations, adaptive learning, full ЕНТ simulation, leaderboard, social features, real-time duels, referral system, and a university grant calculator.
+ENTprep is a TypeScript + React educational web app for Kazakhstan's Unified National Testing (ЕНТ). Practice tests across 13 subjects with **33 244 questions** (authored in Supabase, served at runtime as dumped CDN JSON in `public/data/`; 87 sections / 270 subtopics; 13-file static import fallback), AI explanations, adaptive learning, full ЕНТ simulation, leaderboard, social features, real-time duels, and a university grant calculator.
 
 **Live URL:** https://entprep.org
 
@@ -30,28 +30,32 @@ entprep-app/src/
 ├── main.tsx             # Entry point (OAuth deep link handling)
 ├── types/index.ts       # All shared TypeScript interfaces
 ├── components/          # 40 components (CoachHome, Test, FullENT, QuestionRush, AiTutor, etc.)
-│   └── ui/              # 19 reusable UI primitives
+│   └── ui/              # 23 reusable UI primitives
 ├── contexts/            # AppContext, AuthContext, NavigationContext, ToastContext
-├── locales/             # ru.ts (877 lines), kk.ts (855 lines), index.ts (useT hook)
-├── hooks/               # useAsyncData, useBreakpoint, useFocusTrap (modal a11y)
-├── config/              # 9 files: subjects, ent, questionPools, supabase, sentry, topics, payment, purchases, app
+├── locales/             # ru.ts (1296 lines), kk.ts (1273 lines), index.ts (useT hook)
+├── hooks/               # useBreakpoint, useFocusTrap (modal a11y)
+├── config/              # 11 files: subjects, ent, questionPools, supabase, sentry, topics, payment, purchases, app, aiPrompt, regions
 ├── constants/           # styles, screens, themes
-├── utils/               # 19 files: questionStore, questionHelpers, questionAssembler, storage, cloudSync, analytics, aiLimits, avatarHelpers, pushHelpers, shareCard, shareHelpers, socialHelpers, duelHelpers, scoringEngine, xpHelpers, adaptiveHelpers, competitionHelpers, formatters, srEngine
+├── utils/               # 26 files: questionStore, questionHelpers, questionAssembler, storage, cloudSync, analytics, analyticsHelpers, aiLimits, aiMemory, avatarHelpers, pushHelpers, shareHelpers, socialHelpers, duelHelpers, scoringEngine, xpHelpers, adaptiveHelpers, competitionHelpers, formatters, srEngine, predictScore, scorePrediction, qdHelpers, recommendationEngine, reconcileHelpers, tutorHelpers
 ├── data/questions/      # 13 static fallback files (150q each, .ts)
 ├── data/universities.ts # 52 universities
 └── sw.ts                # Service worker (Workbox + push)
 
-entprep-app/netlify/functions/   # Serverless API
-├── ai-explain.mjs, ai-generate.mjs, ai-plan.mjs
-├── admin-action.mjs, leaderboard.mjs, social.mjs, duel.mjs
-├── revenuecat-webhook.mjs, referral.mjs
+entprep-app/netlify/functions/   # Serverless API (18 functions)
+├── ai-explain.mjs, ai-generate.mjs, ai-plan.mjs, ai-tutor.mjs
+├── admin-action.mjs, leaderboard.mjs, social.mjs, duel.mjs, analytics.mjs
+├── revenuecat-webhook.mjs, lemon-webhook.mjs, lemon-reconcile.mjs, promo.mjs
+├── questions.mjs, teacher.mjs, delete-account.mjs
 ├── push-subscribe.mjs, push-cron.mjs
-└── utils/shared.mjs, constants.mjs, quality.mjs
+└── utils/shared.mjs, constants.mjs, quality.mjs, rag.mjs
 
 entprep-app/docs/                # Documentation
-├── launch-checklist.md, aso-listing.md, marketing-posts.md
+├── launch-checklist.md, LAUNCH-PLAYBOOK.md, aso-listing.md
+├── app-store-submission.md, app-review-notes.md, design-prompt.md, ui-audit-2026-06-15.md
 
-entprep-app/scripts/             # Build & generation scripts
+entprep-app/scripts/             # Build, deploy & question-generation scripts (~60 .mjs)
+├── dump-questions.mjs, compute-quarantine.mjs, predeploy-check.mjs   # deploy chain
+├── ingest-questions.mjs, generate-all.mjs, split-literature.mjs, audit-*.mjs, ...
 └── utils/                       # ent-specs.mjs, constants.mjs, quality.mjs, json.mjs
 ```
 
@@ -59,28 +63,28 @@ entprep-app/scripts/             # Build & generation scripts
 
 | File | Role |
 |------|------|
-| `utils/questionStore.ts` | Question loading: memory → Supabase → localStorage → static fallback. Language-aware: `getPool(sid, lang?)` resolves `_kk` fields for Kazakh |
+| `utils/questionStore.ts` | Question loading: memory → **CDN JSON (`/data/*.json`)** → Supabase → localStorage → static import. (Supabase is the *fallback if CDN fails*, not the primary source — see `getPool`.) Language-aware: `getPool(sid, lang?)` resolves `_kk` fields for Kazakh |
 | `config/questionPools.ts` | Central hub — builds `TOTAL_Q`, `ALL_PROFILES`, `SUBS` |
-| `config/payment.ts` | PLANS (2990₸/9990₸), RC_PRODUCT_IDS |
+| `config/payment.ts` | PLANS (monthly 2990₸ / season 9990₸), RC_PRODUCT_IDS (`entprep_monthly`/`entprep_yearly`). ⚠️ Backend fallback `netlify/functions/utils/constants.mjs` still hardcodes monthly **1990₸** — stale, fix when touching pricing |
 | `config/purchases.ts` | RevenueCat Capacitor wrapper (lazy-loaded, no-ops on web) |
 | `contexts/AppContext.tsx` | Global state — history, profile, settings, cloud sync |
 | `contexts/AuthContext.tsx` | Supabase auth, premium status (DB + native RC), user profile |
 | `config/ent.ts` | Full ENT exam config: sections, timing, scoring, profile blocks |
-| `config/topics.ts` | TOPIC_MAP — 80 sections, 284 subtopics |
+| `config/topics.ts` | TOPIC_MAP — 87 sections, 270 subtopics |
 | `scripts/utils/ent-specs.mjs` | Official ENT curriculum from testcenter.kz |
 | `locales/index.ts` | i18n: `useT()` hook, `getT()` function |
 
 ## Key Features
-- 13 ENT subjects, 31 773 questions (Supabase) + static fallback
+- 13 ENT subjects, 33 244 questions (Supabase → dumped CDN JSON) + 13-file static import fallback
 - 3 question types: single choice, multiple answer, matching
 - Full ENT simulation (120q, 5 subjects, 4h, 140 pts, profile blocks)
-- AI explanations, study plans, question generation (Claude Sonnet 4.6)
+- AI explanations, study plans, question generation, AI tutor (Claude Sonnet 4 — `claude-sonnet-4-20250514`)
 - Adaptive learning, daily challenges, error review
 - Question Rush: timed speed mode with star scoring (topics/difficulty/count/pace wizard)
 - Leaderboard, friends system, real-time 1v1 duels
 - Supabase auth (Google OAuth + Apple Sign In), cloud sync
-- RevenueCat IAP (monthly 1990₸, yearly 9990₸)
-- Referral system (7 days Premium for both users)
+- RevenueCat IAP on native (monthly 2990₸, season 9990₸) + Lemon Squeezy on web; promo-code system (`promo.mjs`) grants free Premium days
+- Referral system: DB migration + locale strings scaffolded, **not yet wired** (no backend grants the 7-day reward; no `referral.mjs`)
 - XP/levels, 16 achievements, streaks, daily goals
 - Push notifications (streak, errors, weekly — all KZ time)
 - Dark/light theme, bilingual (Russian + Kazakh) — UI + question content (q_kk, o_kk, e_kk columns)
@@ -92,13 +96,15 @@ entprep-app/scripts/             # Build & generation scripts
 ```bash
 cd entprep-app
 npm run dev          # Dev server with hot reload
-npm run build        # Production build → dist/
+npm run build        # Production build → dist/ (runs vite with 8 GB Node heap)
 npm run lint         # ESLint check
 npm run lint:fix     # ESLint autofix
 npm run format       # Prettier format
 npm run typecheck    # TypeScript type check (tsc --noEmit)
-npm run test         # Run tests (vitest)
+npm run test         # Run tests (vitest — 374 tests, 25 files)
 npm run test:watch   # Watch mode tests
+npm run design:lint  # Design-system lint (token usage)
+npm run design:spec  # Design-system spec check
 
 # Deploy to prod (entprep.org). --no-build avoids OOM on Netlify's builder.
 # predeploy-check.mjs gates the chain: it FAILS before deploy if the bundle is
@@ -118,11 +124,11 @@ node scripts/dump-questions.mjs && node scripts/compute-quarantine.mjs \
 ## Technical Stack
 - **Language**: TypeScript — **Frontend**: React 18 — **Build**: Vite 6.x
 - **Hosting**: Netlify (+ Functions) — **Backend**: Supabase (PostgreSQL)
-- **AI**: Claude Sonnet 4.6 — **Errors**: Sentry — **Analytics**: Plausible
+- **AI**: Claude Sonnet 4 (`claude-sonnet-4-20250514`) — **Errors**: Sentry — **Analytics**: Plausible
 - **Styling**: Inline styles + themes — **State**: React Context (4 contexts)
-- **Icons**: lucide-react — **Fonts**: Unbounded (RU display) / Rubik (KK display, via `--ff-display` var + `html:lang(kk)`) / Nunito (body) / JetBrains Mono (mono)
-- **PWA**: vite-plugin-pwa — **Testing**: Vitest (357 tests, 23 files)
-- **Mobile**: Capacitor (android/ios) — **Payments**: RevenueCat
+- **Icons**: lucide-react — **Fonts**: Unbounded (RU display) / RubikKZ (KK display, via `--ff-display` var + `html:lang(kk)`) / Nunito (body) / JetBrains Mono (mono)
+- **PWA**: vite-plugin-pwa — **Testing**: Vitest (374 tests, 25 files)
+- **Mobile**: Capacitor 8 (android/ios) — **Payments**: RevenueCat (native) + Lemon Squeezy (web)
 
 ## Important Notes
 - UI: Russian (default) + Kazakh — switchable in Settings
@@ -139,7 +145,7 @@ node scripts/dump-questions.mjs && node scripts/compute-quarantine.mjs \
 | Apple Team ID | `85MH8SWD4T` |
 | App Store ID | `6760261689` |
 | Marketing version | `1.1.0` |
-| Build number | `5` (incremented from 4 — Apr 26) |
+| Build number | `17` (current `CURRENT_PROJECT_VERSION` in `project.pbxproj`; increment on every upload) |
 | RevenueCat API key (Apple) | `appl_hSiijbsNKsMxZEeQDZLYTtjSwmw` (in Netlify env + CLAUDE.md) |
 | Test account for App Review | `apple-review@entprep.org` (creds in `entprep-app/.apple-review-account.local`) |
 
@@ -148,7 +154,7 @@ node scripts/dump-questions.mjs && node scripts/compute-quarantine.mjs \
 - `entprep-app/docs/app-store-submission.md` — step-by-step ASC + RC + TestFlight checklist
 - `entprep-app/docs/app-review-notes.md` — pre-baked text for Apple reviewer (English)
 
-**Native IAP architecture:** `src/components/ui/PaywallScreen.tsx` bridges to `PaywallModal` (RevenueCat StoreKit) on `Capacitor.isNativePlatform()`. All 5 paywall surfaces (Test/AiTutor/FullENT/ProfileTab/ErrorReview) use this bridge — no Lemon Squeezy webview inside iOS (Apple Guideline 3.1.1).
+**Native IAP architecture:** `src/components/ui/PaywallScreen.tsx` bridges to `PaywallModal` (RevenueCat StoreKit) on `Capacitor.isNativePlatform()`. The paywall is wired in `Test`, `AiTutor`, `ProfileTab`, plus the app-level `PaywallModal` in `App.tsx` (opened from Full-ENT / QuestionRush / Adaptive flows) — no Lemon Squeezy webview inside iOS (Apple Guideline 3.1.1). RC product IDs are `entprep_monthly` / `entprep_yearly` (code is source of truth; `docs/app-review-notes.md` still says the stale `entprep_pro_*`).
 
 **Build (iOS Release archive):**
 ```bash
