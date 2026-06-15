@@ -78,6 +78,18 @@ export interface QuestionDetail {
   df?: 'easy' | 'medium' | 'hard';  // difficulty of the question at answer time
 }
 
+/** One subject's result inside a Full ENT run. Newer runs store an array of these. */
+export interface ENTSectionResult {
+  sid?: string;
+  label?: string;
+  icon?: string;
+  pts?: number;
+  maxPts?: number;
+  passed?: boolean;
+  correct?: number;
+  total?: number;
+}
+
 export interface TestResult {
   su: string;
   co?: number;
@@ -88,7 +100,12 @@ export interface TestResult {
   tp?: string;
   type?: 'fullent' | 'regular' | 'duel' | 'rush';
   qd?: QuestionDetail[];
-  sections?: Record<string, { correct: number; total: number; score: number }>;
+  /**
+   * Per-section results for a Full ENT. Newer runs store an array of section
+   * results; legacy history persisted a keyed object. Consumers MUST normalize
+   * (Array.isArray check) and derive the total from `pts` — see fullEntTotalPts.
+   */
+  sections?: ENTSectionResult[] | Record<string, ENTSectionResult>;
   /** Server-verified leaderboard submission data. Not persisted to history. */
   _leaderboard?: { question_indices: number[]; answers: (number | number[] | Record<number, number> | null)[]; };
 }

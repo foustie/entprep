@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { scoreQuestion, scoreSection } from '../scoringEngine';
-import type { Question } from '../../types/index';
+import { scoreQuestion, scoreSection, fullEntTotalPts } from '../scoringEngine';
+import type { Question, TestResult } from '../../types/index';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -175,5 +175,48 @@ describe('scoreSection', () => {
     expect(totalPts).toBe(0);
     expect(maxPts).toBe(0);
     expect(results).toEqual([]);
+  });
+});
+
+// ── fullEntTotalPts: Full-ENT total (regression: 0/140 bug) ──────────────────
+// Every display of a Full-ENT total routes through this helper. The bug was a
+// display reading a top-level `score` that was never stored → every run showed
+// 0/140. These tests pin the real shape FullENT writes (array of per-section
+// results) and the legacy keyed-object shape older history still holds.
+
+describe('fullEntTotalPts', () => {
+  it('sums per-section pts from the array shape (real run → 11, not 0)', () => {
+    const sections: TestResult['sections'] = [
+      { sid: 'math', pts: 4, maxPts: 5, correct: 4, total: 5 },
+      { sid: 'history', pts: 1, maxPts: 5, correct: 1, total: 5 },
+      { sid: 'reading', pts: 3, maxPts: 10, correct: 3, total: 10 },
+      { sid: 'physics', pts: 3, maxPts: 40, correct: 3, total: 40 },
+      { sid: 'math_profile', pts: 0, maxPts: 40, correct: 0, total: 40 },
+    ];
+    expect(fullEntTotalPts(sections)).toBe(11);
+  });
+
+  it('reaches the real 140-pt ceiling', () => {
+    const sections: TestResult['sections'] = [
+      { pts: 20 }, { pts: 20 }, { pts: 20 }, { pts: 40 }, { pts: 40 },
+    ];
+    expect(fullEntTotalPts(sections)).toBe(140);
+  });
+
+  it('handles the legacy keyed-object shape (keyed by sid, summed via pts)', () => {
+    const sections: TestResult['sections'] = {
+      math: { pts: 4, correct: 4, total: 5 },
+      history: { pts: 1, correct: 1, total: 5 },
+    };
+    expect(fullEntTotalPts(sections)).toBe(5);
+  });
+
+  it('rounds to one decimal (partial multiple-choice credit)', () => {
+    expect(fullEntTotalPts([{ pts: 1.5 }, { pts: 2.5 }, { pts: 0.1 }])).toBe(4.1);
+  });
+
+  it('returns 0 for undefined and empty (never NaN)', () => {
+    expect(fullEntTotalPts(undefined)).toBe(0);
+    expect(fullEntTotalPts([])).toBe(0);
   });
 });

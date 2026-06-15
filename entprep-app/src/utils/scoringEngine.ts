@@ -1,4 +1,4 @@
-import type { Question } from '../types/index';
+import type { Question, TestResult } from '../types/index';
 import { getQType } from '../types/index';
 
 export interface ScoreResult {
@@ -6,6 +6,19 @@ export interface ScoreResult {
   maxPts: number;
   correct: boolean;
   partial?: boolean; // true when multiple-choice earns 1/2
+}
+
+/**
+ * Total ENT points for a Full-ENT result — the sum of each section's `pts`.
+ * Single source of truth: every display of a Full-ENT total MUST use this, never a
+ * top-level `score` (the result never stored one — that bug showed every run as 0/140).
+ * Handles both the current array shape and the legacy keyed-object shape.
+ */
+export function fullEntTotalPts(sections: TestResult['sections']): number {
+  if (!sections) return 0;
+  const arr = Array.isArray(sections) ? sections : Object.values(sections);
+  const sum = arr.reduce((s, sec) => s + (sec.pts ?? 0), 0);
+  return Math.round(sum * 10) / 10;
 }
 
 /**

@@ -1,5 +1,6 @@
 import { COLORS } from '../constants/styles';
 import type { TestResult } from '../types/index';
+import { fullEntTotalPts } from './scoringEngine';
 
 export interface LevelInfo {
   level: number;
@@ -26,15 +27,7 @@ export const LEVELS: LevelInfo[] = [
 /** XP earned from a single test result */
 export function calcTestXP(result: TestResult): number {
   if (result.type === 'fullent' && result.sections) {
-    const sections = result.sections as unknown as Array<{ pts?: number; maxPts?: number; correct?: number; total?: number }>;
-    let totalPts = 0;
-    if (Array.isArray(sections)) {
-      totalPts = sections.reduce((s, r) => s + (r.pts ?? 0), 0);
-    } else {
-      // sections might be Record<string, ...> in older data
-      totalPts = Object.values(sections as Record<string, { pts?: number }>).reduce((s, r) => s + (r.pts ?? 0), 0);
-    }
-    const pct = totalPts / 140 * 100;
+    const pct = fullEntTotalPts(result.sections) / 140 * 100;
     return Math.round(pct * 0.7) + (pct >= 100 ? 5 : 0);
   }
 

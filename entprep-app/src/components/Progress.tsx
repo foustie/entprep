@@ -19,7 +19,8 @@ import ProgressBar from './ui/ProgressBar';
 import { useT } from '../locales';
 import Chip from './ui/Chip';
 import GrowthStats from './ui/GrowthStats';
-import type { TestResult } from '../types';
+import type { TestResult, ENTSectionResult } from '../types';
+import { fullEntTotalPts } from '../utils/scoringEngine';
 
 function ActivityHeatmap({ hist }: { hist: TestResult[] }) {
   const t = useT();
@@ -176,10 +177,8 @@ function computeBadges(hist: TestResult[], subjects: string[], badgeTexts: Recor
 
   // Full ENT 100+ points
   const hasFullent100 = hist.some(t => {
-    if (t.type !== 'fullent' || !t.sections) return false;
-    const sections = t.sections as unknown as Array<{ pts?: number }> | Record<string, { pts?: number }>;
-    const vals = Array.isArray(sections) ? sections : Object.values(sections);
-    return vals.reduce((s, r) => s + (r.pts ?? 0), 0) >= 100;
+    if (t.type !== 'fullent') return false;
+    return fullEntTotalPts(t.sections) >= 100;
   });
 
   // Improver: avg of last 5 - avg of first 5 >= 20 on any subject
@@ -587,14 +586,13 @@ export default function Progress() {
             <GraduationCap size={12} strokeWidth={2.4} />{t.progress.fullEnt}
           </div>
           {hist.filter(t => t.type === "fullent").slice(-3).reverse().map((t: TestResult, i: number) => {
-            type FeSection = { icon?: string; label?: string; pts?: number; maxPts?: number; passed?: boolean; sid?: string };
-            const fe = t as TestResult & { score?: number; sections?: FeSection[] | Record<string, FeSection> };
-            // Legacy history rows persisted `sections` as a Record; newer ones as an array.
-            // Normalize to an array (mirrors computeBadges / calcTestXP) so .map never throws.
-            const feSections: FeSection[] = Array.isArray(fe.sections) ? fe.sections : fe.sections ? Object.values(fe.sections) : [];
-            // Total ENT points = sum of section points (single source of truth). The result never
-            // stored a top-level `score`, so reading fe.score always showed 0/140 — derive it instead.
-            const sc = Math.round(feSections.reduce((s, x) => s + (x.pts ?? 0), 0) * 10) / 10;
+            // Legacy history rows persisted `sections` as a keyed object; newer ones as an array.
+            const feSections: ENTSectionResult[] = Array.isArray(t.sections)
+              ? t.sections
+              : t.sections ? (Object.values(t.sections) as ENTSectionResult[]) : [];
+            // Total ENT points = sum of section pts (single source of truth — fullEntTotalPts).
+            // The result never stored a top-level `score`, so reading it always showed 0/140.
+            const sc = fullEntTotalPts(t.sections);
             const scColor = sc >= 100 ? COLORS.win : sc >= 70 ? COLORS.xp : COLORS.streak;
             const scBg = sc >= 100 ? COLORS.winSoft : sc >= 70 ? COLORS.xpSoft : COLORS.streakSoft;
             return (

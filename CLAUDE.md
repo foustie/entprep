@@ -100,9 +100,20 @@ npm run typecheck    # TypeScript type check (tsc --noEmit)
 npm run test         # Run tests (vitest)
 npm run test:watch   # Watch mode tests
 
-# Deploy (--no-build avoids OOM on Netlify server)
-node scripts/dump-questions.mjs && node scripts/compute-quarantine.mjs && VITE_RC_API_KEY_APPLE=appl_hSiijbsNKsMxZEeQDZLYTtjSwmw npx vite build && netlify deploy --prod --dir=dist --no-build
+# Deploy to prod (entprep.org). --no-build avoids OOM on Netlify's builder.
+# predeploy-check.mjs gates the chain: it FAILS before deploy if the bundle is
+# missing critical inlined env (Supabase URL + anon key) — see "Deploy safety".
+node scripts/dump-questions.mjs && node scripts/compute-quarantine.mjs \
+  && VITE_RC_API_KEY_APPLE=appl_hSiijbsNKsMxZEeQDZLYTtjSwmw npx vite build \
+  && node scripts/predeploy-check.mjs \
+  && netlify deploy --prod --dir=dist --no-build
 ```
+
+### Deploy safety (read before any prod deploy)
+1. **Supabase env MUST be inlined at build time.** Vite reads `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` from `entprep-app/.env.local` (gitignored) or the shell. If absent, `config/supabase.ts` sets `supabase = null` → auth, cloud sync, and leaderboard are **silently dead** in prod with no build/deploy error. This shipped once (the 2026-06 auth break).
+2. **`scripts/predeploy-check.mjs` is the gate.** It runs after `vite build`, before `netlify deploy`, and asserts the dist bundle contains the Supabase host + an anon-key JWT. It is wired into the deploy command above — never deploy with a chain that skips it.
+3. **Correct Netlify site is `95dda229-7f00-4ea7-8b23-d9ec28ed071d`** (the entrep site serving entprep.org). The repo once linked to the wrong site (`fluffy-yeot-302607`) and a prod deploy went nowhere visible. If unsure: `netlify status` and confirm the site id before `--prod`.
+4. **Full-ENT total is computed by `fullEntTotalPts()`** (`utils/scoringEngine.ts`) — the single source of truth for every display, XP, and badge. Never read a top-level `score` off a Full-ENT result (it is never stored → 0/140 bug). `TestResult['sections']` is a typed union; do not re-introduce `as unknown as` casts on it.
 
 ## Technical Stack
 - **Language**: TypeScript — **Frontend**: React 18 — **Build**: Vite 6.x
@@ -110,7 +121,7 @@ node scripts/dump-questions.mjs && node scripts/compute-quarantine.mjs && VITE_R
 - **AI**: Claude Sonnet 4.6 — **Errors**: Sentry — **Analytics**: Plausible
 - **Styling**: Inline styles + themes — **State**: React Context (4 contexts)
 - **Icons**: lucide-react — **Fonts**: Unbounded (RU display) / Rubik (KK display, via `--ff-display` var + `html:lang(kk)`) / Nunito (body) / JetBrains Mono (mono)
-- **PWA**: vite-plugin-pwa — **Testing**: Vitest (352 tests, 23 files)
+- **PWA**: vite-plugin-pwa — **Testing**: Vitest (357 tests, 23 files)
 - **Mobile**: Capacitor (android/ios) — **Payments**: RevenueCat
 
 ## Important Notes

@@ -221,7 +221,7 @@ export default function FullENT({ finish }: FullENTProps) {
       };
     }));
     // Save results to history immediately (don't wait for "Go Home" click)
-    finish({ type: "fullent", su: "fullent", sc: 0, dt: new Date().toLocaleDateString("ru-RU"), tm: ENT_CONFIG.totalTime - timeLeft, qd, sections: r.map(sr => ({ sid: sr.sid, label: sr.label, icon: sr.icon, pts: sr.pts, maxPts: sr.maxPts, passed: sr.passed, correct: sr.correct, total: sr.total })) as unknown as TestResult['sections'] } as TestResult);
+    finish({ type: "fullent", su: "fullent", sc: 0, co: r.reduce((s, x) => s + x.correct, 0), to: r.reduce((s, x) => s + x.total, 0), dt: new Date().toLocaleDateString("ru-RU"), tm: ENT_CONFIG.totalTime - timeLeft, qd, sections: r.map(sr => ({ sid: sr.sid, label: sr.label, icon: sr.icon, pts: sr.pts, maxPts: sr.maxPts, passed: sr.passed, correct: sr.correct, total: sr.total })) });
     // Show paywall after 3s delay for free users (let them see their score first)
     if (!isPremium) paywallTimerRef.current = setTimeout(() => openPaywall('fullent'), 3000);
   };
@@ -534,7 +534,7 @@ export default function FullENT({ finish }: FullENTProps) {
                 borderRadius: 12, padding: "10px 8px",
               }}>
                 <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink)', opacity: 0.55, marginBottom: 3 }}>XP</div>
-                <div style={{ fontFamily: FF.display, fontSize: 14, fontWeight: 900, color: '#C77D00', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.025em' }}>+{calcTestXP({ type: 'fullent', su: 'fullent', sc: 0, dt: '', sections: res.map(r => ({ pts: r.pts })) as unknown as TestResult['sections'] })}</div>
+                <div style={{ fontFamily: FF.display, fontSize: 14, fontWeight: 900, color: '#C77D00', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.025em' }}>+{calcTestXP({ type: 'fullent', su: 'fullent', sc: 0, dt: '', sections: res.map(r => ({ pts: r.pts })) })}</div>
               </div>
             </div>
             <div style={{
