@@ -222,7 +222,7 @@ function buildPassagesFromRows(rows: SupabaseRow[]): (Passage & { t_kk?: string;
       c: row.c,
       e: row.e || '',
       q_kk: row.q_kk || undefined,
-      o_kk: row.o_kk || undefined,
+      o_kk: row.o_kk ? cleanOptions(row.o_kk) : undefined,
       e_kk: row.e_kk || undefined,
     } as Omit<Question, '_oi' | '_topic' | 'pt' | 'px'>);
   }
@@ -376,11 +376,24 @@ async function getPassages(lang?: Lang): Promise<Passage[]> {
   if (!passageCache.data) {
     await getPool('reading');
   }
-  const cached = passageCache.data as Passage[] | null;
+  const cached = passageCache.data as (Passage & { t_kk?: string; tx_kk?: string })[] | null;
   if (!cached) return [];
+  const useKk = lang === 'kk';
   return cached.map(p => ({
     ...p,
-    qs: p.qs.map(q => ({ ...q, o: [...q.o] }))
+    // Swap passage title/text to Kazakh when requested (these are passage-level _kk fields).
+    t: useKk && p.t_kk ? p.t_kk : p.t,
+    tx: useKk && p.tx_kk ? p.tx_kk : p.tx,
+    qs: p.qs.map(q => {
+      const cloned = { ...q, o: [...q.o] };
+      // Apply Kazakh question/option/explanation overrides (mirrors clonePool for non-reading pools).
+      if (useKk) {
+        if (q.q_kk) cloned.q = q.q_kk;
+        if (q.o_kk?.length) cloned.o = [...q.o_kk];
+        if (q.e_kk) cloned.e = q.e_kk;
+      }
+      return cloned;
+    }),
   }));
 }
 
