@@ -78,6 +78,16 @@ export async function cloudSave(userId: string, { hist, prof, st, srCards }: Clo
   return { ok: true };
 }
 
+/** Dedup identity for a history entry: a stable id when present, else a composite
+ *  of the fields that distinguish genuinely different runs (dt/su/sc/tm/tp/co/to +
+ *  answered count). Two array slots with the same key are the SAME run (e.g. one
+ *  copy local + one copy from cloud), not two runs. */
+function histKey(h: TestResult): string {
+  if (h.id) return `id:${h.id}`;
+  const qdLen = Array.isArray(h.qd) ? h.qd.length : 0;
+  return `k:${h.dt}_${h.su}_${h.sc}_${h.tm ?? ''}_${h.tp ?? ''}_${h.co ?? ''}_${h.to ?? ''}_${qdLen}`;
+}
+
 export function mergeData(local: CloudData | null, cloud: CloudData | null): CloudData {
   if (!cloud) return local!;
   if (!local) return cloud;
@@ -85,29 +95,29 @@ export function mergeData(local: CloudData | null, cloud: CloudData | null): Clo
   // LOCAL first — local data is fresher and takes priority on dedup collisions
   const allHist = [...(local.hist || []), ...(cloud.hist || [])];
 
-  // Dedup with COUNTER — same key can appear multiple times legitimately
-  // (user takes same subject twice with same score on same day)
-  const keyCount = new Map<string, number>();
+  // Dedup by identity (see histKey), keeping the FIRST occurrence. This collapses
+  // the SAME run appearing once locally and once from cloud into ONE entry. The
+  // prior logic kept up to 10 identical-key copies, so a single run duplicated on
+  // every sign-in (2 → 4 → ... → 10). Genuinely-different runs differ in id (new)
+  // or in tm/score (legacy), so they survive.
+  const seen = new Set<string>();
   const hist = allHist.filter(h => {
-    // Include index-like uniqueness: use qd length or tm (time taken) for extra differentiation
-    const qdLen = Array.isArray(h.qd) ? h.qd.length : 0;
-    const key = `${h.dt}_${h.su}_${h.sc}_${h.tm ?? ''}_${h.tp ?? ''}_${h.co ?? ''}_${h.to ?? ''}_${qdLen}`;
-    const count = keyCount.get(key) || 0;
-    // Allow up to 10 tests with identical keys per day (generous limit)
-    if (count >= 10) return false;
-    keyCount.set(key, count + 1);
+    const key = histKey(h);
+    if (seen.has(key)) return false;
+    seen.add(key);
     return true;
   });
 
-  // Safety: NEVER lose local data. If merge somehow produced fewer entries, keep local.
+  // Safety: NEVER lose a UNIQUE local entry. Compare against the DEDUPED-local
+  // count — raw local length would misfire now, because collapsing the local+cloud
+  // duplicate makes merged < raw-local the EXPECTED outcome, not data loss.
   const localHist = local.hist || [];
-  if (hist.length < localHist.length) {
-    // Merge lost data — fallback to local + any cloud-only entries
-    const localKeys = new Set(localHist.map(h => JSON.stringify({ dt: h.dt, su: h.su, sc: h.sc, co: h.co, to: h.to, tm: h.tm })));
-    const cloudOnly = (cloud.hist || []).filter(h =>
-      !localKeys.has(JSON.stringify({ dt: h.dt, su: h.su, sc: h.sc, co: h.co, to: h.to, tm: h.tm }))
-    );
-    captureError(new Error(`mergeData lost entries: local=${localHist.length} merged=${hist.length}`), { context: 'mergeData.safety' });
+  const uniqLocal = new Set(localHist.map(histKey)).size;
+  if (hist.length < uniqLocal) {
+    // Genuine loss (should not happen with local-first dedup) — restore local + cloud-only.
+    const localKeys = new Set(localHist.map(histKey));
+    const cloudOnly = (cloud.hist || []).filter(h => !localKeys.has(histKey(h)));
+    captureError(new Error(`mergeData lost entries: uniqLocal=${uniqLocal} merged=${hist.length}`), { context: 'mergeData.safety' });
     return { hist: [...localHist, ...cloudOnly], prof: local.prof || cloud.prof || [], st: { ...(cloud.st || {}), ...(local.st || {}) } as Settings, srCards: mergeSrCards(local.srCards || [], cloud.srCards || []) };
   }
 

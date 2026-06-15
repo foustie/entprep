@@ -5,6 +5,13 @@ import { useAuth } from './AuthContext';
 import { addWrongAnswers } from '../utils/srEngine';
 import type { TestResult, Settings, GoalSettings, SRCard } from '../types/index';
 
+/** Stable unique id for a test result, stamped on insert. Lets cloud-sync dedup
+ *  the same run appearing once locally and once from cloud (see mergeData). */
+const newResultId = (): string =>
+  typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID()
+    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+
 interface AppContextValue {
   hist: TestResult[];
   prof: string[];
@@ -160,7 +167,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const addHist = useCallback((result: TestResult) => {
     // Strip _leaderboard before persisting — it's only used for server submission
     const { _leaderboard: _, ...clean } = result;
-    setHist(prev => [...prev, clean]);
+    // Stamp a stable id so cloud-sync can dedup this exact run (the local copy vs
+    // the copy that comes back from cloud) instead of keeping both — see mergeData.
+    const stamped: TestResult = { ...clean, id: clean.id ?? newResultId() };
+    setHist(prev => [...prev, stamped]);
   }, []);
 
   const clearHist = useCallback(() => {

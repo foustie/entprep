@@ -91,6 +91,10 @@ export interface ENTSectionResult {
 }
 
 export interface TestResult {
+  /** Stable unique id stamped at creation (addHist). Lets cloud-sync dedup the
+   *  same run appearing once locally and once from cloud. Optional for backward
+   *  compat with history entries written before ids existed. */
+  id?: string;
   su: string;
   co?: number;
   to?: number;
