@@ -23,8 +23,8 @@ export const DARK: ThemePalette = {
   text: '#F5F2EA',
   'text-body': '#E2E0D6',
   'text-secondary': '#A8AAB4',
-  'text-muted': '#7B7D87',
-  'text-dim': '#5A5C66',
+  'text-muted': '#9A9CA6',   // A11Y-3: was #7B7D87 (3.84:1 on card, AA fail) → 5.75:1
+  'text-dim': '#8C8E98',     // A11Y-3: was #5A5C66 (2.36:1 on card, AA+large fail) → 4.82:1
   'text-light': '#CDCFD7',
   border: 'rgba(255,255,255,0.1)',
   'border-light': 'rgba(255,255,255,0.07)',
@@ -66,9 +66,9 @@ export const LIGHT: ThemePalette = {
   'bg-card-dim': 'rgba(255,255,255,0.5)',
   text: '#1a1a2e',
   'text-body': '#334155',
-  'text-secondary': '#64748b',
+  'text-secondary': '#5B6A7D',  // A11Y-3: was #64748b (4.04:1 on page gradient, AA fail) → 4.69:1
   'text-muted': '#5c6a7a',
-  'text-dim': '#7a8694',
+  'text-dim': '#5F6B7A',        // A11Y-3: was #7a8694 (3.15:1 on page, AA fail) → 4.61:1
   'text-light': '#475569',
   border: 'rgba(0,0,0,0.08)',
   'border-light': 'rgba(0,0,0,0.06)',
