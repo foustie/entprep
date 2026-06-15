@@ -283,8 +283,8 @@ The system was approved Apr 20, 2026 after four iterations (editorial → playfu
 
 ### Surface neutrals
 
-- **Light:** warm cream `#FBF7EE → #F2ECDE` page; pure white `#FFFFFF` cards. Never grey 50 or off-white — the cream warmth distinguishes us from corporate SaaS.
-- **Dark:** `#0B0B12` page; **solid lighter `#22222E` cards** (40% brighter than page bg, so dark ink borders/shadows remain visible). Avoid `rgba` cards in dark theme — they pick up page bg and kill contrast.
+- **Light:** warm cream page — a top-anchored `radial-gradient(ellipse at 50% 0%, #FBF7EE 0%, #F2ECDE 60%)` (`themes.ts` `--bg`), not a flat fill; pure white `#FFFFFF` cards. Never grey 50 or off-white — the cream warmth distinguishes us from corporate SaaS.
+- **Dark:** `#0B0B12` page — a `radial-gradient(ellipse at 50% 0%, #16161E 0%, #0B0B12 60%)` vignette (`themes.ts` `--bg`); **solid lighter `#22222E` cards** (40% brighter than page bg, so dark ink borders/shadows remain visible). Avoid `rgba` cards in dark theme — they pick up page bg and kill contrast.
 
 ### Token references — never use raw hex
 
@@ -315,7 +315,7 @@ Always JetBrains Mono with `tnum` feature when the number changes (score, countd
 
 ### Dark theme contrast strategy
 
-In dark theme, the page is `#0B0B12` and cards are **solid `#22222E`** (deliberately not `rgba` — see Colors). This gives a 40% luminance lift card-vs-page. Combined with the (always-dark) `#0F0F10` 2px ink border, cards read as crisp clipped paper rectangles. Hard ink shadows fade into the background but the border alone carries the v2 "stamped" identity.
+In dark theme, the page is a `#16161E → #0B0B12` radial vignette (`--bg`) and cards are **solid `#22222E`** (deliberately not `rgba` — see Colors). This gives a 40% luminance lift card-vs-page. Combined with the (always-dark) `#0F0F10` 2px ink border, cards read as crisp clipped paper rectangles. Hard ink shadows fade into the background but the border alone carries the v2 "stamped" identity.
 
 ## Elevation & Depth
 
