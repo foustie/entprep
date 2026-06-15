@@ -380,7 +380,7 @@ const kk: Translations = {
     resetProfileConfirm: 'Бейіндік пәндерді қалпына келтіру?',
     inviteFriend: 'Досты шақыр',
     inviteFriendDesc: 'Саған да, досыңа да 7 күн Premium тегін',
-    inviteShareText: 'ENTprep-пен ҰБТ-ға дайындалып жатырмын — 28 000+ сұрақ, AI-талдау және дуэльдер! Менің сілтемем арқылы қосыл және 7 күн Premium тегін ал:',
+    inviteShareText: 'ENTprep-пен ҰБТ-ға дайындалып жатырмын — 30 000+ сұрақ, AI-талдау және дуэльдер! Менің сілтемем арқылы қосыл және 7 күн Premium тегін ал:',
     referralSuccess: 'Реферал бонусы алынды! 7 күн Premium',
     referralAlready: 'Реферал бонусы алынып қойған',
   },

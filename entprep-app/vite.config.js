@@ -31,7 +31,7 @@ export default defineConfig({
       manifest: {
         name: 'ENTprep — Подготовка к ЕНТ',
         short_name: 'ENTprep',
-        description: 'Подготовка к ЕНТ: 28 000+ вопросов, 13 предметов, AI-помощник, адаптивное обучение',
+        description: 'Подготовка к ЕНТ: 30 000+ вопросов, 13 предметов, AI-помощник, адаптивное обучение',
         theme_color: '#FAFAF8',
         background_color: '#FAFAF8',
         lang: 'ru',

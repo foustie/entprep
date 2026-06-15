@@ -18,7 +18,7 @@ Before touching any component/screen/landing markup, read `entprep-app/docs/desi
 
 ## Project Overview
 
-ENTprep is a TypeScript + React educational web app for Kazakhstan's Unified National Testing (ЕНТ). Practice tests across 13 subjects with **28 593 questions** in Supabase (284 subtopics, 150/subject static fallback), AI explanations, adaptive learning, full ЕНТ simulation, leaderboard, social features, real-time duels, referral system, and a university grant calculator.
+ENTprep is a TypeScript + React educational web app for Kazakhstan's Unified National Testing (ЕНТ). Practice tests across 13 subjects with **31 773 questions** in Supabase (284 subtopics, 150/subject static fallback), AI explanations, adaptive learning, full ЕНТ simulation, leaderboard, social features, real-time duels, referral system, and a university grant calculator.
 
 **Live URL:** https://entprep.org
 
@@ -71,7 +71,7 @@ entprep-app/scripts/             # Build & generation scripts
 | `locales/index.ts` | i18n: `useT()` hook, `getT()` function |
 
 ## Key Features
-- 13 ENT subjects, 28 593 questions (Supabase) + static fallback
+- 13 ENT subjects, 31 773 questions (Supabase) + static fallback
 - 3 question types: single choice, multiple answer, matching
 - Full ENT simulation (120q, 5 subjects, 4h, 140 pts, profile blocks)
 - AI explanations, study plans, question generation (Claude Sonnet 4.6)

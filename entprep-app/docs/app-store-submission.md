@@ -67,7 +67,7 @@
 - Keywords: copy из `docs/aso-listing.md` (100 chars exactly)
 - Support URL: `https://entprep.org`
 - Marketing URL: `https://entprep.org`
-- Promotional Text: `28 000+ вопросов · AI-репетитор · Пробный ЕНТ. Готовься к ЕНТ 2026 уже сегодня.` (170 chars max — обновляется без re-review)
+- Promotional Text: `30 000+ вопросов · AI-репетитор · Пробный ЕНТ. Готовься к ЕНТ 2026 уже сегодня.` (170 chars max — обновляется без re-review)
 
 ---
 

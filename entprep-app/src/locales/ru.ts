@@ -380,7 +380,7 @@ const ru = {
     resetProfileConfirm: 'Сбросить профильные предметы?',
     inviteFriend: 'Пригласи друга',
     inviteFriendDesc: '7 дней Premium бесплатно тебе и другу',
-    inviteShareText: 'Готовлюсь к ЕНТ с ENTprep — 28 000+ вопросов, AI-разбор ошибок и дуэли! Присоединяйся по моей ссылке и получи 7 дней Premium бесплатно:',
+    inviteShareText: 'Готовлюсь к ЕНТ с ENTprep — 30 000+ вопросов, AI-разбор ошибок и дуэли! Присоединяйся по моей ссылке и получи 7 дней Premium бесплатно:',
     referralSuccess: 'Реферальный бонус получен! 7 дней Premium',
     referralAlready: 'Реферальный бонус уже получен',
   },
