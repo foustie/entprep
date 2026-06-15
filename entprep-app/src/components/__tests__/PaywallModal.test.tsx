@@ -38,10 +38,10 @@ vi.mock('../../locales', () => ({
       fullEntSim: 'Разбор каждого вопроса с объяснением',
       monthlyPlan: '2 990 ₸/мес',
       yearlyPlan: '9 990 ₸',
-      yearlyPlanAuto: '9 990 ₸/год',
+      yearlyPlanAuto: '9 990 ₸/сезон',
       yearlyPlanDesc: 'автопродление раз в год',
       monthlyLabel: 'Ежемесячно',
-      yearlyLabel: 'Ежегодно',
+      yearlyLabel: 'За сезон',
       yearlyBadge: 'Выгодно',
       getPremium: 'Подписаться',
       alreadyPaid: 'Восстановить покупку',
@@ -84,7 +84,7 @@ describe('PaywallModal', () => {
   it('shows two plan options with fallback prices on web', () => {
     render(<PaywallModal open={true} reason="daily_limit" onClose={() => {}} />);
     expect(screen.getByText('2 990 ₸/мес')).toBeInTheDocument();
-    expect(screen.getByText('9 990 ₸/год')).toBeInTheDocument();
+    expect(screen.getByText('9 990 ₸/сезон')).toBeInTheDocument();
   });
 
   it('on web: "already paid" button calls onClose', () => {
