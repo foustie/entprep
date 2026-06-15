@@ -1,0 +1,77 @@
+/* ============================================================
+   ENTprep — COLOR TOKENS
+   "Vibrant Game" palette. Cream paper, ink borders, ONE orange
+   action color, ONE yellow reward family, green for success only.
+   Rules:
+   - --ink is ALWAYS dark, even in dark theme (borders, hard shadows,
+     and dark text on bright cards).
+   - --streak is the ONLY action color. If it's streak-colored, it's
+     clickable.
+   - Raw hex lives ONLY here. Everywhere else: use the var().
+   ============================================================ */
+
+:root {
+  /* --- Core ink (theme-invariant) --- */
+  --ink: #0F0F10;
+
+  /* --- Action: streak orange (the ONLY interaction color) --- */
+  --streak: #FF5A36;
+  --streak-deep: #E84320;   /* pressed / hover-darken of streak */
+  --streak-soft: #FFD9CE;   /* splash card tint */
+
+  /* --- Reward: xp yellow family --- */
+  --xp: #FFC233;
+  --xp-soft: #FFDF5E;
+  --xp-softer: #FFF1B8;     /* the yellow hero card */
+
+  /* --- Success: win green (semantic only) --- */
+  --win: #1EB854;
+  --win-soft: #B8ECC8;
+
+  /* --- Error (only ever for mistakes) --- */
+  --red: #EF4444;
+  --red-soft: #FBD5D5;
+
+  /* --- Premium accent (only ever for premium/upsell) --- */
+  --premium: #8B5CF6;
+  --premium-soft: #E5DBFB;
+
+  /* --- Surfaces (light theme = warm cream paper) --- */
+  --bg: #FBF6EC;
+  --surface-card: #FFFFFF;
+  --surface-sunken: #F3ECDD;   /* progress track, inset wells */
+
+  /* --- Text --- */
+  --text-primary: #0F0F10;
+  --text-muted: #6B675E;
+  --text-faint: #A39E92;
+
+  /* --- Borders --- */
+  --border-strong: var(--ink);   /* the 2px stamped border */
+
+  /* --- Focus ring (always streak) --- */
+  --focus: var(--streak);
+}
+
+/* ============================================================
+   DARK THEME
+   Bg #0B0B12, cards SOLID #22222E (never rgba). ink stays dark
+   for borders + dark text on bright cards.
+   ============================================================ */
+:root[data-theme="dark"],
+.theme-dark {
+  --bg: #0B0B12;
+  --surface-card: #22222E;
+  --surface-sunken: #16161F;
+
+  --text-primary: #F5F2EA;
+  --text-muted: #ABA8B6;
+  --text-faint: #6E6B7A;
+
+  /* slightly punchier streak on dark so it still reads as action */
+  --streak: #FF6B49;
+  --streak-deep: #FF5A36;
+
+  /* borders on dark go to near-black for the stamped look */
+  --border-strong: #000000;
+}

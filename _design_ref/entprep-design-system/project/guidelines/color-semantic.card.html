@@ -1,0 +1,26 @@
+<!-- @dsCard group="Colors" viewport="700x150" name="Semantic — Win / Error / Premium" subtitle="Green = success, red = error only, purple = premium only" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { padding: 24px; margin: 0; }
+  .row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+  .sw { border: 2px solid var(--ink); border-radius: var(--r-12); overflow: hidden; box-shadow: var(--shadow-rest); }
+  .chip { height: 64px; }
+  .meta { padding: 8px 10px; background: var(--surface-card); }
+  .name { font-family: var(--ff-display); font-weight: 700; font-size: 12px; letter-spacing: -0.01em; }
+  .hex { font-family: var(--ff-mono); font-size: 10px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.04em; text-transform: uppercase; }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="sw"><div class="chip" style="background:var(--win)"></div><div class="meta"><div class="name">win</div><div class="hex">#1EB854</div></div></div>
+    <div class="sw"><div class="chip" style="background:var(--win-soft)"></div><div class="meta"><div class="name">win-soft</div><div class="hex">#B8ECC8</div></div></div>
+    <div class="sw"><div class="chip" style="background:var(--red)"></div><div class="meta"><div class="name">red</div><div class="hex">#EF4444 · error</div></div></div>
+    <div class="sw"><div class="chip" style="background:var(--premium)"></div><div class="meta"><div class="name">premium</div><div class="hex">#8B5CF6</div></div></div>
+    <div class="sw"><div class="chip" style="background:var(--premium-soft)"></div><div class="meta"><div class="name">premium-soft</div><div class="hex">#E5DBFB</div></div></div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!-- @dsCard group="App" viewport="430x880" name="ENTprep App — full flow" subtitle="Home → Quiz → Results, with subjects & profile" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ENTprep — App UI Kit</title>
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  html, body { margin: 0; background: #ECE3D2; }
+  .stage { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .phone {
+    width: 390px; height: 820px;
+    background: var(--bg);
+    border: 3px solid var(--ink);
+    border-radius: 40px;
+    box-shadow: 0 10px 0 0 var(--ink);
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    position: relative;
+  }
+  .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 132px; height: 24px; background: var(--ink); border-radius: 0 0 14px 14px; z-index: 10; }
+  .screen { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .screen::-webkit-scrollbar { width: 0; }
+  .statusbar { display: flex; justify-content: space-between; align-items: center; padding: 10px 24px 0; font-family: var(--ff-mono); font-size: 11px; font-weight: 700; color: var(--text-primary); }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="statusbar">
+        <span>9:41</span>
+        <span style="display:flex;gap:5px;align-items:center"><span>ҰБТ</span><span>▮▮▮</span></span>
+      </div>
+      <div id="app" class="screen"></div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="../../_ds_bundle.js?v=1"></script>
+  <script src="data.js"></script>
+  <script type="text/babel" src="kit.jsx"></script>
+  <script type="text/babel" src="HomeScreen.jsx"></script>
+  <script type="text/babel" src="QuizScreen.jsx"></script>
+  <script type="text/babel" src="ResultsScreen.jsx"></script>
+  <script type="text/babel" src="SubjectsScreen.jsx"></script>
+  <script type="text/babel" src="ProfileScreen.jsx"></script>
+  <script type="text/babel" data-presets="env,react">
+    const { useState, useEffect } = React;
+
+    function App() {
+      const data = window.ENTPREP_DATA;
+      const [tab, setTab] = useState('home');      // home | subjects | quiz | profile
+      const [view, setView] = useState('home');    // home | subjects | quiz | results | profile
+      const [theme, setTheme] = useState('light');
+
+      useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme);
+      }, [theme]);
+
+      function nav(t) {
+        setTab(t);
+        setView(t === 'quiz' ? 'quiz' : t);
+      }
+      const goQuiz = () => { setTab('quiz'); setView('quiz'); };
+      const showChrome = view !== 'quiz' && view !== 'results';
+
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+          {showChrome && <AppHeader user={data.user} />}
+          <div style={{ flex: 1, overflowY: 'auto' }}>
+            {view === 'home' && <HomeScreen data={data} onStartQuiz={goQuiz} onOpenSubjects={() => nav('subjects')} />}
+            {view === 'subjects' && <SubjectsScreen data={data} onStartQuiz={goQuiz} />}
+            {view === 'quiz' && <QuizScreen data={data} onBack={() => nav('home')} onFinish={() => setView('results')} />}
+            {view === 'results' && <ResultsScreen data={data} onReview={() => nav('home')} onHome={() => nav('home')} />}
+            {view === 'profile' && <ProfileScreen data={data} theme={theme} onToggleTheme={() => setTheme(theme === 'dark' ? 'light' : 'dark')} />}
+          </div>
+          {showChrome && <BottomNav active={tab} onNav={nav} />}
+        </div>
+      );
+    }
+
+    function mount() {
+      if (!window.ENTprepDesignSystem_78ebb6 || !window.HomeScreen) { setTimeout(mount, 60); return; }
+      ReactDOM.createRoot(document.getElementById('app')).render(<App />);
+    }
+    mount();
+  </script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+/* ============================================================
+   ENTprep Design System — "Vibrant Game"
+   Global entry point. Consumers link THIS file only.
+   Import order matters: fonts → tokens → base/recipes.
+   ============================================================ */
+
+@import url('./tokens/fonts.css');
+@import url('./tokens/colors.css');
+@import url('./tokens/typography.css');
+@import url('./tokens/spacing.css');
+@import url('./tokens/base.css');

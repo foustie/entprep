@@ -1,0 +1,56 @@
+<!-- @dsCard group="Components" viewport="700x340" name="Pills, Badges, Progress & Stats" subtitle="Chips, counters, progress tracks and mono stats" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  body { padding: 28px; }
+  .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 22px; }
+  .lbl { font-family: var(--ff-mono); font-size: 10px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+  .stack { display: flex; flex-direction: column; gap: 12px; max-width: 380px; margin-bottom: 22px; }
+</style>
+</head>
+<body>
+  <div class="lbl">Pills &amp; Badges</div>
+  <div class="row" id="pills"></div>
+  <div class="lbl">Progress</div>
+  <div class="stack" id="progress"></div>
+  <div class="lbl">Stats</div>
+  <div class="row" id="stats" style="gap:32px"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="../../_ds_bundle.js?v=1"></script>
+  <script type="text/babel">
+    const { Pill, Badge, ProgressBar, Stat } = window.ENTprepDesignSystem_78ebb6;
+    ReactDOM.createRoot(document.getElementById('pills')).render(
+      <>
+        <Pill tone="streak" icon="🔥">12</Pill>
+        <Pill tone="xp">+50 XP</Pill>
+        <Pill tone="win">Готово</Pill>
+        <Pill>Алгебра</Pill>
+        <Badge tone="streak">3</Badge>
+        <Badge tone="xp">NEW</Badge>
+        <Badge tone="red">!</Badge>
+      </>
+    );
+    ReactDOM.createRoot(document.getElementById('progress')).render(
+      <>
+        <ProgressBar value={68} showLabel />
+        <ProgressBar value={40} tone="xp" showLabel />
+        <ProgressBar value={85} tone="streak" showLabel />
+      </>
+    );
+    ReactDOM.createRoot(document.getElementById('stats')).render(
+      <>
+        <Stat value="12" label="дней подряд" color="var(--streak)" />
+        <Stat value="1 240" label="XP" color="var(--xp)" />
+        <Stat value="87%" label="точность" color="var(--win)" />
+      </>
+    );
+  </script>
+</body>
+</html>

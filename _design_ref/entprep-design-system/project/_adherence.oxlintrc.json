@@ -1,0 +1,287 @@
+{
+  "plugins": [
+    "react",
+    "import"
+  ],
+  "rules": {
+    "react/forbid-elements": [
+      "warn",
+      {
+        "forbid": []
+      }
+    ],
+    "no-restricted-imports": [
+      "warn",
+      {
+        "patterns": [
+          {
+            "group": [
+              "components/core/**",
+              "components/learn/**",
+              "ui_kits/app/**"
+            ],
+            "message": "Import design-system components from 'index.js', not component internals."
+          }
+        ]
+      }
+    ],
+    "no-restricted-syntax": [
+      "warn",
+      {
+        "selector": "Literal[value=/#[0-9a-fA-F]{3,8}\\b/]",
+        "message": "Raw hex color — use a design-system color token via var()."
+      },
+      {
+        "selector": "Literal[value=/\\b\\d+px\\b/]",
+        "message": "Raw px value — use a design-system spacing token via var()."
+      },
+      {
+        "selector": "Literal[value=/font-family\\s*:\\s*(?!['\\\"]?(?:Unbounded|Nunito|JetBrains Mono))/i]",
+        "message": "Font not provided by the design system. Available: Unbounded, Nunito, JetBrains Mono."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='AnswerOption'] > JSXAttribute > JSXIdentifier[name!=/^(?:marker|state|disabled|children|key|ref|className|style|children)$/]",
+        "message": "<AnswerOption> doesn't accept that prop. Declared props: marker, state, disabled, children."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Badge'] > JSXAttribute > JSXIdentifier[name!=/^(?:tone|children|key|ref|className|style|children)$/]",
+        "message": "<Badge> doesn't accept that prop. Declared props: tone, children."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Button'] > JSXAttribute > JSXIdentifier[name!=/^(?:variant|size|disabled|fullWidth|leadingIcon|trailingIcon|children|key|ref|className|style|children)$/]",
+        "message": "<Button> doesn't accept that prop. Declared props: variant, size, disabled, fullWidth, leadingIcon, trailingIcon, children."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Card'] > JSXAttribute > JSXIdentifier[name!=/^(?:variant|tone|as|children|key|ref|className|style|children)$/]",
+        "message": "<Card> doesn't accept that prop. Declared props: variant, tone, as, children."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Eyebrow'] > JSXAttribute > JSXIdentifier[name!=/^(?:color|children|key|ref|className|style|children)$/]",
+        "message": "<Eyebrow> doesn't accept that prop. Declared props: color, children."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='IconButton'] > JSXAttribute > JSXIdentifier[name!=/^(?:variant|ariaLabel|children|key|ref|className|style|children)$/]",
+        "message": "<IconButton> doesn't accept that prop. Declared props: variant, ariaLabel, children."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Pill'] > JSXAttribute > JSXIdentifier[name!=/^(?:tone|icon|children|key|ref|className|style|children)$/]",
+        "message": "<Pill> doesn't accept that prop. Declared props: tone, icon, children."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='ProgressBar'] > JSXAttribute > JSXIdentifier[name!=/^(?:value|tone|showLabel|key|ref|className|style|children)$/]",
+        "message": "<ProgressBar> doesn't accept that prop. Declared props: value, tone, showLabel."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Stat'] > JSXAttribute > JSXIdentifier[name!=/^(?:value|label|color|align|key|ref|className|style|children)$/]",
+        "message": "<Stat> doesn't accept that prop. Declared props: value, label, color, align."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Stat'] > JSXAttribute[name.name='align'] > Literal[value!=/^(?:left|center)$/]",
+        "message": "<Stat> align must be one of 'left' | 'center'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='SubjectTile'] > JSXAttribute > JSXIdentifier[name!=/^(?:icon|title|subtitle|progress|accent|locked|key|ref|className|style|children)$/]",
+        "message": "<SubjectTile> doesn't accept that prop. Declared props: icon, title, subtitle, progress, accent, locked."
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/index.js"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ],
+  "x-omelette": {
+    "components": {
+      "AnswerOption": {
+        "replaces": []
+      },
+      "Badge": {
+        "replaces": []
+      },
+      "Button": {
+        "replaces": []
+      },
+      "Card": {
+        "replaces": []
+      },
+      "Eyebrow": {
+        "replaces": []
+      },
+      "IconButton": {
+        "replaces": []
+      },
+      "Pill": {
+        "replaces": []
+      },
+      "ProgressBar": {
+        "replaces": []
+      },
+      "Stat": {
+        "replaces": []
+      },
+      "SubjectTile": {
+        "replaces": []
+      }
+    },
+    "tokens": [
+      "--bg",
+      "--border-strong",
+      "--bw",
+      "--ff-body",
+      "--ff-display",
+      "--ff-mono",
+      "--focus",
+      "--fs-body",
+      "--fs-body-small",
+      "--fs-caption",
+      "--fs-display",
+      "--fs-eyebrow",
+      "--fs-h1",
+      "--fs-h2",
+      "--fs-h3",
+      "--fs-stat",
+      "--fw-black",
+      "--fw-bold",
+      "--fw-extrabold",
+      "--fw-regular",
+      "--fw-semibold",
+      "--ink",
+      "--lh-body",
+      "--lh-heading",
+      "--lh-tight",
+      "--ls-display",
+      "--ls-eyebrow",
+      "--ls-h1",
+      "--ls-h2",
+      "--ls-h3",
+      "--pad-desktop",
+      "--pad-mobile",
+      "--pad-tablet",
+      "--premium",
+      "--premium-soft",
+      "--press-dur",
+      "--press-ease",
+      "--r-12",
+      "--r-16",
+      "--r-18",
+      "--r-20",
+      "--r-24",
+      "--r-8",
+      "--r-pill",
+      "--red",
+      "--red-soft",
+      "--shadow-cta",
+      "--shadow-hero",
+      "--shadow-press",
+      "--shadow-rest",
+      "--sp-12",
+      "--sp-16",
+      "--sp-20",
+      "--sp-24",
+      "--sp-32",
+      "--sp-4",
+      "--sp-8",
+      "--streak",
+      "--streak-deep",
+      "--streak-soft",
+      "--surface-card",
+      "--surface-sunken",
+      "--text-faint",
+      "--text-muted",
+      "--text-primary",
+      "--w-desktop",
+      "--w-mobile",
+      "--w-tablet",
+      "--win",
+      "--win-soft",
+      "--xp",
+      "--xp-soft",
+      "--xp-softer"
+    ],
+    "tokenKinds": {
+      "--ink": "color",
+      "--streak": "color",
+      "--streak-deep": "color",
+      "--streak-soft": "color",
+      "--xp": "color",
+      "--xp-soft": "color",
+      "--xp-softer": "color",
+      "--win": "color",
+      "--win-soft": "color",
+      "--red": "color",
+      "--red-soft": "color",
+      "--premium": "color",
+      "--premium-soft": "color",
+      "--bg": "color",
+      "--surface-card": "color",
+      "--surface-sunken": "color",
+      "--text-primary": "font",
+      "--text-muted": "font",
+      "--text-faint": "font",
+      "--border-strong": "color",
+      "--focus": "color",
+      "--ff-display": "font",
+      "--ff-body": "font",
+      "--ff-mono": "font",
+      "--fs-stat": "spacing",
+      "--fs-display": "spacing",
+      "--fs-h1": "spacing",
+      "--fs-h2": "spacing",
+      "--fs-h3": "spacing",
+      "--fs-body": "spacing",
+      "--fs-body-small": "spacing",
+      "--fs-caption": "spacing",
+      "--fs-eyebrow": "spacing",
+      "--fw-regular": "font",
+      "--fw-semibold": "font",
+      "--fw-bold": "font",
+      "--fw-extrabold": "font",
+      "--fw-black": "font",
+      "--lh-tight": "other",
+      "--lh-heading": "other",
+      "--lh-body": "other",
+      "--ls-display": "other",
+      "--ls-h1": "other",
+      "--ls-h2": "other",
+      "--ls-h3": "other",
+      "--ls-eyebrow": "other",
+      "--sp-4": "spacing",
+      "--sp-8": "spacing",
+      "--sp-12": "spacing",
+      "--sp-16": "spacing",
+      "--sp-20": "spacing",
+      "--sp-24": "spacing",
+      "--sp-32": "spacing",
+      "--r-8": "spacing",
+      "--r-12": "spacing",
+      "--r-16": "spacing",
+      "--r-18": "spacing",
+      "--r-20": "spacing",
+      "--r-24": "spacing",
+      "--r-pill": "spacing",
+      "--bw": "other",
+      "--shadow-rest": "shadow",
+      "--shadow-hero": "shadow",
+      "--shadow-cta": "shadow",
+      "--shadow-press": "shadow",
+      "--press-ease": "other",
+      "--press-dur": "other",
+      "--w-mobile": "spacing",
+      "--w-tablet": "spacing",
+      "--w-desktop": "spacing",
+      "--pad-mobile": "spacing",
+      "--pad-tablet": "spacing",
+      "--pad-desktop": "spacing"
+    },
+    "fontFamilies": [
+      "JetBrains Mono",
+      "Nunito",
+      "Unbounded"
+    ]
+  }
+}
