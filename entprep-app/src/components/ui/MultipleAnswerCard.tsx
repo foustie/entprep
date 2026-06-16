@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { COLORS, FF } from '../../constants/styles';
+import { COLORS, FF, R } from '../../constants/styles';
 import { Check, X } from 'lucide-react';
 import type { Question } from '../../types';
 import { scoreQuestion } from '../../utils/scoringEngine';
@@ -52,7 +52,7 @@ export default function MultipleAnswerCard({
         marginBottom: 10,
       }}>
         <span style={{
-          padding: '4px 10px', borderRadius: 999,
+          padding: '4px 10px', borderRadius: R.pill,
           background: COLORS.streakSoft,
           border: `1.5px solid ${COLORS.streak}`,
           fontFamily: FF.mono, fontSize: 9.5, fontWeight: 800,

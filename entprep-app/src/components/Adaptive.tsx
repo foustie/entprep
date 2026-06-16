@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { getRecommendations, calcTopicStats, calcSubtopicStats, getWrongQuestions, calcStreak } from '../utils/adaptiveHelpers';
 import { supabase } from '../config/supabase';
 import { consumePlan as consumePlanLimit, canGeneratePlan } from '../utils/aiLimits';
-import { CARD_COMPACT, CARD_HERO, TYPE, COLORS, scoreColor, FF } from '../constants/styles';
+import { CARD_COMPACT, CARD_HERO, TYPE, COLORS, scoreColor, FF, R } from '../constants/styles';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useNav } from '../contexts/NavigationContext';
 import { useApp } from '../contexts/AppContext';
@@ -229,7 +229,7 @@ export default function Adaptive() {
     return (
       <div key={s.id} style={{ ...CARD_COMPACT, borderLeft: `4px solid ${stripColor(s.score)}`, padding: "16px 14px", animation: "slideUp 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
         <div role={canExpand ? "button" : undefined} tabIndex={canExpand ? 0 : undefined} aria-expanded={canExpand ? isOpen : undefined} onKeyDown={canExpand ? (e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(s.id); } }) : undefined} style={{ display: "flex", alignItems: "center", marginBottom: 10, cursor: canExpand ? "pointer" : "default" }} onClick={() => canExpand && toggle(s.id)}>
-          <div style={{ width: 40, height: 40, borderRadius: 11, background: s.color + "15", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><SubjectIcon sid={s.id} size={20} color={s.color} strokeWidth={2.2} /></div>
+          <div style={{ width: 40, height: 40, borderRadius: R.md, background: s.color + "15", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><SubjectIcon sid={s.id} size={20} color={s.color} strokeWidth={2.2} /></div>
           <div style={{ marginLeft: 11, flex: 1 }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>{subjectName}</div>
             <div style={{ fontSize: 12, color: "var(--text-secondary)", display: "flex", alignItems: "center", gap: 4 }}>
@@ -252,7 +252,7 @@ export default function Adaptive() {
         <div style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 10, paddingLeft: 50 }}>{s.message}</div>
         <button
           onClick={() => nav("test", s.id)}
-          style={{ marginLeft: 50, background: s.color + "18", border: `1px solid ${s.color}33`, borderRadius: 10, padding: "9px 18px", color: s.color, fontSize: 12, fontWeight: 600, cursor: "pointer", transition: "all 0.2s", display: "inline-flex", alignItems: "center", gap: 5 }}
+          style={{ marginLeft: 50, background: s.color + "18", border: `1px solid ${s.color}33`, borderRadius: R.md, padding: "9px 18px", color: s.color, fontSize: 12, fontWeight: 600, cursor: "pointer", transition: "all 0.2s", display: "inline-flex", alignItems: "center", gap: 5 }}
           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = s.color + "28"; }}
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = s.color + "18"; }}
         >
@@ -294,7 +294,7 @@ export default function Adaptive() {
           </div>
           <div style={{ display: "flex", gap: 6, marginBottom: 10, overflowX: "auto", paddingBottom: 4 }}>
             {(plan.days || []).map((d, i) => (
-              <button key={i} onClick={() => setOpenDay(openDay === i ? null : i)} style={{ background: openDay === i ? "rgba(255,90,54,0.18)" : "var(--bg-subtle)", border: openDay === i ? "1px solid rgba(255,90,54,0.35)" : "1px solid var(--border)", borderRadius: 10, padding: "8px 14px", color: openDay === i ? COLORS.cyan : "var(--text-secondary)", fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s", flexShrink: 0 }}>
+              <button key={i} onClick={() => setOpenDay(openDay === i ? null : i)} style={{ background: openDay === i ? "rgba(255,90,54,0.18)" : "var(--bg-subtle)", border: openDay === i ? "1px solid rgba(255,90,54,0.35)" : "1px solid var(--border)", borderRadius: R.md, padding: "8px 14px", color: openDay === i ? COLORS.cyan : "var(--text-secondary)", fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s", flexShrink: 0 }}>
                 <Calendar size={12} style={{ marginRight: 4, verticalAlign: -2 }} />
                 {(t.progress.dayNames as string[])[i] || `${t.adaptive.dayN} ${d.day}`}
               </button>
@@ -304,7 +304,7 @@ export default function Adaptive() {
             <div style={{ ...CARD_COMPACT, border: "1px solid rgba(255,90,54,0.12)", padding: "14px 14px", animation: "slideUp 0.3s ease" }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", marginBottom: 12 }}>{plan.days[openDay].title}</div>
               {(plan.days[openDay].tasks || []).map((task, ti) => (
-                <div key={ti} role={task.type === "test" ? "button" : undefined} tabIndex={task.type === "test" ? 0 : undefined} onClick={() => { if (task.type === "test" && task.subject) nav("test", task.subject, task.topic || null); }} onKeyDown={task.type === "test" ? (e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (task.subject) nav("test", task.subject, task.topic || null); } }) : undefined} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 12px", marginBottom: 6, borderRadius: 10, background: task.type === "test" ? "rgba(255,90,54,0.06)" : task.type === "review" ? "rgba(255,90,54,0.06)" : "rgba(234,179,8,0.06)", border: `1px solid ${task.type === "test" ? "rgba(255,90,54,0.12)" : task.type === "review" ? "rgba(255,90,54,0.12)" : "rgba(234,179,8,0.12)"}`, cursor: task.type === "test" ? "pointer" : "default", transition: "all 0.2s" }} onMouseEnter={e => { if (task.type === "test") (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,90,54,0.3)"; }} onMouseLeave={e => { if (task.type === "test") (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,90,54,0.12)"; }}>
+                <div key={ti} role={task.type === "test" ? "button" : undefined} tabIndex={task.type === "test" ? 0 : undefined} onClick={() => { if (task.type === "test" && task.subject) nav("test", task.subject, task.topic || null); }} onKeyDown={task.type === "test" ? (e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (task.subject) nav("test", task.subject, task.topic || null); } }) : undefined} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 12px", marginBottom: 6, borderRadius: R.md, background: task.type === "test" ? "rgba(255,90,54,0.06)" : task.type === "review" ? "rgba(255,90,54,0.06)" : "rgba(234,179,8,0.06)", border: `1px solid ${task.type === "test" ? "rgba(255,90,54,0.12)" : task.type === "review" ? "rgba(255,90,54,0.12)" : "rgba(234,179,8,0.12)"}`, cursor: task.type === "test" ? "pointer" : "default", transition: "all 0.2s" }} onMouseEnter={e => { if (task.type === "test") (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,90,54,0.3)"; }} onMouseLeave={e => { if (task.type === "test") (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,90,54,0.12)"; }}>
                   <div style={{ marginTop: 2, flexShrink: 0 }}>{taskIcon(task.type)}</div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, color: "var(--text-body)", lineHeight: 1.4 }}>{task.text}</div>
@@ -342,7 +342,7 @@ export default function Adaptive() {
           };
           return (
             <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}>
-              <div style={{ ...shimmer, height: 48, borderRadius: 10, animationDelay: '0s' }} />
+              <div style={{ ...shimmer, height: 48, borderRadius: R.md, animationDelay: '0s' }} />
               {[0, 1, 2].map(i => (
                 <div key={i} style={{ ...shimmer, height: 36, borderRadius: 8, animationDelay: `${0.1 + i * 0.08}s` }} />
               ))}
@@ -405,7 +405,7 @@ export default function Adaptive() {
           <div style={{ display: "grid", gridTemplateColumns: bp === 'mobile' ? '1fr' : 'repeat(2, 1fr)', gap: 8 }}>
           {strong.map(s => (
             <div key={s.id} style={{ ...CARD_COMPACT, display: "flex", alignItems: "center", borderLeft: `4px solid ${COLORS.green}`, padding: "14px 14px", animation: "slideUp 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
-              <div style={{ width: 32, height: 32, borderRadius: 9, marginRight: 11, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: s.color + "15" }}><SubjectIcon sid={s.id} size={17} color={s.color} strokeWidth={2.2} /></div>
+              <div style={{ width: 32, height: 32, borderRadius: R.sm, marginRight: 11, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: s.color + "15" }}><SubjectIcon sid={s.id} size={17} color={s.color} strokeWidth={2.2} /></div>
               <div style={{ flex: 1, fontSize: 14, fontWeight: 600, color: "var(--text)" }}>{(t.subjects as Record<string, string>)[s.id] || s.name}</div>
               <div style={{ fontSize: 14, fontWeight: 700, fontFamily: FF.mono, color: COLORS.green }}>{s.avg}%</div>
               {s.trend !== "none" && <span style={{ marginLeft: 6 }}><TrendIcon trend={s.trend} /></span>}
@@ -422,7 +422,7 @@ export default function Adaptive() {
           description={t.adaptive.noDataDesc}
           style={{ background: "rgba(255,107,53,0.06)", border: "1px solid rgba(255,107,53,0.15)", marginTop: 10 }}
           action={
-            <button onClick={() => nav("home")} style={{ marginTop: 16, background: COLORS.accent, border: "none", borderRadius: 10, padding: "11px 22px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 5 }}>
+            <button onClick={() => nav("home")} style={{ marginTop: 16, background: COLORS.accent, border: "none", borderRadius: R.md, padding: "11px 22px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 5 }}>
               {t.adaptive.toSubjects} <ChevronRight size={14} />
             </button>
           }

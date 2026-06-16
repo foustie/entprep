@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, memo } from 'react';
-import { COLORS, FF } from '../constants/styles';
+import { COLORS, FF, R } from '../constants/styles';
 import { SUBS, ALL_PROFILES } from '../config/questionPools';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useNav } from '../contexts/NavigationContext';
@@ -177,7 +177,7 @@ export default function Leaderboard() {
       >
         {/* Rank badge — ink chip */}
         <div style={{
-          width: 34, height: 34, borderRadius: 9,
+          width: 34, height: 34, borderRadius: R.sm,
           background: medal ? medal : 'var(--ink)',
           border: '2px solid var(--ink)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -243,7 +243,7 @@ export default function Leaderboard() {
           color: scoreColor, fontVariantNumeric: 'tabular-nums',
           background: scoreBg,
           border: `1.5px solid ${scoreColor}`,
-          padding: '5px 9px', borderRadius: 9,
+          padding: '5px 9px', borderRadius: R.sm,
           flexShrink: 0,
         }}>
           {entry.avgScore}%
@@ -257,7 +257,7 @@ export default function Leaderboard() {
       <BackButton onClick={goHome} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '8px 0 18px' }}>
         <div style={{
-          width: 40, height: 40, borderRadius: 11,
+          width: 40, height: 40, borderRadius: R.md,
           background: COLORS.xp,
           border: '2px solid var(--ink)',
           boxShadow: '0 3px 0 0 var(--ink)',

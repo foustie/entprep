@@ -5,7 +5,7 @@ import { TOPIC_MAP, getTopicQuestions } from '../config/topics';
 import { SUBJECT_META } from '../config/subjects';
 import { API_BASE } from '../config/app';
 import { supabase } from '../config/supabase';
-import { CARD_COMPACT, TYPE, FF } from '../constants/styles';
+import { CARD_COMPACT, TYPE, FF, R } from '../constants/styles';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useAuth } from '../contexts/AuthContext';
 import { useNav } from '../contexts/NavigationContext';
@@ -323,7 +323,7 @@ export default function Admin() {
   const tabStyle = (active: boolean): React.CSSProperties => ({
     flex: 1, padding: '11px', background: active ? 'rgba(255,107,53,0.12)' : 'transparent',
     border: active ? '1px solid rgba(255,107,53,0.25)' : '1px solid var(--border-light)',
-    borderRadius: 10, color: active ? '#FF6B35' : 'var(--text-muted)', fontSize: 12, fontWeight: 700,
+    borderRadius: R.md, color: active ? '#FF6B35' : 'var(--text-muted)', fontSize: 12, fontWeight: 700,
     cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
     transition: 'all 0.2s',
   });
@@ -414,7 +414,7 @@ export default function Admin() {
             <div style={{ padding: "0 16px 12px" }}>
               {generated.o.map((opt, i) => (
                 <div key={i} style={{
-                  padding: "11px 13px", marginBottom: 5, borderRadius: 10,
+                  padding: "11px 13px", marginBottom: 5, borderRadius: R.md,
                   background: i === generated.c ? "rgba(16,185,129,0.1)" : "var(--bg-option)",
                   border: i === generated.c ? "1px solid rgba(16,185,129,0.25)" : "1px solid var(--bg-subtle)",
                   display: "flex", alignItems: "flex-start", gap: 8
@@ -442,13 +442,13 @@ export default function Admin() {
               )}
             </div>
             <div style={{ display: "flex", gap: 7, padding: "0 16px 16px" }}>
-              <button onClick={handleAccept} disabled={saving} style={{ flex: 1, padding: "12px", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.25)", borderRadius: 10, color: "#10B981", fontSize: 12, fontWeight: 700, cursor: saving ? "wait" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+              <button onClick={handleAccept} disabled={saving} style={{ flex: 1, padding: "12px", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.25)", borderRadius: R.md, color: "#10B981", fontSize: 12, fontWeight: 700, cursor: saving ? "wait" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
                 <Check size={14} />{saving ? "..." : "Принять"}
               </button>
-              <button onClick={handleSkip} style={{ flex: 1, padding: "12px", background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.18)", borderRadius: 10, color: "#ef4444", fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+              <button onClick={handleSkip} style={{ flex: 1, padding: "12px", background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.18)", borderRadius: R.md, color: "#ef4444", fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
                 <X size={14} />Пропустить
               </button>
-              <button onClick={handleGenerate} disabled={loading} style={{ flex: 1, padding: "12px", background: "rgba(255,90,54,0.06)", border: "1px solid rgba(255,90,54,0.18)", borderRadius: 10, color: "#FF5A36", fontSize: 12, fontWeight: 700, cursor: loading ? "wait" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+              <button onClick={handleGenerate} disabled={loading} style={{ flex: 1, padding: "12px", background: "rgba(255,90,54,0.06)", border: "1px solid rgba(255,90,54,0.18)", borderRadius: R.md, color: "#FF5A36", fontSize: 12, fontWeight: 700, cursor: loading ? "wait" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
                 <RefreshCw size={14} />{loading ? "..." : "Ещё"}
               </button>
             </div>
@@ -551,16 +551,16 @@ export default function Admin() {
             {/* Action buttons */}
             <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
               <button onClick={startEditing}
-                style={{ flex: 1, padding: '12px', background: 'rgba(255,90,54,0.08)', border: '1px solid rgba(255,90,54,0.2)', borderRadius: 10, color: '#FF5A36', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+                style={{ flex: 1, padding: '12px', background: 'rgba(255,90,54,0.08)', border: '1px solid rgba(255,90,54,0.2)', borderRadius: R.md, color: '#FF5A36', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
                 <Edit3 size={13} />Редактировать
               </button>
               <button onClick={deleteQuestion}
-                style={{ flex: 1, padding: '12px', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.18)', borderRadius: 10, color: '#ef4444', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+                style={{ flex: 1, padding: '12px', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.18)', borderRadius: R.md, color: '#ef4444', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
                 <Trash2 size={13} />Удалить
               </button>
             </div>
             <button onClick={dismissReports}
-              style={{ width: '100%', padding: '12px', marginTop: 8, background: 'rgba(234,179,8,0.06)', border: '1px solid rgba(234,179,8,0.15)', borderRadius: 10, color: '#eab308', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+              style={{ width: '100%', padding: '12px', marginTop: 8, background: 'rgba(234,179,8,0.06)', border: '1px solid rgba(234,179,8,0.15)', borderRadius: R.md, color: '#eab308', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
               <XCircle size={13} />Отклонить жалобы
             </button>
           </>}
@@ -578,7 +578,7 @@ export default function Admin() {
             {editing.o.map((opt, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
                 <button onClick={() => setEditing(p => p ? { ...p, c: i } : p)}
-                  style={{ width: 26, height: 26, borderRadius: 13, border: `2px solid ${i === editing.c ? '#22c55e' : 'var(--text-muted)'}`, background: i === editing.c ? 'rgba(34,197,94,0.15)' : 'transparent', color: i === editing.c ? '#22c55e' : 'var(--text-muted)', fontSize: 10, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  style={{ width: 26, height: 26, borderRadius: R.md, border: `2px solid ${i === editing.c ? '#22c55e' : 'var(--text-muted)'}`, background: i === editing.c ? 'rgba(34,197,94,0.15)' : 'transparent', color: i === editing.c ? '#22c55e' : 'var(--text-muted)', fontSize: 10, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   {i === editing.c ? <Check size={12} /> : String.fromCharCode(65 + i)}
                 </button>
                 <input value={opt} onChange={e => { const o = [...editing.o]; o[i] = e.target.value; setEditing(p => p ? { ...p, o } : p); setEditError(""); }}
@@ -598,11 +598,11 @@ export default function Admin() {
 
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={saveEdit} disabled={editSaving}
-                style={{ flex: 1, padding: '12px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 10, color: '#22c55e', fontSize: 12, fontWeight: 700, cursor: editSaving ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+                style={{ flex: 1, padding: '12px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: R.md, color: '#22c55e', fontSize: 12, fontWeight: 700, cursor: editSaving ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
                 <Save size={13} />{editSaving ? '...' : 'Сохранить'}
               </button>
               <button onClick={() => setEditing(null)}
-                style={{ flex: 1, padding: '12px', background: 'var(--bg-subtle)', border: '1px solid var(--border)', borderRadius: 10, color: 'var(--text-secondary)', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+                style={{ flex: 1, padding: '12px', background: 'var(--bg-subtle)', border: '1px solid var(--border)', borderRadius: R.md, color: 'var(--text-secondary)', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
                 <X size={13} />Отмена
               </button>
             </div>
@@ -633,7 +633,7 @@ export default function Admin() {
             <div style={{ display: 'flex', gap: 8 }}>
               {(['monthly', 'yearly'] as const).map(p => (
                 <button key={p} onClick={() => setPremiumPlan(p)} style={{
-                  flex: 1, padding: '10px', borderRadius: 10, cursor: 'pointer',
+                  flex: 1, padding: '10px', borderRadius: R.md, cursor: 'pointer',
                   background: premiumPlan === p ? 'rgba(255,107,53,0.1)' : 'transparent',
                   border: premiumPlan === p ? '1.5px solid rgba(255,107,53,0.3)' : '1px solid var(--border)',
                   color: premiumPlan === p ? '#FF6B35' : 'var(--text-secondary)',

@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { SUBJECT_META } from '../config/subjects';
 import MiniChart from './ui/MiniChart';
 import SubjectIcon from './ui/SubjectIcon';
-import { CARD_COMPACT, TYPE, COLORS, scoreColor, FF } from '../constants/styles';
+import { CARD_COMPACT, TYPE, COLORS, scoreColor, FF, R } from '../constants/styles';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useApp } from '../contexts/AppContext';
 import { getScoreHistory, getPersonalBests } from '../utils/competitionHelpers';
@@ -496,7 +496,7 @@ export default function Progress() {
               <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 4, background: clr }} />
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                 <div style={{
-                  width: 32, height: 32, borderRadius: 9,
+                  width: 32, height: 32, borderRadius: R.sm,
                   background: `${clr}18`, border: `1.5px solid ${clr}`,
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                   flexShrink: 0,
@@ -610,7 +610,7 @@ export default function Progress() {
                     color: 'var(--text-muted)', letterSpacing: '0.04em',
                   }}>{t.dt}</div>
                   <div style={{
-                    padding: '4px 10px', borderRadius: 999,
+                    padding: '4px 10px', borderRadius: R.pill,
                     background: scBg, border: `1.5px solid ${scColor}`,
                     fontFamily: FF.display, fontSize: 14, fontWeight: 900,
                     color: scColor, letterSpacing: '-0.02em',
@@ -739,7 +739,7 @@ export default function Progress() {
                       padding: '10px 12px 10px 16px',
                       background: 'var(--bg-card)',
                       border: '2px solid var(--ink)',
-                      borderRadius: 10,
+                      borderRadius: R.md,
                       boxShadow: '0 2px 0 0 var(--ink)',
                       overflow: 'hidden',
                     }}>

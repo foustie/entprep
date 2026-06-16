@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { CARD_COMPACT, COLORS, FF } from '../constants/styles';
+import { CARD_COMPACT, COLORS, FF, R } from '../constants/styles';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useNav } from '../contexts/NavigationContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -271,7 +271,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
           <BackButton onClick={goHome} />
           <div style={{
             position: 'relative',
-            width: 38, height: 38, borderRadius: 11,
+            width: 38, height: 38, borderRadius: R.md,
             background: COLORS.streak, border: `2px solid ${COLORS.xp}`,
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
             color: '#fff', fontFamily: FF.brand,
@@ -315,7 +315,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
           <div style={{
             maxWidth: '85%',
             padding: '12px 14px',
-            borderRadius: 16, borderBottomLeftRadius: 6,
+            borderRadius: 16, borderBottomLeftRadius: R.sm,
             background: 'var(--bg-card)',
             border: '2px solid var(--ink)',
             boxShadow: '0 2px 0 0 var(--ink)',
@@ -350,7 +350,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
             {suggestions.map((s, i) => (
               <button key={i} onClick={s.onClick} style={{
                 flexShrink: 0,
-                padding: '7px 12px', borderRadius: 999,
+                padding: '7px 12px', borderRadius: R.pill,
                 background: 'var(--bg-card)',
                 border: '1.5px solid var(--ink)',
                 boxShadow: '0 2px 0 0 rgba(15,15,16,0.15)',
@@ -460,7 +460,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
                   background: 'transparent', border: 'none', textAlign: 'left',
                 }}>
                   <div style={{
-                    width: 34, height: 34, borderRadius: 9,
+                    width: 34, height: 34, borderRadius: R.sm,
                     background: `${s.color}18`, border: `1.5px solid ${s.color}`,
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     flexShrink: 0,
@@ -546,7 +546,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
         <BackButton onClick={() => setMessages([])} />
         <div style={{
           position: 'relative',
-          width: 38, height: 38, borderRadius: 11,
+          width: 38, height: 38, borderRadius: R.md,
           background: COLORS.streak,
           border: `2px solid ${COLORS.xp}`,
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
@@ -574,7 +574,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
           }}>{t.tutor.online} · {isPremium ? 'PRO' : getTutorRemaining() + '/' + 10}</div>
         </div>
         <button onClick={() => setShowSupport(s => !s)} aria-label={t.tutor.supportTitle} aria-pressed={showSupport} style={{
-          width: 34, height: 34, borderRadius: 10,
+          width: 34, height: 34, borderRadius: R.md,
           background: showSupport ? 'rgba(236,72,153,0.12)' : 'transparent',
           border: showSupport ? '1.5px solid rgba(236,72,153,0.35)' : '1.5px solid rgba(15,15,16,0.12)',
           cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -591,7 +591,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
           padding: '14px 14px', marginBottom: 14,
           background: 'rgba(236,72,153,0.06)',
           border: '2px solid var(--ink)',
-          borderRadius: 14,
+          borderRadius: R.lg,
           boxShadow: '0 3px 0 0 var(--ink)',
           animation: 'slideUp 0.3s cubic-bezier(0.16,1,0.3,1)',
         }}>
@@ -607,7 +607,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
             {t.tutor.supportText}
           </div>
           <div style={{
-            padding: '10px 14px', borderRadius: 10,
+            padding: '10px 14px', borderRadius: R.md,
             background: 'var(--ink)',
             fontFamily: FF.mono, fontSize: 13, fontWeight: 800,
             color: '#fff', textAlign: 'center', letterSpacing: '0.04em',
@@ -689,7 +689,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
             flexShrink: 0, marginBottom: 2,
           }}>Д</div>
           <div style={{
-            padding: '10px 14px', borderRadius: 16, borderBottomLeftRadius: 6,
+            padding: '10px 14px', borderRadius: 16, borderBottomLeftRadius: R.sm,
             background: 'var(--bg-card)', border: '2px solid var(--ink)',
             boxShadow: '0 2px 0 0 var(--ink)',
           }}>
@@ -803,7 +803,7 @@ function renderUserContent(content: string, imageAlt: string): React.ReactNode {
       <>
         {text && <div style={{ marginBottom: 8 }}>{text}</div>}
         <img src={src} alt={imageAlt} style={{
-          display: 'block', maxWidth: '100%', borderRadius: 10,
+          display: 'block', maxWidth: '100%', borderRadius: R.md,
           border: '1.5px solid rgba(255,255,255,0.35)',
         }} />
       </>

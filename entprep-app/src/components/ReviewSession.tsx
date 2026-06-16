@@ -3,7 +3,7 @@ import { SUBS, ALL_PROFILES } from '../config/questionPools';
 import { resolveQuestion } from '../utils/questionStore';
 import { reviewCard, getDueCards } from '../utils/srEngine';
 import { scoreQuestion } from '../utils/scoringEngine';
-import { CARD_COMPACT, COLORS, TINT, FF } from '../constants/styles';
+import { CARD_COMPACT, COLORS, TINT, FF, R } from '../constants/styles';
 import { useApp } from '../contexts/AppContext';
 import { useNav } from '../contexts/NavigationContext';
 import { useT } from '../locales';
@@ -133,7 +133,7 @@ export default function ReviewSession({ cards, onFinish }: ReviewSessionProps) {
         </div>
         <button onClick={() => onFinish(updatedCards)} style={{
           width: '100%', padding: '14px', background: COLORS.purple,
-          color: '#fff', border: 'none', borderRadius: 14, cursor: 'pointer',
+          color: '#fff', border: 'none', borderRadius: R.lg, cursor: 'pointer',
           fontSize: 14, fontWeight: 700,
         }}>{t.done}</button>
       </div>
@@ -326,7 +326,7 @@ export default function ReviewSession({ cards, onFinish }: ReviewSessionProps) {
             onClick={handleNext}
             style={{
               width: '100%', padding: '14px', background: COLORS.purple,
-              color: '#fff', border: 'none', borderRadius: 14, cursor: 'pointer',
+              color: '#fff', border: 'none', borderRadius: R.lg, cursor: 'pointer',
               fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center',
               justifyContent: 'center', gap: 8,
             }}

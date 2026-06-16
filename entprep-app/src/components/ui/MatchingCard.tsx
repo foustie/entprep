@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef } from 'react';
 import { Check, X } from 'lucide-react';
-import { COLORS } from '../../constants/styles';
+import { COLORS, R } from '../../constants/styles';
 import { shuffleArray } from '../../utils/questionHelpers';
 import type { Question } from '../../types';
 import { useT } from '../../locales';
@@ -142,7 +142,7 @@ export default function MatchingCard({
               }}>
                 <span style={{
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  width: 22, height: 22, borderRadius: 6,
+                  width: 22, height: 22, borderRadius: R.sm,
                   background: isMissing ? 'rgba(245,158,11,0.15)' : 'rgba(255,90,54,0.1)',
                   color: isMissing ? COLORS.amber : COLORS.teal,
                   fontSize: 10, fontWeight: 700, marginRight: 8,
@@ -227,7 +227,7 @@ export default function MatchingCard({
               ? `linear-gradient(135deg,${COLORS.teal},${COLORS.tealDark})`
               : 'var(--bg-subtle)',
             color: allFilled ? '#fff' : 'var(--text-muted)',
-            border: 'none', borderRadius: 13,
+            border: 'none', borderRadius: R.md,
             fontSize: 14, fontWeight: 700,
             cursor: 'pointer',
             boxShadow: allFilled ? '0 4px 20px rgba(255,90,54,0.25)' : 'none',

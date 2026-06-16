@@ -1,5 +1,5 @@
 import React from 'react';
-import { COLORS, FF } from '../../constants/styles';
+import { COLORS, FF, R } from '../../constants/styles';
 
 type ChipColor = 'teal' | 'accent';
 
@@ -26,7 +26,7 @@ export default function Chip({
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 999,
+    borderRadius: R.pill,
     fontFamily: FF.body,
     fontSize: 12,
     fontWeight: 800,

@@ -1,5 +1,5 @@
 import React from 'react';
-import { CARD_COMPACT } from '../../constants/styles';
+import { CARD_COMPACT, R } from '../../constants/styles';
 
 const shimmerBg: React.CSSProperties = {
   background: 'linear-gradient(90deg, var(--skeleton-bg) 25%, var(--border-light) 50%, var(--skeleton-bg) 75%)',
@@ -19,7 +19,7 @@ interface SkeletonCardProps {
 export default function SkeletonCard({ lines = 2, style }: SkeletonCardProps) {
   return (
     <div style={{ ...CARD_COMPACT, padding: '15px 14px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 12, ...style }}>
-      <div style={{ ...shimmerBg, width: 44, height: 44, borderRadius: 13, flexShrink: 0 }} />
+      <div style={{ ...shimmerBg, width: 44, height: 44, borderRadius: R.md, flexShrink: 0 }} />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
         <Bar width="60%" height={14} />
         {lines > 1 && <Bar width="40%" height={10} delay={0.15} />}

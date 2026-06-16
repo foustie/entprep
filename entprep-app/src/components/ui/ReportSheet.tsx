@@ -1,4 +1,4 @@
-import { COLORS, FF } from '../../constants/styles';
+import { COLORS, FF, R } from '../../constants/styles';
 import { useT } from '../../locales';
 import BottomSheet from './BottomSheet';
 import { Flag } from 'lucide-react';
@@ -30,7 +30,7 @@ export default function ReportSheet({ visible, questionText, options, comment, l
         display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14,
       }}>
         <div style={{
-          width: 34, height: 34, borderRadius: 9,
+          width: 34, height: 34, borderRadius: R.sm,
           background: COLORS.streakSoft,
           border: `1.5px solid ${COLORS.streak}`,
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
@@ -49,7 +49,7 @@ export default function ReportSheet({ visible, questionText, options, comment, l
           padding: '10px 12px', marginBottom: 12,
           background: 'var(--bg-subtle)',
           border: '1.5px solid rgba(15,15,16,0.1)',
-          borderRadius: 10,
+          borderRadius: R.md,
           fontFamily: FF.body, fontSize: 12, fontWeight: 600,
           color: 'var(--text-secondary)', lineHeight: 1.5,
         }}>{questionText}</div>
@@ -73,7 +73,7 @@ export default function ReportSheet({ visible, questionText, options, comment, l
                   background: active ? 'var(--ink)' : 'var(--bg-card)',
                   border: '1.5px solid var(--ink)',
                   boxShadow: active ? `0 2px 0 0 ${COLORS.streak}` : '0 2px 0 0 rgba(15,15,16,0.18)',
-                  borderRadius: 10,
+                  borderRadius: R.md,
                   fontFamily: FF.body, fontSize: 11.5, fontWeight: 800,
                   color: active ? '#fff' : 'var(--text)',
                   cursor: 'pointer', textAlign: 'left',
@@ -101,7 +101,7 @@ export default function ReportSheet({ visible, questionText, options, comment, l
           width: '100%', padding: '10px 12px',
           background: 'var(--bg-card)',
           border: '2px solid var(--ink)',
-          borderRadius: 10,
+          borderRadius: R.md,
           color: 'var(--text)',
           fontFamily: FF.body, fontSize: 12.5, fontWeight: 600,
           resize: 'vertical', marginBottom: 12, outline: 'none',
@@ -120,7 +120,7 @@ export default function ReportSheet({ visible, questionText, options, comment, l
               background: 'var(--bg-card)',
               border: '2px solid var(--ink)',
               boxShadow: '0 2px 0 0 var(--ink)',
-              borderRadius: 10,
+              borderRadius: R.md,
               fontFamily: FF.body, fontSize: 13, fontWeight: 700,
               color: 'var(--text)',
               cursor: loading ? 'wait' : 'pointer', textAlign: 'left',

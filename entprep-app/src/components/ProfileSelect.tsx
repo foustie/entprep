@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import type { CSSProperties } from 'react';
 import { ALL_PROFILES } from '../config/questionPools';
 import { PROFILE_PARTNERS } from '../config/subjects';
-import { COLORS, FF, FW, SP, TINT } from '../constants/styles';
+import { COLORS, FF, FW, SP, TINT, R } from '../constants/styles';
 import { Target, Check, ArrowRight, Trophy } from 'lucide-react';
 import { SubjectChip as SubjectIconChip } from './ui/SubjectIcon';
 import { useBreakpoint } from '../hooks/useBreakpoint';
@@ -67,7 +67,7 @@ export default function ProfileSelect({ onConfirm }: ProfileSelectProps) {
           background: TINT.streak.bg,
           border: `1.5px solid ${TINT.streak.border}`,
           color: COLORS.streak,
-          padding: '5px 11px', borderRadius: 999,
+          padding: '5px 11px', borderRadius: R.pill,
           fontFamily: FF.mono, fontSize: 10, fontWeight: 800,
           letterSpacing: '0.14em', textTransform: 'uppercase',
           marginBottom: 12,
@@ -101,7 +101,7 @@ export default function ProfileSelect({ onConfirm }: ProfileSelectProps) {
       }}>
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: 6,
-          padding: '6px 12px', borderRadius: 999,
+          padding: '6px 12px', borderRadius: R.pill,
           background: ready ? COLORS.win : 'var(--bg-subtle)',
           border: `1.5px solid ${ready ? COLORS.win : COLORS.cardBorder}`,
           color: ready ? '#fff' : COLORS.textSecondary,
@@ -184,7 +184,7 @@ export default function ProfileSelect({ onConfirm }: ProfileSelectProps) {
                   key={p.key + p.examStart}
                   onClick={() => setGoalPeriod(p.key)}
                   style={{
-                    padding: '7px 13px', borderRadius: 999,
+                    padding: '7px 13px', borderRadius: R.pill,
                     fontFamily: FF.body, fontSize: 12, fontWeight: 800,
                     border: `1.5px solid ${active ? INK : 'rgba(15,15,16,0.2)'}`,
                     background: active ? INK : 'rgba(255,255,255,0.7)',
@@ -316,7 +316,7 @@ function SubjectChip({
     padding: '14px 10px 12px',
     background: bg,
     border: `2px solid ${borderColor}`,
-    borderRadius: 14,
+    borderRadius: R.lg,
     boxShadow: disabled ? 'none' : `0 ${shadowDepth}px 0 0 ${shadowColor}`,
     transform: pressed ? 'translateY(3px)' : 'none',
     cursor: disabled ? 'not-allowed' : 'pointer',
@@ -412,7 +412,7 @@ function ConfirmCTA({
       : 'var(--bg-subtle)',
     color: ready ? '#fff' : COLORS.textMuted,
     border: `2px solid ${ready ? INK : COLORS.cardBorder}`,
-    borderRadius: 14,
+    borderRadius: R.lg,
     fontFamily: FF.display,
     fontSize: 14, fontWeight: 900,
     letterSpacing: '0.05em', textTransform: 'uppercase',

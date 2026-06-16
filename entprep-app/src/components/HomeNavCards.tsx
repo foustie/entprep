@@ -1,5 +1,5 @@
 import { UNIS } from '../data/universities';
-import { CARD_COMPACT, COLORS, SECTION_LABEL, TINT, hoverGlow } from '../constants/styles';
+import { CARD_COMPACT, COLORS, SECTION_LABEL, TINT, hoverGlow, R } from '../constants/styles';
 import { useT } from '../locales';
 import { useNav } from '../contexts/NavigationContext';
 import { GraduationCap, ChevronRight, Calculator, Trophy, Users, Swords } from 'lucide-react';
@@ -51,7 +51,7 @@ export default function HomeNavCards() {
             padding: '14px 8px', cursor: 'pointer', textAlign: 'center',
             transition: 'box-shadow 0.2s', gap: 6,
           }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: tint, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 36, height: 36, borderRadius: R.md, background: tint, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Icon size={18} color={color} />
             </div>
             <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text)', lineHeight: 1.2 }}>{label}</span>
@@ -70,7 +70,7 @@ export default function HomeNavCards() {
         padding: '14px 14px',
         cursor: 'pointer', textAlign: 'left',
       }}>
-        <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(255,255,255,0.22)', border: '1.5px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div style={{ width: 38, height: 38, borderRadius: R.md, background: 'rgba(255,255,255,0.22)', border: '1.5px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <Calculator size={20} color="#fff" strokeWidth={2.25} />
         </div>
         <div style={{ marginLeft: 12, flex: 1 }}>

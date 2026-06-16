@@ -1,5 +1,5 @@
 import React from 'react';
-import { CARD_COMPACT, COLORS, FF } from '../constants/styles';
+import { CARD_COMPACT, COLORS, FF, R } from '../constants/styles';
 import { captureError } from '../config/sentry';
 import { getT } from '../locales';
 
@@ -91,7 +91,7 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
                   background: `linear-gradient(135deg,${COLORS.accent},${COLORS.accentDark})`,
                   color: '#fff',
                   border: 'none',
-                  borderRadius: 14,
+                  borderRadius: R.lg,
                   fontSize: 14,
                   fontWeight: 700,
                   cursor: 'pointer',
@@ -108,7 +108,7 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
                 background: isFeature ? 'var(--bg-card)' : `linear-gradient(135deg,${COLORS.accent},${COLORS.accentDark})`,
                 color: isFeature ? 'var(--text)' : '#fff',
                 border: isFeature ? '1px solid var(--border-light)' : 'none',
-                borderRadius: 14,
+                borderRadius: R.lg,
                 fontSize: 14,
                 fontWeight: 700,
                 cursor: 'pointer',

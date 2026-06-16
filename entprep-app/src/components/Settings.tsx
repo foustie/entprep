@@ -3,7 +3,7 @@ import { getPoolSize, getTotalQ } from '../utils/questionStore';
 import { UNIS } from '../data/universities';
 import { supabase } from '../config/supabase';
 import Auth from './Auth';
-import { COLORS, FF, BUTTON } from '../constants/styles';
+import { COLORS, FF, BUTTON, R } from '../constants/styles';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useApp } from '../contexts/AppContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -32,7 +32,7 @@ function Section({ icon, label, children }: { icon: React.ReactNode; label: stri
       </div>
       <div style={{
         background: 'var(--bg-card)',
-        borderRadius: 14,
+        borderRadius: R.lg,
         border: '2px solid var(--ink)',
         boxShadow: '0 3px 0 0 var(--ink)',
         overflow: 'hidden',
@@ -111,7 +111,7 @@ export default function Settings() {
       {/* Title */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0 22px' }}>
         <div style={{
-          width: 36, height: 36, borderRadius: 10,
+          width: 36, height: 36, borderRadius: R.md,
           background: 'var(--ink)', border: '2px solid var(--ink)',
           boxShadow: '0 3px 0 0 ' + COLORS.streak,
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
@@ -137,8 +137,8 @@ export default function Settings() {
           <div style={ROW}>
             <div style={{ fontSize: 12, color: COLORS.red, fontWeight: 600, marginBottom: 8 }}>{t.settings.signOutConfirm}</div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={handleSignOut} style={{ flex: 1, padding: '10px', background: COLORS.red, border: 'none', borderRadius: 10, color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{t.yes}</button>
-              <button onClick={() => setCfSignOut(false)} style={{ flex: 1, padding: '10px', background: 'transparent', border: '1px solid var(--border-md)', borderRadius: 10, color: 'var(--text-secondary)', fontSize: 11, cursor: 'pointer' }}>{t.cancel}</button>
+              <button onClick={handleSignOut} style={{ flex: 1, padding: '10px', background: COLORS.red, border: 'none', borderRadius: R.md, color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{t.yes}</button>
+              <button onClick={() => setCfSignOut(false)} style={{ flex: 1, padding: '10px', background: 'transparent', border: '1px solid var(--border-md)', borderRadius: R.md, color: 'var(--text-secondary)', fontSize: 11, cursor: 'pointer' }}>{t.cancel}</button>
             </div>
           </div>
         )}
@@ -175,7 +175,7 @@ export default function Settings() {
                     onChange={e => { setNickInput(e.target.value.replace(/[^a-zA-Z0-9_]/g, '')); setNickError(''); }}
                     placeholder="my_nickname"
                     maxLength={20}
-                    style={{ flex: 1, padding: '10px 12px', background: 'var(--bg-subtle-2)', border: nickError ? `1.5px solid ${COLORS.red}` : '1px solid var(--border-stronger)', borderRadius: 10, color: 'var(--text)', fontSize: 13, fontFamily: FF.mono }}
+                    style={{ flex: 1, padding: '10px 12px', background: 'var(--bg-subtle-2)', border: nickError ? `1.5px solid ${COLORS.red}` : '1px solid var(--border-stronger)', borderRadius: R.md, color: 'var(--text)', fontSize: 13, fontFamily: FF.mono }}
                   />
                   <button
                     onClick={async () => {
@@ -198,7 +198,7 @@ export default function Settings() {
                       setNickSaving(false);
                     }}
                     disabled={nickSaving || nickInput.trim().length < 3}
-                    style={{ minHeight: 44, padding: '10px 16px', background: nickInput.trim().length >= 3 ? COLORS.streak : 'var(--bg-subtle-2)', border: nickInput.trim().length >= 3 ? '2px solid var(--ink)' : 'none', borderBottom: nickInput.trim().length >= 3 ? '3px solid var(--ink)' : 'none', borderRadius: 10, color: '#fff', fontSize: 12, fontWeight: 700, cursor: nickInput.trim().length >= 3 ? 'pointer' : 'default', opacity: nickSaving ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
+                    style={{ minHeight: 44, padding: '10px 16px', background: nickInput.trim().length >= 3 ? COLORS.streak : 'var(--bg-subtle-2)', border: nickInput.trim().length >= 3 ? '2px solid var(--ink)' : 'none', borderBottom: nickInput.trim().length >= 3 ? '3px solid var(--ink)' : 'none', borderRadius: R.md, color: '#fff', fontSize: 12, fontWeight: 700, cursor: nickInput.trim().length >= 3 ? 'pointer' : 'default', opacity: nickSaving ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
                   >
                     <Check size={14} />{nickSaving ? '...' : 'OK'}
                   </button>
@@ -345,7 +345,7 @@ export default function Settings() {
                 <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 4 }}>{t.settings.entDate}</div>
                 <input type="date" value={goalDate} onChange={e => setGoalDate(e.target.value)} style={{ display: 'block', width: '100%', boxSizing: 'border-box', padding: '8px 10px', background: 'var(--bg-subtle-2)', border: '1px solid var(--border-stronger)', borderRadius: 8, color: 'var(--text)', fontSize: 13, fontFamily: 'inherit', colorScheme: 'var(--color-scheme)', margin: 0, WebkitAppearance: 'none', appearance: 'none' }} />
               </div>
-              <button onClick={() => { updSt({ ...st, goal: { target: goalTarget, date: goalDate } }); setEditGoal(false); }} disabled={!goalDate} style={{ width: '100%', padding: '10px', background: goalDate ? COLORS.xp : 'var(--bg-subtle-2)', border: goalDate ? '2px solid var(--ink)' : 'none', borderBottom: goalDate ? '3px solid var(--ink)' : 'none', borderRadius: 10, color: goalDate ? 'var(--ink)' : 'var(--text-muted)', fontSize: 12, fontWeight: 700, cursor: goalDate ? 'pointer' : 'default' }}>
+              <button onClick={() => { updSt({ ...st, goal: { target: goalTarget, date: goalDate } }); setEditGoal(false); }} disabled={!goalDate} style={{ width: '100%', padding: '10px', background: goalDate ? COLORS.xp : 'var(--bg-subtle-2)', border: goalDate ? '2px solid var(--ink)' : 'none', borderBottom: goalDate ? '3px solid var(--ink)' : 'none', borderRadius: R.md, color: goalDate ? 'var(--ink)' : 'var(--text-muted)', fontSize: 12, fontWeight: 700, cursor: goalDate ? 'pointer' : 'default' }}>
                 {t.settings.saveGoal}
               </button>
             </div>
@@ -388,8 +388,8 @@ export default function Settings() {
           <div style={ROW_LAST}>
             <div style={{ fontSize: 12, color: COLORS.yellow, fontWeight: 600, marginBottom: 8 }}>{t.settings.resetProfileConfirm}</div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={handleResetProfile} style={{ flex: 1, padding: '10px', background: COLORS.yellow, border: 'none', borderRadius: 10, color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{t.yes}</button>
-              <button onClick={() => setCfResetProfile(false)} style={{ flex: 1, padding: '10px', background: 'transparent', border: '1px solid var(--border-md)', borderRadius: 10, color: 'var(--text-secondary)', fontSize: 11, cursor: 'pointer' }}>{t.cancel}</button>
+              <button onClick={handleResetProfile} style={{ flex: 1, padding: '10px', background: COLORS.yellow, border: 'none', borderRadius: R.md, color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{t.yes}</button>
+              <button onClick={() => setCfResetProfile(false)} style={{ flex: 1, padding: '10px', background: 'transparent', border: '1px solid var(--border-md)', borderRadius: R.md, color: 'var(--text-secondary)', fontSize: 11, cursor: 'pointer' }}>{t.cancel}</button>
             </div>
           </div>
         )}
@@ -411,7 +411,7 @@ export default function Settings() {
                 placeholder="ENT-XXXX"
                 aria-label={t.teacher.classCode}
                 maxLength={8}
-                style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border-md)', background: 'var(--bg-subtle)', color: 'var(--text)', fontSize: 13, fontFamily: FF.mono, letterSpacing: 1 }}
+                style={{ flex: 1, padding: '10px 12px', borderRadius: R.md, border: '1px solid var(--border-md)', background: 'var(--bg-subtle)', color: 'var(--text)', fontSize: 13, fontFamily: FF.mono, letterSpacing: 1 }}
               />
               <button
                 disabled={classJoining || classCode.length < 6}
@@ -442,7 +442,7 @@ export default function Settings() {
                     setClassJoining(false);
                   }
                 }}
-                style={{ padding: '10px 16px', borderRadius: 10, background: COLORS.teal, color: '#fff', border: 'none', fontSize: 12, fontWeight: 600, cursor: classCode.length >= 6 ? 'pointer' : 'default', opacity: classCode.length >= 6 ? 1 : 0.5 }}
+                style={{ padding: '10px 16px', borderRadius: R.md, background: COLORS.teal, color: '#fff', border: 'none', fontSize: 12, fontWeight: 600, cursor: classCode.length >= 6 ? 'pointer' : 'default', opacity: classCode.length >= 6 ? 1 : 0.5 }}
               >
                 {classJoining ? '...' : t.settings.classJoinButton}
               </button>
@@ -491,7 +491,7 @@ export default function Settings() {
             }}
           >
             <div style={{
-              width: 34, height: 34, borderRadius: 10,
+              width: 34, height: 34, borderRadius: R.md,
               background: `${item.color}12`,
               border: `2px solid ${item.color}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -550,8 +550,8 @@ export default function Settings() {
           <div style={ROW_LAST}>
             <div style={{ fontSize: 12, color: COLORS.red, fontWeight: 600, marginBottom: 8 }}>{t.settings.deleteHistory}</div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => { clearHist(); setCf(false); }} style={{ flex: 1, padding: '10px', background: COLORS.red, border: 'none', borderRadius: 10, color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{t.settings.deleteConfirm}</button>
-              <button onClick={() => setCf(false)} style={{ flex: 1, padding: '10px', background: 'transparent', border: '1px solid var(--border-md)', borderRadius: 10, color: 'var(--text-secondary)', fontSize: 11, cursor: 'pointer' }}>{t.cancel}</button>
+              <button onClick={() => { clearHist(); setCf(false); }} style={{ flex: 1, padding: '10px', background: COLORS.red, border: 'none', borderRadius: R.md, color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{t.settings.deleteConfirm}</button>
+              <button onClick={() => setCf(false)} style={{ flex: 1, padding: '10px', background: 'transparent', border: '1px solid var(--border-md)', borderRadius: R.md, color: 'var(--text-secondary)', fontSize: 11, cursor: 'pointer' }}>{t.cancel}</button>
             </div>
           </div>
         )}
@@ -567,8 +567,8 @@ export default function Settings() {
             <div style={{ fontSize: 12, color: COLORS.red, fontWeight: 600, marginBottom: 4 }}>{t.settings.deleteAccount || 'Удалить аккаунт'}</div>
             <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 8 }}>{t.settings.deleteAccountWarning || 'Все данные будут удалены. Это действие нельзя отменить.'}</div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={handleDeleteAccount} disabled={deletingAccount} style={{ flex: 1, padding: '10px', background: COLORS.red, border: 'none', borderRadius: 10, color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', opacity: deletingAccount ? 0.6 : 1 }}>{deletingAccount ? '...' : (t.settings.deleteConfirm)}</button>
-              <button onClick={() => setCfDeleteAccount(false)} style={{ flex: 1, padding: '10px', background: 'transparent', border: '1px solid var(--border-md)', borderRadius: 10, color: 'var(--text-secondary)', fontSize: 11, cursor: 'pointer' }}>{t.cancel}</button>
+              <button onClick={handleDeleteAccount} disabled={deletingAccount} style={{ flex: 1, padding: '10px', background: COLORS.red, border: 'none', borderRadius: R.md, color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', opacity: deletingAccount ? 0.6 : 1 }}>{deletingAccount ? '...' : (t.settings.deleteConfirm)}</button>
+              <button onClick={() => setCfDeleteAccount(false)} style={{ flex: 1, padding: '10px', background: 'transparent', border: '1px solid var(--border-md)', borderRadius: R.md, color: 'var(--text-secondary)', fontSize: 11, cursor: 'pointer' }}>{t.cancel}</button>
             </div>
           </div>
         )}

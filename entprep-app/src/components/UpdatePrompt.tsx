@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { RefreshCw } from 'lucide-react';
-import { COLORS, FF } from '../constants/styles';
+import { COLORS, FF, R } from '../constants/styles';
 import { useT } from '../locales';
 
 export default function UpdatePrompt() {
@@ -37,14 +37,14 @@ export default function UpdatePrompt() {
       maxWidth: 448, margin: '0 auto', zIndex: 9998,
       background: 'var(--bg-card)',
       border: '2px solid var(--ink)',
-      borderRadius: 14, padding: '16px 18px',
+      borderRadius: R.lg, padding: '16px 18px',
       boxShadow: `0 5px 0 0 ${COLORS.streak}`,
       animation: 'slideUp 0.45s cubic-bezier(0.16,1,0.3,1)',
       willChange: 'opacity,transform',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
         <div style={{
-          width: 38, height: 38, borderRadius: 10,
+          width: 38, height: 38, borderRadius: R.md,
           background: COLORS.streak,
           border: '2px solid var(--ink)',
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
@@ -68,7 +68,7 @@ export default function UpdatePrompt() {
           background: 'var(--bg-subtle)',
           border: '1.5px solid rgba(15,15,16,0.14)',
           color: 'var(--text-muted)',
-          borderRadius: 10, padding: '9px 16px',
+          borderRadius: R.md, padding: '9px 16px',
           fontFamily: FF.body, fontSize: 12, fontWeight: 800,
           cursor: 'pointer',
         }}>{t.pwa.later}</button>
@@ -77,7 +77,7 @@ export default function UpdatePrompt() {
           border: '2px solid var(--ink)',
           boxShadow: '0 2px 0 0 ' + COLORS.streak,
           color: '#fff',
-          borderRadius: 10, padding: '8px 18px',
+          borderRadius: R.md, padding: '8px 18px',
           fontFamily: FF.display, fontSize: 11, fontWeight: 900,
           letterSpacing: '0.06em', textTransform: 'uppercase',
           cursor: 'pointer',

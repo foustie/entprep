@@ -7,7 +7,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useApp } from '../../contexts/AppContext';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useT } from '../../locales/index';
-import { COLORS, FF, FW, SP, TINT } from '../../constants/styles';
+import { COLORS, FF, FW, SP, TINT, R } from '../../constants/styles';
 import { getEntCountdown } from '../../config/ent';
 import { trackEvent } from '../../utils/analytics';
 import SendToMomSheet from '../SendToMomSheet';
@@ -51,7 +51,7 @@ function PrimaryCTA({ href, label, sub, onClose, onTrackClick }: { href: string;
     background: `linear-gradient(180deg, #FF6A47 0%, ${COLORS.streak} 100%)`,
     color: '#fff',
     border: `2px solid ${INK}`,
-    borderRadius: 14,
+    borderRadius: R.lg,
     textDecoration: 'none',
     fontFamily: FF.display,
     letterSpacing: '0.04em',
@@ -212,7 +212,7 @@ function WebPaywallScreen({ trigger, score, onClose }: PaywallScreenProps) {
               position: 'absolute', top: 14, right: 14,
               background: 'var(--bg-subtle)',
               border: `1.5px solid ${COLORS.cardBorder}`,
-              borderRadius: 10,
+              borderRadius: R.md,
               width: 34, height: 34,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer', color: COLORS.textMuted,
@@ -229,7 +229,7 @@ function WebPaywallScreen({ trigger, score, onClose }: PaywallScreenProps) {
               background: TINT.streak.bg,
               border: `1.5px solid ${TINT.streak.border}`,
               color: COLORS.streak,
-              padding: '5px 11px', borderRadius: 999,
+              padding: '5px 11px', borderRadius: R.pill,
               fontFamily: FF.mono, fontSize: 10, fontWeight: 800,
               letterSpacing: '0.12em', textTransform: 'uppercase',
               marginBottom: SP.md,
@@ -281,7 +281,7 @@ function WebPaywallScreen({ trigger, score, onClose }: PaywallScreenProps) {
               <div style={{
                 position: 'relative', height: 8,
                 background: 'rgba(15,15,16,0.08)',
-                borderRadius: 999,
+                borderRadius: R.pill,
                 border: `1.5px solid ${INK}`,
                 overflow: 'hidden',
                 marginBottom: 10,
@@ -298,7 +298,7 @@ function WebPaywallScreen({ trigger, score, onClose }: PaywallScreenProps) {
                 display: 'inline-flex', alignItems: 'center', gap: 6,
                 background: reachedGrant ? COLORS.win : INK,
                 color: '#fff',
-                padding: '5px 11px', borderRadius: 999,
+                padding: '5px 11px', borderRadius: R.pill,
                 fontFamily: FF.display,
                 fontSize: 11, fontWeight: 900,
                 letterSpacing: '0.06em', textTransform: 'uppercase',
@@ -318,7 +318,7 @@ function WebPaywallScreen({ trigger, score, onClose }: PaywallScreenProps) {
             }}>
               <div style={{
                 flexShrink: 0,
-                width: 48, height: 48, borderRadius: 14,
+                width: 48, height: 48, borderRadius: R.lg,
                 background: INK,
                 color: COLORS.xp,
                 border: `2px solid ${INK}`,
@@ -395,7 +395,7 @@ function WebPaywallScreen({ trigger, score, onClose }: PaywallScreenProps) {
           {/* Price comparison table */}
           <div style={{
             border: `2px solid ${INK}`,
-            borderRadius: 14,
+            borderRadius: R.lg,
             overflow: 'hidden',
             marginBottom: SP.lg,
             boxShadow: `0 3px 0 0 ${INK}`,

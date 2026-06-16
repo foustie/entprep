@@ -1,4 +1,4 @@
-import { COLORS, FF, FS, FW, SP } from '../constants/styles';
+import { COLORS, FF, FS, FW, SP, R } from '../constants/styles';
 import { shareToWhatsApp, copyText } from '../utils/shareHelpers';
 import { X } from 'lucide-react';
 import { useEffect } from 'react';
@@ -139,7 +139,7 @@ const handle: CSSProperties = {
   height: 4,
   margin: '0 auto 12px',
   background: COLORS.cardBorder,
-  borderRadius: 999,
+  borderRadius: R.pill,
 };
 
 const headerRow: CSSProperties = {
@@ -161,7 +161,7 @@ const title: CSSProperties = {
 const closeBtn: CSSProperties = {
   width: 32,
   height: 32,
-  borderRadius: 10,
+  borderRadius: R.md,
   background: 'var(--bg-card)',
   border: `1px solid ${COLORS.cardBorder}`,
   display: 'inline-flex',
@@ -276,7 +276,7 @@ const previewTrend: CSSProperties = {
 const previewProgressTrack: CSSProperties = {
   height: 6,
   background: 'rgba(0,0,0,0.06)',
-  borderRadius: 999,
+  borderRadius: R.pill,
   overflow: 'hidden',
   marginBottom: SP.md,
 };
@@ -284,7 +284,7 @@ const previewProgressTrack: CSSProperties = {
 const previewProgressFill: CSSProperties = {
   height: '100%',
   background: COLORS.win,
-  borderRadius: 999,
+  borderRadius: R.pill,
 };
 
 const previewNote: CSSProperties = {

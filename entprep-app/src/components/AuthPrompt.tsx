@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Cloud, Swords, Trophy, Flame, AlertTriangle, Copy, ExternalLink } from 'lucide-react';
 import { supabase } from '../config/supabase';
-import { COLORS, FF } from '../constants/styles';
+import { COLORS, FF, R } from '../constants/styles';
 import { useT } from '../locales';
 import { useToast } from '../contexts/ToastContext';
 import { Capacitor, registerPlugin } from '@capacitor/core';
@@ -239,7 +239,7 @@ export default function AuthPrompt({ onFinish }: AuthPromptProps) {
               borderRadius: 12,
             }}>
               <div style={{
-                width: 34, height: 34, borderRadius: 9,
+                width: 34, height: 34, borderRadius: R.sm,
                 background: `${cfg.color}18`,
                 border: `1.5px solid ${cfg.color}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
@@ -268,7 +268,7 @@ export default function AuthPrompt({ onFinish }: AuthPromptProps) {
           }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
               <div style={{
-                width: 26, height: 26, borderRadius: 7, flexShrink: 0,
+                width: 26, height: 26, borderRadius: R.sm, flexShrink: 0,
                 background: COLORS.streak,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
@@ -297,7 +297,7 @@ export default function AuthPrompt({ onFinish }: AuthPromptProps) {
                 style={{
                   flex: 1, padding: '9px 10px',
                   background: '#fff', border: '1.5px solid var(--ink)',
-                  borderRadius: 9, cursor: 'pointer',
+                  borderRadius: R.sm, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                   fontFamily: FF.body, fontSize: 11, fontWeight: 800,
                   color: 'var(--ink)',
@@ -312,7 +312,7 @@ export default function AuthPrompt({ onFinish }: AuthPromptProps) {
                   style={{
                     flex: 1, padding: '9px 10px',
                     background: 'var(--ink)', border: '1.5px solid var(--ink)',
-                    borderRadius: 9, cursor: 'pointer',
+                    borderRadius: R.sm, cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                     fontFamily: FF.body, fontSize: 11, fontWeight: 800,
                     color: '#fff',

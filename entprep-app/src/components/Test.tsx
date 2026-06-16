@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { SUBS, ALL_PROFILES } from '../config/questionPools';
 import { getQs } from '../utils/questionHelpers';
 import { supabase } from '../config/supabase';
-import { CARD, CARD_COMPACT, TYPE, COLORS, scoreColor, FF } from '../constants/styles';
+import { CARD, CARD_COMPACT, TYPE, COLORS, scoreColor, FF, R } from '../constants/styles';
 import { useApp } from '../contexts/AppContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useNav } from '../contexts/NavigationContext';
@@ -173,10 +173,10 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
         <h2 style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>{t.test.leaveTestConfirm}</h2>
         <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 20 }}>{Object.keys(ans).length}/{qs.length}</div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => setShowLeaveConfirm(false)} style={{ flex: 1, padding: '12px 0', borderRadius: 10, border: '1px solid var(--border)', background: 'none', color: 'var(--text)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+          <button onClick={() => setShowLeaveConfirm(false)} style={{ flex: 1, padding: '12px 0', borderRadius: R.md, border: '1px solid var(--border)', background: 'none', color: 'var(--text)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
             {t.test.continue}
           </button>
-          <button onClick={doLeave} style={{ flex: 1, padding: '12px 0', borderRadius: 10, border: 'none', background: COLORS.red, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+          <button onClick={doLeave} style={{ flex: 1, padding: '12px 0', borderRadius: R.md, border: 'none', background: COLORS.red, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
             {t.test.exit}
           </button>
         </div>
@@ -348,7 +348,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
             marginTop: 4,
           }}>
             <div style={{
-              width: 32, height: 32, borderRadius: 9,
+              width: 32, height: 32, borderRadius: R.sm,
               background: COLORS.streak, border: '1.5px solid var(--ink)',
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
               color: '#fff', fontFamily: FF.brand,
@@ -359,8 +359,8 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
               flex: 1,
               background: 'var(--bg-card)',
               border: '2px solid var(--ink)',
-              borderRadius: 14,
-              borderBottomLeftRadius: 6,
+              borderRadius: R.lg,
+              borderBottomLeftRadius: R.sm,
               boxShadow: '0 3px 0 0 var(--ink)',
               padding: '12px 14px',
             }}>
@@ -401,7 +401,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
           textAlign: 'left',
         }}>
           <span style={{
-            width: 26, height: 26, borderRadius: 7,
+            width: 26, height: 26, borderRadius: R.sm,
             background: 'var(--bg-card)', border: '1.5px solid rgba(15,15,16,0.2)',
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
             color: 'var(--text-muted)', fontFamily: FF.brand,
@@ -479,7 +479,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: 5,
           marginTop: 14,
-          padding: '6px 12px', borderRadius: 999,
+          padding: '6px 12px', borderRadius: R.pill,
           background: 'var(--ink)', color: '#fff',
           fontFamily: FF.display, fontSize: 10.5, fontWeight: 900,
           letterSpacing: '0.08em', textTransform: 'uppercase',
@@ -561,7 +561,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
         }}
         style={{
           width: "100%", padding: "15px", marginTop: 14,
-          background: COLORS.red, color: "#fff", border: "none", borderRadius: 14,
+          background: COLORS.red, color: "#fff", border: "none", borderRadius: R.lg,
           fontSize: 14, fontWeight: 700, cursor: "pointer",
           boxShadow: "0 4px 20px rgba(239,68,68,0.25)",
           display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
@@ -588,7 +588,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
         background: `linear-gradient(180deg, #FF6A47 0%, ${COLORS.streak} 100%)`,
         color: "#fff",
         border: "2px solid var(--ink)",
-        borderRadius: 14,
+        borderRadius: R.lg,
         fontFamily: FF.display,
         fontSize: 13, fontWeight: 900, letterSpacing: '0.05em', textTransform: 'uppercase',
         cursor: "pointer",
@@ -608,7 +608,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
       style={{
         width: "100%", padding: "15px", marginTop: 8,
         background: "none", color: "var(--text-secondary)",
-        border: "1px solid var(--border-light)", borderRadius: 14,
+        border: "1px solid var(--border-light)", borderRadius: R.lg,
         fontSize: 14, fontWeight: 600, cursor: "pointer",
       }}
     >{t.test.goHome}</button>
@@ -624,7 +624,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
         padding: "7px 12px",
         background: tl < 120 ? "rgba(239,68,68,0.12)" : "var(--bg-card)",
         border: `2px solid ${tl < 120 ? COLORS.red : 'var(--ink)'}`,
-        borderRadius: 999,
+        borderRadius: R.pill,
         boxShadow: tl < 120 ? 'none' : '0 2px 0 0 var(--ink)',
         fontFamily: FF.display, fontSize: 13, fontWeight: 900,
         letterSpacing: '-0.025em',
@@ -643,7 +643,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
           {streakRun >= 3 && (
             <span style={{
               display: 'inline-flex', alignItems: 'center', gap: 4,
-              padding: '3px 8px', borderRadius: 999,
+              padding: '3px 8px', borderRadius: R.pill,
               background: COLORS.streak, color: '#fff',
               border: '2px solid var(--ink)',
               fontFamily: FF.mono, fontSize: 10, fontWeight: 700,
@@ -661,7 +661,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
         </div>
       </div>
       <div style={{
-        height: 8, borderRadius: 999,
+        height: 8, borderRadius: R.pill,
         background: 'rgba(15,15,16,0.1)',
         border: '1.5px solid var(--ink)',
         overflow: 'hidden',
@@ -718,8 +718,8 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
         else if (picked) { bg = "rgba(255,90,54,0.1)"; bd = "1.5px solid rgba(255,90,54,0.55)"; tc = COLORS.streak; }
         const isFocused = !show && focused === idx;
         if (isFocused && !picked) { bd = "1px solid rgba(255,90,54,0.5)"; bg = "rgba(255,90,54,0.08)"; }
-        return (<button key={`${cur}-${idx}`} onClick={() => sel(idx)} role="radio" aria-checked={picked} aria-label={`${t.test.option} ${String.fromCharCode(65 + idx)}: ${opt}`} style={{ display: "flex", alignItems: "center", background: bg, border: bd, borderRadius: 13, padding: "13px 14px", cursor: show ? "default" : "pointer", textAlign: "left", transition: "all 0.2s", position: "relative", overflow: "hidden", outline: isFocused ? "2px solid rgba(255,90,54,0.4)" : undefined, outlineOffset: 1 }}>
-          <div style={{ width: 26, height: 26, borderRadius: 13, border: `2px solid ${tc}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: tc, flexShrink: 0, marginRight: 11 }}>
+        return (<button key={`${cur}-${idx}`} onClick={() => sel(idx)} role="radio" aria-checked={picked} aria-label={`${t.test.option} ${String.fromCharCode(65 + idx)}: ${opt}`} style={{ display: "flex", alignItems: "center", background: bg, border: bd, borderRadius: R.md, padding: "13px 14px", cursor: show ? "default" : "pointer", textAlign: "left", transition: "all 0.2s", position: "relative", overflow: "hidden", outline: isFocused ? "2px solid rgba(255,90,54,0.4)" : undefined, outlineOffset: 1 }}>
+          <div style={{ width: 26, height: 26, borderRadius: R.md, border: `2px solid ${tc}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: tc, flexShrink: 0, marginRight: 11 }}>
             {show && correct ? <Check size={14} /> : show && picked && !correct ? <X size={14} /> : String.fromCharCode(65 + idx)}
           </div>
           <span style={{ fontSize: 14, color: tc, fontWeight: picked ? 600 : 400 }}>{opt}</span>
@@ -748,7 +748,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
         <div style={{
           marginTop: 12,
           padding: '11px 14px',
-          borderRadius: 14,
+          borderRadius: R.lg,
           background: isCorrect ? '#B8ECC8' : '#FFE8DE',
           border: '2px solid var(--ink)',
           borderBottom: '4px solid var(--ink)',
@@ -759,7 +759,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
         }}>
           {isCorrect ? (
             <>
-              <div style={{ width: 28, height: 28, borderRadius: 14, background: '#58CC02', border: '2px solid var(--ink)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div style={{ width: 28, height: 28, borderRadius: R.lg, background: '#58CC02', border: '2px solid var(--ink)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Check size={14} color="#fff" strokeWidth={3.2} />
               </div>
               <div style={{
@@ -784,7 +784,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
             </>
           ) : (
             <>
-              <div style={{ width: 28, height: 28, borderRadius: 14, background: COLORS.streak, border: '2px solid var(--ink)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div style={{ width: 28, height: 28, borderRadius: R.lg, background: COLORS.streak, border: '2px solid var(--ink)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <X size={14} color="#fff" strokeWidth={3} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -806,7 +806,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
       </div>
       {aiBtn(cur)}
     </div>}
-    {show && <button onClick={nxt} style={{ width: "100%", padding: "15px", marginTop: 12, background: `linear-gradient(180deg, #FF6A47 0%, ${COLORS.streak} 100%)`, color: "#fff", border: "2px solid var(--ink)", borderRadius: 14, fontFamily: FF.display, fontSize: 13, fontWeight: 900, letterSpacing: '0.05em', textTransform: 'uppercase', cursor: "pointer", animation: "slideUp 0.4s cubic-bezier(0.16,1,0.3,1)", boxShadow: "0 5px 0 0 var(--ink), 0 0 24px rgba(255,90,54,0.25)" }}>{cur < tot - 1 ? t.test.nextQuestion : t.test.finishTest}</button>}
+    {show && <button onClick={nxt} style={{ width: "100%", padding: "15px", marginTop: 12, background: `linear-gradient(180deg, #FF6A47 0%, ${COLORS.streak} 100%)`, color: "#fff", border: "2px solid var(--ink)", borderRadius: R.lg, fontFamily: FF.display, fontSize: 13, fontWeight: 900, letterSpacing: '0.05em', textTransform: 'uppercase', cursor: "pointer", animation: "slideUp 0.4s cubic-bezier(0.16,1,0.3,1)", boxShadow: "0 5px 0 0 var(--ink), 0 0 24px rgba(255,90,54,0.25)" }}>{cur < tot - 1 ? t.test.nextQuestion : t.test.finishTest}</button>}
     </div>}
     <ReportSheet visible={reportIdx !== null} questionText={reportIdx !== null ? qs[reportIdx]?.q : undefined} options={reportIdx !== null ? qs[reportIdx]?.o : undefined} comment={reportComment} loading={reportLoading} onClose={() => { setReportIdx(null); setReportComment(''); }} onCommentChange={setReportComment} onReport={reason => reportQuestion(reportIdx!, reason)} />
     {showPaywall && <PaywallScreen trigger="explain_limit" onClose={() => setShowPaywall(false)} />}

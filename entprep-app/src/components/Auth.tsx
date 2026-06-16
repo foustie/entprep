@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { supabase } from '../config/supabase';
-import { CARD_COMPACT, COLORS } from '../constants/styles';
+import { CARD_COMPACT, COLORS, R } from '../constants/styles';
 import { LogOut, Key, Cloud, Camera, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { uploadAvatar } from '../utils/avatarHelpers';
@@ -174,7 +174,7 @@ export default function Auth({ user, onSignOut }: AuthProps) {
             <div style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 4 }}><Cloud size={11} />{t.auth.syncOn}</div>
           </div>
         </div>
-        <button onClick={onSignOut} style={{ width: '100%', padding: '11px', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.18)', borderRadius: 10, color: COLORS.red, fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+        <button onClick={onSignOut} style={{ width: '100%', padding: '11px', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.18)', borderRadius: R.md, color: COLORS.red, fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
           <LogOut size={14} />{t.auth.signOut}
         </button>
       </div>

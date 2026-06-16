@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { ALL_PROFILES, SUBS } from '../config/questionPools';
 import { calcStreak } from '../utils/adaptiveHelpers';
 import { getEntCountdown } from '../config/ent';
-import { PILL, PROGRESS_BAR, PROGRESS_FILL, COLORS, SP, FF } from '../constants/styles';
+import { PILL, PROGRESS_BAR, PROGRESS_FILL, COLORS, SP, FF, R } from '../constants/styles';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useNav } from '../contexts/NavigationContext';
 import { useApp } from '../contexts/AppContext';
@@ -196,7 +196,7 @@ export default function CoachHome() {
                 rel="noopener noreferrer"
                 style={{
                   display: 'inline-block', marginTop: 10, padding: '8px 18px',
-                  background: 'var(--ink)', color: '#fff', borderRadius: 10,
+                  background: 'var(--ink)', color: '#fff', borderRadius: R.md,
                   textDecoration: 'none', fontFamily: FF.body, fontSize: 12.5, fontWeight: 700,
                 }}
               >
@@ -215,7 +215,7 @@ export default function CoachHome() {
           marginTop: 6, marginBottom: 14,
           background: 'var(--bg-card)',
           border: `1.5px solid ${COLORS.text}`,
-          borderRadius: 999,
+          borderRadius: R.pill,
         }}>
           <KeyRound size={13} color={COLORS.text} strokeWidth={2.5} />
           <button
@@ -409,7 +409,7 @@ export default function CoachHome() {
                 background: 'var(--bg-card)',
                 border: `2px solid ${INK}`,
                 borderBottom: `4px solid ${INK}`,
-                borderRadius: 14,
+                borderRadius: R.lg,
                 fontFamily: FF.display,
                 fontSize: 12, fontWeight: 900,
                 letterSpacing: '-0.015em',
@@ -422,7 +422,7 @@ export default function CoachHome() {
               <span style={{
                 flexShrink: 0,
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                width: 32, height: 32, borderRadius: 10,
+                width: 32, height: 32, borderRadius: R.md,
                 background: `${color}1F`,
                 border: `1.5px solid ${color}`,
                 color,
@@ -645,7 +645,7 @@ function HomeHero({
           }}>
             <div style={{
               flex: 1, minWidth: 0,
-              height: 10, borderRadius: 999,
+              height: 10, borderRadius: R.pill,
               background: 'rgba(15,15,16,0.28)',
               border: `1.5px solid ${INK}`,
               overflow: 'hidden',
@@ -662,7 +662,7 @@ function HomeHero({
             <div style={{
               flexShrink: 0,
               display: 'inline-flex', alignItems: 'center', gap: 4,
-              padding: '5px 10px', borderRadius: 999,
+              padding: '5px 10px', borderRadius: R.pill,
               background: reached ? COLORS.win : INK,
               color: '#fff',
               fontFamily: FF.display, fontSize: 10, fontWeight: 900,
@@ -695,7 +695,7 @@ function HomeHero({
           padding: '12px 14px',
           background: '#FFFDF5',
           border: `2px solid ${INK}`,
-          borderRadius: 14,
+          borderRadius: R.lg,
           cursor: 'pointer',
           textAlign: 'left',
           transition: 'transform 80ms, box-shadow 80ms',
@@ -773,7 +773,7 @@ function StatChip({
   return (
     <div style={{
       display: 'inline-flex', alignItems: 'center', gap: 5,
-      padding: '5px 10px 5px 9px', borderRadius: 999,
+      padding: '5px 10px 5px 9px', borderRadius: R.pill,
       background: highlight ? '#fff' : 'rgba(255,255,255,0.6)',
       border: `1.5px solid ${INK}`,
     }}>

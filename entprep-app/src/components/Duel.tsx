@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, memo } from 'react';
-import { CARD_COMPACT, TYPE, COLORS, FF } from '../constants/styles';
+import { CARD_COMPACT, TYPE, COLORS, FF, R } from '../constants/styles';
 import { SubjectChip } from './ui/SubjectIcon';
 import { SUBJECT_META } from '../config/subjects';
 import { ALL_PROFILES, SUBS } from '../config/questionPools';
@@ -451,7 +451,7 @@ export default function Duel() {
       <div style={{ padding: `0 var(--content-padding) ${padBottom}px` }}>
         <BackButton onClick={goHome} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 14, background: `linear-gradient(135deg,${COLORS.red},#f97316)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ width: 44, height: 44, borderRadius: R.lg, background: `linear-gradient(135deg,${COLORS.red},#f97316)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <Swords size={24} color="#fff" />
           </div>
           <div>
@@ -467,7 +467,7 @@ export default function Duel() {
               flex: 1, padding: '10px 16px',
               background: menuTab === mt ? `linear-gradient(135deg,${COLORS.red},#f97316)` : 'var(--bg-card)',
               border: menuTab === mt ? 'none' : '1px solid var(--border)',
-              borderRadius: 14, color: menuTab === mt ? '#fff' : 'var(--text-secondary)',
+              borderRadius: R.lg, color: menuTab === mt ? '#fff' : 'var(--text-secondary)',
               fontSize: 12, fontWeight: menuTab === mt ? 700 : 600,
               cursor: 'pointer', transition: 'all 0.2s', textAlign: 'center',
             }}>
@@ -508,7 +508,7 @@ export default function Duel() {
               style={{
                 width: '100%', padding: '16px', textAlign: 'center',
                 background: 'var(--bg-card)', border: '1.5px solid var(--border)',
-                borderRadius: 14, color: 'var(--text)', fontSize: 24,
+                borderRadius: R.lg, color: 'var(--text)', fontSize: 24,
                 fontFamily: FF.mono, fontWeight: 700,
                 letterSpacing: 6, boxSizing: 'border-box',
               }}
@@ -519,7 +519,7 @@ export default function Duel() {
               style={{
                 width: '100%', padding: '14px', marginTop: 12,
                 background: joinCode.length === 6 ? `linear-gradient(135deg,${COLORS.red},#f97316)` : 'var(--bg-subtle-2)',
-                border: 'none', borderRadius: 14, color: '#fff',
+                border: 'none', borderRadius: R.lg, color: '#fff',
                 fontSize: 14, fontWeight: 700, cursor: joinCode.length === 6 ? 'pointer' : 'default',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               }}
@@ -563,13 +563,13 @@ export default function Duel() {
 
           {/* Share buttons */}
           <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-            <button onClick={() => shareToWhatsApp(inviteText)} style={{ flex: 1, padding: '10px', background: 'rgba(37,211,102,0.1)', border: '1px solid rgba(37,211,102,0.2)', borderRadius: 10, color: '#25D366', fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <button onClick={() => shareToWhatsApp(inviteText)} style={{ flex: 1, padding: '10px', background: 'rgba(37,211,102,0.1)', border: '1px solid rgba(37,211,102,0.2)', borderRadius: R.md, color: '#25D366', fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
               <MessageCircle size={15} />WhatsApp
             </button>
-            <button onClick={() => shareToTelegram(inviteText)} style={{ flex: 1, padding: '10px', background: 'rgba(255,90,54,0.1)', border: '1px solid rgba(255,90,54,0.2)', borderRadius: 10, color: COLORS.teal, fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <button onClick={() => shareToTelegram(inviteText)} style={{ flex: 1, padding: '10px', background: 'rgba(255,90,54,0.1)', border: '1px solid rgba(255,90,54,0.2)', borderRadius: R.md, color: COLORS.teal, fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
               <Send size={15} />Telegram
             </button>
-            <button onClick={async () => { const ok = await copyText(inviteUrl); toast.success(ok ? t.errors.copied : t.error); }} style={{ flex: 1, padding: '10px', background: 'rgba(255,107,53,0.1)', border: '1px solid rgba(255,107,53,0.2)', borderRadius: 10, color: COLORS.accent, fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <button onClick={async () => { const ok = await copyText(inviteUrl); toast.success(ok ? t.errors.copied : t.error); }} style={{ flex: 1, padding: '10px', background: 'rgba(255,107,53,0.1)', border: '1px solid rgba(255,107,53,0.2)', borderRadius: R.md, color: COLORS.accent, fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
               <Copy size={15} />{t.friends.link}
             </button>
           </div>
@@ -827,7 +827,7 @@ export default function Duel() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: 4 }}>
                 {myAnswers.map((correct, i) => (
                   <div key={i} style={{
-                    width: '100%', aspectRatio: '1', borderRadius: 6,
+                    width: '100%', aspectRatio: '1', borderRadius: R.sm,
                     background: correct ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 10, fontWeight: 700,
@@ -860,14 +860,14 @@ export default function Duel() {
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={handleRematch} style={{
               flex: 1, padding: '14px', background: `linear-gradient(135deg,${COLORS.red},#f97316)`,
-              border: 'none', borderRadius: 14, color: '#fff', fontSize: 13, fontWeight: 700,
+              border: 'none', borderRadius: R.lg, color: '#fff', fontSize: 13, fontWeight: 700,
               cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
             }}>
               <RotateCcw size={16} />{t.duel.rematch}
             </button>
             <button onClick={goHome} style={{
               flex: 1, padding: '14px', background: 'var(--bg-card)',
-              border: '1px solid var(--border)', borderRadius: 14, color: 'var(--text)',
+              border: '1px solid var(--border)', borderRadius: R.lg, color: 'var(--text)',
               fontSize: 13, fontWeight: 700, cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
             }}>

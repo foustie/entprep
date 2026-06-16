@@ -1,6 +1,6 @@
 import { SUBS, ALL_PROFILES } from '../config/questionPools';
 import { SUBJECT_META } from '../config/subjects';
-import { COLORS, FF } from '../constants/styles';
+import { COLORS, FF, R } from '../constants/styles';
 import { useNav } from '../contexts/NavigationContext';
 import BackButton from './ui/BackButton';
 import { Swords, Play } from 'lucide-react';
@@ -97,7 +97,7 @@ export default function Challenge({ data }: ChallengeProps) {
             boxShadow: '0 2px 0 0 var(--ink)',
           }}>
             <div style={{
-              width: 32, height: 32, borderRadius: 9,
+              width: 32, height: 32, borderRadius: R.sm,
               background: `${subColor}18`, border: `1.5px solid ${subColor}`,
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
               flexShrink: 0,

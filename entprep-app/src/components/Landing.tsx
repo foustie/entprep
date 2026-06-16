@@ -1,4 +1,4 @@
-import { CARD, CARD_HERO, BUTTON, COLORS, TYPE, FF, SP } from '../constants/styles';
+import { CARD, CARD_HERO, BUTTON, COLORS, TYPE, FF, SP, R } from '../constants/styles';
 import { BookOpen, Brain, Zap, Users, ArrowRight, GraduationCap, CheckCircle2, ChevronDown, Flame, Instagram, Send, AtSign, Clock, Star } from 'lucide-react';
 import { useT } from '../locales';
 import { useApp } from '../contexts/AppContext';
@@ -26,7 +26,7 @@ export default function Landing({ onStart, totalQ }: Props) {
     maxWidth: 340,
     padding: '18px 28px',
     fontSize: 15,
-    borderRadius: 14,
+    borderRadius: R.lg,
     justifyContent: 'center',
   };
 
@@ -46,7 +46,7 @@ export default function Landing({ onStart, totalQ }: Props) {
             {/* Logo */}
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
               <img src="/favicon.svg" alt="" aria-hidden="true" width={30} height={30}
-                style={{ display: 'block', borderRadius: 9, border: `2px solid ${INK}`, boxShadow: `0 2px 0 0 ${INK}` }} />
+                style={{ display: 'block', borderRadius: R.sm, border: `2px solid ${INK}`, boxShadow: `0 2px 0 0 ${INK}` }} />
               <span style={{ fontSize: 17, fontWeight: 900, fontFamily: FF.display, letterSpacing: '-0.03em' }}>
                 <span style={{ color: INK }}>ENT</span><span style={{ color: COLORS.streak }}>prep.</span>
               </span>
@@ -58,7 +58,7 @@ export default function Landing({ onStart, totalQ }: Props) {
               aria-label="Language"
               style={{
                 display: 'inline-flex',
-                borderRadius: 10,
+                borderRadius: R.md,
                 border: `2px solid ${INK}`,
                 boxShadow: `0 2px 0 0 ${INK}`,
                 overflow: 'hidden',
@@ -261,15 +261,15 @@ export default function Landing({ onStart, totalQ }: Props) {
                 { name: 'Законы Ньютона', chip: t.subjects.physics, color: '#EC4899', time: 30 },
               ].map((r, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 8px', flex: 1, borderBottom: i < 2 ? `1.5px solid rgba(15,15,16,0.1)` : 'none' }}>
-                  <span style={{ width: 18, height: 18, borderRadius: 9, border: `2px solid ${INK}`, flexShrink: 0, opacity: 0.35 }} />
+                  <span style={{ width: 18, height: 18, borderRadius: R.sm, border: `2px solid ${INK}`, flexShrink: 0, opacity: 0.35 }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, fontFamily: FF.body, color: INK, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.name}</div>
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
-                      <span style={{ fontSize: 9, fontWeight: 800, fontFamily: FF.mono, color: INK, background: `${r.color}33`, border: `1.5px solid ${r.color}`, padding: '1px 6px', borderRadius: 6, letterSpacing: '0.04em' }}>{r.chip}</span>
+                      <span style={{ fontSize: 9, fontWeight: 800, fontFamily: FF.mono, color: INK, background: `${r.color}33`, border: `1.5px solid ${r.color}`, padding: '1px 6px', borderRadius: R.sm, letterSpacing: '0.04em' }}>{r.chip}</span>
                       <span style={{ ...TYPE.caption, fontSize: 10, color: 'var(--ink-soft)', display: 'inline-flex', alignItems: 'center', gap: 3 }}><Clock size={10} /> {r.time} {tl.mockMin}</span>
                     </div>
                   </div>
-                  <span style={{ fontSize: 11, fontWeight: 800, fontFamily: FF.body, color: '#fff', background: r.color, border: `1.5px solid ${INK}`, padding: '6px 12px', borderRadius: 9, flexShrink: 0 }}>{tl.mockStart}</span>
+                  <span style={{ fontSize: 11, fontWeight: 800, fontFamily: FF.body, color: '#fff', background: r.color, border: `1.5px solid ${INK}`, padding: '6px 12px', borderRadius: R.sm, flexShrink: 0 }}>{tl.mockStart}</span>
                 </div>
               ))}
             </div>
@@ -345,7 +345,7 @@ export default function Landing({ onStart, totalQ }: Props) {
       <section style={{ padding: '20px 20px 12px', maxWidth: 440, margin: '0 auto' }}>
         <div style={{ ...CARD, textAlign: 'center', padding: '24px 18px' }}>
           <div style={{
-            width: 52, height: 52, borderRadius: 14, margin: '0 auto 14px',
+            width: 52, height: 52, borderRadius: R.lg, margin: '0 auto 14px',
             background: COLORS.streakSoft,
             border: `2px solid ${INK}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -411,7 +411,7 @@ export default function Landing({ onStart, totalQ }: Props) {
               rel="noopener noreferrer"
               aria-label={s.label}
               style={{
-                width: 36, height: 36, borderRadius: 10,
+                width: 36, height: 36, borderRadius: R.md,
                 background: '#FFF',
                 border: `2px solid ${INK}`,
                 boxShadow: `0 2px 0 0 ${INK}`,
@@ -444,7 +444,7 @@ export default function Landing({ onStart, totalQ }: Props) {
             maxWidth: 440,
             padding: '15px 24px',
             fontSize: 15,
-            borderRadius: 14,
+            borderRadius: R.lg,
             justifyContent: 'center',
             margin: '0 auto',
             display: 'flex',

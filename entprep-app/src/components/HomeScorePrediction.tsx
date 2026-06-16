@@ -1,5 +1,5 @@
 import { UNIS } from '../data/universities';
-import { CARD_COMPACT, COLORS, FF } from '../constants/styles';
+import { CARD_COMPACT, COLORS, FF, R } from '../constants/styles';
 import { useNav } from '../contexts/NavigationContext';
 import { useT } from '../locales';
 import { pluralizeForms } from '../utils/formatters';
@@ -47,7 +47,7 @@ export default function HomeScorePrediction({ hist }: Props) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{
-            width: 36, height: 36, borderRadius: 10,
+            width: 36, height: 36, borderRadius: R.md,
             background: `${scoreColor}15`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
@@ -70,7 +70,7 @@ export default function HomeScorePrediction({ hist }: Props) {
         <button
           onClick={() => nav('fullent')}
           style={{
-            padding: '8px 14px', borderRadius: 10,
+            padding: '8px 14px', borderRadius: R.md,
             background: `${scoreColor}12`, border: `1px solid ${scoreColor}25`,
             color: scoreColor, fontSize: 11, fontWeight: 700,
             cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,

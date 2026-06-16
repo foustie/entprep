@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { SUBS, ALL_PROFILES } from '../config/questionPools';
 import { TOPIC_MAP } from '../config/topics';
-import { CARD_COMPACT, TYPE, COLORS } from '../constants/styles';
+import { CARD_COMPACT, TYPE, COLORS, R } from '../constants/styles';
 import { useNav } from '../contexts/NavigationContext';
 import { useApp } from '../contexts/AppContext';
 import { useT } from '../locales';
@@ -103,7 +103,7 @@ export default function TheorySummary({ sid, topicId }: Props) {
         <BackButton onClick={handleBack} style={{ marginBottom: 14 }} />
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 13, background: (sub?.color || COLORS.teal) + '15', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: R.md, background: (sub?.color || COLORS.teal) + '15', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <BookOpen size={22} color={sub?.color || COLORS.teal} />
           </div>
           <div>
@@ -164,7 +164,7 @@ export default function TheorySummary({ sid, topicId }: Props) {
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-        <div style={{ width: 50, height: 50, borderRadius: 15, background: (sub?.color || COLORS.teal) + '15', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 50, height: 50, borderRadius: R.lg, background: (sub?.color || COLORS.teal) + '15', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <SubjectIcon sid={sid} size={24} color={sub?.color || COLORS.teal} />
         </div>
         <div>
@@ -212,7 +212,7 @@ export default function TheorySummary({ sid, topicId }: Props) {
                     padding: '14px', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s',
                   }}
                 >
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: (sub?.color || COLORS.teal) + '12', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: R.md, background: (sub?.color || COLORS.teal) + '12', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <BookOpen size={17} color={sub?.color || COLORS.teal} strokeWidth={2.2} />
                   </div>
                   <div style={{ marginLeft: 11, flex: 1 }}>

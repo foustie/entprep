@@ -12,7 +12,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNav } from '../contexts/NavigationContext';
 import { useToast } from '../contexts/ToastContext';
 import { useT } from '../locales';
-import { CARD, CARD_COMPACT, COLORS, TYPE, FF, BUTTON, ANSWER, PROGRESS_BAR } from '../constants/styles';
+import { CARD, CARD_COMPACT, COLORS, TYPE, FF, BUTTON, ANSWER, PROGRESS_BAR, R } from '../constants/styles';
 import { pluralizeForms } from '../utils/formatters';
 import BackButton from './ui/BackButton';
 import { SubjectChip } from './ui/SubjectIcon';
@@ -294,7 +294,7 @@ export default function QuestionRush({ save }: RushProps) {
 
   const checkbox = (on: boolean) => (
     <span style={{
-      width: 24, height: 24, borderRadius: 7, flexShrink: 0,
+      width: 24, height: 24, borderRadius: R.sm, flexShrink: 0,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       background: on ? COLORS.streak : 'transparent',
       border: on ? `2px solid ${INK}` : `2px solid var(--border-strong)`,
@@ -314,7 +314,7 @@ export default function QuestionRush({ save }: RushProps) {
             <button key={s.id} onClick={() => selectSubject(s.id)} {...press3D(INK)} style={{
               display: 'flex', alignItems: 'center', gap: 10, padding: '14px 12px',
               background: 'var(--bg-card)',
-              border: `2px solid ${INK}`, borderBottom: `4px solid ${INK}`, borderRadius: 14,
+              border: `2px solid ${INK}`, borderBottom: `4px solid ${INK}`, borderRadius: R.lg,
               cursor: 'pointer', textAlign: 'left',
               transition: 'transform 80ms, border-bottom 80ms',
             }}>
@@ -417,7 +417,7 @@ export default function QuestionRush({ save }: RushProps) {
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 14, fontWeight: 800, fontFamily: FF.body, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 6 }}>
                     {d.label}
-                    {d.pro && <span style={{ fontSize: 9, fontWeight: 800, fontFamily: FF.mono, color: INK, background: COLORS.xp, border: `1.5px solid ${INK}`, padding: '2px 7px', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 3, letterSpacing: '0.06em' }}><Crown size={10} />{t.rush.pro}</span>}
+                    {d.pro && <span style={{ fontSize: 9, fontWeight: 800, fontFamily: FF.mono, color: INK, background: COLORS.xp, border: `1.5px solid ${INK}`, padding: '2px 7px', borderRadius: R.sm, display: 'inline-flex', alignItems: 'center', gap: 3, letterSpacing: '0.06em' }}><Crown size={10} />{t.rush.pro}</span>}
                   </div>
                   <div style={{ fontSize: 11, fontFamily: FF.body, color: 'var(--text-secondary)' }}>{d.desc}</div>
                 </div>
@@ -441,7 +441,7 @@ export default function QuestionRush({ save }: RushProps) {
               }}>
                 <div style={{ fontSize: 16, fontWeight: 800, fontFamily: FF.display, letterSpacing: '-0.02em', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 8 }}>
                   {n} {pluralizeForms(n, t.rush.questionsWord)}
-                  {n === 20 && <span style={{ fontSize: 9, fontWeight: 800, fontFamily: FF.mono, color: INK, background: COLORS.winSoft, border: `1.5px solid ${INK}`, padding: '2px 8px', borderRadius: 10, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{t.rush.recommended}</span>}
+                  {n === 20 && <span style={{ fontSize: 9, fontWeight: 800, fontFamily: FF.mono, color: INK, background: COLORS.winSoft, border: `1.5px solid ${INK}`, padding: '2px 8px', borderRadius: R.md, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{t.rush.recommended}</span>}
                 </div>
                 <div style={{ fontSize: 12, fontFamily: FF.body, color: 'var(--text-secondary)', marginTop: 2 }}>{sub}</div>
               </button>
@@ -452,8 +452,8 @@ export default function QuestionRush({ save }: RushProps) {
               <span style={{ display: 'block', fontSize: 14, fontWeight: 700, fontFamily: FF.body, color: 'var(--text)' }}>{t.rush.skipCompleted}</span>
               <span style={{ fontSize: 11, fontFamily: FF.body, color: 'var(--text-muted)' }}>{t.rush.skipCompletedDesc}</span>
             </span>
-            <span style={{ width: 44, height: 26, borderRadius: 13, border: `2px solid ${INK}`, background: skipDone ? COLORS.win : 'var(--toggle-off)', position: 'relative', flexShrink: 0, transition: 'background 0.2s' }}>
-              <span style={{ position: 'absolute', top: 2, left: skipDone ? 19 : 2, width: 18, height: 18, borderRadius: 9, background: '#fff', border: `1.5px solid ${INK}`, transition: 'left 0.2s' }} />
+            <span style={{ width: 44, height: 26, borderRadius: R.md, border: `2px solid ${INK}`, background: skipDone ? COLORS.win : 'var(--toggle-off)', position: 'relative', flexShrink: 0, transition: 'background 0.2s' }}>
+              <span style={{ position: 'absolute', top: 2, left: skipDone ? 19 : 2, width: 18, height: 18, borderRadius: R.sm, background: '#fff', border: `1.5px solid ${INK}`, transition: 'left 0.2s' }} />
             </span>
           </button>
         </>)}
@@ -478,7 +478,7 @@ export default function QuestionRush({ save }: RushProps) {
                 <div>
                   <div style={{ fontSize: 16, fontWeight: 800, fontFamily: FF.display, letterSpacing: '-0.02em', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 8 }}>
                     {p.label}
-                    {p.k === 'standard' && <span style={{ fontSize: 9, fontWeight: 800, fontFamily: FF.mono, color: INK, background: COLORS.winSoft, border: `1.5px solid ${INK}`, padding: '2px 8px', borderRadius: 10, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{t.rush.recommended}</span>}
+                    {p.k === 'standard' && <span style={{ fontSize: 9, fontWeight: 800, fontFamily: FF.mono, color: INK, background: COLORS.winSoft, border: `1.5px solid ${INK}`, padding: '2px 8px', borderRadius: R.md, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{t.rush.recommended}</span>}
                   </div>
                   <div style={{ fontSize: 12, fontFamily: FF.body, color: 'var(--text-secondary)', marginTop: 2 }}>
                     {p.k === 'standard' ? t.rush.baselineTimes : `${p.mult} ${t.rush.timePerQ}`}
@@ -523,7 +523,7 @@ export default function QuestionRush({ save }: RushProps) {
     return (
       <div style={{ padding: '0 var(--content-padding) 100px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '8px 0 12px' }}>
-          <button onClick={goHome} aria-label={t.close} style={{ width: 34, height: 34, borderRadius: 17, border: `2px solid ${INK}`, background: 'var(--bg-card)', cursor: 'pointer', color: 'var(--text)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><X size={16} /></button>
+          <button onClick={goHome} aria-label={t.close} style={{ width: 34, height: 34, borderRadius: R.lg, border: `2px solid ${INK}`, background: 'var(--bg-card)', cursor: 'pointer', color: 'var(--text)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><X size={16} /></button>
           <span style={{ ...TYPE.eyebrow, fontSize: 12 }}>{index + 1} / {questions.length}</span>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 15, fontWeight: 800, fontFamily: FF.display, color: 'var(--text)' }}>
             <Star size={16} fill={COLORS.xp} color={INK} strokeWidth={1.5} /> {stars}
@@ -554,7 +554,7 @@ export default function QuestionRush({ save }: RushProps) {
                 display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left',
                 cursor: revealed ? 'default' : 'pointer',
               }}>
-                <span style={{ width: 26, height: 26, borderRadius: 13, border: `2px solid ${tc === 'var(--text)' ? 'var(--border-strong)' : tc}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, fontFamily: FF.mono, color: tc, flexShrink: 0 }}>
+                <span style={{ width: 26, height: 26, borderRadius: R.md, border: `2px solid ${tc === 'var(--text)' ? 'var(--border-strong)' : tc}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, fontFamily: FF.mono, color: tc, flexShrink: 0 }}>
                   {revealed && idx === correctIdx ? <Check size={14} /> : revealed && idx === selected ? <X size={14} /> : String.fromCharCode(65 + idx)}
                 </span>
                 <span style={{ fontSize: 14, fontFamily: FF.body, color: tc, fontWeight: 600 }}>{opt}</span>

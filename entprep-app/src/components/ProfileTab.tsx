@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { CSSProperties } from 'react';
-import { COLORS, FF, FW, TINT } from '../constants/styles';
+import { COLORS, FF, FW, TINT, R } from '../constants/styles';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useApp } from '../contexts/AppContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -136,7 +136,7 @@ export default function ProfileTab() {
                 letterSpacing: '0.12em',
                 background: COLORS.streak,
                 color: '#fff',
-                padding: '3px 7px', borderRadius: 6,
+                padding: '3px 7px', borderRadius: R.sm,
                 border: `1.5px solid ${INK}`,
               }}>
                 PRO
@@ -148,7 +148,7 @@ export default function ProfileTab() {
           }}>
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: 5,
-              padding: '3px 8px', borderRadius: 999,
+              padding: '3px 8px', borderRadius: R.pill,
               background: TINT.xp.bg,
               border: `1px solid ${TINT.xp.border}`,
             }}>
@@ -175,7 +175,7 @@ export default function ProfileTab() {
                 style={{
                   marginTop: 6,
                   display: 'inline-flex', alignItems: 'center', gap: 5,
-                  padding: '3px 9px', borderRadius: 999,
+                  padding: '3px 9px', borderRadius: R.pill,
                   background: COLORS.streakSoft || 'rgba(255,90,54,0.12)',
                   border: `1px solid ${COLORS.streak}`,
                   color: COLORS.streak,
@@ -363,7 +363,7 @@ function StatCard({
       padding: '12px 6px',
       background: 'var(--bg-card)',
       border: `2px solid ${INK}`,
-      borderRadius: 14,
+      borderRadius: R.lg,
       boxShadow: `0 3px 0 0 ${INK}`,
     }}>
       <div style={{
@@ -480,7 +480,7 @@ function NavRow({
     padding: '12px 14px',
     background: 'var(--bg-card)',
     border: `2px solid ${INK}`,
-    borderRadius: 14,
+    borderRadius: R.lg,
     cursor: 'pointer',
     textAlign: 'left',
     transition: 'transform 80ms, box-shadow 80ms',
@@ -499,7 +499,7 @@ function NavRow({
     >
       <span style={{
         flexShrink: 0,
-        width: 36, height: 36, borderRadius: 10,
+        width: 36, height: 36, borderRadius: R.md,
         background: bg,
         border: `1.5px solid ${color}`,
         color,

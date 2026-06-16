@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, memo } from 'react';
-import { CARD_COMPACT, TYPE, COLORS, FF } from '../constants/styles';
+import { CARD_COMPACT, TYPE, COLORS, FF, R } from '../constants/styles';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useNav } from '../contexts/NavigationContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -237,7 +237,7 @@ export default function Friends() {
     padding: '10px 16px',
     background: active ? `linear-gradient(135deg,${COLORS.teal},${COLORS.tealDark})` : 'var(--bg-card)',
     border: active ? 'none' : '1px solid var(--border)',
-    borderRadius: 14,
+    borderRadius: R.lg,
     color: active ? '#fff' : 'var(--text-secondary)',
     fontSize: 12,
     fontWeight: active ? 700 : 600,
@@ -253,7 +253,7 @@ export default function Friends() {
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-        <div style={{ width: 44, height: 44, borderRadius: 14, background: `linear-gradient(135deg,${COLORS.teal},${COLORS.tealDark})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div style={{ width: 44, height: 44, borderRadius: R.lg, background: `linear-gradient(135deg,${COLORS.teal},${COLORS.tealDark})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <Users size={24} color="#fff" />
         </div>
         <div style={{ flex: 1 }}>
@@ -275,13 +275,13 @@ export default function Friends() {
         <div style={{ ...CARD_COMPACT, padding: '14px', marginBottom: 10, animation: 'fadeIn 0.2s ease' }}>
           <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', marginBottom: 10 }}>{t.friends.inviteFriend}</div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => { shareToWhatsApp(inviteText); }} style={{ flex: 1, padding: '10px', background: 'rgba(37,211,102,0.1)', border: '1px solid rgba(37,211,102,0.2)', borderRadius: 10, color: '#25D366', fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <button onClick={() => { shareToWhatsApp(inviteText); }} style={{ flex: 1, padding: '10px', background: 'rgba(37,211,102,0.1)', border: '1px solid rgba(37,211,102,0.2)', borderRadius: R.md, color: '#25D366', fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
               <MessageCircle size={15} />{t.friends.whatsapp}
             </button>
-            <button onClick={() => { shareToTelegram(inviteText); }} style={{ flex: 1, padding: '10px', background: 'rgba(255,90,54,0.1)', border: '1px solid rgba(255,90,54,0.2)', borderRadius: 10, color: COLORS.teal, fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <button onClick={() => { shareToTelegram(inviteText); }} style={{ flex: 1, padding: '10px', background: 'rgba(255,90,54,0.1)', border: '1px solid rgba(255,90,54,0.2)', borderRadius: R.md, color: COLORS.teal, fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
               <Send size={15} />{t.friends.telegram}
             </button>
-            <button onClick={async () => { const ok = await copyText(inviteUrl); toast.success(ok ? t.friends.linkCopied : t.friends.linkCopyFailed); }} style={{ flex: 1, padding: '10px', background: 'rgba(255,107,53,0.1)', border: '1px solid rgba(255,107,53,0.2)', borderRadius: 10, color: COLORS.accent, fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <button onClick={async () => { const ok = await copyText(inviteUrl); toast.success(ok ? t.friends.linkCopied : t.friends.linkCopyFailed); }} style={{ flex: 1, padding: '10px', background: 'rgba(255,107,53,0.1)', border: '1px solid rgba(255,107,53,0.2)', borderRadius: R.md, color: COLORS.accent, fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
               <Copy size={15} />{t.friends.link}
             </button>
           </div>
@@ -302,7 +302,7 @@ export default function Friends() {
             padding: '12px 12px 12px 36px',
             background: 'var(--bg-card)',
             border: '1px solid var(--border)',
-            borderRadius: 14,
+            borderRadius: R.lg,
             color: 'var(--text)',
             fontSize: 13,
             boxSizing: 'border-box',
@@ -342,11 +342,11 @@ export default function Friends() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 8 }}>
                       <LevelBadge level={u.level} />
                       {sent ? (
-                        <div style={{ padding: '6px 12px', background: 'rgba(34,197,94,0.1)', borderRadius: 10, fontSize: 11, fontWeight: 600, color: COLORS.green, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <div style={{ padding: '6px 12px', background: 'rgba(34,197,94,0.1)', borderRadius: R.md, fontSize: 11, fontWeight: 600, color: COLORS.green, display: 'flex', alignItems: 'center', gap: 4 }}>
                           <Check size={13} />{t.friends.sentLabel}
                         </div>
                       ) : (
-                        <button onClick={() => handleSendRequest(u.id)} style={{ padding: '6px 12px', background: `linear-gradient(135deg,${COLORS.teal},${COLORS.tealDark})`, border: 'none', borderRadius: 10, color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <button onClick={() => handleSendRequest(u.id)} style={{ padding: '6px 12px', background: `linear-gradient(135deg,${COLORS.teal},${COLORS.tealDark})`, border: 'none', borderRadius: R.md, color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                           <UserPlus size={13} />{t.friends.addButton}
                         </button>
                       )}
@@ -367,7 +367,7 @@ export default function Friends() {
         <button onClick={() => setTab('requests')} style={tabStyle(tab === 'requests')}>
           {t.friends.requestsTab}
           {requests.length > 0 && (
-            <span style={{ marginLeft: 6, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: 9, background: COLORS.red, color: '#fff', fontSize: 10, fontWeight: 700 }}>
+            <span style={{ marginLeft: 6, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: R.sm, background: COLORS.red, color: '#fff', fontSize: 10, fontWeight: 700 }}>
               {requests.length}
             </span>
           )}
@@ -394,10 +394,10 @@ export default function Friends() {
                   <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: FF.mono }}>@{req.profile.nickname}</div>
                 </div>
                 <div style={{ display: 'flex', gap: 6, marginLeft: 8 }}>
-                  <button onClick={() => handleRespond(req.id, 'accepted')} aria-label={t.friends.friendAdded} style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                  <button onClick={() => handleRespond(req.id, 'accepted')} aria-label={t.friends.friendAdded} style={{ width: 44, height: 44, borderRadius: R.md, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                     <UserCheck size={18} color={COLORS.green} />
                   </button>
-                  <button onClick={() => handleRespond(req.id, 'declined')} aria-label={t.friends.requestDeclined} style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                  <button onClick={() => handleRespond(req.id, 'declined')} aria-label={t.friends.requestDeclined} style={{ width: 44, height: 44, borderRadius: R.md, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                     <UserX size={18} color={COLORS.red} />
                   </button>
                 </div>

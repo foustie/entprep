@@ -3,7 +3,7 @@ import { SUBS, ALL_PROFILES } from '../config/questionPools';
 import { resolveQuestion } from '../utils/questionStore';
 import { getWrongQuestions } from '../utils/adaptiveHelpers';
 import { shuffleOptions } from '../utils/questionHelpers';
-import { CARD_COMPACT, CARD_HERO, TYPE, COLORS, FF } from '../constants/styles';
+import { CARD_COMPACT, CARD_HERO, TYPE, COLORS, FF, R } from '../constants/styles';
 import { useApp } from '../contexts/AppContext';
 import { useNav } from '../contexts/NavigationContext';
 import SkeletonCard from './ui/SkeletonCard';
@@ -84,7 +84,7 @@ export default function ErrorReview() {
 
   if (loading) return (
     <div style={{ padding: `0 var(--content-padding) ${isDesktop ? 40 : 100}px` }}>
-      <div style={{ height: 18, width: 80, borderRadius: 9, background: 'var(--skeleton-bg)', marginBottom: 18 }} />
+      <div style={{ height: 18, width: 80, borderRadius: R.sm, background: 'var(--skeleton-bg)', marginBottom: 18 }} />
       {[0, 1, 2, 3].map(i => <SkeletonCard key={i} style={{ animationDelay: `${i * 0.1}s` }} />)}
     </div>
   );
@@ -125,7 +125,7 @@ export default function ErrorReview() {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
         <BackButton onClick={handleBack} />
         <div style={{
-          padding: '5px 10px', borderRadius: 999,
+          padding: '5px 10px', borderRadius: R.pill,
           background: COLORS.streakSoft, border: `1.5px solid ${COLORS.streak}`,
           fontFamily: FF.mono, fontSize: 10, fontWeight: 800,
           letterSpacing: '0.08em', textTransform: 'uppercase',
@@ -137,7 +137,7 @@ export default function ErrorReview() {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '4px 0 18px' }}>
         <div style={{
-          width: 40, height: 40, borderRadius: 11,
+          width: 40, height: 40, borderRadius: R.md,
           background: 'var(--ink)', border: '2px solid var(--ink)',
           boxShadow: '0 3px 0 0 ' + COLORS.streak,
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
@@ -169,7 +169,7 @@ export default function ErrorReview() {
               style={{ display: "flex", alignItems: "center", gap: 11, padding: "12px 14px", cursor: "pointer" }}
             >
               <div style={{
-                width: 36, height: 36, borderRadius: 9,
+                width: 36, height: 36, borderRadius: R.sm,
                 background: `${SUBJECT_META[g.su]?.color || 'var(--ink)'}18`,
                 border: `1.5px solid ${SUBJECT_META[g.su]?.color || 'var(--ink)'}`,
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
@@ -197,7 +197,7 @@ export default function ErrorReview() {
                     padding: '12px 12px 12px 16px',
                     background: 'var(--bg-subtle)',
                     border: `1.5px solid rgba(15,15,16,0.1)`,
-                    borderRadius: 10,
+                    borderRadius: R.md,
                     overflow: 'hidden',
                   }}>
                     <div style={{
@@ -212,7 +212,7 @@ export default function ErrorReview() {
                       padding: '6px 9px', marginBottom: 6,
                       background: COLORS.winSoft,
                       border: `1px solid ${COLORS.win}`,
-                      borderRadius: 7,
+                      borderRadius: R.sm,
                       fontFamily: FF.body, fontSize: 11, fontWeight: 700,
                       color: COLORS.win, lineHeight: 1.4,
                     }}>

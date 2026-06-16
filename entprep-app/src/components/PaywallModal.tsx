@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import BottomSheet from './ui/BottomSheet';
 import { Crown, Sparkles, Bot, GraduationCap, BookOpen, RotateCcw, Loader2, LogIn } from 'lucide-react';
-import { COLORS, BUTTON, FF } from '../constants/styles';
+import { COLORS, BUTTON, FF, R } from '../constants/styles';
 
 const INK = 'var(--ink)';
 import { useT } from '../locales';
@@ -166,7 +166,7 @@ export default function PaywallModal({ open, reason, onClose }: PaywallModalProp
         <div style={{
           background: 'var(--bg-subtle)',
           border: '1px solid var(--border)',
-          borderRadius: 14, padding: '14px 16px',
+          borderRadius: R.lg, padding: '14px 16px',
           marginBottom: 16, textAlign: 'left',
         }}>
           {benefitLabels.map((label, i) => {
@@ -222,7 +222,7 @@ export default function PaywallModal({ open, reason, onClose }: PaywallModalProp
                 background: COLORS.streak,
                 border: `2px solid ${INK}`,
                 color: '#fff', fontSize: 9, fontWeight: 700,
-                padding: '2px 8px', borderRadius: 6,
+                padding: '2px 8px', borderRadius: R.sm,
                 fontFamily: FF.mono, letterSpacing: '0.06em',
               }}>
                 {t.paywall.yearlyBadge}
@@ -253,7 +253,7 @@ export default function PaywallModal({ open, reason, onClose }: PaywallModalProp
                 width: '100%',
                 padding: '15px',
                 fontSize: 14,
-                borderRadius: 14,
+                borderRadius: R.lg,
                 justifyContent: 'center',
               }}
             >
@@ -273,7 +273,7 @@ export default function PaywallModal({ open, reason, onClose }: PaywallModalProp
                 width: '100%',
                 padding: '15px',
                 fontSize: 14,
-                borderRadius: 14,
+                borderRadius: R.lg,
                 justifyContent: 'center',
                 background: purchasing ? 'var(--bg-muted)' : COLORS.streak,
                 borderBottomColor: purchasing ? 'transparent' : '#C94524',

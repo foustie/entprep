@@ -9,7 +9,7 @@ import MultipleAnswerCard from './ui/MultipleAnswerCard';
 import MatchingCard from './ui/MatchingCard';
 import BlockIndicator from './ui/BlockIndicator';
 import PointsBadge from './ui/PointsBadge';
-import { CARD, CARD_COMPACT, TYPE, COLORS, FF } from '../constants/styles';
+import { CARD, CARD_COMPACT, TYPE, COLORS, FF, R } from '../constants/styles';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useApp } from '../contexts/AppContext';
@@ -303,16 +303,16 @@ export default function FullENT({ finish }: FullENTProps) {
         <div style={{ display: 'grid', gridTemplateColumns: bp === 'mobile' ? '1fr' : 'repeat(2, 1fr)', gap: 6, marginBottom: 18 }}>
           {[0, 1, 2, 3, 4].map(i => (
             <div key={i} style={{ ...CARD_COMPACT, padding: '14px', display: 'flex', alignItems: 'center' }}>
-              <div style={{ ...shimmerStyle, width: 40, height: 40, borderRadius: 11, flexShrink: 0, animationDelay: `${i * 0.08}s` }} />
+              <div style={{ ...shimmerStyle, width: 40, height: 40, borderRadius: R.md, flexShrink: 0, animationDelay: `${i * 0.08}s` }} />
               <div style={{ marginLeft: 11, flex: 1 }}>
-                <div style={{ ...shimmerStyle, height: 13, width: '70%', borderRadius: 6, marginBottom: 6, animationDelay: `${0.05 + i * 0.08}s` }} />
+                <div style={{ ...shimmerStyle, height: 13, width: '70%', borderRadius: R.sm, marginBottom: 6, animationDelay: `${0.05 + i * 0.08}s` }} />
                 <div style={{ ...shimmerStyle, height: 10, width: '50%', borderRadius: 5, animationDelay: `${0.1 + i * 0.08}s` }} />
               </div>
             </div>
           ))}
         </div>
         {/* Start button skeleton */}
-        <div style={{ ...shimmerStyle, height: 50, borderRadius: 14 }} />
+        <div style={{ ...shimmerStyle, height: 50, borderRadius: R.lg }} />
       </div>
     );
   }
@@ -376,7 +376,7 @@ export default function FullENT({ finish }: FullENTProps) {
             ].map((s, i) => (
               <div key={i} style={{
                 display: 'inline-flex', alignItems: 'baseline', gap: 4,
-                padding: '5px 10px', borderRadius: 999,
+                padding: '5px 10px', borderRadius: R.pill,
                 background: 'rgba(255,255,255,0.7)',
                 border: '1.5px solid var(--ink)',
                 fontFamily: FF.display,
@@ -409,7 +409,7 @@ export default function FullENT({ finish }: FullENTProps) {
             padding: '12px 14px',
             background: 'var(--bg-card)',
             border: '2px solid var(--ink)',
-            borderRadius: 14,
+            borderRadius: R.lg,
             boxShadow: '0 3px 0 0 var(--ink)',
           }}>
             <SubjectChip sid={s.sid} size={40} />
@@ -436,7 +436,7 @@ export default function FullENT({ finish }: FullENTProps) {
       <div style={{
         background: COLORS.streakSoft,
         border: '2px solid var(--ink)',
-        borderRadius: 14,
+        borderRadius: R.lg,
         padding: "12px 14px",
         marginBottom: 18,
         boxShadow: '0 3px 0 0 var(--ink)',
@@ -470,7 +470,7 @@ export default function FullENT({ finish }: FullENTProps) {
         color: "#fff",
         border: "2px solid var(--ink)",
         borderBottom: "5px solid var(--ink)",
-        borderRadius: 14,
+        borderRadius: R.lg,
         fontFamily: FF.display,
         fontSize: 14, fontWeight: 900, letterSpacing: '0.05em', textTransform: 'uppercase',
         cursor: "pointer",
@@ -540,7 +540,7 @@ export default function FullENT({ finish }: FullENTProps) {
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: 5,
               marginTop: 14,
-              padding: '6px 12px', borderRadius: 999,
+              padding: '6px 12px', borderRadius: R.pill,
               background: 'var(--ink)', color: '#fff',
               fontFamily: FF.display, fontSize: 10.5, fontWeight: 900,
               letterSpacing: '0.08em', textTransform: 'uppercase',
@@ -556,7 +556,7 @@ export default function FullENT({ finish }: FullENTProps) {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
                 <div style={{
-                  width: 32, height: 32, borderRadius: 9,
+                  width: 32, height: 32, borderRadius: R.sm,
                   background: `${SUBJECT_META[r.sid]?.color || 'var(--ink)'}14`,
                   border: `1.5px solid ${SUBJECT_META[r.sid]?.color || 'var(--ink)'}4D`,
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
@@ -610,7 +610,7 @@ export default function FullENT({ finish }: FullENTProps) {
                       </div>;
                     }) : <div style={{ color: "var(--text-muted)" }}>{t.test.skipped}</div>}
                   </div>)}
-                  <div style={{ fontSize: 9, color: "var(--text-secondary)", marginTop: 3, lineHeight: 1.6, background: "rgba(255,90,54,0.04)", padding: "5px 7px", borderRadius: 6, display: "flex", gap: 4 }}>
+                  <div style={{ fontSize: 9, color: "var(--text-secondary)", marginTop: 3, lineHeight: 1.6, background: "rgba(255,90,54,0.04)", padding: "5px 7px", borderRadius: R.sm, display: "flex", gap: 4 }}>
                     <Lightbulb size={11} color={COLORS.teal} style={{ flexShrink: 0, marginTop: 1 }} /><span>{qq.e}</span>
                   </div>
                   {user && (reportSent[`${si}-${qi}`]
@@ -622,7 +622,7 @@ export default function FullENT({ finish }: FullENTProps) {
             </div>
           ))}
         </details>
-        <button onClick={goHome} style={{ width: "100%", padding: "15px", marginTop: 8, background: COLORS.teal, color: "#fff", border: "none", borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{t.test.goHome}</button>
+        <button onClick={goHome} style={{ width: "100%", padding: "15px", marginTop: 8, background: COLORS.teal, color: "#fff", border: "none", borderRadius: R.lg, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{t.test.goHome}</button>
         <ReportSheet visible={reportIdx !== null} questionText={reportIdx !== null && sections ? (() => { const [si, qi] = reportIdx.split('-').map(Number); return sections[si]?.qs[qi]?.q; })() : undefined} options={reportIdx !== null && sections ? (() => { const [si, qi] = reportIdx.split('-').map(Number); return sections[si]?.qs[qi]?.o; })() : undefined} comment={reportComment} loading={reportLoading} onClose={() => { setReportIdx(null); setReportComment(''); }} onCommentChange={setReportComment} onReport={reason => reportQuestion(reportIdx!, reason)} />
       </div>
     );
@@ -657,7 +657,7 @@ export default function FullENT({ finish }: FullENTProps) {
       </div>}
       {!paused && !offline && <><div style={{ display: "flex", gap: 4, marginBottom: 12, overflowX: "auto" }}>
         {sections.map((s, i) => { const sa = answers[i] || {}; const cnt = Object.keys(sa).length; const active = i === curSec; return (
-          <button key={i} onClick={() => goSec(i)} style={{ display: "flex", flexDirection: "column", alignItems: "center", background: active ? "rgba(255,90,54,0.12)" : "var(--bg-card)", border: active ? "1px solid rgba(255,90,54,0.3)" : "1px solid var(--border)", borderRadius: 10, padding: "7px 9px", cursor: "pointer", minWidth: 56, flexShrink: 0 }}>
+          <button key={i} onClick={() => goSec(i)} style={{ display: "flex", flexDirection: "column", alignItems: "center", background: active ? "rgba(255,90,54,0.12)" : "var(--bg-card)", border: active ? "1px solid rgba(255,90,54,0.3)" : "1px solid var(--border)", borderRadius: R.md, padding: "7px 9px", cursor: "pointer", minWidth: 56, flexShrink: 0 }}>
             <SubjectIcon sid={s.sid} size={16} color={active ? COLORS.teal : (SUBJECT_META[s.sid]?.color || 'var(--text-muted)')} strokeWidth={2.2} />
             <span style={{ fontSize: 9, color: active ? COLORS.teal : "var(--text-muted)", fontWeight: 600, marginTop: 3 }}>{cnt}/{s.cnt}</span>
           </button>
@@ -673,7 +673,7 @@ export default function FullENT({ finish }: FullENTProps) {
       </div>
       {showGrid && <div style={{ display: "grid", gridTemplateColumns: "repeat(10,1fr)", gap: 4, marginBottom: 12 }}>
         {sec!.qs.map((_qq, i) => { const a = (answers[curSec] || {})[i]; const hasAnswer = a !== undefined; return (
-          <button key={i} onClick={() => goQ(i)} aria-current={i === curQ ? 'true' : undefined} aria-label={`${t.fullent.questionNumber} ${i + 1}${hasAnswer ? `, ${t.fullent.answeredWord}` : ''}`} style={{ background: i === curQ ? "rgba(255,90,54,0.15)" : hasAnswer ? "rgba(255,90,54,0.08)" : "var(--bg-card)", border: `1px solid ${i === curQ ? "rgba(255,90,54,0.35)" : "var(--border-light)"}`, borderRadius: 6, padding: "5px 0", cursor: "pointer", fontSize: 10, color: i === curQ ? COLORS.teal : hasAnswer ? COLORS.teal : "var(--text-muted)", fontWeight: 600 }}>{i + 1}</button>
+          <button key={i} onClick={() => goQ(i)} aria-current={i === curQ ? 'true' : undefined} aria-label={`${t.fullent.questionNumber} ${i + 1}${hasAnswer ? `, ${t.fullent.answeredWord}` : ''}`} style={{ background: i === curQ ? "rgba(255,90,54,0.15)" : hasAnswer ? "rgba(255,90,54,0.08)" : "var(--bg-card)", border: `1px solid ${i === curQ ? "rgba(255,90,54,0.35)" : "var(--border-light)"}`, borderRadius: R.sm, padding: "5px 0", cursor: "pointer", fontSize: 10, color: i === curQ ? COLORS.teal : hasAnswer ? COLORS.teal : "var(--text-muted)", fontWeight: 600 }}>{i + 1}</button>
         ); })}
       </div>}
       <ProgressBar value={curQ + 1} max={sec!.qs.length} gradient={`linear-gradient(90deg,${COLORS.accent},${COLORS.amber})`} style={{ marginBottom: 12 }} />

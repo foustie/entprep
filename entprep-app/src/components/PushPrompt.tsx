@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Bell, Flame, BookOpen, BarChart2 } from 'lucide-react';
-import { COLORS, FF } from '../constants/styles';
+import { COLORS, FF, R } from '../constants/styles';
 import { useApp } from '../contexts/AppContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useT } from '../locales';
@@ -57,7 +57,7 @@ export default function PushPrompt() {
     <BottomSheet visible={visible} onClose={handleDismiss}>
       <div style={{ textAlign: 'center', padding: '4px 0' }}>
         <div style={{
-          width: 56, height: 56, borderRadius: 14,
+          width: 56, height: 56, borderRadius: R.lg,
           background: 'var(--ink)',
           border: '2px solid var(--ink)',
           boxShadow: '0 4px 0 0 ' + COLORS.streak,

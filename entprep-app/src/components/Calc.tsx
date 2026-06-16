@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { UNIS } from '../data/universities';
-import { COLORS, FF } from '../constants/styles';
+import { COLORS, FF, R } from '../constants/styles';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useNav } from '../contexts/NavigationContext';
 import { useApp } from '../contexts/AppContext';
@@ -157,7 +157,7 @@ export default function Calc() {
               </div>
             </div>
             <div style={{
-              padding: '5px 11px', borderRadius: 999,
+              padding: '5px 11px', borderRadius: R.pill,
               background: sliderColor,
               fontFamily: FF.display, fontSize: 10, fontWeight: 900,
               color: sliderColor === COLORS.xp ? 'var(--ink)' : '#fff',
@@ -174,7 +174,7 @@ export default function Calc() {
               <div style={{ position: 'relative', height: 40, display: 'flex', alignItems: 'center' }}>
                 <div style={{
                   position: 'absolute', inset: '50% 0', transform: 'translateY(-50%)',
-                  height: 12, borderRadius: 999,
+                  height: 12, borderRadius: R.pill,
                   background: 'rgba(255,255,255,0.1)',
                   border: '1.5px solid rgba(255,255,255,0.2)',
                   overflow: 'hidden',
@@ -223,7 +223,7 @@ export default function Calc() {
                     marginTop: 10, width: '100%', padding: '8px 12px',
                     background: 'rgba(255,255,255,0.06)',
                     border: '1.5px solid rgba(255,255,255,0.12)',
-                    borderRadius: 10,
+                    borderRadius: R.md,
                     color: 'rgba(255,255,255,0.75)',
                     fontFamily: FF.body, fontSize: 11, fontWeight: 700,
                     cursor: 'pointer',
@@ -241,7 +241,7 @@ export default function Calc() {
                 width: '100%', padding: '10px 12px',
                 background: 'rgba(255,255,255,0.06)',
                 border: '1.5px solid rgba(255,255,255,0.14)',
-                borderRadius: 10,
+                borderRadius: R.md,
                 color: '#fff',
                 fontFamily: FF.body, fontSize: 12, fontWeight: 700,
                 cursor: 'pointer',
@@ -260,7 +260,7 @@ export default function Calc() {
           padding: '14px 16px', marginBottom: 16,
           background: COLORS.xpSoft,
           border: '2px solid var(--ink)',
-          borderRadius: 14,
+          borderRadius: R.lg,
           boxShadow: '0 3px 0 0 var(--ink)',
           display: 'flex', alignItems: 'center', gap: 12,
         }}>
@@ -276,7 +276,7 @@ export default function Calc() {
           </div>
           <button onClick={goHome} style={{
             flexShrink: 0,
-            padding: '8px 14px', borderRadius: 10,
+            padding: '8px 14px', borderRadius: R.md,
             background: 'var(--ink)', color: '#fff',
             border: '2px solid var(--ink)',
             fontFamily: FF.display, fontSize: 10, fontWeight: 900,
@@ -342,7 +342,7 @@ export default function Calc() {
           const active = tp === k;
           return (
             <button key={k} onClick={() => setTp(k)} style={{
-              padding: '7px 14px', borderRadius: 999,
+              padding: '7px 14px', borderRadius: R.pill,
               fontFamily: FF.body, fontSize: 12, fontWeight: 800,
               cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
               border: '1.5px solid var(--ink)',
@@ -396,7 +396,7 @@ export default function Calc() {
           padding: '40px 20px', textAlign: 'center',
           background: 'var(--bg-card)',
           border: '2px dashed rgba(15,15,16,0.15)',
-          borderRadius: 14,
+          borderRadius: R.lg,
         }}>
           <div style={{ fontSize: 32, marginBottom: 8 }}>🔍</div>
           <div style={{
@@ -430,7 +430,7 @@ function MatchRow({
       padding: '14px 14px 14px 18px',
       background: 'var(--bg-card)',
       border: '2px solid var(--ink)',
-      borderRadius: 14,
+      borderRadius: R.lg,
       boxShadow: `0 3px 0 0 ${color}`,
       display: 'flex', alignItems: 'center', gap: 12,
       overflow: 'hidden',
@@ -439,7 +439,7 @@ function MatchRow({
         position: 'absolute', top: 0, bottom: 0, left: 0, width: 5, background: color,
       }} />
       <div style={{
-        width: 44, height: 44, borderRadius: 11,
+        width: 44, height: 44, borderRadius: R.md,
         background: `${color}18`,
         border: `1.5px solid ${color}`,
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
@@ -464,7 +464,7 @@ function MatchRow({
       </div>
       <button onClick={onFav} style={{
         flexShrink: 0,
-        width: 36, height: 36, borderRadius: 10,
+        width: 36, height: 36, borderRadius: R.md,
         background: isFav ? COLORS.xpSoft : 'var(--bg-subtle)',
         border: `1.5px solid ${isFav ? COLORS.xp : 'rgba(15,15,16,0.14)'}`,
         cursor: 'pointer',
@@ -527,7 +527,7 @@ function UniCard({
             fontVariantNumeric: 'tabular-nums',
           }}>{isLow ? `\u2212${Math.abs(u.gap)}` : chanceTxt[u.chance]}</div>
           <button onClick={onFav} style={{
-            width: 26, height: 26, borderRadius: 7,
+            width: 26, height: 26, borderRadius: R.sm,
             background: isFav ? COLORS.xpSoft : 'transparent',
             border: `1.5px solid ${isFav ? COLORS.xp : 'rgba(15,15,16,0.14)'}`,
             cursor: 'pointer',

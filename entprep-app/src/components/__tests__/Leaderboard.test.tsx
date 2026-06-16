@@ -121,6 +121,7 @@ vi.mock('lucide-react', () => ({
 vi.mock('../../constants/styles', () => ({
   CARD_COMPACT: {},
   TYPE: { h2: {}, caption: {} },
+  R: { sm: 8, md: 12, lg: 16, xl: 20, xxl: 24, pill: 100 },
   FF: {
     display: "'Unbounded', system-ui, sans-serif",
     body: "'Nunito', system-ui, sans-serif",

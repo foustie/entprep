@@ -1,5 +1,5 @@
 import React from 'react';
-import { CARD_COMPACT } from '../../constants/styles';
+import { CARD_COMPACT, R } from '../../constants/styles';
 
 const shimmer: React.CSSProperties = {
   background: 'linear-gradient(90deg, var(--skeleton-bg) 25%, var(--border-light) 50%, var(--skeleton-bg) 75%)',
@@ -34,7 +34,7 @@ export default function TestSkeleton({ color = 'var(--text-muted)' }: TestSkelet
 
       {[0, 1, 2, 3].map(i => (
         <div key={i} style={{ ...CARD_COMPACT, padding: '16px 14px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ ...shimmer, width: 32, height: 32, borderRadius: 10, flexShrink: 0, animationDelay: `${0.25 + i * 0.08}s` }} />
+          <div style={{ ...shimmer, width: 32, height: 32, borderRadius: R.md, flexShrink: 0, animationDelay: `${0.25 + i * 0.08}s` }} />
           <Bar width={`${65 - i * 8}%`} height={13} delay={0.3 + i * 0.08} />
         </div>
       ))}

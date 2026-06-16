@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { SUBS, ALL_PROFILES } from '../config/questionPools';
 import { TOPIC_MAP, getTopicCount } from '../config/topics';
-import { CARD_COMPACT, TYPE, COLORS, scoreColor, FF } from '../constants/styles';
+import { CARD_COMPACT, TYPE, COLORS, scoreColor, FF, R } from '../constants/styles';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useNav } from '../contexts/NavigationContext';
 import { useApp } from '../contexts/AppContext';
@@ -106,7 +106,7 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
       {/* Subject header — neutral ink chip + Unbounded title + mono stats */}
       <div style={{ display: "flex", alignItems: "center", marginBottom: 20, gap: 14 }}>
         <div style={{
-          width: 56, height: 56, borderRadius: 14,
+          width: 56, height: 56, borderRadius: R.lg,
           background: `${sub.color}2E`,
           border: `2px solid var(--ink)`,
           boxShadow: `0 3px 0 0 var(--ink)`,
@@ -207,7 +207,7 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
                 width: "100%",
                 background: 'var(--bg-card)',
                 border: `2px solid var(--ink)`,
-                borderRadius: 14,
+                borderRadius: R.lg,
                 boxShadow: '0 3px 0 0 var(--ink)',
                 overflow: 'hidden',
               }}>
@@ -225,7 +225,7 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
                   style={{ display: "flex", alignItems: "center", flex: 1, cursor: "pointer", gap: 11, padding: '11px 12px', minWidth: 0 }}
                 >
                   <div style={{
-                    width: 38, height: 38, borderRadius: 10,
+                    width: 38, height: 38, borderRadius: R.md,
                     background: 'var(--bg-subtle)',
                     border: '1.5px solid rgba(15,15,16,0.12)',
                     display: "flex", alignItems: "center", justifyContent: "center",
@@ -324,7 +324,7 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
                           marginTop: 4,
                           background: 'var(--bg-card)',
                           border: '1.5px solid rgba(15,15,16,0.12)',
-                          borderRadius: 10,
+                          borderRadius: R.md,
                           cursor: stCnt > 0 ? "pointer" : "default",
                           textAlign: "left",
                           opacity: stCnt > 0 ? 1 : 0.45,
@@ -409,7 +409,7 @@ function ActionRow({
         padding: '12px 14px',
         background: 'var(--bg-card)',
         border: '2px solid var(--ink)',
-        borderRadius: 14,
+        borderRadius: R.lg,
         cursor: disabled ? 'wait' : 'pointer',
         textAlign: 'left',
         width: '100%',

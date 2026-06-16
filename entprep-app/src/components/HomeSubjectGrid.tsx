@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { CSSProperties } from 'react';
-import { COLORS, FF, FW, SP, scoreColor } from '../constants/styles';
+import { COLORS, FF, FW, SP, scoreColor, R } from '../constants/styles';
 import { useT } from '../locales';
 import { pluralizeForms } from '../utils/formatters';
 import { useNav } from '../contexts/NavigationContext';
@@ -112,7 +112,7 @@ function SubjectRow({
     display: 'flex', alignItems: 'center', gap: 0,
     background: 'var(--bg-card)',
     border: `2px solid ${INK}`,
-    borderRadius: 14,
+    borderRadius: R.lg,
     cursor: 'pointer',
     textAlign: 'left',
     overflow: 'hidden',

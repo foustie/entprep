@@ -39,7 +39,7 @@ function EmptyCard({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: SP.sm, padding: `${SP.xl}px ${SP.lg}px`, minHeight: 120, textAlign: 'center' }}>
       {/* Stamped icon chip per the design kit */}
-      <span style={{ width: 36, height: 36, borderRadius: 10, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: COLORS.xpSofter, border: '2px solid var(--ink)', boxShadow: '0 2px 0 0 var(--ink)', color: 'var(--ink)' }}>
+      <span style={{ width: 36, height: 36, borderRadius: R.md, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: COLORS.xpSofter, border: '2px solid var(--ink)', boxShadow: '0 2px 0 0 var(--ink)', color: 'var(--ink)' }}>
         {icon}
       </span>
       <div style={{ ...TYPE.bodySmall, marginTop: 2 }}>{text}</div>
