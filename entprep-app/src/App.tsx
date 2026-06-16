@@ -137,12 +137,19 @@ function AppContent() {
   const [totalQ, setTotalQ] = useState(TOTAL_Q);
   useEffect(() => {
     prefetchCounts().then(ok => { if (ok) setTotalQ(getTotalQ()); });
-    // Background prefetch all ENT subjects so Full ENT loads instantly
-    setTimeout(() => prefetchSubjects(['math', 'reading', 'history']), 1000);
-    setTimeout(() => {
+    // Background prefetch ENT subjects so Full ENT loads instantly. Each subject pool is
+    // multi-MB, so skip the eager fetch on data-saver / slow connections — hauling ~12MB+
+    // for a visitor who may never start a test is wasteful there (PERF-3). On-demand getPool
+    // still fires when a test actually starts; unsupported browsers (no Network Info API,
+    // e.g. Safari) keep the previous behaviour.
+    const conn = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+    if (conn && (conn.saveData === true || conn.effectiveType === '2g' || conn.effectiveType === 'slow-2g')) return;
+    const t1 = setTimeout(() => prefetchSubjects(['math', 'reading', 'history']), 1000);
+    const t2 = setTimeout(() => {
       const profileSubs = JSON.parse(localStorage.getItem('entprep_profile') || '[]');
       if (profileSubs.length > 0) prefetchSubjects(profileSubs);
     }, 3000);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
   // Persist UTM params for users who haven't signed in yet
