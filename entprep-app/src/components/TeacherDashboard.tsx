@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { CARD, CARD_COMPACT, COLORS, TINT, TYPE, SECTION_LABEL, scoreColor, R, FF } from '../constants/styles';
+import { CARD, CARD_COMPACT, COLORS, TINT, TYPE, SECTION_LABEL, scoreColor, R, FF, FS } from '../constants/styles';
 import { SUBJECT_META } from '../config/subjects';
 import { TOPIC_MAP } from '../config/topics';
 import { useAuth } from '../contexts/AuthContext';
@@ -431,7 +431,7 @@ export default function TeacherDashboard({ onBack }: Props) {
                   <div style={{ width: 36, height: 36, borderRadius: '50%', background: TINT.teal.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                     {st.avatar_url
                       ? <img src={st.avatar_url} alt="" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} />
-                      : <span style={{ fontSize: 16 }}>{st.nickname.charAt(0).toUpperCase()}</span>
+                      : <span style={{ fontSize: FS.xl }}>{st.nickname.charAt(0).toUpperCase()}</span>
                     }
                   </div>
 
@@ -473,7 +473,7 @@ export default function TeacherDashboard({ onBack }: Props) {
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 0 8px' }}>
                         <Target size={14} color={COLORS.teal} />
                         <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{tt.predictedEnt}</span>
-                        <span style={{ fontSize: 16, fontWeight: 800, fontFamily: FF.mono, color: scoreColor(Math.round(st.predictedScore / 1.4)) }}>
+                        <span style={{ fontSize: FS.xl, fontWeight: 800, fontFamily: FF.mono, color: scoreColor(Math.round(st.predictedScore / 1.4)) }}>
                           {st.predictedScore}<span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)' }}>/140</span>
                         </span>
                       </div>

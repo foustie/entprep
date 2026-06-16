@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { ALL_PROFILES, SUBS } from '../config/questionPools';
 import { calcStreak } from '../utils/adaptiveHelpers';
 import { getEntCountdown } from '../config/ent';
-import { PILL, PROGRESS_BAR, PROGRESS_FILL, COLORS, SP, FF, R } from '../constants/styles';
+import { PILL, PROGRESS_BAR, PROGRESS_FILL, COLORS, SP, FF, FS, R } from '../constants/styles';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useNav } from '../contexts/NavigationContext';
 import { useApp } from '../contexts/AppContext';
@@ -197,7 +197,7 @@ export default function CoachHome() {
                 style={{
                   display: 'inline-block', marginTop: 10, padding: '8px 18px',
                   background: 'var(--ink)', color: '#fff', borderRadius: R.md,
-                  textDecoration: 'none', fontFamily: FF.body, fontSize: 12.5, fontWeight: 700,
+                  textDecoration: 'none', fontFamily: FF.body, fontSize: FS.base, fontWeight: 700,
                 }}
               >
                 {t.home.diyarPromoCta}
@@ -223,7 +223,7 @@ export default function CoachHome() {
             style={{
               flex: 1, textAlign: 'left',
               background: 'none', border: 'none',
-              fontFamily: FF.body, fontSize: 12.5, fontWeight: 800,
+              fontFamily: FF.body, fontSize: FS.base, fontWeight: 800,
               color: COLORS.text, cursor: 'pointer', padding: 0,
               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
             }}
@@ -287,7 +287,7 @@ export default function CoachHome() {
               borderRadius: 12,
               color: COLORS.textSecondary,
               fontFamily: FF.body,
-              fontSize: 12.5, fontWeight: 800,
+              fontSize: FS.base, fontWeight: 800,
               letterSpacing: '0.02em',
               cursor: 'pointer',
               transition: 'border-color 0.15s, color 0.15s',
@@ -358,7 +358,7 @@ export default function CoachHome() {
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{
               fontFamily: FF.mono,
-              fontSize: 9.5, fontWeight: 800,
+              fontSize: FS.xs, fontWeight: 800,
               letterSpacing: '0.14em', textTransform: 'uppercase',
               color: COLORS.xp, marginBottom: 2,
             }}>
@@ -366,7 +366,7 @@ export default function CoachHome() {
             </div>
             <div style={{
               fontFamily: FF.body,
-              fontSize: 13.5, fontWeight: 700,
+              fontSize: FS.lg, fontWeight: 700,
               lineHeight: 1.35,
               color: 'rgba(255,255,255,0.88)',
               display: '-webkit-box',
@@ -591,7 +591,7 @@ function HomeHero({
       {!hasPrognosis && (
         <div style={{ position: 'relative', flex: 1, marginBottom: 14, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <div style={{
-            fontFamily: FF.mono, fontSize: 9.5, fontWeight: 800,
+            fontFamily: FF.mono, fontSize: FS.xs, fontWeight: 800,
             letterSpacing: '0.14em', textTransform: 'uppercase',
             color: INK, opacity: 0.55, marginBottom: 8,
           }}>
@@ -612,7 +612,7 @@ function HomeHero({
       {hasPrognosis && (
         <div style={{ position: 'relative', marginBottom: 14 }}>
           <div style={{
-            fontFamily: FF.mono, fontSize: 9.5, fontWeight: 800,
+            fontFamily: FF.mono, fontSize: FS.xs, fontWeight: 800,
             letterSpacing: '0.14em', textTransform: 'uppercase',
             color: INK, opacity: 0.55, marginBottom: 2,
           }}>
@@ -728,7 +728,7 @@ function HomeHero({
             {t.home.nextStep}
           </div>
           <div style={{
-            fontFamily: FF.display, fontSize: 16, fontWeight: 900,
+            fontFamily: FF.display, fontSize: FS.xl, fontWeight: 900,
             letterSpacing: '-0.025em',
             color: 'var(--ink)',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
@@ -736,7 +736,7 @@ function HomeHero({
             {missionTitle}
           </div>
           <div style={{
-            fontFamily: FF.body, fontSize: 11.5, fontWeight: 700,
+            fontFamily: FF.body, fontSize: FS.base, fontWeight: 700,
             color: 'var(--ink-soft)', marginTop: 1,
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>

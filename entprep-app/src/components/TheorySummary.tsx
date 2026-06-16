@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { SUBS, ALL_PROFILES } from '../config/questionPools';
 import { TOPIC_MAP } from '../config/topics';
-import { CARD_COMPACT, TYPE, COLORS, R } from '../constants/styles';
+import { CARD_COMPACT, TYPE, COLORS, FS, R } from '../constants/styles';
 import { useNav } from '../contexts/NavigationContext';
 import { useApp } from '../contexts/AppContext';
 import { useT } from '../locales';
@@ -107,7 +107,7 @@ export default function TheorySummary({ sid, topicId }: Props) {
             <BookOpen size={22} color={sub?.color || COLORS.teal} />
           </div>
           <div>
-            <h1 style={{ ...TYPE.h2, fontSize: 16, margin: 0 }}>{name}</h1>
+            <h1 style={{ ...TYPE.h2, fontSize: FS.xl, margin: 0 }}>{name}</h1>
             <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{t.theory.topicSummary}</div>
           </div>
         </div>

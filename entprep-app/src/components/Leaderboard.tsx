@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, memo } from 'react';
-import { COLORS, FF, R } from '../constants/styles';
+import { COLORS, FF, R, FS } from '../constants/styles';
 import { SUBS, ALL_PROFILES } from '../config/questionPools';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useNav } from '../contexts/NavigationContext';
@@ -210,7 +210,7 @@ export default function Leaderboard() {
         {/* Name + "You" badge */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
-            fontFamily: FF.body, fontSize: 13.5, fontWeight: 800,
+            fontFamily: FF.body, fontSize: FS.lg, fontWeight: 800,
             color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis',
             whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6,
           }}>
@@ -220,7 +220,7 @@ export default function Leaderboard() {
             {isMe && (
               <span style={{
                 fontFamily: FF.mono,
-                fontSize: 8.5, fontWeight: 800,
+                fontSize: FS.xxs, fontWeight: 800,
                 letterSpacing: '0.12em', textTransform: 'uppercase',
                 color: '#fff', background: COLORS.streak,
                 padding: '2px 6px', borderRadius: 5,

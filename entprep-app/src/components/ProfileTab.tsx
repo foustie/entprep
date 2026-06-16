@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { CSSProperties } from 'react';
-import { COLORS, FF, FW, TINT, R } from '../constants/styles';
+import { COLORS, FF, FS, FW, TINT, R } from '../constants/styles';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useApp } from '../contexts/AppContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -121,7 +121,7 @@ export default function ProfileTab() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
             <span style={{
               fontFamily: FF.display,
-              fontSize: 17, fontWeight: 900,
+              fontSize: FS.xxl, fontWeight: 900,
               letterSpacing: '-0.025em',
               color: COLORS.text,
               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
@@ -241,7 +241,7 @@ export default function ProfileTab() {
                 onClick={() => setRecoverOpen(true)}
                 style={{
                   background: 'transparent', border: 'none',
-                  fontFamily: FF.body, fontSize: 11.5, fontWeight: FW.semibold,
+                  fontFamily: FF.body, fontSize: FS.base, fontWeight: FW.semibold,
                   color: COLORS.textMuted,
                   textDecoration: 'underline',
                   textUnderlineOffset: 2,

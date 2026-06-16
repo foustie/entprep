@@ -1,6 +1,6 @@
 import { SUBS, ALL_PROFILES } from '../config/questionPools';
 import { SUBJECT_META } from '../config/subjects';
-import { COLORS, FF, R } from '../constants/styles';
+import { COLORS, FF, FS, R } from '../constants/styles';
 import { useNav } from '../contexts/NavigationContext';
 import BackButton from './ui/BackButton';
 import { Swords, Play } from 'lucide-react';
@@ -111,7 +111,7 @@ export default function Challenge({ data }: ChallengeProps) {
           </div>
 
           <div style={{
-            fontFamily: FF.display, fontSize: 16, fontWeight: 900,
+            fontFamily: FF.display, fontSize: FS.xl, fontWeight: 900,
             color: 'var(--ink)', letterSpacing: '-0.03em', marginBottom: 18,
           }}>{t.challenge.canYouBeat}</div>
 

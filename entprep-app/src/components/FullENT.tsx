@@ -9,7 +9,7 @@ import MultipleAnswerCard from './ui/MultipleAnswerCard';
 import MatchingCard from './ui/MatchingCard';
 import BlockIndicator from './ui/BlockIndicator';
 import PointsBadge from './ui/PointsBadge';
-import { CARD, CARD_COMPACT, TYPE, COLORS, FF, R } from '../constants/styles';
+import { CARD, CARD_COMPACT, TYPE, COLORS, FF, R, FS } from '../constants/styles';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useApp } from '../contexts/AppContext';
@@ -359,7 +359,7 @@ export default function FullENT({ finish }: FullENTProps) {
             letterSpacing: '-0.035em',
           }}>{t.fullent.title}</h1>
           <p style={{
-            fontFamily: FF.body, fontSize: 13.5, fontWeight: 700,
+            fontFamily: FF.body, fontSize: FS.lg, fontWeight: 700,
             color: 'var(--ink)', opacity: 0.65, margin: 0, lineHeight: 1.45,
           }}>{t.fullent.subtitle}</p>
 
@@ -542,7 +542,7 @@ export default function FullENT({ finish }: FullENTProps) {
               marginTop: 14,
               padding: '6px 12px', borderRadius: R.pill,
               background: 'var(--ink)', color: '#fff',
-              fontFamily: FF.display, fontSize: 10.5, fontWeight: 900,
+              fontFamily: FF.display, fontSize: FS.sm, fontWeight: 900,
               letterSpacing: '0.08em', textTransform: 'uppercase',
             }}>
               {allPassed ? <><Check size={13} strokeWidth={3} />{t.fullent.allThresholdsPassed}</> : <><X size={13} strokeWidth={3} />{t.fullent.someThresholdsFailed}</>}
@@ -569,7 +569,7 @@ export default function FullENT({ finish }: FullENTProps) {
                 </div>
               </div>
               <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: 17, fontWeight: 800, fontFamily: FF.mono, color: r.passed ? COLORS.green : COLORS.red }}>{r.pts}/{r.maxPts}</div>
+                <div style={{ fontSize: FS.xxl, fontWeight: 800, fontFamily: FF.mono, color: r.passed ? COLORS.green : COLORS.red }}>{r.pts}/{r.maxPts}</div>
                 <div style={{ fontSize: 10, color: r.passed ? COLORS.green : COLORS.red, display: "flex", alignItems: "center", gap: 3, justifyContent: "flex-end" }}>
                   {r.passed ? <><Check size={11} />{t.fullent.threshold}</> : `${t.fullent.thresholdFailed} ${r.threshold})`}
                 </div>

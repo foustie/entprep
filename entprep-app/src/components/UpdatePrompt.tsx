@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { RefreshCw } from 'lucide-react';
-import { COLORS, FF, R } from '../constants/styles';
+import { COLORS, FF, FS, R } from '../constants/styles';
 import { useT } from '../locales';
 
 export default function UpdatePrompt() {
@@ -58,7 +58,7 @@ export default function UpdatePrompt() {
             color: 'var(--text)', letterSpacing: '-0.02em', lineHeight: 1.15,
           }}>{t.pwa.updateAvailable}</div>
           <div style={{
-            fontFamily: FF.body, fontSize: 11.5, fontWeight: 700,
+            fontFamily: FF.body, fontSize: FS.base, fontWeight: 700,
             color: 'var(--text-muted)', marginTop: 2,
           }}>{t.pwa.newVersion}</div>
         </div>

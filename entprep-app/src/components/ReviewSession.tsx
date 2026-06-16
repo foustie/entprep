@@ -3,7 +3,7 @@ import { SUBS, ALL_PROFILES } from '../config/questionPools';
 import { resolveQuestion } from '../utils/questionStore';
 import { reviewCard, getDueCards } from '../utils/srEngine';
 import { scoreQuestion } from '../utils/scoringEngine';
-import { CARD_COMPACT, COLORS, TINT, FF, R } from '../constants/styles';
+import { CARD_COMPACT, COLORS, TINT, FF, FS, R } from '../constants/styles';
 import { useApp } from '../contexts/AppContext';
 import { useNav } from '../contexts/NavigationContext';
 import { useT } from '../locales';
@@ -92,7 +92,7 @@ export default function ReviewSession({ cards, onFinish }: ReviewSessionProps) {
     return (
       <div style={{ padding: '40px 20px', textAlign: 'center' }}>
         <PartyPopper size={36} color={COLORS.amber} style={{ marginBottom: 12 }} />
-        <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{review.done}</div>
+        <div style={{ fontSize: FS.xl, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{review.done}</div>
         <button onClick={goHome} style={{
           ...CARD_COMPACT, padding: '10px 24px', background: COLORS.purple,
           color: '#fff', border: 'none', borderRadius: 12, cursor: 'pointer',
@@ -115,7 +115,7 @@ export default function ReviewSession({ cards, onFinish }: ReviewSessionProps) {
           borderRadius: 18, padding: '28px 20px', textAlign: 'center', marginBottom: 20,
         }}>
           <RotateCcw size={28} color={COLORS.purple} style={{ marginBottom: 12 }} />
-          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{review.summary}</div>
+          <div style={{ fontSize: FS.xl, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{review.summary}</div>
           <div style={{ fontSize: 28, fontWeight: 800, color: COLORS.purple, fontFamily: FF.mono }}>
             {results.length}
           </div>

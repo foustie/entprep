@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, memo } from 'react';
-import { CARD_COMPACT, TYPE, COLORS, FF, R } from '../constants/styles';
+import { CARD_COMPACT, TYPE, COLORS, FF, R, FS } from '../constants/styles';
 import { SubjectChip } from './ui/SubjectIcon';
 import { SUBJECT_META } from '../config/subjects';
 import { ALL_PROFILES, SUBS } from '../config/questionPools';
@@ -637,7 +637,7 @@ export default function Duel() {
           <div style={{ width: 64, height: 64, borderRadius: 20, background: 'rgba(34,197,94,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
             <Check size={32} color={COLORS.green} />
           </div>
-          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>
+          <div style={{ fontSize: FS.xl, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>
             {t.duel.youFinished}
           </div>
           <div style={{ fontSize: 24, fontWeight: 800, fontFamily: FF.mono, color: COLORS.green, marginBottom: 16 }}>
@@ -846,7 +846,7 @@ export default function Duel() {
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           }}>
             <Zap size={18} color={COLORS.amber} />
-            <span style={{ fontSize: 16, fontWeight: 700, color: COLORS.amber, fontFamily: FF.mono }}>
+            <span style={{ fontSize: FS.xl, fontWeight: 700, color: COLORS.amber, fontFamily: FF.mono }}>
               +{totalXP} XP
             </span>
             {bonusXP > 0 && (

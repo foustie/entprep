@@ -1,4 +1,4 @@
-import { COLORS, FF, R } from '../../constants/styles';
+import { COLORS, FF, FS, R } from '../../constants/styles';
 import { useT } from '../../locales';
 import BottomSheet from './BottomSheet';
 import { Flag } from 'lucide-react';
@@ -39,7 +39,7 @@ export default function ReportSheet({ visible, questionText, options, comment, l
           <Flag size={16} strokeWidth={2.4} />
         </div>
         <div style={{
-          fontFamily: FF.display, fontSize: 16, fontWeight: 900,
+          fontFamily: FF.display, fontSize: FS.xl, fontWeight: 900,
           color: 'var(--text)', letterSpacing: '-0.03em',
         }}>{t.test.reportQuestion}</div>
       </div>
@@ -58,7 +58,7 @@ export default function ReportSheet({ visible, questionText, options, comment, l
       {options && options.length > 0 && (
         <div style={{ marginBottom: 12 }}>
           <div style={{
-            fontFamily: FF.mono, fontSize: 9.5, fontWeight: 800,
+            fontFamily: FF.mono, fontSize: FS.xs, fontWeight: 800,
             letterSpacing: '0.14em', textTransform: 'uppercase',
             color: 'var(--text-muted)', marginBottom: 6,
           }}>
@@ -74,7 +74,7 @@ export default function ReportSheet({ visible, questionText, options, comment, l
                   border: '1.5px solid var(--ink)',
                   boxShadow: active ? `0 2px 0 0 ${COLORS.streak}` : '0 2px 0 0 rgba(15,15,16,0.18)',
                   borderRadius: R.md,
-                  fontFamily: FF.body, fontSize: 11.5, fontWeight: 800,
+                  fontFamily: FF.body, fontSize: FS.base, fontWeight: 800,
                   color: active ? '#fff' : 'var(--text)',
                   cursor: 'pointer', textAlign: 'left',
                   whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
@@ -103,7 +103,7 @@ export default function ReportSheet({ visible, questionText, options, comment, l
           border: '2px solid var(--ink)',
           borderRadius: R.md,
           color: 'var(--text)',
-          fontFamily: FF.body, fontSize: 12.5, fontWeight: 600,
+          fontFamily: FF.body, fontSize: FS.md, fontWeight: 600,
           resize: 'vertical', marginBottom: 12, outline: 'none',
         }}
       />
@@ -126,7 +126,7 @@ export default function ReportSheet({ visible, questionText, options, comment, l
               cursor: loading ? 'wait' : 'pointer', textAlign: 'left',
             }}
           >
-            <span style={{ fontSize: 16 }}>{r.emoji}</span>{r.label}
+            <span style={{ fontSize: FS.xl }}>{r.emoji}</span>{r.label}
           </button>
         ))}
       </div>

@@ -122,6 +122,7 @@ vi.mock('../../constants/styles', () => ({
   CARD_COMPACT: {},
   TYPE: { h2: {}, caption: {} },
   R: { sm: 8, md: 12, lg: 16, xl: 20, xxl: 24, pill: 100 },
+  FS: { xxs:9, xs:10, sm:11, base:12, md:13, lg:14, xl:15, xxl:18, h1:26, display:44, display1:56, display2:80, display3:128 },
   FF: {
     display: "'Unbounded', system-ui, sans-serif",
     body: "'Nunito', system-ui, sans-serif",

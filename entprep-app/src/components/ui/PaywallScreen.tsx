@@ -7,7 +7,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useApp } from '../../contexts/AppContext';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useT } from '../../locales/index';
-import { COLORS, FF, FW, SP, TINT, R } from '../../constants/styles';
+import { COLORS, FF, FW, FS, SP, TINT, R } from '../../constants/styles';
 import { getEntCountdown } from '../../config/ent';
 import { trackEvent } from '../../utils/analytics';
 import SendToMomSheet from '../SendToMomSheet';
@@ -251,7 +251,7 @@ function WebPaywallScreen({ trigger, score, onClose }: PaywallScreenProps) {
               marginBottom: SP.lg,
             }}>
               <div style={{
-                fontFamily: FF.mono, fontSize: 9.5, fontWeight: 800,
+                fontFamily: FF.mono, fontSize: FS.xs, fontWeight: 800,
                 letterSpacing: '0.16em', textTransform: 'uppercase',
                 color: INK, opacity: 0.7, marginBottom: 4,
               }}>
@@ -331,7 +331,7 @@ function WebPaywallScreen({ trigger, score, onClose }: PaywallScreenProps) {
                 <h2 style={{
                   margin: 0, marginBottom: 4,
                   fontFamily: FF.display,
-                  fontSize: 19, fontWeight: 900,
+                  fontSize: FS.xxl, fontWeight: 900,
                   letterSpacing: '-0.025em', lineHeight: 1.15,
                   color: COLORS.text,
                 }}>
@@ -354,7 +354,7 @@ function WebPaywallScreen({ trigger, score, onClose }: PaywallScreenProps) {
             <p style={{
               margin: 0, marginBottom: SP.lg,
               fontFamily: FF.body,
-              fontSize: 13.5, fontWeight: 700,
+              fontSize: FS.lg, fontWeight: 700,
               lineHeight: 1.45, color: COLORS.text,
             }}>
               {reachedGrant
@@ -384,7 +384,7 @@ function WebPaywallScreen({ trigger, score, onClose }: PaywallScreenProps) {
                 </span>
                 <span style={{
                   fontFamily: FF.body,
-                  fontSize: 13.5, fontWeight: 800,
+                  fontSize: FS.lg, fontWeight: 800,
                   lineHeight: 1.3,
                   color: COLORS.text,
                 }}>{label}</span>
@@ -444,7 +444,7 @@ function WebPaywallScreen({ trigger, score, onClose }: PaywallScreenProps) {
               onClick={() => { trackEvent('Paywall Checkout Click', { trigger, plan: 'monthly' }); onClose(); }}
               style={{
                 fontFamily: FF.body,
-                fontSize: 12.5, fontWeight: FW.bold,
+                fontSize: FS.md, fontWeight: FW.bold,
                 color: COLORS.textSecondary,
                 textDecoration: 'underline',
                 textDecorationColor: COLORS.cardBorder,
@@ -496,7 +496,7 @@ function WebPaywallScreen({ trigger, score, onClose }: PaywallScreenProps) {
                   borderRadius: 12,
                   boxShadow: `0 3px 0 0 ${INK}`,
                   fontFamily: FF.display,
-                  fontSize: 12.5, fontWeight: 800,
+                  fontSize: FS.md, fontWeight: 800,
                   letterSpacing: '0.06em', textTransform: 'uppercase',
                   cursor: 'pointer',
                 }}
@@ -513,7 +513,7 @@ function WebPaywallScreen({ trigger, score, onClose }: PaywallScreenProps) {
               textAlign: 'center',
               marginTop: SP.md,
               fontFamily: FF.body,
-              fontSize: 11.5, fontWeight: FW.semibold,
+              fontSize: FS.base, fontWeight: FW.semibold,
               lineHeight: 1.4,
               color: COLORS.textMuted,
             }}>

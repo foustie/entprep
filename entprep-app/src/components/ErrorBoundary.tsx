@@ -1,5 +1,5 @@
 import React from 'react';
-import { CARD_COMPACT, COLORS, FF, R } from '../constants/styles';
+import { CARD_COMPACT, COLORS, FF, FS, R } from '../constants/styles';
 import { captureError } from '../config/sentry';
 import { getT } from '../locales';
 
@@ -61,7 +61,7 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
       return (
         <div style={{ padding: isFeature ? '30px 20px' : '40px 20px', textAlign: 'center', minHeight: isFeature ? '40vh' : '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ fontSize: isFeature ? 36 : 48, marginBottom: 16 }}>&#x26A0;&#xFE0F;</div>
-          <div style={{ fontSize: isFeature ? 16 : 18, fontWeight: 700, color: 'var(--text)', marginBottom: 8, fontFamily: FF.display }}>
+          <div style={{ fontSize: isFeature ? FS.xl : 18, fontWeight: 700, color: 'var(--text)', marginBottom: 8, fontFamily: FF.display }}>
             {title}
           </div>
           <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 24, maxWidth: 300, lineHeight: 1.6 }}>
@@ -77,7 +77,7 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
           {import.meta.env.DEV && this.state.componentStack && (
             <div style={{ ...CARD_COMPACT, background: 'rgba(255,90,54,0.06)', border: '1px solid rgba(255,90,54,0.18)', padding: '10px 14px', marginBottom: 20, maxWidth: 340, textAlign: 'left' }}>
               <div style={{ fontSize: 9, color: COLORS.teal, fontWeight: 600, marginBottom: 4 }}>Component Stack:</div>
-              <pre style={{ fontSize: 8, color: 'var(--text-secondary)', fontFamily: FF.mono, whiteSpace: 'pre-wrap', wordBreak: 'break-all', margin: 0, maxHeight: 200, overflow: 'auto' }}>
+              <pre style={{ fontSize: FS.xxs, color: 'var(--text-secondary)', fontFamily: FF.mono, whiteSpace: 'pre-wrap', wordBreak: 'break-all', margin: 0, maxHeight: 200, overflow: 'auto' }}>
                 {this.state.componentStack}
               </pre>
             </div>

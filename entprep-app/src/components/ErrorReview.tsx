@@ -3,7 +3,7 @@ import { SUBS, ALL_PROFILES } from '../config/questionPools';
 import { resolveQuestion } from '../utils/questionStore';
 import { getWrongQuestions } from '../utils/adaptiveHelpers';
 import { shuffleOptions } from '../utils/questionHelpers';
-import { CARD_COMPACT, CARD_HERO, TYPE, COLORS, FF, R } from '../constants/styles';
+import { CARD_COMPACT, CARD_HERO, TYPE, COLORS, FF, R, FS } from '../constants/styles';
 import { useApp } from '../contexts/AppContext';
 import { useNav } from '../contexts/NavigationContext';
 import SkeletonCard from './ui/SkeletonCard';
@@ -204,7 +204,7 @@ export default function ErrorReview() {
                       position: 'absolute', top: 0, bottom: 0, left: 0, width: 4, background: COLORS.streak,
                     }} />
                     <div style={{
-                      fontFamily: FF.body, fontSize: 12.5, fontWeight: 700,
+                      fontFamily: FF.body, fontSize: FS.md, fontWeight: 700,
                       color: 'var(--text)', lineHeight: 1.45, marginBottom: 8,
                     }}>{w.q.q}</div>
                     <div style={{

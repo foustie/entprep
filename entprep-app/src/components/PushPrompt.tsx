@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Bell, Flame, BookOpen, BarChart2 } from 'lucide-react';
-import { COLORS, FF, R } from '../constants/styles';
+import { COLORS, FF, FS, R } from '../constants/styles';
 import { useApp } from '../contexts/AppContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useT } from '../locales';
@@ -73,7 +73,7 @@ export default function PushPrompt() {
         }}>{t.push?.promptTitle || 'Не забывай заниматься!'}</div>
 
         <div style={{
-          fontFamily: FF.body, fontSize: 12.5, fontWeight: 700,
+          fontFamily: FF.body, fontSize: FS.md, fontWeight: 700,
           color: 'var(--text-secondary)', marginBottom: 18, lineHeight: 1.5,
         }}>{t.push?.promptDesc || 'Включи уведомления, чтобы мы напомнили о серии и ошибках'}</div>
 

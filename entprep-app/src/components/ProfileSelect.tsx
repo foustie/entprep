@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import type { CSSProperties } from 'react';
 import { ALL_PROFILES } from '../config/questionPools';
 import { PROFILE_PARTNERS } from '../config/subjects';
-import { COLORS, FF, FW, SP, TINT, R } from '../constants/styles';
+import { COLORS, FF, FS, FW, SP, TINT, R } from '../constants/styles';
 import { Target, Check, ArrowRight, Trophy } from 'lucide-react';
 import { SubjectChip as SubjectIconChip } from './ui/SubjectIcon';
 import { useBreakpoint } from '../hooks/useBreakpoint';
@@ -237,7 +237,7 @@ export default function ProfileSelect({ onConfirm }: ProfileSelectProps) {
           />
           <div style={{
             display: 'flex', justifyContent: 'space-between', marginTop: 6,
-            fontFamily: FF.mono, fontSize: 9.5, fontWeight: 700,
+            fontFamily: FF.mono, fontSize: FS.xs, fontWeight: 700,
             color: INK, opacity: 0.55,
             letterSpacing: '0.08em', textTransform: 'uppercase',
           }}>
@@ -356,7 +356,7 @@ function SubjectChip({
 
       <div style={{
         fontFamily: FF.body,
-        fontSize: 12.5, fontWeight: 800,
+        fontSize: FS.md, fontWeight: 800,
         lineHeight: 1.2,
         color: disabled ? COLORS.textMuted : active ? COLORS.text : COLORS.text,
       }}>
@@ -382,7 +382,7 @@ function SubjectChip({
       ) : (
         <div style={{
           fontFamily: FF.mono,
-          fontSize: 9.5, fontWeight: 700,
+          fontSize: FS.xs, fontWeight: 700,
           letterSpacing: '0.06em',
           color: active ? COLORS.streak : COLORS.textMuted,
           marginTop: 4,

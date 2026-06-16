@@ -174,7 +174,7 @@ const closeBtn: CSSProperties = {
 const subtitle: CSSProperties = {
   margin: `0 0 ${SP.lg}px`,
   fontFamily: FF.body,
-  fontSize: 13.5,
+  fontSize: FS.lg,
   fontWeight: FW.semibold,
   lineHeight: 1.5,
   color: COLORS.textSecondary,
@@ -220,7 +220,7 @@ const previewAvatar: CSSProperties = {
   justifyContent: 'center',
   fontFamily: FF.brand,
   fontWeight: 900,
-  fontSize: 17,
+  fontSize: FS.xxl,
   border: `3px solid ${COLORS.xp}`,
 };
 

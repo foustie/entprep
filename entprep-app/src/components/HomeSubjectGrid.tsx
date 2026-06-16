@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { CSSProperties } from 'react';
-import { COLORS, FF, FW, SP, scoreColor, R } from '../constants/styles';
+import { COLORS, FF, FW, SP, scoreColor, R, FS } from '../constants/styles';
 import { useT } from '../locales';
 import { pluralizeForms } from '../utils/formatters';
 import { useNav } from '../contexts/NavigationContext';
@@ -160,7 +160,7 @@ function SubjectRow({
         </span>
         <span style={{
           fontFamily: FF.mono,
-          fontSize: 9.5, fontWeight: 700,
+          fontSize: FS.xs, fontWeight: 700,
           letterSpacing: '0.06em',
           color: COLORS.textMuted,
           marginTop: 2,

@@ -1,4 +1,4 @@
-import { CARD_COMPACT, COLORS, TINT } from '../constants/styles';
+import { CARD_COMPACT, COLORS, TINT, FS } from '../constants/styles';
 import { useT } from '../locales';
 import { useNav } from '../contexts/NavigationContext';
 import { Target, Check, Zap, ArrowRight, RotateCcw } from 'lucide-react';
@@ -96,7 +96,7 @@ export default function HomeTodayStrip({ dailyGoal, dailyProgress, dailyDone, da
             width: 32, height: 32, borderRadius: 8,
             background: daily.completed ? TINT.green.bg : `${daily.sub.color}12`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 16, flexShrink: 0,
+            fontSize: FS.xl, flexShrink: 0,
           }}>
             {daily.completed ? <Check size={16} color={COLORS.green} /> : <SubjectIcon sid={daily.subjectId} size={16} color={daily.sub.color} strokeWidth={2.2} />}
           </div>

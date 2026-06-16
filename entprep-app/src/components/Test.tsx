@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { SUBS, ALL_PROFILES } from '../config/questionPools';
 import { getQs } from '../utils/questionHelpers';
 import { supabase } from '../config/supabase';
-import { CARD, CARD_COMPACT, TYPE, COLORS, scoreColor, FF, R } from '../constants/styles';
+import { CARD, CARD_COMPACT, TYPE, COLORS, scoreColor, FF, FS, R } from '../constants/styles';
 import { useApp } from '../contexts/AppContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useNav } from '../contexts/NavigationContext';
@@ -170,7 +170,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
   if (showLeaveConfirm) return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: 20 }}>
       <div ref={leaveDlgRef} role="dialog" aria-modal="true" aria-label={t.test.leaveTestConfirm} tabIndex={-1} style={{ background: 'var(--bg-card)', borderRadius: 16, padding: '24px 20px', maxWidth: 320, width: '100%', textAlign: 'center' }}>
-        <h2 style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>{t.test.leaveTestConfirm}</h2>
+        <h2 style={{ margin: '0 0 8px', fontSize: FS.xl, fontWeight: 700, color: 'var(--text)' }}>{t.test.leaveTestConfirm}</h2>
         <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 20 }}>{Object.keys(ans).length}/{qs.length}</div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={() => setShowLeaveConfirm(false)} style={{ flex: 1, padding: '12px 0', borderRadius: R.md, border: '1px solid var(--border)', background: 'none', color: 'var(--text)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
@@ -311,7 +311,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
               cursor: aiLoad[index] ? 'wait' : 'pointer',
               color: 'var(--text)',
               fontFamily: FF.body,
-              fontSize: 12.5, fontWeight: 700,
+              fontSize: FS.md, fontWeight: 700,
               textAlign: 'left',
               ...(isFirstAiExposure && !aiLoad[index] ? { animation: 'pulse 2s ease-in-out 3' } : {}),
             }}>
@@ -333,7 +333,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
             }} style={{
               background: 'none', border: 'none', padding: '4px 0', cursor: 'pointer',
               color: COLORS.streak,
-              fontFamily: FF.body, fontSize: 11.5, fontWeight: 700,
+              fontFamily: FF.body, fontSize: FS.base, fontWeight: 700,
               display: 'inline-flex', alignItems: 'center', gap: 5, alignSelf: 'flex-start',
             }}>
               <Sparkles size={12} strokeWidth={2.4} />{t.test.aiTutorNudge || 'Разобрать с AI Tutor'}
@@ -469,11 +469,11 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 16 }}>
           <div style={{ background: 'rgba(255,255,255,0.6)', border: '1.5px solid var(--ink)', borderRadius: 12, padding: "10px 8px" }}>
             <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: FF.mono, color: 'var(--ink)', opacity: 0.8, marginBottom: 3 }}>{t.test.timeLabel}</div>
-            <div style={{ fontSize: 16, fontWeight: 900, fontFamily: FF.display, letterSpacing: '-0.025em', color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' }}>{fm(timerSec - tl)}</div>
+            <div style={{ fontSize: FS.xl, fontWeight: 900, fontFamily: FF.display, letterSpacing: '-0.025em', color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' }}>{fm(timerSec - tl)}</div>
           </div>
           <div style={{ background: 'rgba(255,255,255,0.6)', border: '1.5px solid var(--ink)', borderRadius: 12, padding: "10px 8px" }}>
             <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: FF.mono, color: 'var(--ink)', opacity: 0.8, marginBottom: 3 }}>XP</div>
-            <div style={{ fontSize: 16, fontWeight: 900, fontFamily: FF.display, letterSpacing: '-0.025em', color: '#C77D00', fontVariantNumeric: 'tabular-nums' }}>+{calcTestXP({ su: sid, sc: pct, dt: '', co: cc, to: tot })}</div>
+            <div style={{ fontSize: FS.xl, fontWeight: 900, fontFamily: FF.display, letterSpacing: '-0.025em', color: '#C77D00', fontVariantNumeric: 'tabular-nums' }}>+{calcTestXP({ su: sid, sc: pct, dt: '', co: cc, to: tot })}</div>
           </div>
         </div>
         <div style={{
@@ -481,7 +481,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
           marginTop: 14,
           padding: '6px 12px', borderRadius: R.pill,
           background: 'var(--ink)', color: '#fff',
-          fontFamily: FF.display, fontSize: 10.5, fontWeight: 900,
+          fontFamily: FF.display, fontSize: FS.sm, fontWeight: 900,
           letterSpacing: '0.08em', textTransform: 'uppercase',
         }}>
           {pct >= 70 ? <><Check size={13} strokeWidth={3} />{t.test.aboveThreshold}</> : pct >= 50 ? t.test.needReview : t.test.needMorePrep}
@@ -496,7 +496,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
             <Trophy size={16} strokeWidth={2.5} />
             <span style={{ fontFamily: FF.display, fontSize: 12, fontWeight: 900, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{t.test.newRecord}</span>
           </div>
-          {record.prevBest > 0 && <div style={{ fontSize: 10.5, fontWeight: 700, fontFamily: FF.body, marginTop: 4, opacity: 0.8 }}>
+          {record.prevBest > 0 && <div style={{ fontSize: FS.sm, fontWeight: 700, fontFamily: FF.body, marginTop: 4, opacity: 0.8 }}>
             {t.test.was} {record.prevBest}{t.test.became} {pct}% (+{record.improvement}%)
           </div>}
         </div>}
@@ -677,7 +677,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
     </div>
     {offline && <div style={{ ...CARD, background: "linear-gradient(135deg,rgba(26,26,50,0.95),rgba(22,33,62,0.95))", borderRadius: 18, padding: "32px 20px", textAlign: "center", marginBottom: 16, animation: "slideUp 0.3s cubic-bezier(0.16,1,0.3,1)" }}>
       <WifiOff size={32} color={COLORS.red} style={{ marginBottom: 10 }} />
-      <div style={{ fontSize: 16, fontWeight: 700, color: COLORS.red, marginBottom: 6 }}>{(t.test as unknown as Record<string, string>).connectionLost}</div>
+      <div style={{ fontSize: FS.xl, fontWeight: 700, color: COLORS.red, marginBottom: 6 }}>{(t.test as unknown as Record<string, string>).connectionLost}</div>
       <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{(t.test as unknown as Record<string, string>).timerPaused}</div>
     </div>}
     {!offline && <div key={`qblock-${cur}`}>
@@ -687,7 +687,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
     </div>}
     <div style={{ ...CARD, padding: "20px 16px", marginBottom: 12, animation: "slideUp 0.35s cubic-bezier(0.16,1,0.3,1)" }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-        <div style={{ fontSize: 16, fontWeight: 600, color: "var(--text)", lineHeight: 1.65 }}>{q.q}</div>
+        <div style={{ fontSize: FS.xl, fontWeight: 600, color: "var(--text)", lineHeight: 1.65 }}>{q.q}</div>
         {!reportSent[cur] && <button onClick={() => openReport(cur)} aria-label={t.test.report} style={{ background: 'none', border: 'none', padding: 4, cursor: 'pointer', flexShrink: 0, opacity: 0.5 }}><Flag size={16} color="var(--text-secondary)" /></button>}
         {reportSent[cur] && <Check size={16} color={COLORS.win} style={{ flexShrink: 0, marginTop: 4 }} />}
       </div>
@@ -764,7 +764,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
               </div>
               <div style={{
                 flex: 1,
-                fontFamily: FF.display, fontSize: 16, fontWeight: 800,
+                fontFamily: FF.display, fontSize: FS.xl, fontWeight: 800,
                 color: 'var(--ink)', letterSpacing: '-0.01em',
               }}>
                 {phrase}

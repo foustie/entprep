@@ -1,4 +1,4 @@
-import { CARD, CARD_HERO, BUTTON, COLORS, TYPE, FF, SP, R } from '../constants/styles';
+import { CARD, CARD_HERO, BUTTON, COLORS, TYPE, FF, FS, SP, R } from '../constants/styles';
 import { BookOpen, Brain, Zap, Users, ArrowRight, GraduationCap, CheckCircle2, ChevronDown, Flame, Instagram, Send, AtSign, Clock, Star } from 'lucide-react';
 import { useT } from '../locales';
 import { useApp } from '../contexts/AppContext';
@@ -47,7 +47,7 @@ export default function Landing({ onStart, totalQ }: Props) {
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
               <img src="/favicon.svg" alt="" aria-hidden="true" width={30} height={30}
                 style={{ display: 'block', borderRadius: R.sm, border: `2px solid ${INK}`, boxShadow: `0 2px 0 0 ${INK}` }} />
-              <span style={{ fontSize: 17, fontWeight: 900, fontFamily: FF.display, letterSpacing: '-0.03em' }}>
+              <span style={{ fontSize: FS.xxl, fontWeight: 900, fontFamily: FF.display, letterSpacing: '-0.03em' }}>
                 <span style={{ color: INK }}>ENT</span><span style={{ color: COLORS.streak }}>prep.</span>
               </span>
             </span>
@@ -148,7 +148,7 @@ export default function Landing({ onStart, totalQ }: Props) {
               }}>
                 <div style={{
                   ...TYPE.statSmall,
-                  fontSize: 16,
+                  fontSize: FS.xl,
                   color: s.color,
                 }}>{s.v}</div>
                 <div style={{ ...TYPE.statLabel, marginTop: 3, color: INK, opacity: 0.6 }}>
@@ -224,7 +224,7 @@ export default function Landing({ onStart, totalQ }: Props) {
                 ].map((s, i) => (
                   <div key={i}>
                     <div style={{ ...TYPE.caption, fontSize: 10, color: 'var(--ink-soft)' }}>{s.n}</div>
-                    <div style={{ fontFamily: FF.mono, fontSize: 16, fontWeight: 800, color: INK }}>{s.v}</div>
+                    <div style={{ fontFamily: FF.mono, fontSize: FS.xl, fontWeight: 800, color: INK }}>{s.v}</div>
                   </div>
                 ))}
               </div>
@@ -247,8 +247,8 @@ export default function Landing({ onStart, totalQ }: Props) {
             </div>
           </div>
           <div style={{ ...TYPE.eyebrow, marginTop: 14 }}>01</div>
-          <div style={{ ...TYPE.h3, fontSize: 17, margin: '4px 0 4px' }}>{tl.step1Title}</div>
-          <div style={{ ...TYPE.bodySmall, fontSize: 13.5, lineHeight: 1.55 }}>{tl.step1Desc}</div>
+          <div style={{ ...TYPE.h3, fontSize: FS.xxl, margin: '4px 0 4px' }}>{tl.step1Title}</div>
+          <div style={{ ...TYPE.bodySmall, fontSize: FS.lg, lineHeight: 1.55 }}>{tl.step1Desc}</div>
         </div>
 
         {/* 02 — Tailored plan */}
@@ -275,8 +275,8 @@ export default function Landing({ onStart, totalQ }: Props) {
             </div>
           </div>
           <div style={{ ...TYPE.eyebrow, marginTop: 14 }}>02</div>
-          <div style={{ ...TYPE.h3, fontSize: 17, margin: '4px 0 4px' }}>{tl.step2Title}</div>
-          <div style={{ ...TYPE.bodySmall, fontSize: 13.5, lineHeight: 1.55 }}>{tl.step2Desc}</div>
+          <div style={{ ...TYPE.h3, fontSize: FS.xxl, margin: '4px 0 4px' }}>{tl.step2Title}</div>
+          <div style={{ ...TYPE.bodySmall, fontSize: FS.lg, lineHeight: 1.55 }}>{tl.step2Desc}</div>
         </div>
 
         {/* 03 — Hit your target: question bank + Question Rush */}
@@ -303,8 +303,8 @@ export default function Landing({ onStart, totalQ }: Props) {
             </div>
           </div>
           <div style={{ ...TYPE.eyebrow, marginTop: 14 }}>03</div>
-          <div style={{ ...TYPE.h3, fontSize: 17, margin: '4px 0 4px' }}>{tl.step3Title}</div>
-          <div style={{ ...TYPE.bodySmall, fontSize: 13.5, lineHeight: 1.55 }}>{tl.step3Desc}</div>
+          <div style={{ ...TYPE.h3, fontSize: FS.xxl, margin: '4px 0 4px' }}>{tl.step3Title}</div>
+          <div style={{ ...TYPE.bodySmall, fontSize: FS.lg, lineHeight: 1.55 }}>{tl.step3Desc}</div>
         </div>
 
         </div>

@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { SUBJECT_META } from '../config/subjects';
 import MiniChart from './ui/MiniChart';
 import SubjectIcon from './ui/SubjectIcon';
-import { CARD_COMPACT, TYPE, COLORS, scoreColor, FF, R } from '../constants/styles';
+import { CARD_COMPACT, TYPE, COLORS, scoreColor, FF, FS, R } from '../constants/styles';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useApp } from '../contexts/AppContext';
 import { getScoreHistory, getPersonalBests } from '../utils/competitionHelpers';
@@ -81,7 +81,7 @@ function ActivityHeatmap({ hist }: { hist: TestResult[] }) {
       <div style={{ display: "flex", gap: 2, overflowX: "auto" }}>
         {weeks.map((w, wi) => (
           <div key={wi} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {wi < months.length && <div style={{ fontSize: 8, color: "var(--text-muted)", height: 10, overflow: "hidden" }}>{months[wi]}</div>}
+            {wi < months.length && <div style={{ fontSize: FS.xxs, color: "var(--text-muted)", height: 10, overflow: "hidden" }}>{months[wi]}</div>}
             {w.map((d, di) => (
               <div key={di} title={d.count >= 0 ? `${d.key}: ${d.count} ${t.progress.testCount}` : ""} style={{ width: 10, height: 10, borderRadius: 2, background: d.count < 0 ? "transparent" : getColor(d.count) }} />
             ))}
@@ -271,9 +271,9 @@ function Badges({ hist, subjects }: { hist: TestResult[]; subjects: string[] }) 
         {badges.map(b => (
           <div key={b.id} role="button" tabIndex={0} aria-pressed={selected === b.id} aria-label={b.name} onClick={() => { setSelected(selected === b.id ? null : b.id); if (isNew(b)) markSeen(b.id); }} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelected(selected === b.id ? null : b.id); if (isNew(b)) markSeen(b.id); } }} style={{ textAlign: "center", padding: "8px 4px", borderRadius: 8, background: selected === b.id ? (b.earned ? "rgba(245,158,11,0.15)" : "rgba(100,100,100,0.1)") : b.earned ? "rgba(245,158,11,0.06)" : "var(--bg-subtle)", border: selected === b.id ? (b.earned ? "1.5px solid rgba(245,158,11,0.4)" : "1.5px solid var(--border)") : b.earned ? "1px solid rgba(245,158,11,0.15)" : "1px solid transparent", opacity: b.earned ? 1 : 0.35, cursor: "pointer", transition: "all 0.15s", position: "relative", animation: isNew(b) ? "confetti 0.8s ease-out" : undefined }}>
             <b.Icon size={20} color={b.earned ? b.color : 'var(--text-muted)'} />
-            <div style={{ fontSize: 8, color: b.earned ? "var(--text-secondary)" : "var(--text-muted)", marginTop: 2, lineHeight: 1.2 }}>{b.name}</div>
+            <div style={{ fontSize: FS.xxs, color: b.earned ? "var(--text-secondary)" : "var(--text-muted)", marginTop: 2, lineHeight: 1.2 }}>{b.name}</div>
             {isNew(b) && (
-              <div style={{ position: "absolute", top: -4, right: -4, background: COLORS.accent, color: "#fff", fontSize: 7, fontWeight: 700, padding: "1px 4px", borderRadius: 4, lineHeight: 1.3 }}>NEW</div>
+              <div style={{ position: "absolute", top: -4, right: -4, background: COLORS.accent, color: "#fff", fontSize: FS.xxs, fontWeight: 700, padding: "1px 4px", borderRadius: 4, lineHeight: 1.3 }}>NEW</div>
             )}
           </div>
         ))}
@@ -325,8 +325,8 @@ function XPSection({ hist }: { hist: TestResult[] }) {
               opacity: reached ? 1 : 0.4,
             }}>
               <div style={{ fontSize: 14, fontWeight: 800, color: l.color, fontFamily: FF.display }}>{l.level}</div>
-              <div style={{ fontSize: 7, color: reached ? "var(--text-secondary)" : "var(--text-muted)", marginTop: 1, lineHeight: 1.2 }}>{(t.levels as Record<number, string>)[l.level] || l.name}</div>
-              <div style={{ fontSize: 7, color: "var(--text-muted)", marginTop: 1 }}>{l.minXP}+</div>
+              <div style={{ fontSize: FS.xxs, color: reached ? "var(--text-secondary)" : "var(--text-muted)", marginTop: 1, lineHeight: 1.2 }}>{(t.levels as Record<number, string>)[l.level] || l.name}</div>
+              <div style={{ fontSize: FS.xxs, color: "var(--text-muted)", marginTop: 1 }}>{l.minXP}+</div>
             </div>
           );
         })}
@@ -542,7 +542,7 @@ export default function Progress() {
                   borderRadius: 8, textAlign: 'center',
                 }}>
                   <div style={{
-                    fontFamily: FF.mono, fontSize: 8, fontWeight: 800,
+                    fontFamily: FF.mono, fontSize: FS.xxs, fontWeight: 800,
                     letterSpacing: '0.12em', textTransform: 'uppercase',
                     color: 'var(--text-muted)', marginBottom: 2,
                   }}>{t.progress.avgShort}</div>
@@ -559,7 +559,7 @@ export default function Progress() {
                   borderRadius: 8, textAlign: 'center',
                 }}>
                   <div style={{
-                    fontFamily: FF.mono, fontSize: 8, fontWeight: 800,
+                    fontFamily: FF.mono, fontSize: FS.xxs, fontWeight: 800,
                     letterSpacing: '0.12em', textTransform: 'uppercase',
                     color: COLORS.win, marginBottom: 2,
                     display: 'inline-flex', alignItems: 'center', gap: 3,

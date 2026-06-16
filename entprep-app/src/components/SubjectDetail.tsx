@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { SUBS, ALL_PROFILES } from '../config/questionPools';
 import { TOPIC_MAP, getTopicCount } from '../config/topics';
-import { CARD_COMPACT, TYPE, COLORS, scoreColor, FF, R } from '../constants/styles';
+import { CARD_COMPACT, TYPE, COLORS, scoreColor, FF, FS, R } from '../constants/styles';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useNav } from '../contexts/NavigationContext';
 import { useApp } from '../contexts/AppContext';
@@ -240,7 +240,7 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{
                       fontFamily: FF.body,
-                      fontSize: 13.5, fontWeight: 800,
+                      fontSize: FS.lg, fontWeight: 800,
                       color: "var(--text)",
                       lineHeight: 1.2,
                       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
@@ -341,13 +341,13 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{
                             fontFamily: FF.body,
-                            fontSize: 12.5, fontWeight: 700,
+                            fontSize: FS.md, fontWeight: 700,
                             color: "var(--text)",
                             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                           }}>{isKk && st.name_kk ? st.name_kk : st.name}</div>
                           <div style={{
                             fontFamily: FF.mono,
-                            fontSize: 9.5, fontWeight: 700,
+                            fontSize: FS.xs, fontWeight: 700,
                             color: "var(--text-muted)", marginTop: 2,
                             letterSpacing: '0.04em',
                           }}>
@@ -436,7 +436,7 @@ function ActionRow({
         }}>{title}</div>
         <div style={{
           fontFamily: FF.body,
-          fontSize: 11.5, fontWeight: 600,
+          fontSize: FS.base, fontWeight: 600,
           color: 'var(--text-secondary)', marginTop: 2,
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>{desc}</div>

@@ -12,7 +12,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNav } from '../contexts/NavigationContext';
 import { useToast } from '../contexts/ToastContext';
 import { useT } from '../locales';
-import { CARD, CARD_COMPACT, COLORS, TYPE, FF, BUTTON, ANSWER, PROGRESS_BAR, R } from '../constants/styles';
+import { CARD, CARD_COMPACT, COLORS, TYPE, FF, FS, BUTTON, ANSWER, PROGRESS_BAR, R } from '../constants/styles';
 import { pluralizeForms } from '../utils/formatters';
 import BackButton from './ui/BackButton';
 import { SubjectChip } from './ui/SubjectIcon';
@@ -286,7 +286,7 @@ export default function QuestionRush({ save }: RushProps) {
   const header = (label: string, onBack: () => void) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '6px 0 16px' }}>
       <BackButton onClick={onBack} />
-      <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 17, fontWeight: 800, fontFamily: FF.display, letterSpacing: '-0.02em', color: 'var(--text)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: FS.xxl, fontWeight: 800, fontFamily: FF.display, letterSpacing: '-0.02em', color: 'var(--text)' }}>
         <Zap size={18} color={COLORS.streak} fill={COLORS.streak} /> {label}
       </div>
     </div>
@@ -439,7 +439,7 @@ export default function QuestionRush({ save }: RushProps) {
                 boxShadow: on ? `0 2px 0 0 ${COLORS.streak}` : (CARD_COMPACT.boxShadow as string),
                 border: on ? `2px solid ${COLORS.streak}` : (CARD_COMPACT.border as string),
               }}>
-                <div style={{ fontSize: 16, fontWeight: 800, fontFamily: FF.display, letterSpacing: '-0.02em', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ fontSize: FS.xl, fontWeight: 800, fontFamily: FF.display, letterSpacing: '-0.02em', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 8 }}>
                   {n} {pluralizeForms(n, t.rush.questionsWord)}
                   {n === 20 && <span style={{ fontSize: 9, fontWeight: 800, fontFamily: FF.mono, color: INK, background: COLORS.winSoft, border: `1.5px solid ${INK}`, padding: '2px 8px', borderRadius: R.md, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{t.rush.recommended}</span>}
                 </div>
@@ -476,7 +476,7 @@ export default function QuestionRush({ save }: RushProps) {
                 border: on ? `2px solid ${COLORS.streak}` : (CARD_COMPACT.border as string),
               }}>
                 <div>
-                  <div style={{ fontSize: 16, fontWeight: 800, fontFamily: FF.display, letterSpacing: '-0.02em', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ fontSize: FS.xl, fontWeight: 800, fontFamily: FF.display, letterSpacing: '-0.02em', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 8 }}>
                     {p.label}
                     {p.k === 'standard' && <span style={{ fontSize: 9, fontWeight: 800, fontFamily: FF.mono, color: INK, background: COLORS.winSoft, border: `1.5px solid ${INK}`, padding: '2px 8px', borderRadius: R.md, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{t.rush.recommended}</span>}
                   </div>
@@ -535,7 +535,7 @@ export default function QuestionRush({ save }: RushProps) {
         </div>
 
         <div style={{ ...CARD, padding: '22px 18px', marginBottom: 14 }}>
-          <div style={{ fontSize: 17, fontWeight: 700, fontFamily: FF.body, color: 'var(--text)', lineHeight: 1.55 }}>{q.q}</div>
+          <div style={{ fontSize: FS.xxl, fontWeight: 700, fontFamily: FF.body, color: 'var(--text)', lineHeight: 1.55 }}>{q.q}</div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>

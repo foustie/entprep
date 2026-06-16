@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import BottomSheet from './ui/BottomSheet';
 import { Crown, Sparkles, Bot, GraduationCap, BookOpen, RotateCcw, Loader2, LogIn } from 'lucide-react';
-import { COLORS, BUTTON, FF, R } from '../constants/styles';
+import { COLORS, BUTTON, FF, FS, R } from '../constants/styles';
 
 const INK = 'var(--ink)';
 import { useT } from '../locales';
@@ -154,7 +154,7 @@ export default function PaywallModal({ open, reason, onClose }: PaywallModalProp
           <Crown size={26} color="#fff" strokeWidth={2.25} />
         </div>
 
-        <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>
+        <div style={{ fontSize: FS.xl, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>
           {titles[reason] || 'Premium'}
         </div>
 
