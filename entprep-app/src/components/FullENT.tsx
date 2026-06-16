@@ -117,6 +117,11 @@ export default function FullENT({ finish }: FullENTProps) {
   // [phase, paused, offline]), so it would otherwise call a finishENT closure captured
   // at test start with empty answers. This ref always points at the latest finishENT.
   const finishRef = useRef<() => void>(() => {});
+  // BUG-2: finishENT can be reached by both the expiring timer (finishRef) and the
+  // "finish early" confirm button. setPhase("results") is async, so without this latch
+  // a near-simultaneous double call would write the result to history twice (distinct
+  // ids, defeating cloud de-dup). Mirrors Test.tsx's recordedRef guard.
+  const finishedRef = useRef(false);
 
   // ── Per-question answer-time tracking ──────────────────────────────────────
   // Questions can be revisited, so we accumulate CUMULATIVE facing time per
@@ -198,6 +203,8 @@ export default function FullENT({ finish }: FullENTProps) {
   const goQ = (i: number) => { navigateTo(curSec, i); };
 
   const finishENT = () => {
+    if (finishedRef.current) return; // BUG-2: guard against double-finish (timer + finish-early race)
+    finishedRef.current = true;
     if (timerRef.current) clearInterval(timerRef.current);
     flushQTime(); // capture time spent on the question visible at finish
     setPhase("results");
@@ -463,6 +470,7 @@ export default function FullENT({ finish }: FullENTProps) {
           if (lastFull === today) { openPaywall('fullent'); return; }
           localStorage.setItem('entprep_last_fullent', today);
         }
+        finishedRef.current = false; // fresh run: allow exactly one finish
         setPhase("test");
       }} style={{
         width: "100%", padding: "16px",
