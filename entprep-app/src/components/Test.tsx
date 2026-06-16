@@ -83,6 +83,16 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
   const qTimesRef = useRef<Record<number, number>>({});
   const leaveDlgRef = useRef<HTMLDivElement>(null);
 
+  // BUG-2: one history entry per test. The timer auto-finish and each results-screen
+  // button (retry / next / home) all call finish(); without this guard a timed-out
+  // test that is then dismissed via a button records the result twice.
+  const recordedRef = useRef(false);
+  const recordResult = (result: TestResult) => {
+    if (recordedRef.current) return;
+    recordedRef.current = true;
+    finish(result);
+  };
+
   const doLeave = () => {
     setShowLeaveConfirm(false);
     if (customQs) { setNavCustomQs(null); setScreen('errors'); }
@@ -103,7 +113,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
 
   useEffect(() => { let cancelled = false; (async () => { const questions = customQs ? customQs.map(q => ({ ...q, o: [...q.o] })) : await getQs(sid, sub.cnt, useShuffle, tid, st.lang); if (cancelled) return; if (questions.length === 0) { toast.error(t.test.noQuestionsForTopic); doLeave(); return; } const tot = questions.length; const timerSec = tid ? Math.max(5 * 60, Math.round(baseTime * (tot / sub.cnt))) : baseTime; setQs(questions); setTl(timerSec); setLoading(false); })(); return () => { cancelled = true } }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (loading || !useTmr || offline) { if (tr.current) { clearInterval(tr.current); tr.current = null; } return; } tr.current = setInterval(() => setTl(p => { if (p <= 1) { clearInterval(tr.current!); autoFinished.current = true; setFin(true); return 0; } return p - 1; }), 1000); return () => { if (tr.current) clearInterval(tr.current); }; }, [loading, offline]);
-  useEffect(() => { if (!fin || !autoFinished.current || !qs) return; autoFinished.current = false; const tot = qs.length; const timerSec = tid ? Math.max(5 * 60, Math.round(baseTime * (tot / sub.cnt))) : baseTime; const cc = qs.filter((q, i) => ans[i] !== undefined && scoreQuestion(q, ans[i]).correct).length; const qd = buildQd(qs, ans, qTimesRef.current); finish({ su: sid, tp: tid || undefined, co: cc, to: tot, sc: tot ? Math.round(cc / tot * 100) : 0, dt: new Date().toLocaleDateString("ru-RU"), tm: timerSec, qd, _leaderboard: buildLeaderboardData() }); }, [fin]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (!fin || !autoFinished.current || !qs) return; autoFinished.current = false; const tot = qs.length; const timerSec = tid ? Math.max(5 * 60, Math.round(baseTime * (tot / sub.cnt))) : baseTime; const cc = qs.filter((q, i) => ans[i] !== undefined && scoreQuestion(q, ans[i]).correct).length; const qd = buildQd(qs, ans, qTimesRef.current); recordResult({ su: sid, tp: tid || undefined, co: cc, to: tot, sc: tot ? Math.round(cc / tot * 100) : 0, dt: new Date().toLocaleDateString("ru-RU"), tm: timerSec, qd, _leaderboard: buildLeaderboardData() }); }, [fin]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!fin || dailyMarkedRef.current || customQs || !qs) return;
     const tot = qs.length;
@@ -555,7 +565,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
           const errorQs = qs.filter((_, i) => ans[i] !== undefined && !scoreQuestion(qs[i], ans[i]).correct);
           if (errorQs.length > 0) {
             const qd = buildQd(qs, ans, qTimesRef.current);
-            finish({ su: sid, tp: tid || undefined, co: cc, to: tot, sc: pct, dt: new Date().toLocaleDateString("ru-RU"), tm: timerSec - tl, qd, _leaderboard: buildLeaderboardData() });
+            recordResult({ su: sid, tp: tid || undefined, co: cc, to: tot, sc: pct, dt: new Date().toLocaleDateString("ru-RU"), tm: timerSec - tl, qd, _leaderboard: buildLeaderboardData() });
             setTimeout(() => navToErrorTest(errorQs), 50);
           }
         }}
@@ -574,7 +584,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
       onClick={() => {
         const qd = buildQd(qs, ans, qTimesRef.current);
         const result = { su: sid, tp: tid || undefined, co: cc, to: tot, sc: pct, dt: new Date().toLocaleDateString("ru-RU"), tm: timerSec - tl, qd, _leaderboard: buildLeaderboardData() };
-        finish(result);
+        recordResult(result);
         const profileSubjects = [...['math', 'reading', 'history'], ...prof];
         const rec = getRecommendation([...hist, result], profileSubjects);
         setTimeout(() => {
@@ -602,7 +612,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
       onClick={() => {
         if (challenge) sessionStorage.removeItem("entprep_challenge");
         const qd = buildQd(qs, ans, qTimesRef.current);
-        finish({ su: sid, tp: tid || undefined, co: cc, to: tot, sc: pct, dt: new Date().toLocaleDateString("ru-RU"), tm: timerSec - tl, qd, _leaderboard: buildLeaderboardData() });
+        recordResult({ su: sid, tp: tid || undefined, co: cc, to: tot, sc: pct, dt: new Date().toLocaleDateString("ru-RU"), tm: timerSec - tl, qd, _leaderboard: buildLeaderboardData() });
         goHome();
       }}
       style={{
@@ -745,7 +755,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
       const phrases = t.test.correctPhrases || [t.test.correctBanner];
       const phrase = phrases[cur % phrases.length];
       return (
-        <div style={{
+        <div role="status" aria-live="polite" aria-atomic="true" style={{
           marginTop: 12,
           padding: '11px 14px',
           borderRadius: R.lg,
