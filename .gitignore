@@ -9,3 +9,13 @@ dist/
 # API keys / secrets — never commit
 .secrets/
 AuthKey_*.p8
+
+# Repo clutter — regenerable export, design-ref bundle, QA screenshots (untracked, kept on disk)
+/new-questions/
+/_design_ref/
+/entprep-after-rollback.png
+/entprep-home-desktop.png
+/entprep-home-mobile.png
+/localhost-after-revert-mobile.png
+/localhost-exact-mobile.png
+/localhost-final-mobile.png

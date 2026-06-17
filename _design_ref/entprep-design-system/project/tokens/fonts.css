@@ -1,8 +1,0 @@
-/* ENTprep — Webfonts
-   Three authentic Google Fonts. These are the brand families:
-   - Unbounded   → display / headings / hero numbers
-   - Nunito      → all body copy
-   - JetBrains Mono → numbers, eyebrows, stat labels
-   Pulled from Google Fonts so consumers get the real files with no local binaries. */
-
-@import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;800;900&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400&family=JetBrains+Mono:wght@400;500;700;800&display=swap');
