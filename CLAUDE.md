@@ -16,6 +16,27 @@ Before writing custom implementations, check if an existing npm package or built
 ### Follow the design system on ANY UI work
 Before touching any component/screen/landing markup, read `entprep-app/docs/design-prompt.md` (compact rules) — full spec in `entprep-app/DESIGN.md`. Hard rules: tokens only (`COLORS`/`TYPE`/`FF`/`FS`/`SP`/`R` from `src/constants/styles.ts`, CSS vars from `themes.ts`) — no raw hex, no inline font-family, no arbitrary sizes/gaps; one streak CTA + one bright splash card per screen; hard ink shadows only (no blur); every visible string goes through `useT()` locales (ru + kk); verify in both themes at 390px and 1440px.
 
+### Don't touch the design unless asked
+Never restyle, recolor, re-layout, or "improve" the appearance of an existing screen/component unless the user **explicitly** requested a design change. Bug fixes, refactors, and token migrations must be **visually identical** (zero pixel change). If you think the design should change — **propose it, don't apply it.**
+
+### Don't restructure existing working features unless asked
+Do not refactor, rename, re-architect, or change the logic/flow of a feature that already works, unless that change was explicitly requested. Fixing a specific bug is **not** a license to restructure the surrounding code — make the smallest change that fixes the issue and preserve existing behavior.
+
+### Verify and self-review before calling anything done
+Never report a count, status, or "done/fixed/passing" without checking it against the actual code or command output **in this session** — no guessed numbers, no "should work." Before declaring any task complete, **re-check your own work maximally for bugs, logic errors, edge cases and regressions**: re-read the diff, run `typecheck`/`lint`/`test`, verify behavior in the running app; for substantial work do an adversarial self-review (or dispatch a reviewer). "Done" is an evidence-backed claim, never optimism.
+
+### Prove a file/feature is dead before deleting it
+Before removing any file or feature, grep for importers/usages **and** confirm it isn't a live user-facing feature — a same-named duplicate may exist (e.g. a live `predictScore.ts` vs the dead `scorePrediction.ts`; an unwired stub like `aiMemory.ts`). If it's content you didn't create, surface it rather than delete.
+
+### Irreversible / outward-facing actions need explicit per-action authorization
+Never deploy, `git push`, merge to `master`, force-push, or run any destructive/outward action unless the user **explicitly authorizes that specific action in the current session** — a general "go ahead" from earlier does not carry over. State exactly what you're about to do and confirm the target first (e.g. the correct Netlify site `95dda229-7f00-4ea7-8b23-d9ec28ed071d`). Prefer letting the user run the final prod-publish command themselves.
+
+### Keep Obsidian current as you go — and flush context before it fills
+Whenever you produce something a future session (or the memory layer) needs — a fix + its commit, a decision, an open thread, a gotcha, a deploy — write it to the Obsidian vault (`ENTprep/`) **immediately, not batched to the end of the session**. As the context window grows large (≈500k tokens, before a compaction), proactively flush the still-needed durable context to Obsidian **first**, so compaction loses nothing and the next session reloads it cheaply instead of re-deriving at high token cost. (You can't run `/compact` yourself — the harness auto-compacts; suggest the user run it when helpful.)
+
+### Commit per bug/task ID, smallest diff
+Make small atomic commits scoped to one bug/task ID with a clear message; stage only the files you changed; never bundle unrelated changes.
+
 ## Project Overview
 
 ENTprep is a TypeScript + React educational web app for Kazakhstan's Unified National Testing (ЕНТ). Practice tests across 13 subjects with **33 244 questions** (authored in Supabase, served at runtime as dumped CDN JSON in `public/data/`; 87 sections / 270 subtopics; 13-file static import fallback), AI explanations, adaptive learning, full ЕНТ simulation, leaderboard, social features, real-time duels, and a university grant calculator.
@@ -29,14 +50,14 @@ entprep-app/src/
 ├── App.tsx              # Root (providers, navigation, lazy routes)
 ├── main.tsx             # Entry point (OAuth deep link handling)
 ├── types/index.ts       # All shared TypeScript interfaces
-├── components/          # 40 components (CoachHome, Test, FullENT, QuestionRush, AiTutor, etc.)
+├── components/          # 33 components (CoachHome, Test, FullENT, QuestionRush, AiTutor, etc.)
 │   └── ui/              # 23 reusable UI primitives
 ├── contexts/            # AppContext, AuthContext, NavigationContext, ToastContext
 ├── locales/             # ru.ts (1296 lines), kk.ts (1273 lines), index.ts (useT hook)
 ├── hooks/               # useBreakpoint, useFocusTrap (modal a11y)
 ├── config/              # 11 files: subjects, ent, questionPools, supabase, sentry, topics, payment, purchases, app, aiPrompt, regions
 ├── constants/           # styles, screens, themes
-├── utils/               # 26 files: questionStore, questionHelpers, questionAssembler, storage, cloudSync, analytics, analyticsHelpers, aiLimits, aiMemory, avatarHelpers, pushHelpers, shareHelpers, socialHelpers, duelHelpers, scoringEngine, xpHelpers, adaptiveHelpers, competitionHelpers, formatters, srEngine, predictScore, scorePrediction, qdHelpers, recommendationEngine, reconcileHelpers, tutorHelpers
+├── utils/               # 24 files: questionStore, questionHelpers, questionAssembler, storage, cloudSync, analytics, analyticsHelpers, aiLimits, avatarHelpers, pushHelpers, shareHelpers, socialHelpers, duelHelpers, scoringEngine, xpHelpers, adaptiveHelpers, competitionHelpers, formatters, srEngine, predictScore, qdHelpers, recommendationEngine, reconcileHelpers, tutorHelpers
 ├── data/questions/      # 13 static fallback files (150q each, .ts)
 ├── data/universities.ts # 52 universities
 └── sw.ts                # Service worker (Workbox + push)
@@ -101,7 +122,7 @@ npm run lint         # ESLint check
 npm run lint:fix     # ESLint autofix
 npm run format       # Prettier format
 npm run typecheck    # TypeScript type check (tsc --noEmit)
-npm run test         # Run tests (vitest — 374 tests, 25 files)
+npm run test         # Run tests (vitest — 379 tests, 26 files)
 npm run test:watch   # Watch mode tests
 npm run design:lint  # Design-system lint (token usage)
 npm run design:spec  # Design-system spec check
@@ -127,7 +148,7 @@ node scripts/dump-questions.mjs && node scripts/compute-quarantine.mjs \
 - **AI**: Claude Sonnet 4 (`claude-sonnet-4-20250514`) — **Errors**: Sentry — **Analytics**: Plausible
 - **Styling**: Inline styles + themes — **State**: React Context (4 contexts)
 - **Icons**: lucide-react — **Fonts**: Unbounded (RU display) / RubikKZ (KK display, via `--ff-display` var + `html:lang(kk)`) / Nunito (body) / JetBrains Mono (mono)
-- **PWA**: vite-plugin-pwa — **Testing**: Vitest (374 tests, 25 files)
+- **PWA**: vite-plugin-pwa — **Testing**: Vitest (379 tests, 26 files)
 - **Mobile**: Capacitor 8 (android/ios) — **Payments**: RevenueCat (native) + Lemon Squeezy (web)
 
 ## Important Notes
