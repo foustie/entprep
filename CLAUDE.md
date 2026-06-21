@@ -62,11 +62,11 @@ entprep-app/src/
 ├── data/universities.ts # 52 universities
 └── sw.ts                # Service worker (Workbox + push)
 
-entprep-app/netlify/functions/   # Serverless API (18 functions)
+entprep-app/netlify/functions/   # Serverless API (19 functions)
 ├── ai-explain.mjs, ai-generate.mjs, ai-plan.mjs, ai-tutor.mjs
 ├── admin-action.mjs, leaderboard.mjs, social.mjs, duel.mjs, analytics.mjs
 ├── revenuecat-webhook.mjs, lemon-webhook.mjs, lemon-reconcile.mjs, promo.mjs
-├── questions.mjs, teacher.mjs, delete-account.mjs
+├── questions.mjs, public-questions.mjs, teacher.mjs, delete-account.mjs
 ├── push-subscribe.mjs, push-cron.mjs
 └── utils/shared.mjs, constants.mjs, quality.mjs, rag.mjs
 
