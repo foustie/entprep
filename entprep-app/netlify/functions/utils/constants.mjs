@@ -77,6 +77,6 @@ export const JACCARD_THRESHOLD = 0.70;
 
 // ── Payment plans ───────────────────────────────────────────────────────────
 export const PLANS = {
-  monthly: { amount: 1990 },
+  monthly: { amount: 2990 },
   yearly:  { amount: 9990 },
 };
