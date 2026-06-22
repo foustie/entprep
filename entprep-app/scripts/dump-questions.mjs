@@ -51,6 +51,10 @@ async function fetchAll(sid) {
       .select(COLS)
       .eq('subject', sid)
       .order('idx', { ascending: true })
+      // Stable tiebreaker: idx is not unique (ties), so without a unique secondary
+      // sort the dump order — and thus the array-position _oi that quarantine and user
+      // history key on — is non-deterministic across dumps (DATA-1). Order by the PK too.
+      .order('id', { ascending: true })
       .range(offset, offset + PAGE - 1);
     if (error) { console.error(`  Error fetching ${sid} offset ${offset}:`, error.message); break; }
     if (!data || data.length === 0) break;
