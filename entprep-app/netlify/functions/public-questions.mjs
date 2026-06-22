@@ -115,7 +115,7 @@ export default async function handler(req) {
 
     // ── list mode (paged export, ordered) ──
     if (mode === "list") {
-      const limit = Math.min(parseInt(url.searchParams.get("limit") || "100", 10) || 100, 200);
+      const limit = Math.min(parseInt(url.searchParams.get("limit") || "100", 10) || 100, 1000);
       const offset = Math.max(parseInt(url.searchParams.get("offset") || "0", 10) || 0, 0);
       const res = await fetch(
         `${SB_URL}/rest/v1/questions?${subjFilter}${topicFilter}&select=${cols}&order=idx&limit=${limit}&offset=${offset}`,
