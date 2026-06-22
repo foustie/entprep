@@ -173,15 +173,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const needsNickname = useMemo(() => !!profile && profile.nickname.startsWith('user_'), [profile]);
 
   const FREE_PREMIUM = false as boolean;
-  const isPremium = useMemo(() => {
-    if (FREE_PREMIUM || isAdmin || nativePremium || dbPremium) return true;
-    // Fallback to user_metadata (cache, not authoritative)
-    const meta = user?.user_metadata;
-    if (!meta || !meta.is_premium) return false;
-    const until = meta.premium_until;
-    if (typeof until !== 'string') return false;
-    return new Date(until) > new Date();
-  }, [FREE_PREMIUM, user, isAdmin, nativePremium, dbPremium]);
+  // PAY-3: premium is derived only from authoritative sources. The previous
+  // user_metadata.is_premium fallback was client-writable (supabase.auth.updateUser),
+  // letting any user self-grant Premium — removed.
+  const isPremium = useMemo(
+    () => FREE_PREMIUM || isAdmin || nativePremium || dbPremium,
+    [FREE_PREMIUM, isAdmin, nativePremium, dbPremium],
+  );
 
   const value = useMemo<AuthContextValue>(
     () => ({ user, profile, isPremium, isAdmin, needsNickname, refreshUser, refreshProfile }),
