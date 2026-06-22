@@ -124,11 +124,16 @@ export function getRecommendation(hist: TestResult[], profileSubjects: string[])
     const avg = avgScore(recent);
     const lastDate = recent[0]?.dt ? toISO(recent[0].dt) : undefined;
     const daysSince = lastDate ? daysBetween(lastDate, now) : 999;
+    // Rotate away from a subject already practiced today, so right after finishing
+    // (e.g.) Math the "next step"/"next test" suggests a DIFFERENT weak subject —
+    // a just-done subject returns tomorrow if still weak. (≠ exclusion: if it's the
+    // only weak subject it still wins over lower-priority fallbacks.)
+    const recencyPenalty = daysSince === 0 ? 0.5 : 0;
 
     // a. Weak subject (avg < 50%)
     if (avg >= 0 && avg < 50) {
       const rounded = Math.round(avg);
-      pick({ type: 'weak_subject', subject: sid, score: rounded, message: `${subName(sid)}`, priority: 9 });
+      pick({ type: 'weak_subject', subject: sid, score: rounded, message: `${subName(sid)}`, priority: 9 - recencyPenalty });
     }
 
     // b. Weak topic (error rate > 60%)
@@ -139,7 +144,7 @@ export function getRecommendation(hist: TestResult[], profileSubjects: string[])
       if (rate > 60) {
         const tName = topicName(sid, tp);
         const rounded = Math.round(100 - rate);
-        pick({ type: 'weak_topic', subject: sid, topic: tp, topicName: tName, score: rounded, message: `${subName(sid)} · ${tName}`, priority: 8 });
+        pick({ type: 'weak_topic', subject: sid, topic: tp, topicName: tName, score: rounded, message: `${subName(sid)} · ${tName}`, priority: 8 - recencyPenalty });
       }
     }
 
