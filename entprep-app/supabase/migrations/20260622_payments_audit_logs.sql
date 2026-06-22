@@ -2,9 +2,11 @@
 -- These tables exist in production (used by shared.mjs activatePremium and admin-action.mjs)
 -- but were never in repo migrations, so their schema was unversioned.
 --
--- This migration is written IDEMPOTENTLY (IF NOT EXISTS / guarded ADD CONSTRAINT) so it is
--- safe to run against the live DB without clobbering existing data. Columns are inferred from
--- usage; CONFIRM AGAINST THE LIVE SCHEMA before running (column types/defaults may differ).
+-- This migration is written IDEMPOTENTLY (IF NOT EXISTS / guarded ADD CONSTRAINT, re-runnable
+-- de-dupe) so it is safe to run against the live DB. The only existing-data change is rewriting
+-- legacy constant 'manual' kaspi_tx_id values to unique 'manual_<pk>' ids so the UNIQUE
+-- constraint can be created (no rows are deleted). Columns are inferred from usage; CONFIRM
+-- AGAINST THE LIVE SCHEMA before running (column types/defaults may differ).
 
 -- ── payments ────────────────────────────────────────────────────────────────
 -- Written by: shared.mjs activatePremium INSERT (user_id, amount, plan, kaspi_tx_id,
@@ -21,9 +23,16 @@ CREATE TABLE IF NOT EXISTS public.payments (
 );
 
 -- PAY-7: enforce one payment row per provider transaction id. Guarded so re-running is safe.
--- NOTE: real (non-'manual') tx ids are unique per webhook event. If the live table already
--- contains multiple 'manual' rows this ADD CONSTRAINT will FAIL — de-dupe those first
--- (manual grants come from admin-action and should be migrated to a per-grant id).
+-- Real (non-'manual') tx ids are unique per webhook event. Legacy manual grants all wrote the
+-- constant 'manual' (admin-action.mjs), so the live table likely holds several duplicate
+-- 'manual' rows that would make ADD CONSTRAINT abort. De-dupe them first by rewriting each to a
+-- per-row unique id (manual_<pk>); this preserves every row (no data loss) and is idempotent
+-- (after it runs there are no bare 'manual' rows left, so a re-run matches nothing). New manual
+-- grants now mint a unique manual_<uuid> id in code, so this is a one-time legacy cleanup.
+UPDATE public.payments
+  SET kaspi_tx_id = 'manual_' || id::text
+  WHERE kaspi_tx_id = 'manual';
+
 DO $$
 BEGIN
   IF NOT EXISTS (

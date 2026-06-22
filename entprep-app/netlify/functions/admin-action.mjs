@@ -2,6 +2,7 @@
 // Uses Supabase REST API with service key (bypasses RLS)
 // No supabase-js dependency — pure fetch for Netlify Functions compatibility
 
+import { randomUUID } from "node:crypto";
 import { CORS_HEADERS, corsResponse, verifyAuth, findUserByEmail, activatePremium } from "./utils/shared.mjs";
 import { captureFunctionError } from "./utils/sentry.mjs";
 import { tokenize, jaccard, checkGenerated } from "./utils/quality.mjs";
@@ -195,7 +196,9 @@ export default async function handler(req) {
           userId: targetUser.id,
           userMeta: targetUser.user_metadata,
           plan: premiumPlan,
-          kaspiTxId: "manual",
+          // Unique per grant — a constant "manual" would collide on the
+          // payments UNIQUE(kaspi_tx_id) constraint from the 2nd grant onward.
+          kaspiTxId: `manual_${randomUUID()}`,
         });
 
         await logAudit({ email, plan: premiumPlan, premium_until: premiumUntil });

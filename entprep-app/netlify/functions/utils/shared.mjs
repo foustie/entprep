@@ -1,5 +1,6 @@
 // Shared utilities for Netlify Functions: CORS, auth, rate limiting, validation, premium
 
+import { randomUUID } from "node:crypto";
 import { VALID_SUBJECTS, PLANS } from "./constants.mjs";
 
 // ── CORS ────────────────────────────────────────────────────────────────────
@@ -221,23 +222,24 @@ export async function activatePremium({ userId, userMeta, plan, kaspiTxId }) {
   });
   if (!updateRes.ok) throw new Error("Failed to update user: " + await updateRes.text());
 
-  // Upsert subscriptions table (authoritative source)
-  try {
-    await fetch(`${SB_URL_SHARED}/rest/v1/subscriptions`, {
-      method: "POST",
-      headers: { ...sbHeadersShared(), Prefer: "resolution=merge-duplicates,return=minimal" },
-      body: JSON.stringify({
-        user_id: userId,
-        is_active: true,
-        plan,
-        expires_at: premiumUntil,
-        updated_at: new Date().toISOString(),
-      }),
-    });
-  } catch (e) {
-    console.error("Failed to upsert subscriptions table:", e);
-    // Non-fatal — user_metadata was already updated above
-  }
+  // Upsert subscriptions table — the authoritative premium source read by the
+  // client (AuthContext) and checkPremium. Since PAY-3 dropped the user_metadata
+  // fallback, a silently-failed write here would leave a paying user charged but
+  // showing as free. fetch() does NOT reject on a 4xx/5xx, so check res.ok and
+  // throw: the webhook then returns 500 and the provider retries (the upsert is
+  // idempotent via merge-duplicates) instead of stranding the grant.
+  const subRes = await fetch(`${SB_URL_SHARED}/rest/v1/subscriptions`, {
+    method: "POST",
+    headers: { ...sbHeadersShared(), Prefer: "resolution=merge-duplicates,return=minimal" },
+    body: JSON.stringify({
+      user_id: userId,
+      is_active: true,
+      plan,
+      expires_at: premiumUntil,
+      updated_at: new Date().toISOString(),
+    }),
+  });
+  if (!subRes.ok) throw new Error("Failed to upsert subscription: " + await subRes.text());
 
   // Insert payment record
   const insertRes = await fetch(`${SB_URL_SHARED}/rest/v1/payments`, {
@@ -247,7 +249,11 @@ export async function activatePremium({ userId, userMeta, plan, kaspiTxId }) {
       user_id: userId,
       amount,
       plan,
-      kaspi_tx_id: kaspiTxId || "manual",
+      // Must be unique per row: the payments table has a UNIQUE(kaspi_tx_id)
+      // constraint. Real provider tx ids are already unique; for grants without
+      // one, mint a per-grant id so they never collide (a constant sentinel would
+      // make the 2nd+ grant hit 23505 and silently drop the payment audit row).
+      kaspi_tx_id: kaspiTxId || `manual_${randomUUID()}`,
       status: "completed",
       premium_until: premiumUntil,
     }),
