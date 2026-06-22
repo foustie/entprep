@@ -230,9 +230,9 @@ export default function Landing({ onStart, totalQ }: Props) {
               </div>
               <div style={{ ...TYPE.statLabel, marginTop: 0, marginBottom: 8, color: 'var(--ink-soft)' }}>{tl.mockWeakTopics}</div>
               {[
-                { name: 'Производная и интеграл', pct: 58, color: COLORS.red },
-                { name: 'Стереометрия', pct: 72, color: COLORS.xp },
-                { name: 'Тригонометрия', pct: 81, color: COLORS.win },
+                { name: tl.mockTopic1, pct: 58, color: COLORS.red },
+                { name: tl.mockTopic2, pct: 72, color: COLORS.xp },
+                { name: tl.mockTopic3, pct: 81, color: COLORS.win },
               ].map((b, i) => (
                 <div key={i} style={{ marginBottom: 8 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontFamily: FF.body, marginBottom: 3 }}>
@@ -256,9 +256,9 @@ export default function Landing({ onStart, totalQ }: Props) {
           <div style={{ background: COLORS.streakSoft, border: `2px solid ${INK}`, borderRadius: 16, boxShadow: `0 3px 0 0 ${INK}`, padding: 12, flex: isDesktop ? 1 : 'none', display: 'flex', flexDirection: 'column' }}>
             <div style={{ background: '#FFF', border: `2px solid ${INK}`, borderRadius: 12, padding: 6, flex: 1, display: 'flex', flexDirection: 'column' }}>
               {[
-                { name: 'Квадратные уравнения', chip: tl.mockMath, color: COLORS.streak, time: 25 },
-                { name: 'Тюркский каганат', chip: t.subjects.history, color: COLORS.win, time: 20 },
-                { name: 'Законы Ньютона', chip: t.subjects.physics, color: '#EC4899', time: 30 },
+                { name: tl.mockTopic4, chip: tl.mockMath, color: COLORS.streak, time: 25 },
+                { name: tl.mockTopic5, chip: t.subjects.history, color: COLORS.win, time: 20 },
+                { name: tl.mockTopic6, chip: t.subjects.physics, color: '#EC4899', time: 30 },
               ].map((r, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 8px', flex: 1, borderBottom: i < 2 ? `1.5px solid rgba(15,15,16,0.1)` : 'none' }}>
                   <span style={{ width: 18, height: 18, borderRadius: R.sm, border: `2px solid ${INK}`, flexShrink: 0, opacity: 0.35 }} />
