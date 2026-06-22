@@ -53,6 +53,24 @@ function classifyPlan(variantId) {
   return null; // unknown — caller decides fallback
 }
 
+// Pure helpers (exported for unit tests) ───────────────────────────────────────
+
+// Case-insensitive, trimmed email comparison. Returns false unless both are
+// non-empty strings — never treats two blanks as a match.
+export function emailMatches(a, b) {
+  if (typeof a !== "string" || typeof b !== "string") return false;
+  const x = a.trim().toLowerCase();
+  const y = b.trim().toLowerCase();
+  return x.length > 0 && x === y;
+}
+
+// Canonical payment tx id for a Lemon order. MUST match lemon-webhook.mjs
+// (`lemon_${body.data.id}`) so the webhook and self-reconcile collide on the
+// payments.kaspi_tx_id unique key and a single order can never be granted twice.
+export function lemonTxId(orderId) {
+  return `lemon_${orderId}`;
+}
+
 async function hasActivePremium(userId) {
   const res = await fetch(
     `${SB_URL}/rest/v1/subscriptions?user_id=eq.${userId}&select=is_active,expires_at&limit=1`,
@@ -83,6 +101,21 @@ async function findLemonOrderById(orderId) {
   return data.data;
 }
 
+// Look up any existing payment row for this order, across BOTH the webhook tx id
+// (`lemon_${id}`) and the legacy reconcile tx id (`lemon_reconcile_${id}`).
+// Returns the first matching row ({ user_id }) or null.
+async function findExistingClaim(orderId) {
+  const ids = [lemonTxId(orderId), `lemon_reconcile_${orderId}`];
+  const inList = ids.map(encodeURIComponent).join(",");
+  const res = await fetch(
+    `${SB_URL}/rest/v1/payments?kaspi_tx_id=in.(${inList})&select=user_id,kaspi_tx_id&limit=1`,
+    { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } },
+  );
+  if (!res.ok) throw new Error(`payments lookup failed: ${res.status}`);
+  const rows = await res.json();
+  return rows[0] || null;
+}
+
 async function activateFromLemonOrder(user, order) {
   const attrs = order.attributes || {};
   const variantId = attrs.first_order_item?.variant_id;
@@ -90,7 +123,7 @@ async function activateFromLemonOrder(user, order) {
     // Fallback: Lemon order interval — "year" / "month" — present on subscriptions
     || (attrs.first_order_item?.product_name?.toLowerCase().includes("year") ? "yearly" : "monthly");
 
-  const txId = `lemon_reconcile_${order.id}`;
+  const txId = lemonTxId(order.id);
   const premiumUntil = await activatePremium({
     userId: user.id,
     userMeta: user.user_metadata || {},
@@ -135,6 +168,20 @@ export default async function handler(req) {
       // Sanity: store must match — block claiming someone else's order from another shop
       if (LEMON_STORE_ID && String(order.attributes?.store_id) !== String(LEMON_STORE_ID)) {
         return Response.json({ error: "Order from different store" }, { status: 400, headers: CORS_HEADERS });
+      }
+      // Bind to the payer: the order's billing email MUST equal the caller's email.
+      // Without this, any logged-in user could claim any paid order ID.
+      if (!emailMatches(order.attributes?.user_email, authUser.email)) {
+        return Response.json({ error: "Order email does not match your account" }, { status: 403, headers: CORS_HEADERS });
+      }
+      // Idempotency: a given order can be activated at most once. If it was already
+      // claimed (by this user or another), do not grant premium again.
+      const existing = await findExistingClaim(orderId);
+      if (existing) {
+        if (existing.user_id === authUser.id) {
+          return Response.json({ ok: true, alreadyClaimed: true, orderId }, { status: 200, headers: CORS_HEADERS });
+        }
+        return Response.json({ error: "Order already claimed by another account" }, { status: 409, headers: CORS_HEADERS });
       }
       // Fetch fresh user record (verifyAuth returns shallow user without user_metadata field guarantee)
       const userRes = await fetch(`${SB_URL}/auth/v1/admin/users/${authUser.id}`, {
