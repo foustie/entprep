@@ -177,6 +177,16 @@ function sbHeadersShared() {
   };
 }
 
+// Treats a Postgres unique-violation (23505) on the payments INSERT as an
+// idempotent success: the row already exists for this kaspi_tx_id, so the grant
+// was already recorded — don't throw and don't double-grant. PostgREST surfaces
+// this as HTTP 409 with a body containing "code":"23505".
+export function isDuplicatePaymentResponse(status, bodyText) {
+  if (status === 409) return true;
+  if (typeof bodyText === "string" && bodyText.includes("23505")) return true;
+  return false;
+}
+
 export function calcPremiumUntil(plan) {
   const now = new Date();
   if (plan === "monthly") {
@@ -199,7 +209,7 @@ export async function findUserByEmail(email) {
 
 export async function activatePremium({ userId, userMeta, plan, kaspiTxId }) {
   const premiumUntil = calcPremiumUntil(plan);
-  const amount = PLANS[plan]?.amount || (plan === "monthly" ? 1990 : 9990);
+  const amount = PLANS[plan]?.amount || (plan === "monthly" ? 2990 : 9990);
 
   // Update user_metadata via Supabase Auth Admin API
   const updateRes = await fetch(`${SB_URL_SHARED}/auth/v1/admin/users/${userId}`, {
@@ -242,7 +252,14 @@ export async function activatePremium({ userId, userMeta, plan, kaspiTxId }) {
       premium_until: premiumUntil,
     }),
   });
-  if (!insertRes.ok) throw new Error("Failed to insert payment: " + await insertRes.text());
+  if (!insertRes.ok) {
+    // A unique-violation on kaspi_tx_id means this payment was already recorded —
+    // treat as idempotent success (no throw, no double-grant). Any other failure throws.
+    const errText = await insertRes.text();
+    if (!isDuplicatePaymentResponse(insertRes.status, errText)) {
+      throw new Error("Failed to insert payment: " + errText);
+    }
+  }
 
   return premiumUntil;
 }
