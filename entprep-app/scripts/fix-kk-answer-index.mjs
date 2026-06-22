@@ -100,13 +100,20 @@ async function runSupabase() {
   for (;;) {
     const { data, error } = await supabase
       .from('questions')
-      .select('id, subject, q, o, o_kk, c, type, pairs')
+      .select('id, subject, q, o, o_kk, c, correct_indices, type, pairs')
       .not('o_kk', 'is', null)
       .range(from, from + PAGE - 1);
     if (error) { console.error('Supabase read error:', error.message); process.exit(1); }
     if (!data || data.length === 0) break;
     for (const row of data) {
-      const fixed = computeFix(row);
+      // For 'multiple' the DB `c` column is a dummy 0; the real answer key lives in
+      // correct_indices. dump-questions.mjs substitutes it into `c`, and the deploy guard
+      // (check-kk-index) scans that dumped shape — so normalize the same way here, else the
+      // fixer and the guard would judge multiple-choice rows against different sources.
+      const norm = row.type === 'multiple' && row.correct_indices != null
+        ? { ...row, c: row.correct_indices }
+        : row;
+      const fixed = computeFix(norm);
       if (fixed) {
         fixes.push({ id: row.id, subject: row.subject, q: row.q, c: row.c, o: row.o, o_kk: row.o_kk, fixed });
         perSubject[row.subject] = (perSubject[row.subject] || 0) + 1;
