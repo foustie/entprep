@@ -128,7 +128,10 @@ export function getRecommendation(hist: TestResult[], profileSubjects: string[])
     // (e.g.) Math the "next step"/"next test" suggests a DIFFERENT weak subject —
     // a just-done subject returns tomorrow if still weak. (≠ exclusion: if it's the
     // only weak subject it still wins over lower-priority fallbacks.)
-    const recencyPenalty = daysSince === 0 ? 0.5 : 0;
+    // `<= 0`, not `=== 0`: dt is stored in LOCAL time (toLocaleDateString) while today() is
+    // UTC, so a test finished in the early-morning local window can yield daysSince === -1.
+    // Treat any non-positive delta as "practiced today" so the penalty still applies.
+    const recencyPenalty = daysSince <= 0 ? 0.5 : 0;
 
     // a. Weak subject (avg < 50%)
     if (avg >= 0 && avg < 50) {
