@@ -20,7 +20,7 @@ const YEARLY_VARIANT_IDS = (process.env.LEMON_YEARLY_VARIANT_IDS || "")
 const MONTHLY_VARIANT_IDS = (process.env.LEMON_MONTHLY_VARIANT_IDS || "")
   .split(",").map(s => s.trim()).filter(Boolean);
 
-function detectPlan(eventName, attrs) {
+export function detectPlan(eventName, attrs) {
   // Lemon payload shape:
   //   subscription_*: attrs.variant_id (number) + attrs.product_id
   //   order_created: attrs.first_order_item.variant_id (number)
@@ -42,9 +42,9 @@ function detectPlan(eventName, attrs) {
   return isMonthlyEvent ? "monthly" : "yearly";
 }
 
-function verifySignature(rawBody, signature) {
-  if (!WEBHOOK_SECRET || !signature) return false;
-  const digest = createHmac("sha256", WEBHOOK_SECRET).update(rawBody).digest("hex");
+export function verifySignature(rawBody, signature, secret = WEBHOOK_SECRET) {
+  if (!secret || !signature) return false;
+  const digest = createHmac("sha256", secret).update(rawBody).digest("hex");
   const sigBuf = Buffer.from(signature);
   const digestBuf = Buffer.from(digest);
   return sigBuf.length === digestBuf.length && timingSafeEqual(sigBuf, digestBuf);
