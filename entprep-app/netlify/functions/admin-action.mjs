@@ -3,6 +3,7 @@
 // No supabase-js dependency — pure fetch for Netlify Functions compatibility
 
 import { CORS_HEADERS, corsResponse, verifyAuth, findUserByEmail, activatePremium } from "./utils/shared.mjs";
+import { captureFunctionError } from "./utils/sentry.mjs";
 import { tokenize, jaccard, checkGenerated } from "./utils/quality.mjs";
 import { JACCARD_THRESHOLD } from "./utils/constants.mjs";
 
@@ -206,6 +207,7 @@ export default async function handler(req) {
     }
   } catch (err) {
     console.error("Admin action error:", err);
+    captureFunctionError(err, { fn: "admin-action" });
     return Response.json({ error: "Internal server error" }, { status: 500, headers: CORS_HEADERS });
   }
 }

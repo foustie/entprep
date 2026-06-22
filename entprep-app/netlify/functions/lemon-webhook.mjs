@@ -1,6 +1,7 @@
 // LemonSqueezy webhook — grants premium on order/subscription created, extends on renewal
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { CORS_HEADERS, corsResponse, findUserByEmail, activatePremium } from "./utils/shared.mjs";
+import { captureFunctionError } from "./utils/sentry.mjs";
 
 const WEBHOOK_SECRET = process.env.LEMON_WEBHOOK_SECRET;
 // order_created = yearly season pass (one-time)
@@ -143,6 +144,7 @@ export default async function handler(req) {
     return Response.json({ ok: true }, { status: 200, headers: CORS_HEADERS });
   } catch (err) {
     console.error("Lemon webhook error:", err);
+    captureFunctionError(err, { fn: "lemon-webhook" });
     return Response.json({ error: "Internal error" }, { status: 500, headers: CORS_HEADERS });
   }
 }

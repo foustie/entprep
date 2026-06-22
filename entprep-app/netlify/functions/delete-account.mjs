@@ -2,6 +2,7 @@
 // Called from Settings → Delete Account.
 
 import { CORS_HEADERS, corsResponse, verifyAuth } from "./utils/shared.mjs";
+import { captureFunctionError } from "./utils/sentry.mjs";
 
 const SB_URL = process.env.VITE_SUPABASE_URL;
 const SB_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
@@ -88,6 +89,7 @@ export default async function handler(req) {
     return Response.json({ ok: true }, { headers: CORS_HEADERS });
   } catch (err) {
     console.error("delete-account error:", err);
+    captureFunctionError(err, { fn: "delete-account" });
     return Response.json(
       { error: "Internal server error" },
       { status: 500, headers: CORS_HEADERS },

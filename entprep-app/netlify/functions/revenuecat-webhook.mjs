@@ -1,5 +1,6 @@
 // RevenueCat webhook — grants/revokes premium based on subscription events
 import { CORS_HEADERS, corsResponse, activatePremium } from "./utils/shared.mjs";
+import { captureFunctionError } from "./utils/sentry.mjs";
 import { timingSafeEqual } from "node:crypto";
 
 export const config = { path: "/api/revenuecat-webhook" };
@@ -223,6 +224,7 @@ export default async function handler(req) {
     return Response.json({ ok: true }, { status: 200, headers: CORS_HEADERS });
   } catch (err) {
     console.error("RC webhook error:", err);
+    captureFunctionError(err, { fn: "revenuecat-webhook" });
     return Response.json({ error: "Internal error" }, { status: 500, headers: CORS_HEADERS });
   }
 }

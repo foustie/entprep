@@ -1,5 +1,6 @@
 // Promo code system: redeem a code for Premium days
 import { CORS_HEADERS, corsResponse, verifyAuth, createRateLimiter, rateLimitResponse } from "./utils/shared.mjs";
+import { captureFunctionError } from "./utils/sentry.mjs";
 
 const SB_URL = process.env.VITE_SUPABASE_URL;
 const SB_KEY = process.env.SUPABASE_SERVICE_KEY;
@@ -109,6 +110,7 @@ export default async function handler(req) {
     }, { headers: CORS_HEADERS });
   } catch (err) {
     console.error("Promo error:", err);
+    captureFunctionError(err, { fn: "promo" });
     return Response.json({ error: "Server error" }, { status: 500, headers: CORS_HEADERS });
   }
 }

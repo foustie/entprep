@@ -17,6 +17,7 @@
 //   ADMIN_EMAILS — comma-separated admin emails for `mode=manual`
 
 import { CORS_HEADERS, corsResponse, verifyAuth, findUserByEmail, activatePremium } from "./utils/shared.mjs";
+import { captureFunctionError } from "./utils/sentry.mjs";
 
 const LEMON_API_KEY = process.env.LEMON_API_KEY;
 const LEMON_STORE_ID = process.env.LEMON_STORE_ID;
@@ -196,6 +197,7 @@ export default async function handler(req) {
       return Response.json({ ok: true, ...result }, { status: 200, headers: CORS_HEADERS });
     } catch (err) {
       console.error("lemon-reconcile (self) error:", err);
+      captureFunctionError(err, { fn: "lemon-reconcile", mode: "self" });
       return Response.json({ error: "Internal error", detail: String(err.message || err) }, { status: 500, headers: CORS_HEADERS });
     }
   }
@@ -234,6 +236,7 @@ export default async function handler(req) {
         results.push({ email, status: "activated", ...result });
       } catch (err) {
         console.error(`lemon-reconcile (manual) error for ${email}:`, err);
+        captureFunctionError(err, { fn: "lemon-reconcile", mode: "manual", email });
         results.push({ email, status: "error", detail: String(err.message || err) });
       }
     }
