@@ -127,6 +127,7 @@ export default function CoachHome() {
       case 'weak_subject':
       case 'weak_topic':
       case 'not_practiced':
+      case 'not_practiced_new':
         nav('test', rec.subject || profileSubjects[0], rec.topic);
         break;
       case 'error_review': nav('errors'); break;

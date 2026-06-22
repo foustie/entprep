@@ -5,7 +5,7 @@ import { TOPIC_MAP } from '../config/topics';
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export interface Recommendation {
-  type: 'weak_subject' | 'weak_topic' | 'not_practiced' | 'error_review' | 'full_ent' | 'first_test';
+  type: 'weak_subject' | 'weak_topic' | 'not_practiced' | 'not_practiced_new' | 'error_review' | 'full_ent' | 'first_test';
   subject?: string;
   topic?: string;
   topicName?: string;
@@ -133,6 +133,17 @@ export function getRecommendation(hist: TestResult[], profileSubjects: string[])
     // Treat any non-positive delta as "practiced today" so the penalty still applies.
     const recencyPenalty = daysSince <= 0 ? 0.5 : 0;
 
+    // Diagnostic-first: a profile subject with NO history is invisible to the weak/topic/
+    // not-practiced branches below — they all require prior data. That's why the recommender
+    // used to loop on the one subject already practiced (always "Мат. грамотность"). Surface
+    // never-practiced subjects with the top per-subject priority so the user is guided to
+    // cover every subject once before we start drilling weak spots. Once all are practiced
+    // there are no candidates here and the weak-subject/topic logic resumes.
+    if (recent.length === 0) {
+      pick({ type: 'not_practiced_new', subject: sid, message: `${subName(sid)}`, priority: 9.5 });
+      continue;
+    }
+
     // a. Weak subject (avg < 50%)
     if (avg >= 0 && avg < 50) {
       const rounded = Math.round(avg);
@@ -240,6 +251,8 @@ export function getContextualCTA(rec: Recommendation): string {
       return rec.score != null ? `Разобрать ${rec.score} ошибок` : 'Разобрать ошибки';
     case 'not_practiced':
       return `Вернуться к ${subName(rec.subject || '').toLowerCase()}`;
+    case 'not_practiced_new':
+      return `Пройти ${subName(rec.subject || '').toLowerCase()}`;
     case 'full_ent':
       return 'Пробник на 4 часа';
     case 'first_test':
@@ -277,6 +290,8 @@ export function getAndySpeech(rec: Recommendation, streak: number, hour: number 
         : 'Есть ошибки. Давай разберём';
     case 'not_practiced':
       return `Давно не решал ${subName(rec.subject || '').toLowerCase()}. Вернёмся?`;
+    case 'not_practiced_new':
+      return `${subName(rec.subject || '')} ещё не проходил. Узнаем твой уровень?`;
     case 'full_ent':
       return 'Готов к пробнику? Я буду рядом';
     default:

@@ -17,28 +17,36 @@ const result = (su: string, sc: number, daysAgo: number): TestResult => ({
   type: 'regular',
 });
 
-describe('getRecommendation — recency rotation', () => {
-  it('does NOT recommend a weak subject just practiced today when another weak subject exists', () => {
-    // subA: weak (30%) and practiced TODAY. subB: equally weak but practiced 2 days ago.
-    // Regression: before the recencyPenalty fix both scored priority 9 and subA (first
-    // in the profile, just finished) won — so right after a Math test it suggested Math again.
+describe('getRecommendation — diagnostic-first (cover every subject once)', () => {
+  it('leads to a never-practiced subject instead of re-recommending the one just practiced', () => {
+    // The original bug: after a Math test "next test" kept sending back to Math, because a
+    // never-practiced subject (subB) was invisible to the weak/topic/not-practiced branches.
+    const hist: TestResult[] = [result('subA', 30, 0)];
+    const rec = getRecommendation(hist, ['subA', 'subB']);
+    expect(rec.type).toBe('not_practiced_new');
+    expect(rec.subject).toBe('subB');
+  });
+
+  it('prefers a never-practiced subject even over a weak subject practiced on another day (coverage before drilling)', () => {
+    const hist: TestResult[] = [result('subA', 30, 2)]; // subA weak but practiced 2 days ago
+    const rec = getRecommendation(hist, ['subA', 'subB']);
+    expect(rec.type).toBe('not_practiced_new');
+    expect(rec.subject).toBe('subB');
+  });
+});
+
+describe('getRecommendation — weak-subject logic once every subject is practiced', () => {
+  it('rotates away from a subject practiced today to another weak subject', () => {
+    // Both practiced (so diagnostic-first does not fire). subA weak today, subB weak earlier:
+    // the recency penalty (subA 9-0.5=8.5) must let subB (9) win.
     const hist: TestResult[] = [result('subA', 30, 0), result('subB', 30, 2)];
     const rec = getRecommendation(hist, ['subA', 'subB']);
     expect(rec.type).toBe('weak_subject');
     expect(rec.subject).toBe('subB');
   });
 
-  it('still recommends a just-practiced subject if it is the ONLY weak one (penalty ≠ exclusion)', () => {
-    // subA weak + practiced today; subB never practiced (not a candidate).
-    const hist: TestResult[] = [result('subA', 30, 0)];
-    const rec = getRecommendation(hist, ['subA', 'subB']);
-    expect(rec.type).toBe('weak_subject');
-    expect(rec.subject).toBe('subA');
-  });
-
-  it('prefers a weak subject practiced today over a non-weak alternative (penalty stays above fallbacks)', () => {
-    // subA weak (30%) today; subB strong (90%) practiced 2 days ago. subA must still win:
-    // 9 - 0.5 = 8.5 beats every lower-priority fallback (full_ent=5, default=4).
+  it('still recommends a just-practiced subject if it is the only weak one (penalty ≠ exclusion)', () => {
+    // Both practiced. subA weak today; subB strong. subA (8.5) must still beat every fallback.
     const hist: TestResult[] = [result('subA', 30, 0), result('subB', 90, 2)];
     const rec = getRecommendation(hist, ['subA', 'subB']);
     expect(rec.type).toBe('weak_subject');
