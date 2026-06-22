@@ -75,7 +75,7 @@ entprep-app/docs/                # Documentation
 ├── app-store-submission.md, app-review-notes.md, design-prompt.md, ui-audit-2026-06-15.md
 
 entprep-app/scripts/             # Build, deploy & question-generation scripts (~60 .mjs)
-├── dump-questions.mjs, compute-quarantine.mjs, predeploy-check.mjs   # deploy chain
+├── dump-questions.mjs, check-kk-index.mjs, compute-quarantine.mjs, predeploy-check.mjs   # deploy chain
 ├── ingest-questions.mjs, generate-all.mjs, split-literature.mjs, audit-*.mjs, ...
 └── utils/                       # ent-specs.mjs, constants.mjs, quality.mjs, json.mjs
 ```
@@ -130,7 +130,7 @@ npm run design:spec  # Design-system spec check
 # Deploy to prod (entprep.org). --no-build avoids OOM on Netlify's builder.
 # predeploy-check.mjs gates the chain: it FAILS before deploy if the bundle is
 # missing critical inlined env (Supabase URL + anon key) — see "Deploy safety".
-node scripts/dump-questions.mjs && node scripts/compute-quarantine.mjs \
+node scripts/dump-questions.mjs && node scripts/check-kk-index.mjs && node scripts/compute-quarantine.mjs \
   && VITE_RC_API_KEY_APPLE=appl_hSiijbsNKsMxZEeQDZLYTtjSwmw npx vite build \
   && node scripts/predeploy-check.mjs \
   && netlify deploy --prod --dir=dist --no-build
