@@ -82,7 +82,7 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 function AppContent() {
-  const { screen, curSub, selTopic, customQs, tab, challengeData, paywallReason, nav, goHome, changeTab, setScreen, setTab, closePaywall } = useNav();
+  const { screen, curSub, selTopic, customQs, tab, challengeData, paywallReason, navNonce, nav, goHome, changeTab, setScreen, setTab, closePaywall } = useNav();
   const { hist, prof, st, srCards, syncError, showAuthPrompt, addHist, confirmProfile, finishAuthPrompt, addSrFromResult, setSrCards } = useApp();
   const toast = useToast();
   const tr = useT();
@@ -282,7 +282,7 @@ function AppContent() {
         )}
         <Suspense fallback={<LoadingSpinner />}>
           {!needProfile && screen === SCREENS.TEST && curSub && (
-            <ErrorBoundary key="test" title={tr.errors.testTitle} message={tr.errors.testMessage} onRecover={goHome}>
+            <ErrorBoundary key={`test-${navNonce}`} title={tr.errors.testTitle} message={tr.errors.testMessage} onRecover={goHome}>
               <Test sid={curSub} tid={selTopic} customQs={customQs} finish={handleFinish} />
             </ErrorBoundary>
           )}

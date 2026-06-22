@@ -17,6 +17,7 @@ interface NavigationContextValue {
   setTab: React.Dispatch<React.SetStateAction<string>>;
   challengeData: ChallengeData | null;
   paywallReason: PaywallReason;
+  navNonce: number;
   nav: (target: string, sub?: string | null, topic?: string | null) => void;
   navToErrorTest: (questions: Question[]) => void;
   navToReview: () => void;
@@ -44,11 +45,17 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
   const [customQs, setCustomQs] = useState<Question[] | null>(null);
   const [tab, setTab] = useState<string>(SCREENS.HOME);
   const [paywallReason, setPaywallReason] = useState<PaywallReason>(null);
+  // Bumped on every navigation so a destination screen can force a remount even
+  // when navigating to the SAME screen (e.g. test results → "Next test"/"Retry
+  // errors", which both set screen=TEST while already on TEST). Without it React
+  // reused the finished Test instance and those buttons appeared dead.
+  const [navNonce, setNavNonce] = useState(0);
 
   const closePaywall = useCallback(() => setPaywallReason(null), []);
   const openPaywall = useCallback((reason: PaywallReason) => setPaywallReason(reason), []);
 
   const nav = useCallback((target: string, sub?: string | null, topic?: string | null) => {
+    setNavNonce((n) => n + 1);
     if (target === 'test' && sub) {
       setCurSub(sub);
       setSelTopic(topic || null);
@@ -93,6 +100,7 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
   }, []);
 
   const navToErrorTest = useCallback((questions: Question[]) => {
+    setNavNonce((n) => n + 1);
     setCustomQs(questions);
     setCurSub(questions[0]?._su || 'math');
     setSelTopic(null);
@@ -135,10 +143,11 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
       tab, setTab,
       challengeData,
       paywallReason,
+      navNonce,
       nav, navToErrorTest, navToReview, goHome, changeTab, goBack,
       closePaywall, openPaywall,
     }),
-    [screen, curSub, selTopic, customQs, tab, challengeData, paywallReason, nav, navToErrorTest, navToReview, goHome, changeTab, goBack, closePaywall, openPaywall],
+    [screen, curSub, selTopic, customQs, tab, challengeData, paywallReason, navNonce, nav, navToErrorTest, navToReview, goHome, changeTab, goBack, closePaywall, openPaywall],
   );
 
   return (
