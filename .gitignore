@@ -19,3 +19,4 @@ AuthKey_*.p8
 /localhost-after-revert-mobile.png
 /localhost-exact-mobile.png
 /localhost-final-mobile.png
+.playwright-mcp/
