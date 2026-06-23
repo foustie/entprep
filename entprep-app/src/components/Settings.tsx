@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getPoolSize, getTotalQ } from '../utils/questionStore';
 import { UNIS } from '../data/universities';
 import { supabase } from '../config/supabase';
@@ -13,9 +13,10 @@ import { useToast } from '../contexts/ToastContext';
 import { useT } from '../locales';
 import { getGoalProgress } from '../utils/competitionHelpers';
 import { setNickname } from '../utils/socialHelpers';
+import { getSubscriptionStatus, cancelSubscription, resumeSubscription, type SubscriptionStatus } from '../utils/subscriptionHelpers';
 import Toggle from './ui/Toggle';
 import ProgressBar from './ui/ProgressBar';
-import { Settings as SettingsIcon, BarChart2, Trash2, Target, Wrench, Trophy, AtSign, Check, Globe, User, BookOpen, Palette, Database, Bell, Shield, Users, GraduationCap, Heart, ExternalLink, Instagram, MessageCircle, Send, Mail, Sun, Moon } from 'lucide-react';
+import { Settings as SettingsIcon, BarChart2, Trash2, Target, Wrench, Trophy, AtSign, Check, Globe, User, BookOpen, Palette, Database, Bell, Shield, Users, GraduationCap, Heart, ExternalLink, Instagram, MessageCircle, Send, Mail, Sun, Moon, CreditCard } from 'lucide-react';
 import { isPushSupported, getPushPermission, subscribeToPush, unsubscribeFromPush, syncPushPrefs } from '../utils/pushHelpers';
 
 /* ─── Section wrapper — v2 ink-bordered card ─── */
@@ -54,7 +55,7 @@ const ROW_LAST: React.CSSProperties = {
 
 export default function Settings() {
   const { st, updSt, hist, clearHist, resetProfile } = useApp();
-  const { user, isAdmin, profile, needsNickname, refreshProfile } = useAuth();
+  const { user, isAdmin, profile, needsNickname, refreshProfile, isPremium } = useAuth();
   const { nav, setScreen, setTab } = useNav();
   const toast = useToast();
   const t = useT();
@@ -71,6 +72,11 @@ export default function Settings() {
   const [pushLoading, setPushLoading] = useState(false);
   const [cfDeleteAccount, setCfDeleteAccount] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [subStatus, setSubStatus] = useState<SubscriptionStatus | null>(null);
+  const [subLoading, setSubLoading] = useState(false);
+  const [subErr, setSubErr] = useState(false);
+  const [cfCancelSub, setCfCancelSub] = useState(false);
+  const [subBusy, setSubBusy] = useState(false);
   const [classCode, setClassCode] = useState('');
   const [classJoining, setClassJoining] = useState(false);
   const [classMsg, setClassMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -105,6 +111,49 @@ export default function Settings() {
   };
   const handleResetProfile = () => { resetProfile(); setScreen('profile'); setTab('home'); setCfResetProfile(false); };
   const lang = st.lang || 'ru';
+  const fmtDate = (d?: string | null) =>
+    d ? new Date(d).toLocaleDateString(lang === 'kk' ? 'kk-KZ' : 'ru-RU') : '';
+
+  // Load the user's Lemon (web) subscription status so premium users can self-cancel.
+  // found:false for season-pass / native-store purchases — UI shows a pointer instead.
+  useEffect(() => {
+    if (!supabase || !user || !isPremium) { setSubStatus(null); return; }
+    let active = true;
+    setSubLoading(true);
+    setSubErr(false);
+    getSubscriptionStatus()
+      .then(s => { if (active) { setSubStatus(s); setCfCancelSub(false); } })
+      .catch(() => { if (active) setSubErr(true); })
+      .finally(() => { if (active) setSubLoading(false); });
+    return () => { active = false; };
+  }, [user, isPremium]);
+
+  const handleCancelSub = async () => {
+    setSubBusy(true);
+    try {
+      const r = await cancelSubscription();
+      toast.success(t.settings.subCancelled.replace('{date}', fmtDate(r.endsAt)));
+      setSubStatus(await getSubscriptionStatus());
+    } catch {
+      toast.error(t.error);
+    } finally {
+      setSubBusy(false);
+      setCfCancelSub(false);
+    }
+  };
+
+  const handleResumeSub = async () => {
+    setSubBusy(true);
+    try {
+      await resumeSubscription();
+      toast.success(t.settings.subResumed);
+      setSubStatus(await getSubscriptionStatus());
+    } catch {
+      toast.error(t.error);
+    } finally {
+      setSubBusy(false);
+    }
+  };
 
   return (
     <div style={{ padding: `0 var(--content-padding) ${isDesktop ? 40 : 100}px` }}>
@@ -213,6 +262,73 @@ export default function Settings() {
           </div>
         )}
       </Section>}
+
+      {/* ════════ SUBSCRIPTION ════════ */}
+      {/* Web (Lemon) self-cancel. Only for premium users; native/season-pass purchases
+          report found:false and get a pointer to where they're actually managed. */}
+      {supabase && user && isPremium && (
+        <Section icon={<CreditCard size={11} />} label={t.settings.sectionSubscription}>
+          <div style={ROW_LAST}>
+            {subLoading ? (
+              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>…</div>
+            ) : subErr ? (
+              <div style={{ fontSize: 12, color: COLORS.red }}>{t.settings.subLoadError}</div>
+            ) : subStatus?.found ? (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                  <CreditCard size={15} color={COLORS.teal} />
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{t.settings.subPro}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                      {subStatus.cancelled
+                        ? `${t.settings.subEndsAt.replace('{date}', fmtDate(subStatus.endsAt))} · ${t.settings.subWontRenew}`
+                        : subStatus.status === 'past_due' || subStatus.status === 'unpaid'
+                          ? t.settings.subPaymentIssue
+                          : subStatus.status === 'paused'
+                            ? t.settings.subPaused
+                            : t.settings.subRenews.replace('{date}', fmtDate(subStatus.renewsAt))}
+                    </div>
+                  </div>
+                </div>
+                {subStatus.cancelled ? (
+                  <button
+                    onClick={handleResumeSub}
+                    disabled={subBusy}
+                    style={{ width: '100%', padding: '10px', background: COLORS.teal, border: '2px solid var(--ink)', borderBottom: '3px solid var(--ink)', borderRadius: R.md, color: '#fff', fontSize: 12, fontWeight: 700, cursor: subBusy ? 'wait' : 'pointer', opacity: subBusy ? 0.7 : 1 }}
+                  >
+                    {subBusy ? '…' : t.settings.subResume}
+                  </button>
+                ) : !cfCancelSub ? (
+                  <button
+                    onClick={() => setCfCancelSub(true)}
+                    style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8, color: COLORS.red, fontSize: 13, fontWeight: 600, padding: 0 }}
+                  >
+                    <Trash2 size={15} />{t.settings.subCancel}
+                  </button>
+                ) : (
+                  <div>
+                    <div style={{ fontSize: 12, color: COLORS.red, fontWeight: 600, marginBottom: 8 }}>
+                      {fmtDate(subStatus.renewsAt || subStatus.endsAt)
+                        ? t.settings.subCancelConfirm.replace('{date}', fmtDate(subStatus.renewsAt || subStatus.endsAt))
+                        : t.settings.subCancelConfirmNoDate}
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={handleCancelSub} disabled={subBusy} style={{ flex: 1, padding: '10px', background: COLORS.red, border: 'none', borderRadius: R.md, color: '#fff', fontSize: 11, fontWeight: 700, cursor: subBusy ? 'wait' : 'pointer', opacity: subBusy ? 0.7 : 1 }}>
+                        {subBusy ? '…' : t.settings.subCancelYes}
+                      </button>
+                      <button onClick={() => setCfCancelSub(false)} disabled={subBusy} style={{ flex: 1, padding: '10px', background: 'transparent', border: '1px solid var(--border-md)', borderRadius: R.md, color: 'var(--text-secondary)', fontSize: 11, cursor: 'pointer' }}>
+                        {t.cancel}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{t.settings.subNone}</div>
+            )}
+          </div>
+        </Section>
+      )}
 
       {/* ════════ APPEARANCE ════════ */}
       <Section icon={<Palette size={11} />} label={t.settings.sectionAppearance || 'Appearance'}>

@@ -57,15 +57,15 @@ entprep-app/src/
 ├── hooks/               # useBreakpoint, useFocusTrap (modal a11y)
 ├── config/              # 11 files: subjects, ent, questionPools, supabase, sentry, topics, payment, purchases, app, aiPrompt, regions
 ├── constants/           # styles, screens, themes
-├── utils/               # 24 files: questionStore, questionHelpers, questionAssembler, storage, cloudSync, analytics, analyticsHelpers, aiLimits, avatarHelpers, pushHelpers, shareHelpers, socialHelpers, duelHelpers, scoringEngine, xpHelpers, adaptiveHelpers, competitionHelpers, formatters, srEngine, predictScore, qdHelpers, recommendationEngine, reconcileHelpers, tutorHelpers
+├── utils/               # 25 files: questionStore, questionHelpers, questionAssembler, storage, cloudSync, analytics, analyticsHelpers, aiLimits, avatarHelpers, pushHelpers, shareHelpers, socialHelpers, duelHelpers, scoringEngine, xpHelpers, adaptiveHelpers, competitionHelpers, formatters, srEngine, predictScore, qdHelpers, recommendationEngine, reconcileHelpers, subscriptionHelpers, tutorHelpers
 ├── data/questions/      # 13 static fallback files (150q each, .ts)
 ├── data/universities.ts # 52 universities
 └── sw.ts                # Service worker (Workbox + push)
 
-entprep-app/netlify/functions/   # Serverless API (19 functions)
+entprep-app/netlify/functions/   # Serverless API (20 functions)
 ├── ai-explain.mjs, ai-generate.mjs, ai-plan.mjs, ai-tutor.mjs
 ├── admin-action.mjs, leaderboard.mjs, social.mjs, duel.mjs, analytics.mjs
-├── revenuecat-webhook.mjs, lemon-webhook.mjs, lemon-reconcile.mjs, promo.mjs
+├── revenuecat-webhook.mjs, lemon-webhook.mjs, lemon-reconcile.mjs, lemon-subscription.mjs, promo.mjs
 ├── questions.mjs, public-questions.mjs, teacher.mjs, delete-account.mjs
 ├── push-subscribe.mjs, push-cron.mjs
 └── utils/shared.mjs, constants.mjs, quality.mjs, rag.mjs
