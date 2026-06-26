@@ -16,6 +16,11 @@ describe('sanitizeMath', () => {
   it('removes \\( \\) \\[ \\] wrappers', () => {
     expect(sanitizeMath('\\(x\\)')).toBe('x');
   });
+  it('strips markdown headers and normalizes bullets, but keeps **bold**', () => {
+    expect(sanitizeMath('### Геометрический смысл')).toBe('Геометрический смысл');
+    expect(sanitizeMath('* Мука: 500 г')).toBe('• Мука: 500 г');
+    expect(sanitizeMath('Это **важно** знать')).toBe('Это **важно** знать');
+  });
   it('is a no-op on plain text', () => {
     expect(sanitizeMath('Просто текст без формул')).toBe('Просто текст без формул');
   });

@@ -31,8 +31,10 @@ export function sanitizeMath(s) {
     .replace(/\\(?:geq|ge)\b/g, "≥")
     .replace(/\\neq\b/g, "≠")
     .replace(/\\(?:left|right|displaystyle|quad|qquad|,|;|!)\b/g, "")
-    .replace(/\\[()[\]]/g, "")   // \( \) \[ \]
-    .replace(/\$\$?/g, "")        // $ and $$ math delimiters
+    .replace(/\\[()[\]]/g, "")        // \( \) \[ \]
+    .replace(/\$\$?/g, "")             // $ and $$ math delimiters
+    .replace(/^\s{0,3}#{1,6}\s+/gm, "") // markdown headers "### X" -> "X" (UI shows ** only)
+    .replace(/^(\s{0,3})[*+]\s+/gm, "$1• ") // "* item" bullets -> "• item" (keeps **bold**)
     .replace(/[ \t]{2,}/g, " ");
 }
 
