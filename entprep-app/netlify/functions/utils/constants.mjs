@@ -66,11 +66,20 @@ export const QUALITY_RULES = `
 - ЗАПРЕЩЕНЫ вопросы начинающиеся с "Что такое", "Кто был", "Кто является", "Как называется", "Назовите"
 - Объяснение должно быть ОБРАЗОВАТЕЛЬНЫМ (1-3 предложения), а НЕ просто "Правильный ответ: X"`;
 
-// ── AI model ────────────────────────────────────────────────────────────────
-export const AI_MODEL = "claude-sonnet-4-20250514";
+// ── AI provider selection ─────────────────────────────────────────────────────
+// Default provider for ALL runtime AI (explain / plan / generate / tutor).
+// Flip at runtime with the AI_PROVIDER env var ("openrouter" | "anthropic")
+// for an instant rollback with no code change. Adapter lives in utils/ai.mjs.
+export const AI_PROVIDER = "openrouter";
 
-// ── Anthropic API endpoint ──────────────────────────────────────────────────
+// ── Anthropic (rollback provider) ─────────────────────────────────────────────
+export const AI_MODEL = "claude-sonnet-4-20250514"; // override via AI_MODEL_OVERRIDE env
 export const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
+
+// ── OpenRouter (default provider) ─────────────────────────────────────────────
+// OpenAI-compatible Chat Completions endpoint; model override via OPENROUTER_MODEL env.
+export const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
+export const OPENROUTER_MODEL = "qwen/qwen3.7-plus";
 
 // ── Dedup threshold ─────────────────────────────────────────────────────────
 export const JACCARD_THRESHOLD = 0.70;

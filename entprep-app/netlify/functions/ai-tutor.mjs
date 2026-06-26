@@ -2,10 +2,7 @@
 // Streaming response for fast UX
 
 import { CORS_HEADERS, corsResponse, verifyAuth, createRateLimiter, checkPremium } from "./utils/shared.mjs";
-import { ANTHROPIC_API_URL, VALID_SUBJECTS } from "./utils/constants.mjs";
-
-// Sonnet for tutor — smarter, better Socratic reasoning
-const TUTOR_MODEL = "claude-sonnet-4-20250514";
+import { callAI, aiConfigured, buildAIRequest } from "./utils/ai.mjs";
 
 // Free tier matches client-side limit in src/utils/aiLimits.ts (DAILY_TUTOR_LIMIT)
 // so cheaters who clear localStorage hit the same ceiling as honest users.
@@ -108,8 +105,7 @@ export default async function handler(req) {
     return Response.json({ error: "Messages required" }, { status: 400, headers: CORS_HEADERS });
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return Response.json({ error: "AI not configured" }, { status: 500, headers: CORS_HEADERS });
+  if (!aiConfigured()) return Response.json({ error: "AI not configured" }, { status: 500, headers: CORS_HEADERS });
 
   // Fetch summary (parallel-safe, cached after first call)
   const summary = await fetchSummary(subject, topicId, lang);
@@ -120,25 +116,19 @@ export default async function handler(req) {
     content: typeof m.content === 'string' ? m.content : String(m.content),
   }));
 
-  // Streaming mode
+  // Streaming mode (currently unused: client forces stream:false because Netlify
+  // buffers SSE — see tutorHelpers.ts. Kept provider-correct in case it's re-enabled.
+  // NOTE: the passed-through SSE is the active provider's native event format.)
   if (stream) {
     try {
-      const aiRes = await fetch(ANTHROPIC_API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": apiKey,
-          "anthropic-version": "2023-06-01",
-        },
-        body: JSON.stringify({
-          model: TUTOR_MODEL,
-          max_tokens: 600,
-          temperature: 0.7,
-          stream: true,
-          system: systemPrompt,
-          messages: recentMessages,
-        }),
+      const { url, headers, body } = buildAIRequest({
+        system: systemPrompt,
+        messages: recentMessages,
+        max_tokens: 600,
+        temperature: 0.7,
+        stream: true,
       });
+      const aiRes = await fetch(url, { method: "POST", headers, body: JSON.stringify(body) });
 
       if (!aiRes.ok) {
         return Response.json({ error: "AI временно недоступен" }, { status: 500, headers: CORS_HEADERS });
@@ -157,31 +147,20 @@ export default async function handler(req) {
     }
   }
 
-  // Non-streaming fallback
+  // Non-streaming (the live path)
   try {
-    const aiRes = await fetch(ANTHROPIC_API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: TUTOR_MODEL,
-        max_tokens: 600,
-        temperature: 0.7,
-        system: systemPrompt,
-        messages: recentMessages,
-      }),
+    const ai = await callAI({
+      system: systemPrompt,
+      messages: recentMessages,
+      max_tokens: 600,
+      temperature: 0.7,
     });
 
-    if (!aiRes.ok) {
+    if (!ai.ok) {
       return Response.json({ error: "AI временно недоступен" }, { status: 500, headers: CORS_HEADERS });
     }
 
-    const data = await aiRes.json();
-    const text = data.content?.[0]?.text?.trim() || "";
-    return Response.json({ text }, { headers: CORS_HEADERS });
+    return Response.json({ text: ai.text }, { headers: CORS_HEADERS });
   } catch {
     return Response.json({ error: "AI service unavailable" }, { status: 500, headers: CORS_HEADERS });
   }

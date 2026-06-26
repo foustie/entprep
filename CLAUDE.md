@@ -68,7 +68,7 @@ entprep-app/netlify/functions/   # Serverless API (20 functions)
 ├── revenuecat-webhook.mjs, lemon-webhook.mjs, lemon-reconcile.mjs, lemon-subscription.mjs, promo.mjs
 ├── questions.mjs, public-questions.mjs, teacher.mjs, delete-account.mjs
 ├── push-subscribe.mjs, push-cron.mjs
-└── utils/shared.mjs, constants.mjs, quality.mjs, rag.mjs
+└── utils/shared.mjs, constants.mjs, quality.mjs, rag.mjs, ai.mjs
 
 entprep-app/docs/                # Documentation
 ├── launch-checklist.md, LAUNCH-PLAYBOOK.md, aso-listing.md
@@ -99,7 +99,7 @@ entprep-app/scripts/             # Build, deploy & question-generation scripts (
 - 13 ENT subjects, 33 244 questions (Supabase → dumped CDN JSON) + 13-file static import fallback
 - 3 question types: single choice, multiple answer, matching
 - Full ENT simulation (120q, 5 subjects, 4h, 140 pts, profile blocks)
-- AI explanations, study plans, question generation, AI tutor (Claude Sonnet 4 — `claude-sonnet-4-20250514`)
+- AI explanations, study plans, question generation, AI tutor (default **OpenRouter `qwen/qwen3.7-plus`**; provider-switchable — see AI provider note below)
 - Adaptive learning, daily challenges, error review
 - Question Rush: timed speed mode with star scoring (topics/difficulty/count/pace wizard)
 - Leaderboard, friends system, real-time 1v1 duels
@@ -145,7 +145,7 @@ node scripts/dump-questions.mjs && node scripts/check-kk-index.mjs && node scrip
 ## Technical Stack
 - **Language**: TypeScript — **Frontend**: React 18 — **Build**: Vite 6.x
 - **Hosting**: Netlify (+ Functions) — **Backend**: Supabase (PostgreSQL)
-- **AI**: Claude Sonnet 4 (`claude-sonnet-4-20250514`) — **Errors**: Sentry — **Analytics**: Plausible
+- **AI**: OpenRouter `qwen/qwen3.7-plus` (default) — provider-switchable via env, Claude Sonnet 4 as rollback — **Errors**: Sentry — **Analytics**: Plausible
 - **Styling**: Inline styles + themes — **State**: React Context (4 contexts)
 - **Icons**: lucide-react — **Fonts**: Unbounded (RU display) / RubikKZ (KK display, via `--ff-display` var + `html:lang(kk)`) / Nunito (body) / JetBrains Mono (mono)
 - **PWA**: vite-plugin-pwa — **Testing**: Vitest (379 tests, 26 files)
@@ -157,6 +157,13 @@ node scripts/dump-questions.mjs && node scripts/check-kk-index.mjs && node scrip
 - Question content: bilingual (Russian + Kazakh via `_kk` Supabase columns)
 - Question explanations include math symbols: ², ³, √, π, ×, ÷, ≈, →
 - `VITE_RC_API_KEY_APPLE` must be passed at build time (Vite inlines it)
+
+### AI provider (runtime functions)
+All four runtime AI functions (`ai-explain`, `ai-plan`, `ai-generate`, `ai-tutor`) call a single adapter `netlify/functions/utils/ai.mjs` — they are provider-agnostic. Provider is chosen at **runtime** from the `AI_PROVIDER` env var (default `openrouter`, set in `utils/constants.mjs`):
+- `AI_PROVIDER=openrouter` (default) → OpenRouter OpenAI-compatible API; needs `OPENROUTER_API_KEY`; model `qwen/qwen3.7-plus` (override `OPENROUTER_MODEL`).
+- `AI_PROVIDER=anthropic` → rollback to Claude; needs `ANTHROPIC_API_KEY`; model `claude-sonnet-4-20250514` (override `AI_MODEL_OVERRIDE`).
+
+**Rollback to Claude = flip `AI_PROVIDER` in Netlify env, no code change.** OpenRouter is OpenAI-shaped (system folded into messages, response in `choices[0].message.content`) — the adapter normalizes both shapes. Streaming is disabled client-side (`tutorHelpers.ts useStream=false`), so only the non-streaming JSON path is live. Build-time content scripts (`scripts/*`) still call Anthropic directly — out of scope. Adapter transform is covered by `__tests__/ai-adapter.test.mjs`.
 
 ## iOS App Store Submission (Apr 2026)
 

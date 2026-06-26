@@ -1,5 +1,5 @@
 import { corsResponse, CORS_HEADERS, verifyAuth, createRateLimiter, rateLimitResponse, validateExplain, checkPremium } from "./utils/shared.mjs";
-import { AI_MODEL, ANTHROPIC_API_URL } from "./utils/constants.mjs";
+import { callAI, aiConfigured } from "./utils/ai.mjs";
 import { getContext } from "./utils/rag.mjs";
 
 const checkRate = createRateLimiter("explain", { max: 30, windowSec: 60 });
@@ -27,9 +27,8 @@ export default async function handler(req) {
 
   const { question, options, userAnswer, correctAnswer, explanation, questionType, pairs, lang, subject } = body;
 
-  // Anthropic API key
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return Response.json({ error: "AI not configured" }, { status: 500, headers: CORS_HEADERS });
+  // AI provider key (OpenRouter by default — see utils/ai.mjs)
+  if (!aiConfigured()) return Response.json({ error: "AI not configured" }, { status: 500, headers: CORS_HEADERS });
 
   // RAG: fetch textbook context for supported subjects
   const ragContext = subject ? await getContext(subject, question).catch(() => null) : null;
@@ -70,29 +69,19 @@ export default async function handler(req) {
     : 'Ты репетитор ЕНТ (Единое национальное тестирование, Казахстан). Ответь на русском. Не повторяй текст вопроса. Верни строго JSON без markdown: {"short":"1 предложение — суть почему этот ответ правильный","detailed":"3-5 предложений — подробный разбор, если ученик ошибся — объясни ошибку, простым языком"}';
 
   try {
-    const aiRes = await fetch(ANTHROPIC_API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: AI_MODEL,
-        max_tokens: 500,
-        temperature: 0.7,
-        system: systemPrompt,
-        messages: [{ role: "user", content: userContent }],
-      }),
+    const ai = await callAI({
+      system: systemPrompt,
+      messages: [{ role: "user", content: userContent }],
+      max_tokens: 500,
+      temperature: 0.7,
     });
 
-    if (!aiRes.ok) {
-      console.error("Anthropic error:", await aiRes.text());
+    if (!ai.ok) {
+      console.error("AI error:", ai.status, ai.errorText);
       return Response.json({ error: "AI временно недоступен. Попробуйте позже." }, { status: 500, headers: CORS_HEADERS });
     }
 
-    const data = await aiRes.json();
-    let raw = data.content?.[0]?.text?.trim() || "";
+    let raw = ai.text;
     raw = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
 
     try {
@@ -102,7 +91,7 @@ export default async function handler(req) {
       return Response.json({ short: raw, detailed: raw }, { headers: CORS_HEADERS });
     }
   } catch (fetchErr) {
-    console.error("Anthropic fetch error:", fetchErr);
+    console.error("AI fetch error:", fetchErr);
     return Response.json({ error: "AI service unavailable" }, { status: 500, headers: CORS_HEADERS });
   }
 }

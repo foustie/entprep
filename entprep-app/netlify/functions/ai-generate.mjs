@@ -1,10 +1,11 @@
-// AI question generation using Claude Sonnet 4.6
+// AI question generation via the active provider (see utils/ai.mjs)
 // Strict quality rules for ENT-level questions
 // Post-generation validation: self-answer, trivial, short, weak explanation, dedup
 
 import { corsResponse, CORS_HEADERS, verifyAuth, createRateLimiter, rateLimitResponse, validateGenerate } from "./utils/shared.mjs";
 import { checkGenerated, tokenize, jaccard } from "./utils/quality.mjs";
-import { SUBJECT_NAMES, getTemperature, getSTEMPrefix, JACCARD_THRESHOLD, QUALITY_RULES, AI_MODEL, ANTHROPIC_API_URL } from "./utils/constants.mjs";
+import { SUBJECT_NAMES, getTemperature, getSTEMPrefix, JACCARD_THRESHOLD, QUALITY_RULES } from "./utils/constants.mjs";
+import { callAI, aiConfigured } from "./utils/ai.mjs";
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "").split(",").map(e => e.trim()).filter(Boolean);
 const checkRate = createRateLimiter("generate", { max: 10, windowSec: 60 });
@@ -34,9 +35,8 @@ export default async function handler(req) {
   const { subject, topic, examples } = body;
   const subjectName = SUBJECT_NAMES[subject] || subject;
 
-  // Claude API key
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return Response.json({ error: "AI not configured (ANTHROPIC_API_KEY missing)" }, { status: 500, headers: CORS_HEADERS });
+  // AI provider key (OpenRouter by default — see utils/ai.mjs)
+  if (!aiConfigured()) return Response.json({ error: "AI not configured (provider API key missing)" }, { status: 500, headers: CORS_HEADERS });
 
   const examplesText = examples
     .map((ex, i) => `Пример ${i + 1}:\nВопрос: ${ex.q}\nА) ${ex.o[0]}\nБ) ${ex.o[1]}\nВ) ${ex.o[2]}\nГ) ${ex.o[3]}\nПравильный: ${["А", "Б", "В", "Г"][ex.c]}\nОбъяснение: ${ex.e}`)
@@ -71,31 +71,20 @@ ${QUALITY_RULES}
 
   const userMessage = `Примеры существующих вопросов (для образца стиля, НЕ повторяй их):\n\n${examplesText}\n\nСоздай 1 новый аналитический вопрос повышенной сложности. Верни только JSON.`;
 
-  // Helper: call Claude and parse response
-  async function callClaude(messages) {
-    const aiRes = await fetch(ANTHROPIC_API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: AI_MODEL,
-        max_tokens: 800,
-        temperature: getTemperature(subject),
-        system: systemPrompt,
-        messages,
-      }),
+  // Helper: call the active AI provider and parse response
+  async function callModel(messages) {
+    const ai = await callAI({
+      system: systemPrompt,
+      messages,
+      max_tokens: 800,
+      temperature: getTemperature(subject),
     });
 
-    if (!aiRes.ok) {
-      const errText = await aiRes.text();
-      throw new Error(`API ${aiRes.status}: ${errText.slice(0, 200)}`);
+    if (!ai.ok) {
+      throw new Error(`API ${ai.status}: ${(ai.errorText || "").slice(0, 200)}`);
     }
 
-    const data = await aiRes.json();
-    let raw = data.content?.[0]?.text?.trim() || "";
+    let raw = ai.text;
     raw = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
 
     const parsed = JSON.parse(raw);
@@ -117,7 +106,7 @@ ${QUALITY_RULES}
 
   try {
     // Attempt 1
-    let parsed = await callClaude([{ role: "user", content: userMessage }]);
+    let parsed = await callModel([{ role: "user", content: userMessage }]);
 
     // Quality gate: check for issues
     let issues = checkGenerated(parsed.q, parsed.o, parsed.c, parsed.e, subject);
@@ -133,7 +122,7 @@ ${QUALITY_RULES}
       // Attempt 2: retry with feedback about what was wrong
       try {
         const retryMessage = `Предыдущий вопрос отклонён из-за проблем с качеством:\n${issues.map(i => `- ${i}`).join("\n")}\n\nОтклонённый вопрос: "${parsed.q}"\n\nСоздай ДРУГОЙ вопрос, избегая этих проблем. Верни только JSON.`;
-        parsed = await callClaude([
+        parsed = await callModel([
           { role: "user", content: userMessage },
           { role: "assistant", content: JSON.stringify(parsed) },
           { role: "user", content: retryMessage },
@@ -155,20 +144,14 @@ ${QUALITY_RULES}
 
     // Auto-translate to Kazakh
     try {
-      const trRes = await fetch(ANTHROPIC_API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
-        body: JSON.stringify({
-          model: AI_MODEL,
-          max_tokens: 800,
-          temperature: 0.3,
-          system: `Ты профессиональный переводчик учебных материалов с русского на казахский. Переводи точно и полностью. Числа, формулы, Unicode символы (², √, π) — без изменений. Количество вариантов ответа ТОЧНО совпадает с оригиналом. Верни строго JSON (без markdown): {"q_kk":"...","o_kk":["...","...","...","..."],"e_kk":"..."}`,
-          messages: [{ role: "user", content: `Переведи на казахский:\nВопрос: ${parsed.q}\nВарианты: ${parsed.o.map((o, i) => `${["А","Б","В","Г"][i]}) ${o}`).join("; ")}\nОбъяснение: ${parsed.e}` }],
-        }),
+      const trAi = await callAI({
+        system: `Ты профессиональный переводчик учебных материалов с русского на казахский. Переводи точно и полностью. Числа, формулы, Unicode символы (², √, π) — без изменений. Количество вариантов ответа ТОЧНО совпадает с оригиналом. Верни строго JSON (без markdown): {"q_kk":"...","o_kk":["...","...","...","..."],"e_kk":"..."}`,
+        messages: [{ role: "user", content: `Переведи на казахский:\nВопрос: ${parsed.q}\nВарианты: ${parsed.o.map((o, i) => `${["А","Б","В","Г"][i]}) ${o}`).join("; ")}\nОбъяснение: ${parsed.e}` }],
+        max_tokens: 800,
+        temperature: 0.3,
       });
-      if (trRes.ok) {
-        const trData = await trRes.json();
-        let trRaw = trData.content?.[0]?.text?.trim() || "";
+      if (trAi.ok) {
+        let trRaw = trAi.text;
         trRaw = trRaw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
         const tr = JSON.parse(trRaw);
         if (tr.q_kk && Array.isArray(tr.o_kk) && tr.o_kk.length === 4 && tr.e_kk) {
@@ -183,7 +166,7 @@ ${QUALITY_RULES}
 
     return Response.json(parsed, { headers: CORS_HEADERS });
   } catch (err) {
-    console.error("Claude error:", err.message);
+    console.error("AI error:", err.message);
     const isFormat = err.message.includes("Invalid format") || err instanceof SyntaxError;
     return Response.json(
       { error: isFormat ? "AI returned invalid question format" : "AI service unavailable" },
