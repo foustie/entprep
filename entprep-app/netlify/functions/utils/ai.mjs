@@ -59,6 +59,13 @@ export function buildAIRequest({ system, messages, max_tokens, temperature, stre
         model: process.env.OPENROUTER_MODEL || OPENROUTER_MODEL,
         max_tokens,
         temperature,
+        // Qwen3.7-plus is a reasoning model. Left on, it burns ~1500+ hidden
+        // reasoning tokens per call (~10x cost + latency, uncapped by max_tokens)
+        // and drifts to English on RU/KK prompts. These short explain / plan /
+        // generate / tutor tasks don't need it — the prompts already carry their
+        // own step-by-step instructions — so disable reasoning. Re-enable per call
+        // by setting OPENROUTER_REASONING=1 if a future task genuinely needs it.
+        ...(process.env.OPENROUTER_REASONING === "1" ? {} : { reasoning: { enabled: false } }),
         ...(stream ? { stream: true } : {}),
         messages: msgs,
       },

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { aiProvider, aiConfigured, buildAIRequest, extractAIText } from '../utils/ai.mjs';
 
 // Env keys the adapter reads at call time. Snapshot + restore so tests don't leak.
-const ENV_KEYS = ['AI_PROVIDER', 'OPENROUTER_API_KEY', 'OPENROUTER_MODEL', 'ANTHROPIC_API_KEY', 'AI_MODEL_OVERRIDE'];
+const ENV_KEYS = ['AI_PROVIDER', 'OPENROUTER_API_KEY', 'OPENROUTER_MODEL', 'OPENROUTER_REASONING', 'ANTHROPIC_API_KEY', 'AI_MODEL_OVERRIDE'];
 let saved;
 
 beforeEach(() => {
@@ -84,6 +84,15 @@ describe('buildAIRequest — OpenRouter (default)', () => {
     expect(buildAIRequest(CHAT).body.stream).toBeUndefined();
     expect(buildAIRequest({ ...CHAT, stream: true }).body.stream).toBe(true);
   });
+
+  it('disables reasoning by default (Qwen3.7-plus is a reasoning model)', () => {
+    expect(buildAIRequest(CHAT).body.reasoning).toEqual({ enabled: false });
+  });
+
+  it('omits the reasoning override when OPENROUTER_REASONING=1', () => {
+    process.env.OPENROUTER_REASONING = '1';
+    expect(buildAIRequest(CHAT).body.reasoning).toBeUndefined();
+  });
 });
 
 describe('buildAIRequest — Anthropic (rollback)', () => {
@@ -102,6 +111,7 @@ describe('buildAIRequest — Anthropic (rollback)', () => {
     expect(body.system).toBe('You are a tutor.');
     expect(body.messages).toEqual([{ role: 'user', content: 'hi' }]);
     expect(body.model).toBe('claude-sonnet-4-20250514');
+    expect(body.reasoning).toBeUndefined(); // reasoning toggle is OpenRouter-only
   });
 
   it('honors AI_MODEL_OVERRIDE', () => {
