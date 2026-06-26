@@ -65,6 +65,12 @@ describe('buildRecentMessages', () => {
     expect(recentMessages[0].content).toHaveLength(4);
   });
 
+  it('drops images when allowImages is false (non-premium gate)', () => {
+    const { recentMessages, hasImage } = buildRecentMessages([{ role: 'user', content: 'реши', images: [PNG] }], { allowImages: false });
+    expect(recentMessages[0]).toEqual({ role: 'user', content: 'реши' });
+    expect(hasImage).toBe(false);
+  });
+
   it('only keeps the last 8 messages (slice -8)', () => {
     const msgs = Array.from({ length: 10 }, (_, i) => ({ role: 'user', content: `m${i}` }));
     const { recentMessages } = buildRecentMessages(msgs);

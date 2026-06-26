@@ -111,12 +111,12 @@ export function isVisionDataUrl(u) {
 // valid images becomes an OpenAI-style multimodal content array (text + image_url
 // parts); everything else stays a plain string. Returns hasImage so the caller can
 // reinforce "solve from the photo" in the system prompt for the current turn.
-export function buildRecentMessages(messages) {
+export function buildRecentMessages(messages, { allowImages = true } = {}) {
   let hasImage = false;
   const recentMessages = messages.slice(-8).map(m => {
     const role = m.role === "user" ? "user" : "assistant";
     const text = typeof m.content === "string" ? m.content : String(m.content ?? "");
-    const imgs = role === "user" && Array.isArray(m.images) ? m.images.filter(isVisionDataUrl).slice(0, 4) : [];
+    const imgs = allowImages && role === "user" && Array.isArray(m.images) ? m.images.filter(isVisionDataUrl).slice(0, 4) : [];
     if (imgs.length) {
       hasImage = true;
       return {
@@ -162,7 +162,9 @@ export default async function handler(req) {
 
   // Fetch summary (parallel-safe, cached after first call)
   const summary = await fetchSummary(subject, topicId, lang);
-  const { recentMessages, hasImage } = buildRecentMessages(messages);
+  // Vision is a premium feature — enforce server-side (camera is client-gated only,
+  // so a non-premium user could POST images directly to the expensive vision path).
+  const { recentMessages, hasImage } = buildRecentMessages(messages, { allowImages: isPremium });
   const systemPrompt = buildSystemPrompt(profile, summary, lang, mode || 'chat')
     + (hasImage ? '\n\nНа фото — задача ученика: прочитай условие с изображения и реши пошагово с числами до финального ответа.' : '');
 
