@@ -1,5 +1,9 @@
 import { corsResponse, CORS_HEADERS, verifyAuth, createRateLimiter, rateLimitResponse, validatePlan, checkPremium } from "./utils/shared.mjs";
 import { callAI, aiConfigured } from "./utils/ai.mjs";
+import { VALID_SUBJECTS } from "./utils/constants.mjs";
+
+// Known hallucinated subject ids -> real ids (Qwen invents these); anything else is dropped.
+const SUBJECT_ALIASES = { math_literacy: "math", math_lit: "math", history_kz: "history", kazakh_history: "history" };
 
 const checkRate = createRateLimiter("plan", { max: 5, windowSec: 60 });
 
@@ -102,6 +106,13 @@ Markdown-сыз қатаң JSON қайтар:
 - Чередуй предметы, не ставь сложные подряд
 - В выходные — легче, повторение`;
 
+  // Constrain output: a valid subject-id enum (Qwen invented math_lit/history_kz that
+  // broke the 'Start test' button) + MINIFIED JSON (pretty-printed plans overflowed
+  // max_tokens and truncated -> JSON.parse 500, worst on token-dense Kazakh).
+  const constraints = isKk
+    ? `\n\nМАҢЫЗДЫ:\n- subject өрісінде ТЕК осы ID-лерді қолдан (дәл солай жаз): ${VALID_SUBJECTS.join(', ')}. Басқа ID ойлап таппа.\n- Жауапты бір жолда, минифицирленген JSON-мен қайтар: шегініссіз, жолбасынсыз, markdown-сыз.`
+    : `\n\nВАЖНО:\n- В поле subject используй ТОЛЬКО эти ID (дословно): ${VALID_SUBJECTS.join(', ')}. Не придумывай другие.\n- Верни МИНИФИЦИРОВАННЫЙ JSON одной строкой: без отступов, без переносов строк, без markdown.`;
+
   const userMessage = `Данные ученика:
 Общий средний балл: ${overall}%
 Всего тестов: ${totalTests}
@@ -112,35 +123,57 @@ ${weakText || "нет данных"}
 
 Сильные предметы: ${strongText || "нет данных"}`;
 
-  try {
+  // Generate + parse, with one retry — Qwen at temperature occasionally emits
+  // malformed JSON. Lower temp (0.4) for determinism; clip to the outermost {...}
+  // in case of stray prose; bad shape or parse error throws so the caller retries.
+  async function attemptPlan() {
     const ai = await callAI({
-      system: systemPrompt,
+      system: systemPrompt + constraints,
       messages: [{ role: "user", content: userMessage }],
-      max_tokens: 1200,
-      temperature: 0.7,
+      max_tokens: 3000,
+      temperature: 0.4,
     });
+    if (!ai.ok) { const e = new Error("ai_unavailable"); e.unavailable = true; throw e; }
+    let raw = ai.text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+    const first = raw.indexOf("{"), last = raw.lastIndexOf("}");
+    if (first >= 0 && last > first) raw = raw.slice(first, last + 1);
+    const parsed = JSON.parse(raw);
+    if (!parsed.summary || !Array.isArray(parsed.days)) throw new Error("bad_shape");
+    return parsed;
+  }
 
-    if (!ai.ok) {
-      console.error("AI error:", ai.status, ai.errorText);
+  try {
+    let parsed;
+    try {
+      parsed = await attemptPlan();
+    } catch (firstErr) {
+      if (firstErr.unavailable) {
+        console.error("AI error (plan): unavailable");
+        return Response.json({ error: "AI временно недоступен. Попробуйте позже." }, { status: 500, headers: CORS_HEADERS });
+      }
+      console.warn("Plan parse failed, retrying once:", firstErr.message);
+      parsed = await attemptPlan(); // one retry; a second failure falls to the outer catch
+    }
+
+    // Repair hallucinated subject ids: map known aliases, drop the rest so a 'test'
+    // task can't route the 'Start test' button (nav('test', subject)) to an empty pool.
+    const validSet = new Set(VALID_SUBJECTS);
+    for (const day of parsed.days) {
+      if (!day || !Array.isArray(day.tasks)) continue;
+      for (const task of day.tasks) {
+        if (!task || !task.subject) continue;
+        const sid = validSet.has(task.subject) ? task.subject : (SUBJECT_ALIASES[task.subject] || null);
+        if (sid) task.subject = sid;
+        else { delete task.subject; delete task.topic; if (task.type === "test") task.type = "review"; }
+      }
+    }
+    return Response.json(parsed, { headers: CORS_HEADERS });
+  } catch (err) {
+    if (err.unavailable) {
       return Response.json({ error: "AI временно недоступен. Попробуйте позже." }, { status: 500, headers: CORS_HEADERS });
     }
-
-    let raw = ai.text;
-    raw = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
-
-    try {
-      const parsed = JSON.parse(raw);
-      if (!parsed.summary || !Array.isArray(parsed.days)) {
-        return Response.json({ error: "Invalid plan format" }, { status: 500, headers: CORS_HEADERS });
-      }
-      return Response.json(parsed, { headers: CORS_HEADERS });
-    } catch {
-      console.error("Failed to parse plan JSON:", raw);
-      return Response.json({ error: "Не удалось сформировать план. Попробуйте ещё раз." }, { status: 500, headers: CORS_HEADERS });
-    }
-  } catch (fetchErr) {
-    console.error("AI fetch error:", fetchErr);
-    return Response.json({ error: "AI service unavailable" }, { status: 500, headers: CORS_HEADERS });
+    console.error("Plan generation failed:", err.message);
+    return Response.json({ error: "Не удалось сформировать план. Попробуйте ещё раз." }, { status: 500, headers: CORS_HEADERS });
   }
 }
 
