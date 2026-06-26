@@ -3,6 +3,7 @@
 
 import { CORS_HEADERS, corsResponse, verifyAuth, createRateLimiter, checkPremium } from "./utils/shared.mjs";
 import { callAI, aiConfigured, buildAIRequest } from "./utils/ai.mjs";
+import { sanitizeMath } from "./utils/text.mjs";
 
 // Free tier matches client-side limit in src/utils/aiLimits.ts (DAILY_TUTOR_LIMIT)
 // so cheaters who clear localStorage hit the same ceiling as honest users.
@@ -228,7 +229,7 @@ export default async function handler(req) {
       return Response.json({ error: "AI временно недоступен" }, { status: 500, headers: CORS_HEADERS });
     }
 
-    return Response.json({ text: ai.text }, { headers: CORS_HEADERS });
+    return Response.json({ text: sanitizeMath(ai.text) }, { headers: CORS_HEADERS });
   } catch {
     return Response.json({ error: "AI service unavailable" }, { status: 500, headers: CORS_HEADERS });
   }

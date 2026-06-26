@@ -6,6 +6,7 @@ import { corsResponse, CORS_HEADERS, verifyAuth, createRateLimiter, rateLimitRes
 import { checkGenerated, tokenize, jaccard } from "./utils/quality.mjs";
 import { SUBJECT_NAMES, getTemperature, getSTEMPrefix, JACCARD_THRESHOLD, QUALITY_RULES, STEM_SUBJECTS } from "./utils/constants.mjs";
 import { callAI, aiConfigured } from "./utils/ai.mjs";
+import { parseLooseJson } from "./utils/text.mjs";
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "").split(",").map(e => e.trim()).filter(Boolean);
 const checkRate = createRateLimiter("generate", { max: 10, windowSec: 60 });
@@ -84,10 +85,7 @@ ${QUALITY_RULES}
       throw new Error(`API ${ai.status}: ${(ai.errorText || "").slice(0, 200)}`);
     }
 
-    let raw = ai.text;
-    raw = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
-
-    const parsed = JSON.parse(raw);
+    const parsed = parseLooseJson(ai.text);
     if (!parsed.q || !Array.isArray(parsed.o) || parsed.o.length !== 4 || typeof parsed.c !== "number" || parsed.c < 0 || parsed.c > 3 || !parsed.e) {
       throw new Error("Invalid format");
     }
@@ -110,8 +108,7 @@ ${QUALITY_RULES}
   // Parse + validate the Kazakh translation sub-call into the exact
   // {q_kk, o_kk(array of 4 non-empty strings), e_kk} schema. Throws on shape failure.
   function parseTranslation(text) {
-    let raw = (text || "").replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
-    const tr = JSON.parse(raw);
+    const tr = parseLooseJson(text);
     if (!tr || typeof tr.q_kk !== "string" || !tr.q_kk.trim() ||
         !Array.isArray(tr.o_kk) || tr.o_kk.length !== 4 ||
         !tr.o_kk.every(o => typeof o === "string" && o.trim()) ||

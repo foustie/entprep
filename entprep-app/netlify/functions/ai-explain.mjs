@@ -2,6 +2,7 @@ import { corsResponse, CORS_HEADERS, verifyAuth, createRateLimiter, rateLimitRes
 import { callAI, aiConfigured } from "./utils/ai.mjs";
 import { getContext } from "./utils/rag.mjs";
 import { STEM_SUBJECTS, getTemperature, getSTEMPrefix } from "./utils/constants.mjs";
+import { parseLooseJson, sanitizeMath } from "./utils/text.mjs";
 
 const checkRate = createRateLimiter("explain", { max: 30, windowSec: 60 });
 
@@ -97,14 +98,18 @@ export default async function handler(req) {
       return Response.json({ error: "AI временно недоступен. Попробуйте позже." }, { status: 500, headers: CORS_HEADERS });
     }
 
-    let raw = ai.text;
-    raw = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
-
     try {
-      const parsed = JSON.parse(raw);
-      return Response.json({ short: parsed.short || raw, detailed: parsed.detailed || raw }, { headers: CORS_HEADERS });
+      // parseLooseJson repairs the lone-backslash LaTeX (\cdot etc.) that Qwen leaks
+      // and otherwise crashes JSON.parse into a raw-blob fallback; sanitizeMath cleans
+      // any residual $...$ / \frac so the student never sees broken markup.
+      const parsed = parseLooseJson(ai.text);
+      return Response.json({
+        short: sanitizeMath(parsed.short || ai.text),
+        detailed: sanitizeMath(parsed.detailed || ai.text),
+      }, { headers: CORS_HEADERS });
     } catch {
-      return Response.json({ short: raw, detailed: raw }, { headers: CORS_HEADERS });
+      const clean = sanitizeMath(ai.text);
+      return Response.json({ short: clean, detailed: clean }, { headers: CORS_HEADERS });
     }
   } catch (fetchErr) {
     console.error("AI fetch error:", fetchErr);

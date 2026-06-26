@@ -1,6 +1,7 @@
 import { corsResponse, CORS_HEADERS, verifyAuth, createRateLimiter, rateLimitResponse, validatePlan, checkPremium } from "./utils/shared.mjs";
 import { callAI, aiConfigured } from "./utils/ai.mjs";
 import { VALID_SUBJECTS } from "./utils/constants.mjs";
+import { parseLooseJson } from "./utils/text.mjs";
 
 // Known hallucinated subject ids -> real ids (Qwen invents these); anything else is dropped.
 const SUBJECT_ALIASES = { math_literacy: "math", math_lit: "math", history_kz: "history", kazakh_history: "history" };
@@ -134,10 +135,7 @@ ${weakText || "нет данных"}
       temperature: 0.4,
     });
     if (!ai.ok) { const e = new Error("ai_unavailable"); e.unavailable = true; throw e; }
-    let raw = ai.text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
-    const first = raw.indexOf("{"), last = raw.lastIndexOf("}");
-    if (first >= 0 && last > first) raw = raw.slice(first, last + 1);
-    const parsed = JSON.parse(raw);
+    const parsed = parseLooseJson(ai.text);
     if (!parsed.summary || !Array.isArray(parsed.days)) throw new Error("bad_shape");
     return parsed;
   }
