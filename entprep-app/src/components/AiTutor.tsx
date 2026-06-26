@@ -138,7 +138,9 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
     }
     sendingRef.current = true;
     if (!user) { toast.error(t.test.loginRequired); sendingRef.current = false; return; }
-    if (!isPremium && !consumeTutorLimit()) {
+    // Gate only — do NOT consume here. The quota is consumed after a successful
+    // response so failed/timed-out/429 sends don't burn a free user's daily message.
+    if (!isPremium && getTutorRemaining() <= 0) {
       trackEvent('AI Tutor Limit Hit');
       setShowPaywall(true);
       sendingRef.current = false;
@@ -171,6 +173,8 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
         updated[placeholderIdx] = { role: 'assistant', content: res.text, timestamp: Date.now() };
         return updated;
       });
+      // Consume the daily quota only on a successful response (one per success).
+      if (!isPremium) consumeTutorLimit();
       trackEvent('tutor_message', { subject, mode });
     } catch (e: unknown) {
       const errMsg = e instanceof Error ? e.message : t.tutor.errorWord;
@@ -363,7 +367,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
         }}>
           <div style={{ display: 'flex', gap: 6, maxWidth: 'var(--content-max-width)', margin: '0 auto', alignItems: 'flex-end' }}>
             {'webkitSpeechRecognition' in window && (
-              <button onClick={handleVoice} style={iconBtnStyle(recording ? COLORS.streakSoft : 'var(--bg-card)', recording ? COLORS.streak : 'var(--text-muted)', recording)}>
+              <button onClick={handleVoice} aria-label={t.tutor.micLabel} aria-pressed={recording} style={iconBtnStyle(recording ? COLORS.streakSoft : 'var(--bg-card)', recording ? COLORS.streak : 'var(--text-muted)', recording)}>
                 {recording ? <MicOff size={17} strokeWidth={2.4} /> : <Mic size={17} strokeWidth={2.4} />}
               </button>
             )}
@@ -376,7 +380,6 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-              onBeforeInput={e => { if ((e as unknown as { inputType: string }).inputType === 'insertLineBreak') { e.preventDefault(); handleSend(); } }}
               enterKeyHint="send"
               inputMode="text"
               placeholder={t.tutor.inputPlaceholderAny}
@@ -534,7 +537,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
         marginBottom: 14, padding: '10px 0',
         borderBottom: '1.5px solid rgba(15,15,16,0.1)',
       }}>
-        <BackButton onClick={() => setMessages([])} />
+        <BackButton onClick={goHome} />
         <div style={{
           position: 'relative',
           width: 38, height: 38, borderRadius: R.md,
@@ -608,7 +611,8 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
         </div>
       )}
 
-      {/* Messages */}
+      {/* Messages — role=log + aria-live so screen readers announce new replies */}
+      <div role="log" aria-live="polite" aria-label={t.tutor.conversationLabel}>
       {messages.map((msg, i) => {
         const isUser = msg.role === 'user';
         const showAvatar = !isUser && (i === 0 || messages[i - 1]?.role !== 'assistant');
@@ -699,6 +703,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
       )}
 
       <div ref={messagesEndRef} />
+      </div>
 
       {/* v2 Input bar — ink border, streak gradient send, mic with streak on active */}
       <div style={{
@@ -710,7 +715,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
         <div style={{ display: 'flex', gap: 6, maxWidth: 'var(--content-max-width)', margin: '0 auto', alignItems: 'flex-end' }}>
           {/* Voice button */}
           {'webkitSpeechRecognition' in window && (
-            <button onClick={handleVoice} style={iconBtnStyle(recording ? COLORS.streakSoft : 'var(--bg-card)', recording ? COLORS.streak : 'var(--text-muted)', recording)}>
+            <button onClick={handleVoice} aria-label={t.tutor.micLabel} aria-pressed={recording} style={iconBtnStyle(recording ? COLORS.streakSoft : 'var(--bg-card)', recording ? COLORS.streak : 'var(--text-muted)', recording)}>
               {recording ? <MicOff size={17} strokeWidth={2.4} /> : <Mic size={17} strokeWidth={2.4} />}
             </button>
           )}

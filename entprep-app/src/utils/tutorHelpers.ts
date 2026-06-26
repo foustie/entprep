@@ -4,6 +4,7 @@ import { supabase } from '../config/supabase';
 import { API_BASE } from '../config/app';
 import type { TestResult } from '../types/index';
 import { TOPIC_MAP } from '../config/topics';
+import { getT } from '../locales';
 
 // ── Types ──
 
@@ -111,6 +112,7 @@ export async function sendTutorMessage(
   onChunk?: (text: string) => void,
 ): Promise<TutorResponse> {
   if (!supabase) throw new Error('Not configured');
+  const tr = getT(options.lang === 'kk' ? 'kk' : 'ru');
   // Try getSession first, fallback to direct localStorage read
   let token: string | null = null;
   const sessionRes = await supabase.auth.getSession();
@@ -122,7 +124,7 @@ export async function sendTutorMessage(
       if (raw) { const parsed = JSON.parse(raw); token = parsed.access_token || null; }
     } catch { /* ignore */ }
   }
-  if (!token) throw new Error('Войдите в аккаунт чтобы использовать AI');
+  if (!token) throw new Error(tr.tutor.errLogin);
 
   const useStream = false; // Disabled: Netlify Functions buffer SSE, breaks streaming
 
@@ -158,8 +160,8 @@ export async function sendTutorMessage(
     const errBody = await res.text().catch(() => '');
     const ua = navigator.userAgent.substring(0, 80);
     console.error('[AI Tutor] Error response:', res.status, errBody.slice(0, 200), 'UA:', ua);
-    if (res.status === 401) throw new Error('Сессия истекла. Перезайдите в аккаунт.');
-    try { const d = JSON.parse(errBody); throw new Error(d.error || (res.status === 429 ? 'Слишком много запросов. Подожди минутку.' : 'AI временно недоступен')); } catch(e) { if (e instanceof SyntaxError) throw new Error(res.status === 429 ? 'Слишком много запросов. Подожди минутку.' : 'AI временно недоступен'); throw e; }
+    if (res.status === 401) throw new Error(tr.tutor.errSession);
+    try { const d = JSON.parse(errBody); throw new Error(d.error || (res.status === 429 ? tr.tutor.errRateLimit : tr.tutor.errUnavailable)); } catch(e) { if (e instanceof SyntaxError) throw new Error(res.status === 429 ? tr.tutor.errRateLimit : tr.tutor.errUnavailable); throw e; }
   }
 
   // Non-streaming (streaming disabled — Netlify buffers SSE)
@@ -184,11 +186,12 @@ export function startVoiceInput(
   onResult: (text: string) => void,
   onError: (err: string) => void,
 ): () => void {
+  const tr = getT(lang === 'kk' ? 'kk' : 'ru');
   const SpeechRecognition = (window as unknown as Record<string, unknown>).webkitSpeechRecognition ||
     (window as unknown as Record<string, unknown>).SpeechRecognition;
 
   if (!SpeechRecognition) {
-    onError('Голосовой ввод не поддерживается в этом браузере');
+    onError(tr.tutor.errVoiceUnsupported);
     return () => {};
   }
 
@@ -203,7 +206,7 @@ export function startVoiceInput(
   };
 
   recognition.onerror = (event) => {
-    if (event.error !== 'aborted') onError('Не удалось распознать речь');
+    if (event.error !== 'aborted') onError(tr.tutor.errVoiceFailed);
   };
 
   recognition.start();
