@@ -96,6 +96,42 @@ const STREAM_HEADERS = {
   "Connection": "keep-alive",
 };
 
+// ── Vision ────────────────────────────────────────────────────────────────────
+// Server-side guard: client size/MIME checks are bypassable on a paid backend.
+// Accept only jpeg/png/webp base64 data URLs (heic/heif dropped — unreliable OCR),
+// and reject payloads decoding to more than ~5MB.
+const MAX_IMG_BYTES = 5 * 1024 * 1024;
+export function isVisionDataUrl(u) {
+  if (typeof u !== "string") return false;
+  const m = /^data:image\/(jpeg|jpg|png|webp);base64,([A-Za-z0-9+/=]+)$/.exec(u);
+  return !!m && (m[2].length * 3) / 4 <= MAX_IMG_BYTES;
+}
+
+// Map raw client messages to provider-ready messages. A user message carrying
+// valid images becomes an OpenAI-style multimodal content array (text + image_url
+// parts); everything else stays a plain string. Returns hasImage so the caller can
+// reinforce "solve from the photo" in the system prompt for the current turn.
+export function buildRecentMessages(messages) {
+  let hasImage = false;
+  const recentMessages = messages.slice(-8).map(m => {
+    const role = m.role === "user" ? "user" : "assistant";
+    const text = typeof m.content === "string" ? m.content : String(m.content ?? "");
+    const imgs = role === "user" && Array.isArray(m.images) ? m.images.filter(isVisionDataUrl).slice(0, 4) : [];
+    if (imgs.length) {
+      hasImage = true;
+      return {
+        role,
+        content: [
+          ...(text ? [{ type: "text", text }] : []),
+          ...imgs.map(url => ({ type: "image_url", image_url: { url } })),
+        ],
+      };
+    }
+    return { role, content: text };
+  });
+  return { recentMessages, hasImage };
+}
+
 export default async function handler(req) {
   if (req.method === "OPTIONS") return corsResponse();
   if (req.method !== "POST") return Response.json({ error: "Method not allowed" }, { status: 405, headers: CORS_HEADERS });
@@ -126,12 +162,9 @@ export default async function handler(req) {
 
   // Fetch summary (parallel-safe, cached after first call)
   const summary = await fetchSummary(subject, topicId, lang);
-  const systemPrompt = buildSystemPrompt(profile, summary, lang, mode || 'chat');
-
-  const recentMessages = messages.slice(-8).map(m => ({
-    role: m.role === 'user' ? 'user' : 'assistant',
-    content: typeof m.content === 'string' ? m.content : String(m.content),
-  }));
+  const { recentMessages, hasImage } = buildRecentMessages(messages);
+  const systemPrompt = buildSystemPrompt(profile, summary, lang, mode || 'chat')
+    + (hasImage ? '\n\nНа фото — задача ученика: прочитай условие с изображения и реши пошагово с числами до финального ответа.' : '');
 
   // Streaming mode (currently unused: client forces stream:false because Netlify
   // buffers SSE — see tutorHelpers.ts. Kept provider-correct in case it's re-enabled.
