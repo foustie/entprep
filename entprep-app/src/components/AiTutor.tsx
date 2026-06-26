@@ -603,7 +603,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
             fontFamily: FF.mono, fontSize: 13, fontWeight: 800,
             color: '#fff', textAlign: 'center', letterSpacing: '0.04em',
           }}>
-            Kaspi · 8 747 356 4629
+            Kaspi · 8 705 234 0280
           </div>
         </div>
       )}
