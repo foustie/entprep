@@ -273,11 +273,19 @@ async function getPool(sid: string, lang?: Lang): Promise<Question[]> {
         clearTimeout(timeout);
         if (resp.ok) {
           const rawRows = await resp.json();
-          // CDN JSON uses _topic/_subtopic (dump script format), normalize to Supabase column names
+          // CDN JSON uses the dump's field names (_topic/_subtopic, and pt/px/pt_kk/px_kk
+          // for passages) — normalize to the Supabase column names supabaseRowToQuestion
+          // reads. Without the passage remap, non-reading 'context' questions (e.g. English
+          // reading-comprehension) silently lose their passage: q.px is never set → isR=false
+          // → the passage block is not rendered.
           const rows: SupabaseRow[] = rawRows.map((r: Record<string, unknown>) => ({
             ...r,
             topic: r.topic || r._topic || '',
             subtopic: r.subtopic || r._subtopic || '',
+            passage_title: (r.passage_title ?? r.pt) as string | null | undefined,
+            passage_text: (r.passage_text ?? r.px) as string | null | undefined,
+            passage_title_kk: (r.passage_title_kk ?? r.pt_kk) as string | null | undefined,
+            passage_text_kk: (r.passage_text_kk ?? r.px_kk) as string | null | undefined,
           }));
           if (rows.length > 0) {
             if (sid === 'reading') {
