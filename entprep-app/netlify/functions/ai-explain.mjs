@@ -1,6 +1,7 @@
 import { corsResponse, CORS_HEADERS, verifyAuth, createRateLimiter, rateLimitResponse, validateExplain, checkPremium } from "./utils/shared.mjs";
 import { callAI, aiConfigured } from "./utils/ai.mjs";
 import { getContext } from "./utils/rag.mjs";
+import { STEM_SUBJECTS, getTemperature, getSTEMPrefix } from "./utils/constants.mjs";
 
 const checkRate = createRateLimiter("explain", { max: 30, windowSec: 60 });
 
@@ -64,16 +65,31 @@ export default async function handler(req) {
   }
 
   const isKk = lang === 'kk';
-  const systemPrompt = isKk
+  const baseSystemPrompt = isKk
     ? 'Сен ҰБТ (Ұлттық бірыңғай тестілеу, Қазақстан) репетиторысың. Қазақ тілінде жауап бер. Сұрақ мәтінін қайталама. Markdown-сыз қатаң JSON қайтар: {"short":"1 сөйлем — неге бұл жауап дұрыс","detailed":"3-5 сөйлем — толық талдау, оқушы қателессе — қатені түсіндір, қарапайым тілмен"}'
     : 'Ты репетитор ЕНТ (Единое национальное тестирование, Казахстан). Ответь на русском. Не повторяй текст вопроса. Верни строго JSON без markdown: {"short":"1 предложение — суть почему этот ответ правильный","detailed":"3-5 предложений — подробный разбор, если ученик ошибся — объясни ошибку, простым языком"}';
+
+  // STEM hardening (audit #7): Qwen runs with reasoning DISABLED, so it does no
+  // internal chain-of-thought — its one-shot arithmetic is the only guard on STEM
+  // explanations. For STEM subjects, prepend the solve-and-verify scaffold so the
+  // model re-derives the answer and checks arithmetic + units BEFORE emitting JSON,
+  // and lower the temperature. The verification is SILENT: the final visible output
+  // must stay ONLY the strict {short,detailed} JSON object — no steps, no markdown.
+  const stemPrefix = getSTEMPrefix(subject);
+  const systemPrompt = stemPrefix
+    ? `${stemPrefix}\n\nВАЖНО: всю проверку и решение выполни про себя, НЕ выводи шаги. Итоговый ответ — ТОЛЬКО JSON-объект указанного ниже формата, без markdown и без какого-либо текста до или после JSON.\n\n${baseSystemPrompt}`
+    : baseSystemPrompt;
+
+  // Non-STEM keeps the original 0.7 (getTemperature would bump it to 0.8 — avoid
+  // changing established non-STEM behavior). STEM uses getTemperature → 0.5.
+  const temperature = STEM_SUBJECTS.has(subject) ? getTemperature(subject) : 0.7;
 
   try {
     const ai = await callAI({
       system: systemPrompt,
       messages: [{ role: "user", content: userContent }],
       max_tokens: 500,
-      temperature: 0.7,
+      temperature,
     });
 
     if (!ai.ok) {
