@@ -56,7 +56,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
   const profileRef = useRef<StudentProfile>(buildStudentProfile(hist, st.goal));
   const sendingRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const handleSendRef = useRef<(text?: string) => void>(() => {});
+  const handleSendRef = useRef<(text?: string, images?: string[]) => void>(() => {});
 
   const handleCameraClick = () => {
     if (!user) { toast.warning(t.test.loginRequired); return; }
@@ -81,18 +81,9 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
     reader.onload = () => {
       const dataUrl = typeof reader.result === 'string' ? reader.result : '';
       if (!dataUrl) return;
-      const caption = t.tutor.photoCaption;
-      const userMsg: TutorMessage = {
-        role: 'user',
-        content: caption + '\n\n![image](' + dataUrl + ')',
-        timestamp: Date.now(),
-      };
-      setMessages(prev => [...prev, userMsg, {
-        role: 'assistant',
-        content: t.tutor.photoReceived,
-        timestamp: Date.now(),
-      }]);
       trackEvent('AI Tutor Photo Sent', { size: file.size });
+      // Route the photo through the real send pipeline (multimodal vision request)
+      handleSendRef.current(t.tutor.photoCaption, [dataUrl]);
     };
     reader.readAsDataURL(file);
   };
@@ -135,9 +126,9 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleSend = async (text?: string) => {
+  const handleSend = async (text?: string, images?: string[]) => {
     const msg = text || input.trim();
-    if (!msg) return;
+    if (!msg && !(images && images.length)) return;
     // Reset stuck state — if loading was stuck from a previous failed attempt, force reset
     if (loading || sendingRef.current) {
       setLoading(false);
@@ -154,7 +145,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
       return;
     }
 
-    const userMsg: TutorMessage = { role: 'user', content: msg, timestamp: Date.now() };
+    const userMsg: TutorMessage = { role: 'user', content: msg || t.tutor.photoCaption, timestamp: Date.now(), ...(images && images.length ? { images } : {}) };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
     setInput('');
@@ -671,7 +662,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
                     }} />
                   ))}
                 </div>
-              ) : msg.role === 'assistant' ? renderBold(msg.content) : renderUserContent(msg.content, t.tutor.imageAlt)}
+              ) : msg.role === 'assistant' ? renderBold(msg.content) : renderUserContent(msg, t.tutor.imageAlt)}
             </div>
           </div>
         );
@@ -794,22 +785,22 @@ const proDotStyle: React.CSSProperties = {
   border: '1.5px solid var(--ink)',
 };
 
-// Renders a user message — extracts inline `![image](data:...)` and shows thumbnail
-function renderUserContent(content: string, imageAlt: string): React.ReactNode {
-  const match = content.match(/^([\s\S]*?)\n\n!\[image\]\((data:image\/[^)]+)\)\s*$/);
-  if (match) {
-    const [, text, src] = match;
+// Renders a user message — text plus any attached image thumbnails (vision)
+function renderUserContent(msg: TutorMessage, imageAlt: string): React.ReactNode {
+  if (msg.images && msg.images.length) {
     return (
       <>
-        {text && <div style={{ marginBottom: 8 }}>{text}</div>}
-        <img src={src} alt={imageAlt} style={{
-          display: 'block', maxWidth: '100%', borderRadius: R.md,
-          border: '1.5px solid rgba(255,255,255,0.35)',
-        }} />
+        {msg.content && <div style={{ marginBottom: 8 }}>{msg.content}</div>}
+        {msg.images.map((src, i) => (
+          <img key={i} src={src} alt={imageAlt} style={{
+            display: 'block', maxWidth: '100%', borderRadius: R.md,
+            border: '1.5px solid rgba(255,255,255,0.35)',
+          }} />
+        ))}
       </>
     );
   }
-  return content;
+  return msg.content;
 }
 
 // Simple bold text renderer for **text**

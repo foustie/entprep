@@ -1263,7 +1263,6 @@ const ru = {
     cameraLabel: 'Фото задачи',
     imageAlt: 'задача',
     photoCaption: 'Реши эту задачу',
-    photoReceived: 'Фото получил. Разбор по изображению подключим скоро 💜',
     photoTooLarge: 'Фото слишком большое (больше 3 МБ)',
     photoBadFormat: 'Загрузите JPG, PNG или WebP',
     errorWord: 'Ошибка',

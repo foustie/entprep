@@ -1248,7 +1248,6 @@ const kk: Translations = {
     cameraLabel: 'Тапсырманың суреті',
     imageAlt: 'тапсырма',
     photoCaption: 'Осы тапсырманы шеш',
-    photoReceived: 'Фотоны қабылдадым. Сурет бойынша талдау жақын арада қосылады 💜',
     photoTooLarge: 'Сурет тым үлкен (3 МБ-тан көп)',
     photoBadFormat: 'JPG, PNG немесе WebP жүктеңіз',
     errorWord: 'Қате',

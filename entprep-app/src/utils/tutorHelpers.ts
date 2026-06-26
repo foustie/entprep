@@ -10,6 +10,7 @@ import { TOPIC_MAP } from '../config/topics';
 export interface TutorMessage {
   role: 'user' | 'assistant';
   content: string;
+  images?: string[]; // base64 data: URLs (vision); forwarded only on the last message
   timestamp: number;
 }
 
@@ -136,7 +137,13 @@ export async function sendTutorMessage(
     },
     signal: ac.signal,
     body: JSON.stringify({
-      messages: messages.map(m => ({ role: m.role, content: m.content })),
+      messages: messages.map((m, i) => ({
+        role: m.role,
+        content: m.content,
+        // Forward images only on the last message — bounds payload/token cost
+        // (older photos are dropped by the backend slice(-8) anyway).
+        ...(i === messages.length - 1 && m.images && m.images.length ? { images: m.images } : {}),
+      })),
       profile,
       subject: options.subject,
       topicId: options.topicId,
