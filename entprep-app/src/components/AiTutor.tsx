@@ -64,7 +64,7 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
     fileInputRef.current?.click();
   };
 
-  const handlePhotoPick = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
@@ -77,15 +77,12 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
       toast.warning(t.tutor.photoBadFormat);
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = typeof reader.result === 'string' ? reader.result : '';
-      if (!dataUrl) return;
-      trackEvent('AI Tutor Photo Sent', { size: file.size });
-      // Route the photo through the real send pipeline (multimodal vision request)
-      handleSendRef.current(t.tutor.photoCaption, [dataUrl]);
-    };
-    reader.readAsDataURL(file);
+    trackEvent('AI Tutor Photo Sent', { size: file.size });
+    // Downscale before sending — cuts vision tokens/payload ~10x and normalizes to JPEG.
+    const dataUrl = await downscaleImage(file);
+    if (!dataUrl) return;
+    // Route the photo through the real send pipeline (multimodal vision request)
+    handleSendRef.current(t.tutor.photoCaption, [dataUrl]);
   };
 
   // Pre-warm the serverless function on mount (HEAD request, no auth needed)
@@ -789,6 +786,39 @@ const proDotStyle: React.CSSProperties = {
   background: '#FFC233',
   border: '1.5px solid var(--ink)',
 };
+
+// Downscale a picked image to a max edge + JPEG before sending — bounds vision
+// token cost and request size, and normalizes HEIC/PNG/WebP to JPEG. Falls back to
+// the raw data URL if the browser can't decode it (e.g. HEIC on desktop).
+async function downscaleImage(file: File, maxEdge = 1024, quality = 0.8): Promise<string> {
+  const raw = await new Promise<string>((resolve) => {
+    const r = new FileReader();
+    r.onload = () => resolve(typeof r.result === 'string' ? r.result : '');
+    r.onerror = () => resolve('');
+    r.readAsDataURL(file);
+  });
+  if (!raw) return '';
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = () => reject(new Error('decode failed'));
+      i.src = raw;
+    });
+    const longest = Math.max(img.width, img.height);
+    const scale = longest > maxEdge ? maxEdge / longest : 1;
+    if (scale === 1 && file.size < 400 * 1024) return raw; // already small enough
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(img.width * scale);
+    canvas.height = Math.round(img.height * scale);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return raw;
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL('image/jpeg', quality);
+  } catch {
+    return raw; // browser couldn't decode — send original, backend caps/strips it
+  }
+}
 
 // Renders a user message — text plus any attached image thumbnails (vision)
 function renderUserContent(msg: TutorMessage, imageAlt: string): React.ReactNode {

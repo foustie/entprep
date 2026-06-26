@@ -13,6 +13,11 @@ const TUTOR_PREMIUM_DAILY = 50;
 // This prevents free→premium (or premium→free) transitions mid-window from resetting the counter.
 const checkRate = createRateLimiter("tutor", { max: TUTOR_PREMIUM_DAILY, windowSec: 86400 });
 
+// Vision turns cost ~10x a text turn — a separate daily sub-cap (premium-only) on
+// top of the text cap bounds image spend. Counts only image-bearing requests.
+const VISION_DAILY = 20;
+const checkVisionRate = createRateLimiter("tutor-vision", { max: VISION_DAILY, windowSec: 86400 });
+
 const SITE_URL = process.env.URL || "https://entprep.org";
 const summaryCache = new Map();
 
@@ -165,6 +170,17 @@ export default async function handler(req) {
   // Vision is a premium feature — enforce server-side (camera is client-gated only,
   // so a non-premium user could POST images directly to the expensive vision path).
   const { recentMessages, hasImage } = buildRecentMessages(messages, { allowImages: isPremium });
+
+  // Vision-specific daily sub-cap (only image-bearing turns count toward it).
+  if (hasImage) {
+    const vRetry = checkVisionRate(user.id);
+    if (vRetry) return Response.json({
+      error: lang === 'kk'
+        ? 'Бүгінге сурет бойынша талдау лимиті бітті. Ертең қайтадан!'
+        : 'Лимит разборов по фото на сегодня исчерпан. Завтра снова!',
+    }, { status: 429, headers: CORS_HEADERS });
+  }
+
   const systemPrompt = buildSystemPrompt(profile, summary, lang, mode || 'chat')
     + (hasImage ? '\n\nНа фото — задача ученика: прочитай условие с изображения и реши пошагово с числами до финального ответа.' : '');
 
