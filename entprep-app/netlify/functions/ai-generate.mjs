@@ -4,7 +4,7 @@
 
 import { corsResponse, CORS_HEADERS, verifyAuth, createRateLimiter, rateLimitResponse, validateGenerate } from "./utils/shared.mjs";
 import { checkGenerated, tokenize, jaccard } from "./utils/quality.mjs";
-import { SUBJECT_NAMES, getTemperature, getSTEMPrefix, JACCARD_THRESHOLD, QUALITY_RULES } from "./utils/constants.mjs";
+import { SUBJECT_NAMES, getTemperature, getSTEMPrefix, JACCARD_THRESHOLD, QUALITY_RULES, STEM_SUBJECTS } from "./utils/constants.mjs";
 import { callAI, aiConfigured } from "./utils/ai.mjs";
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "").split(",").map(e => e.trim()).filter(Boolean);
@@ -104,9 +104,65 @@ ${QUALITY_RULES}
     return false;
   }
 
+  // Strip "А) / Б) / В) / Г)" letter prefixes Qwen sometimes prepends to o_kk items.
+  const KK_LETTER_PREFIX = /^\s*[АаБбВвГгӘә]\s*[).\]]\s*/;
+
+  // Parse + validate the Kazakh translation sub-call into the exact
+  // {q_kk, o_kk(array of 4 non-empty strings), e_kk} schema. Throws on shape failure.
+  function parseTranslation(text) {
+    let raw = (text || "").replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+    const tr = JSON.parse(raw);
+    if (!tr || typeof tr.q_kk !== "string" || !tr.q_kk.trim() ||
+        !Array.isArray(tr.o_kk) || tr.o_kk.length !== 4 ||
+        !tr.o_kk.every(o => typeof o === "string" && o.trim()) ||
+        typeof tr.e_kk !== "string" || !tr.e_kk.trim()) {
+      throw new Error("Invalid translation format");
+    }
+    return {
+      q_kk: tr.q_kk.trim(),
+      o_kk: tr.o_kk.map(o => o.replace(KK_LETTER_PREFIX, "").trim()),
+      e_kk: tr.e_kk.trim(),
+    };
+  }
+
+  // Heuristic: does this look like a calculation question (vs. a conceptual one)?
+  // The wrong-key defect we verify against is a numeric slip, so only verify those.
+  function looksNumeric(question) {
+    const hasDigit = s => /\d/.test(s || "");
+    const numericOpts = question.o.filter(hasDigit).length;
+    return numericOpts >= 2 || (hasDigit(question.q) && numericOpts >= 1);
+  }
+
+  // STEM wrong-key guard: one independent re-derivation of the numeric answer.
+  // Returns the option index (0-3) the model computes, or null when it can't
+  // decide / the call fails (fail-open — never block on verifier flakiness).
+  async function verifyStemAnswer(question) {
+    const optsText = question.o.map((o, i) => `${i}) ${o}`).join("\n");
+    const vAi = await callAI({
+      system: `Ты эксперт по точным наукам. Реши задачу с нуля сам, шаг за шагом, НЕ доверяя готовому ответу. Проверь арифметику и единицы измерения. Затем выбери вариант, ТОЧНО совпадающий с твоим результатом. Если задача не вычислительная — верни -1. Ответь СТРОГО JSON без markdown: {"idx": N}, где N — индекс варианта (0-3) или -1.`,
+      messages: [{ role: "user", content: `Задача: ${question.q}\nВарианты (индекс) значение:\n${optsText}` }],
+      max_tokens: 600,
+      temperature: 0,
+    });
+    if (!vAi.ok) return null;
+    try {
+      const raw = vAi.text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+      const v = JSON.parse(raw);
+      if (typeof v.idx === "number" && v.idx >= 0 && v.idx <= 3) return v.idx;
+    } catch { /* unparseable — fail open */ }
+    return null;
+  }
+
   try {
-    // Attempt 1
-    let parsed = await callModel([{ role: "user", content: userMessage }]);
+    // Attempt 1 — retry once if the first response is malformed JSON / wrong shape
+    // (a parse throw used to fall straight through to a hard HTTP 500).
+    let parsed;
+    try {
+      parsed = await callModel([{ role: "user", content: userMessage }]);
+    } catch (parseErr) {
+      console.log("Attempt 1 parse/format failed:", parseErr.message, "— retrying once");
+      parsed = await callModel([{ role: "user", content: `${userMessage}\n\nВАЖНО: верни СТРОГО валидный JSON в формате {"q":...,"o":[...4...],"c":0-3,"e":...} — без markdown, без пояснений.` }]);
+    }
 
     // Quality gate: check for issues
     let issues = checkGenerated(parsed.q, parsed.o, parsed.c, parsed.e, subject);
@@ -142,23 +198,41 @@ ${QUALITY_RULES}
       }
     }
 
-    // Auto-translate to Kazakh
+    // STEM wrong-key guard: one extra independent re-derivation catches the
+    // self-consistent numeric slips (e.g. ×100 unit errors) the mismatch gate
+    // can't — explanation and key agree but both are wrong. STEM + numeric only,
+    // a single extra call, to bound cost.
+    if (STEM_SUBJECTS.has(subject) && looksNumeric(parsed)) {
+      const verifyIdx = await verifyStemAnswer(parsed);
+      if (verifyIdx !== null && verifyIdx !== parsed.c) {
+        console.log(`STEM verify mismatch: model computed option ${verifyIdx}, key is ${parsed.c} — rejecting`);
+        return Response.json(
+          { error: "Не удалось сгенерировать качественный вопрос. Попробуйте ещё раз." },
+          { status: 422, headers: CORS_HEADERS }
+        );
+      }
+    }
+
+    // Auto-translate to Kazakh. Validate the exact {q_kk, o_kk[4], e_kk} schema
+    // and retry ONCE on shape failure — Qwen drops/garbles the shape often enough
+    // that KK silently went missing without this.
     try {
-      const trAi = await callAI({
-        system: `Ты профессиональный переводчик учебных материалов с русского на казахский. Переводи точно и полностью. Числа, формулы, Unicode символы (², √, π) — без изменений. Количество вариантов ответа ТОЧНО совпадает с оригиналом. Верни строго JSON (без markdown): {"q_kk":"...","o_kk":["...","...","...","..."],"e_kk":"..."}`,
-        messages: [{ role: "user", content: `Переведи на казахский:\nВопрос: ${parsed.q}\nВарианты: ${parsed.o.map((o, i) => `${["А","Б","В","Г"][i]}) ${o}`).join("; ")}\nОбъяснение: ${parsed.e}` }],
-        max_tokens: 800,
-        temperature: 0.3,
-      });
-      if (trAi.ok) {
-        let trRaw = trAi.text;
-        trRaw = trRaw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
-        const tr = JSON.parse(trRaw);
-        if (tr.q_kk && Array.isArray(tr.o_kk) && tr.o_kk.length === 4 && tr.e_kk) {
-          parsed.q_kk = tr.q_kk;
-          parsed.o_kk = tr.o_kk;
-          parsed.e_kk = tr.e_kk;
+      const trSystem = `Ты профессиональный переводчик учебных материалов с русского на казахский. Переводи точно и полностью. Числа, формулы, Unicode символы (², √, π) — без изменений. Количество вариантов ответа ТОЧНО совпадает с оригиналом. НЕ добавляй буквенные метки (А)/Б)) к вариантам. Верни строго JSON (без markdown): {"q_kk":"...","o_kk":["...","...","...","..."],"e_kk":"..."}`;
+      const trUser = { role: "user", content: `Переведи на казахский:\nВопрос: ${parsed.q}\nВарианты: ${parsed.o.map((o, i) => `${["А","Б","В","Г"][i]}) ${o}`).join("; ")}\nОбъяснение: ${parsed.e}` };
+      let tr = null;
+      for (let attempt = 0; attempt < 2 && !tr; attempt++) {
+        const trAi = await callAI({ system: trSystem, messages: [trUser], max_tokens: 800, temperature: 0.3 });
+        if (!trAi.ok) break;
+        try {
+          tr = parseTranslation(trAi.text);
+        } catch (shapeErr) {
+          if (attempt === 1) console.log("KK translation shape invalid after retry:", shapeErr.message);
         }
+      }
+      if (tr) {
+        parsed.q_kk = tr.q_kk;
+        parsed.o_kk = tr.o_kk;
+        parsed.e_kk = tr.e_kk;
       }
     } catch (trErr) {
       console.log("Auto-translate failed (non-critical):", trErr.message);

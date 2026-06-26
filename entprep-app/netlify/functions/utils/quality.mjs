@@ -97,6 +97,42 @@ function extractCore(text) {
     .trim();
 }
 
+// Common RU stopwords — ignored when fuzzy-matching long option phrases.
+const MENTION_STOPWORDS = new Set([
+  "это", "как", "что", "или", "для", "также", "если", "того", "этот", "эта",
+  "была", "были", "было", "быть", "есть", "очень", "более", "менее", "между",
+  "после", "перед", "через", "всех", "весь", "его", "она", "они", "оно",
+  "тоже", "чтобы", "потому", "который", "которые", "которая", "когда", "чем",
+]);
+
+/** Meaningful keywords of an option: words length≥4 minus stopwords, lowercased. */
+function extractKeywords(text) {
+  return (text || "").toLowerCase()
+    .replace(/[.,!?;:()«»"'\-—–]/g, " ")
+    .split(/\s+/)
+    .filter(w => w.length >= 4 && !MENTION_STOPWORDS.has(w));
+}
+
+/**
+ * Is an option referenced by the explanation?
+ * Exact/substring match for short & numeric answers (keeps wrong-key STEM
+ * detection intact); fuzzy keyword-overlap (≥70% of meaningful keywords appear)
+ * for long, multi-word humanities options that get paraphrased, not quoted.
+ */
+function isOptionMentioned(optionText, expLower) {
+  const core = extractCore(optionText);
+  if (core.length < 2) return false;
+  if (expLower.includes(core)) return true;
+  const keywords = extractKeywords(optionText);
+  if (keywords.length >= 2) {
+    const hits = keywords.filter(
+      k => expLower.includes(k) || (k.length >= 6 && expLower.includes(k.slice(0, -2)))
+    ).length;
+    if (hits / keywords.length >= 0.7) return true;
+  }
+  return false;
+}
+
 /**
  * Check if the explanation contradicts the marked correct answer.
  * Detects when AI correctly solves a problem in the explanation but assigns
@@ -113,12 +149,11 @@ export function checkExplanationMismatch(q, options, correctIdx, explanation) {
   const correctCore = extractCore(correctOption);
   if (correctCore.length < 2) return null;
 
-  // Check which options' core values appear in the explanation
+  // Check which options the explanation references (exact for short/numeric,
+  // fuzzy keyword-overlap for long paraphrased phrases — see isOptionMentioned)
   const mentionedOptions = [];
   for (let i = 0; i < options.length; i++) {
-    const core = extractCore(options[i]);
-    if (core.length < 2) continue;
-    if (expLower.includes(core)) mentionedOptions.push(i);
+    if (isOptionMentioned(options[i], expLower)) mentionedOptions.push(i);
   }
 
   // If correct option is mentioned — no mismatch
