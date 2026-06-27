@@ -943,7 +943,6 @@ const ru = {
     noPurchaseFound: 'Подписка не найдена. Если вы покупали — попробуйте позже.',
     loginToSubscribe: 'Войдите, чтобы подписаться',
     loginToSubscribeDesc: 'Для оформления подписки нужен аккаунт',
-    webOnly: 'Скачать приложение',
     purchasing: 'Оформление...',
     yearlyPlanAuto: '9 990 \u20B8/сезон',
     legalPrefix: 'Оформляя подписку, вы соглашаетесь с',

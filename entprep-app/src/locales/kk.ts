@@ -930,7 +930,6 @@ const kk: Translations = {
     noPurchaseFound: 'Жазылым табылмады. Сатып алған болсаңыз — кейінірек қайталаңыз.',
     loginToSubscribe: 'Жазылу үшін кіріңіз',
     loginToSubscribeDesc: 'Жазылымды рәсімдеу үшін аккаунт қажет',
-    webOnly: 'Қосымшаны жүктеу',
     purchasing: 'Рәсімдеу...',
     yearlyPlanAuto: '9 990 \u20B8/маусым',
     legalPrefix: 'Жазылым рәсімдей отырып, сіз төмендегі шарттарға келісесіз:',

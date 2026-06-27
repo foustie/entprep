@@ -12,6 +12,7 @@ import { getEntCountdown } from '../../config/ent';
 import { trackEvent } from '../../utils/analytics';
 import SendToMomSheet from '../SendToMomSheet';
 import PaywallModal from '../PaywallModal';
+import { lemonCheckoutUrl } from '../../config/payment';
 
 interface PaywallScreenProps {
   trigger: 'explain_limit' | 'tutor_limit' | 'fullent_result';
@@ -33,9 +34,6 @@ function NativePaywallBridge({ trigger, onClose }: PaywallScreenProps) {
     : 'daily_limit';
   return <PaywallModal open reason={reason} onClose={onClose} />;
 }
-
-const SEASON_URL = 'https://entprep.lemonsqueezy.com/checkout/buy/f2bd4267-eddc-4ba3-9e88-b43eee15dc9a';
-const MONTHLY_URL = 'https://entprep.lemonsqueezy.com/checkout/buy/6dac2860-6f5a-4643-8eee-1981e3441d08';
 
 const INK = 'var(--ink)';
 const DEFAULT_GRANT = 122;
@@ -141,9 +139,8 @@ function WebPaywallScreen({ trigger, score, onClose }: PaywallScreenProps) {
   }, [trigger, score]);
 
   const email = user?.email ?? '';
-  const qs = email ? `?checkout[email]=${encodeURIComponent(email)}` : '';
-  const seasonLink = SEASON_URL + qs;
-  const monthlyLink = MONTHLY_URL + qs;
+  const seasonLink = lemonCheckoutUrl('season', email);
+  const monthlyLink = lemonCheckoutUrl('monthly', email);
 
   const features = useMemo((): { label: string; Icon: ComponentType<{ size?: number; strokeWidth?: number }>; color: string; bg: string }[] => {
     const base = [

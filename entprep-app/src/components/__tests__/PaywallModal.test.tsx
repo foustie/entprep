@@ -5,7 +5,11 @@ import PaywallModal from '../PaywallModal';
 vi.mock('../../config/payment', () => ({
   PLANS: { monthly: { amount: 2990 }, yearly: { amount: 9990 } },
   RC_PRODUCT_IDS: { monthly: 'entprep_monthly', yearly: 'entprep_yearly' },
+  lemonCheckoutUrl: (plan: string, email?: string) =>
+    `https://entprep.lemonsqueezy.com/checkout/buy/${plan === 'monthly' ? 'MID' : 'SID'}${email ? `?checkout[email]=${encodeURIComponent(email)}` : ''}`,
 }));
+
+vi.mock('../../utils/analytics', () => ({ trackEvent: vi.fn() }));
 
 vi.mock('../../config/purchases', () => ({
   isNativePlatform: () => false,
@@ -46,7 +50,6 @@ vi.mock('../../locales', () => ({
       getPremium: 'Подписаться',
       alreadyPaid: 'Восстановить покупку',
       noPurchaseFound: 'Подписка не найдена',
-      webOnly: 'Скачать приложение',
       purchasing: 'Оформление...',
     },
   }),
@@ -94,11 +97,16 @@ describe('PaywallModal', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it('on web: CTA opens store link', () => {
+  it('on web: CTA opens the Lemon Squeezy checkout with the email prefilled', () => {
     const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
-    render(<PaywallModal open={true} reason="daily_limit" onClose={() => {}} />);
-    fireEvent.click(screen.getByText(/Скачать приложение/));
-    expect(openSpy).toHaveBeenCalledWith(expect.stringContaining('play.google.com'), '_blank');
+    const onClose = vi.fn();
+    render(<PaywallModal open={true} reason="daily_limit" onClose={onClose} />);
+    fireEvent.click(screen.getByText('Подписаться'));
+    expect(openSpy).toHaveBeenCalledTimes(1);
+    const url = openSpy.mock.calls[0][0] as string;
+    expect(url).toContain('lemonsqueezy.com/checkout');
+    expect(url).toContain('checkout[email]=test%40test.com'); // logged-in user's email prefilled
+    expect(onClose).toHaveBeenCalled(); // modal closes after sending to checkout
     openSpy.mockRestore();
   });
 });

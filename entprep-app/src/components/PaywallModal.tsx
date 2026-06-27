@@ -8,7 +8,8 @@ import { useT } from '../locales';
 import { useAuth } from '../contexts/AuthContext';
 import { useNav } from '../contexts/NavigationContext';
 import type { PaywallReason } from '../types';
-import type { PlanType } from '../config/payment';
+import { lemonCheckoutUrl, type PlanType } from '../config/payment';
+import { trackEvent } from '../utils/analytics';
 import {
   isNativePlatform,
   getOfferings,
@@ -26,12 +27,6 @@ interface PaywallModalProps {
 const BENEFIT_ICONS = [Bot, Sparkles, GraduationCap, BookOpen];
 const BENEFIT_COLORS = [COLORS.streak, COLORS.xp, COLORS.win, COLORS.purple];
 
-
-const STORE_LINKS = {
-  android: 'https://play.google.com/store/apps/details?id=kz.entprep.app',
-  ios: 'https://apps.apple.com/app/entprep/id6760261689',
-};
-
 export default function PaywallModal({ open, reason, onClose }: PaywallModalProps) {
   const t = useT();
   const { user } = useAuth();
@@ -45,10 +40,10 @@ export default function PaywallModal({ open, reason, onClose }: PaywallModalProp
 
   const handlePay = useCallback(async () => {
     if (!isNative) {
-      // Web: direct to app store
-      const ua = navigator.userAgent.toLowerCase();
-      const link = /iphone|ipad|mac/.test(ua) ? STORE_LINKS.ios : STORE_LINKS.android;
-      window.open(link, '_blank');
+      // Web: no native app yet — send to the Lemon Squeezy checkout for the chosen plan.
+      trackEvent('Paywall Checkout Click', { reason: reason ?? 'unknown', plan: plan === 'monthly' ? 'monthly' : 'season' });
+      window.open(lemonCheckoutUrl(plan === 'monthly' ? 'monthly' : 'season', user?.email), '_blank', 'noopener,noreferrer');
+      onClose();
       return;
     }
 
@@ -72,7 +67,7 @@ export default function PaywallModal({ open, reason, onClose }: PaywallModalProp
     } finally {
       setPurchasing(false);
     }
-  }, [isNative, plan, packages, onClose, t.error]);
+  }, [isNative, plan, packages, onClose, t.error, reason, user]);
 
   const handleRestore = useCallback(async () => {
     if (!isNative) return;
@@ -288,7 +283,7 @@ export default function PaywallModal({ open, reason, onClose }: PaywallModalProp
               {purchasing ? (
                 <><Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />{t.paywall.purchasing}</>
               ) : (
-                <><Crown size={18} />{isNative ? t.paywall.getPremium : t.paywall.webOnly}</>
+                <><Crown size={18} />{t.paywall.getPremium}</>
               )}
             </button>
 
