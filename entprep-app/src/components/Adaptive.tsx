@@ -1,37 +1,22 @@
-import React, { useState, useEffect } from "react";
-import { getRecommendations, calcTopicStats, calcSubtopicStats, getWrongQuestions, calcStreak } from '../utils/adaptiveHelpers';
-import { supabase } from '../config/supabase';
-import { consumePlan as consumePlanLimit, canGeneratePlan } from '../utils/aiLimits';
-import { CARD_COMPACT, CARD_HERO, TYPE, COLORS, scoreColor, FF, R } from '../constants/styles';
+import React, { useState, useRef } from "react";
+import { getRecommendations, calcTopicStats, calcSubtopicStats, getWrongQuestions } from '../utils/adaptiveHelpers';
+import { generateStudyPlan } from '../utils/studyPlanGenerator';
+import { toggleTaskDone } from '../utils/studyPlanStore';
+import { trackEvent } from '../utils/analytics';
+import { getUpcomingPeriods } from '../config/ent';
+import { TOPIC_MAP } from '../config/topics';
+import { CARD_COMPACT, CARD_HERO, TYPE, COLORS, scoreColor, FF, FS, SP, R, ICON } from '../constants/styles';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useNav } from '../contexts/NavigationContext';
 import { useApp } from '../contexts/AppContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import SubjectIcon from './ui/SubjectIcon';
-import { API_BASE } from '../config/app';
 import { useT } from '../locales';
 import EmptyState from './ui/EmptyState';
-import { TrendingUp, TrendingDown, Minus, ChevronDown, ChevronRight, AlertTriangle, FileText, XCircle, Sparkles, Calendar, BookOpen, Lightbulb, ClipboardList, RefreshCw, Lock, Loader } from 'lucide-react';
-import type { TopicStats } from '../types';
-
-interface PlanTask {
-  type: string;
-  text: string;
-  subject?: string;
-  topic?: string | null;
-}
-
-interface PlanDay {
-  day: number;
-  title: string;
-  tasks: PlanTask[];
-}
-
-interface Plan {
-  summary: string;
-  days: PlanDay[];
-}
+import { TrendingUp, TrendingDown, Minus, ChevronDown, ChevronRight, ChevronLeft, AlertTriangle, FileText, XCircle, Sparkles, RefreshCw, Lock, Check, Play } from 'lucide-react';
+import type { TopicStats, StudyTask, StudyWeek, StudyPlanTopicRef } from '../types';
 
 interface SubjectAnalysis {
   id: string;
@@ -45,28 +30,24 @@ interface SubjectAnalysis {
   message: string;
 }
 
-const PLAN_KEY = "entprep_plan";
-const PLAN_MAX_AGE = 3 * 24 * 60 * 60 * 1000;
-
-function loadCachedPlan(): { date: string; data: Plan } | null {
-  try {
-    const raw = localStorage.getItem(PLAN_KEY);
-    if (!raw) return null;
-    const cached = JSON.parse(raw) as { date?: string; data?: Plan };
-    if (!cached.date || !cached.data) return null;
-    if (Date.now() - new Date(cached.date).getTime() > PLAN_MAX_AGE) return null;
-    return cached as { date: string; data: Plan };
-  } catch { return null; }
+// ── Plan date helpers ─────────────────────────────────────────────────────────
+function todayISO(): string {
+  return new Date().toISOString().slice(0, 10);
 }
 
-function savePlanCache(data: Plan): void {
-  localStorage.setItem(PLAN_KEY, JSON.stringify({ date: new Date().toISOString(), data }));
+/** Index of the week containing `today` (clamped to [0, last]). */
+function defaultWeekIndex(weeks: StudyWeek[], today: string): number {
+  for (let i = 0; i < weeks.length; i++) {
+    if (today >= weeks[i].startDate && today <= weeks[i].endDate) return i;
+  }
+  if (weeks.length && today < weeks[0].startDate) return 0;
+  return Math.max(0, weeks.length - 1);
 }
 
 export default function Adaptive() {
   const { nav, openPaywall } = useNav();
-  const { hist, prof, st } = useApp();
-  const { user, isPremium } = useAuth();
+  const { hist, prof, st, plan: planSnap, setPlanSnapshot } = useApp();
+  const { isPremium } = useAuth();
   const toast = useToast();
   const bp = useBreakpoint();
   const t = useT();
@@ -80,50 +61,121 @@ export default function Adaptive() {
   const wrongCount = getWrongQuestions(hist, 1).length;
   const hasQd = hist.some(t => t.qd);
 
-  const [plan, setPlan] = useState<Plan | null>(null);
-  const [planDate, setPlanDate] = useState<string | null>(null);
-  const [planLoading, setPlanLoading] = useState(false);
-  const [planError, setPlanError] = useState<string | null>(null);
-  const [openDay, setOpenDay] = useState<number | null>(null);
+  // currentWeek is 0-based; null = follow the by-date default (today's week).
+  const [weekIdx, setWeekIdx] = useState<number | null>(null);
 
-  useEffect(() => {
-    const cached = loadCachedPlan();
-    if (cached) { setPlan(cached.data); setPlanDate(cached.date); }
-  }, []);
+  // Regenerate guard: confirm before wiping completion progress.
+  const [showRegenConfirm, setShowRegenConfirm] = useState(false);
+  const regenDlgRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(regenDlgRef, showRegenConfirm, () => setShowRegenConfirm(false));
 
-  const generatePlan = async () => {
-    if (!user || !supabase) return;
-    if (!canGeneratePlan()) { toast.warning(t.adaptive.planAlreadyGenerated); return; }
-    setPlanLoading(true);
-    setPlanError(null);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) { setPlanError(t.adaptive.sessionExpired); toast.warning(t.adaptive.sessionExpiredShort); setPlanLoading(false); return; }
-      const weakWithTopics = weak.map(s => {
-        const ts = calcTopicStats(s.id, hist);
-        return { name: s.name, avg: s.avg, trend: s.trend, topics: ts ? ts.filter(t => t.pct >= 0).map(t => ({ name: t.name, pct: t.pct })) : [] };
-      });
-      const strongData = strong.map(s => ({ name: s.name, avg: s.avg }));
-      const { current: streak } = calcStreak(hist);
-      const res = await fetch(`${API_BASE}/api/ai-plan`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify({ weak: weakWithTopics, strong: strongData, overall, totalTests, streak, lang: st.lang }),
-      });
-      if (res.status === 403) { setPlanError(t.adaptive.planQuotaReached); setPlanLoading(false); return; }
-      if (!res.ok) { const err = await res.json().catch(() => ({})); setPlanError((err as Record<string, string>).error || t.adaptive.planError); toast.error(t.adaptive.planError, { action: generatePlan, actionLabel: t.adaptive.retry }); setPlanLoading(false); return; }
-      const json = await res.json();
-      consumePlanLimit(); // consume limit only on success
-      setPlan(json);
-      setPlanDate(new Date().toISOString());
-      savePlanCache(json);
-      setOpenDay(0);
-    } catch { setPlanError(t.adaptive.networkError); toast.error(t.adaptive.networkErrorShort, { action: generatePlan, actionLabel: t.adaptive.retry }); }
-    setPlanLoading(false);
+  // ── Plan generation ──────────────────────────────────────────────────────
+  const buildWeakTopics = (): StudyPlanTopicRef[] =>
+    weak.map(s => {
+      const ts = calcTopicStats(s.id, hist);
+      const weakest = ts ? ts.filter(x => x.pct >= 0).sort((a, b) => a.pct - b.pct)[0] : undefined;
+      return { id: s.id, topic: weakest?.id, name: s.name, score: s.score };
+    });
+
+  const buildStrongTopics = (): StudyPlanTopicRef[] =>
+    strong.map(s => ({ id: s.id, name: s.name, score: s.score }));
+
+  const handleGenerate = () => {
+    const examDate = st.goal?.date || getUpcomingPeriods()[0]?.examStart || '';
+    if (!examDate) { toast.warning(t.study_plan.noGoal); return; }
+    const seed = new Date().toISOString();
+    const next = generateStudyPlan({
+      examDate,
+      target: st.goal?.target || 122,
+      profileSubjects: prof,
+      weakTopics: buildWeakTopics(),
+      strongTopics: buildStrongTopics(),
+      today: todayISO(),
+      seed,
+    });
+    if (!next) { toast.error(t.study_plan.planError); return; }
+    setPlanSnapshot({ plan: next, completion: {}, updatedAt: seed });
+    setWeekIdx(defaultWeekIndex(next.weeks, todayISO()));
+    trackEvent('Study Plan Created', { weeks: next.weeksCount, target: next.target });
   };
 
-  const planAge = planDate ? Date.now() - new Date(planDate).getTime() : null;
-  const planIsOld = planAge != null && planAge > PLAN_MAX_AGE;
+  const handleToggle = (taskId: string) => {
+    if (!planSnap) return;
+    const now = new Date().toISOString();
+    setPlanSnapshot({ ...planSnap, completion: toggleTaskDone(planSnap.completion, taskId, now), updatedAt: now });
+  };
+
+  const handleStart = (task: StudyTask) => {
+    if (task.type === 'practice' || task.type === 'review') {
+      if (task.subject) nav('test', task.subject, task.topic || null);
+    } else if (task.type === 'fullent') {
+      nav('fullent');
+    } else if (task.type === 'lesson') {
+      nav('tutor', task.subject || null, task.topic || null);
+    }
+    // challenge: deferred to phase 4 (locked / placeholder); tip: display-only
+  };
+
+  const hasStart = (task: StudyTask) =>
+    task.type === 'practice' || task.type === 'review' || task.type === 'fullent' || task.type === 'lesson';
+
+  const openLock = (reason: 'week3Plus' | 'challenge') => {
+    trackEvent('Study Plan Paywall Click', { reason });
+    openPaywall('study_plan_locked');
+  };
+
+  // ── Title / meta localization ────────────────────────────────────────────
+  const subjectName = (id?: string) => (id ? (t.subjects as Record<string, string>)[id] || id : '');
+  const taskTypeLabel = (type: StudyTask['type']) =>
+    (t.study_plan.taskTypes as Record<string, string>)[type] || type;
+
+  const topicName = (subject?: string, topic?: string): string => {
+    if (!subject || !topic) return '';
+    const loc = (t.topics as Record<string, string>)[`${subject}_${topic}`];
+    if (loc) return loc;
+    const sec = TOPIC_MAP[subject]?.find(s => s.id === topic);
+    if (sec) return isKk && sec.name_kk ? sec.name_kk : sec.name;
+    return '';
+  };
+
+  const taskTitle = (task: StudyTask): string => {
+    const sp = t.study_plan as unknown as Record<string, string>;
+    if (task.subject) {
+      if (task.topic) {
+        const k = `task_${task.type}_${task.subject}_${task.topic}`;
+        if (sp[k]) return sp[k];
+      }
+      const k2 = `task_${task.type}_${task.subject}`;
+      if (sp[k2]) return sp[k2];
+    }
+    const tl = taskTypeLabel(task.type);
+    if (!task.subject) return tl;
+    const sn = subjectName(task.subject);
+    const tn = topicName(task.subject, task.topic);
+    return tn ? `${tl}: ${sn} — ${tn}` : `${tl}: ${sn}`;
+  };
+
+  const taskMeta = (task: StudyTask): string => {
+    const parts: string[] = [];
+    if (task.subject) parts.push(subjectName(task.subject));
+    parts.push(taskTypeLabel(task.type));
+    parts.push(`~${task.durationMin} ${t.study_plan.meta.duration}`);
+    return parts.join(' / ');
+  };
+
+  const locale = isKk ? 'kk-KZ' : 'ru-RU';
+  const fmtDay = (iso: string) =>
+    new Date(iso + 'T00:00:00').toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' });
+  const fmtRange = (start: string, end: string) => {
+    const a = new Date(start + 'T00:00:00').toLocaleDateString(locale, { day: 'numeric', month: 'short' });
+    const b = new Date(end + 'T00:00:00').toLocaleDateString(locale, { day: 'numeric', month: 'short' });
+    return `${a} – ${b}`;
+  };
+
+  // Subject color lookup (from recommendation meta).
+  const subjColorMap: Record<string, string> = {};
+  [...weak, ...strong].forEach(s => { subjColorMap[s.id] = s.color; });
+  const subjColor = (id?: string) => (id && subjColorMap[id]) || COLORS.streak;
 
   const toggle = (id: string) => {
     if (!expanded[id] && !topicCache[id]) {
@@ -140,12 +192,6 @@ export default function Adaptive() {
   };
   const trendLabel = (trend: string) => trend === "improving" ? t.adaptive.improving : trend === "declining" ? t.adaptive.declining : trend === "none" ? "" : t.adaptive.stable;
   const stripColor = (score: number) => score > 60 ? COLORS.red : score > 40 ? COLORS.yellow : COLORS.green;
-
-  const taskIcon = (type: string) => {
-    if (type === "test") return <ClipboardList size={14} color={COLORS.teal} />;
-    if (type === "review") return <BookOpen size={14} color={COLORS.cyan} />;
-    return <Lightbulb size={14} color={COLORS.yellow} />;
-  };
 
   const toggleSection = (subjectId: string, sectionId: string) => {
     const key = `${subjectId}:${sectionId}`;
@@ -182,7 +228,7 @@ export default function Adaptive() {
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 3 }}>
                     <span style={{ fontSize: 12, color: "var(--text-body)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{isKk && ts.name_kk ? ts.name_kk : ts.name}</span>
                     <span style={{ fontSize: 12, fontWeight: 700, fontFamily: FF.mono, color: ts.pct < 0 ? "var(--text-muted)" : scoreColor(ts.pct), flexShrink: 0, marginLeft: 6 }}>
-                      {ts.pct < 0 ? "\u2014" : ts.pct + "%"}
+                      {ts.pct < 0 ? "—" : ts.pct + "%"}
                     </span>
                   </div>
                   <div style={{ height: 3, background: "var(--bg-subtle-2)", borderRadius: 2 }}>
@@ -203,7 +249,7 @@ export default function Adaptive() {
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 2 }}>
                           <span style={{ fontSize: 11, color: "var(--text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{isKk && st.name_kk ? st.name_kk : st.name}</span>
                           <span style={{ fontSize: 11, fontWeight: 700, fontFamily: FF.mono, color: st.pct < 0 ? "var(--text-muted)" : scoreColor(st.pct), flexShrink: 0, marginLeft: 4 }}>
-                            {st.pct < 0 ? "\u2014" : st.pct + "%"}
+                            {st.pct < 0 ? "—" : st.pct + "%"}
                           </span>
                         </div>
                         <div style={{ height: 2, background: "var(--bg-subtle-2)", borderRadius: 1 }}>
@@ -262,95 +308,170 @@ export default function Adaptive() {
     );
   };
 
-  const renderPlanSection = () => {
-    if (totalTests === 0) return null;
-    if (!user) {
-      return (
-        <div style={{ ...CARD_COMPACT, border: "1px solid var(--border-md)", padding: "18px 16px", marginBottom: 18, display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ width: 42, height: 42, borderRadius: 12, background: "var(--bg-subtle-2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <Lock size={20} color="var(--text-muted)" />
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>{t.adaptive.aiPlan}</div>
-            <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{t.adaptive.aiPlanLogin}</div>
-          </div>
-        </div>
-      );
-    }
-    if (plan && !planIsOld) {
-      return (
-        <div style={{ marginBottom: 28 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <Sparkles size={16} color={COLORS.cyan} />
-              <h2 style={{ ...TYPE.h3, margin: 0 }}>{t.adaptive.aiPlan7Days}</h2>
-            </div>
-            <button onClick={generatePlan} disabled={planLoading} style={{ background: "none", border: "1px solid rgba(255,90,54,0.2)", borderRadius: 8, padding: "5px 10px", color: COLORS.cyan, fontSize: 11, cursor: planLoading ? "wait" : "pointer", display: "flex", alignItems: "center", gap: 4 }}>
-              <RefreshCw size={12} /> {t.adaptive.refresh}
-            </button>
-          </div>
-          <div style={{ ...CARD_COMPACT, background: "var(--bg-elevated)", border: "1px solid rgba(255,90,54,0.18)", padding: "14px 16px", marginBottom: 10 }}>
-            <div style={{ fontSize: 13, color: "var(--text-body)", lineHeight: 1.5 }}>{plan.summary}</div>
-          </div>
-          <div style={{ display: "flex", gap: 6, marginBottom: 10, overflowX: "auto", paddingBottom: 4 }}>
-            {(plan.days || []).map((d, i) => (
-              <button key={i} onClick={() => setOpenDay(openDay === i ? null : i)} style={{ background: openDay === i ? "rgba(255,90,54,0.18)" : "var(--bg-subtle)", border: openDay === i ? "1px solid rgba(255,90,54,0.35)" : "1px solid var(--border)", borderRadius: R.md, padding: "8px 14px", color: openDay === i ? COLORS.cyan : "var(--text-secondary)", fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s", flexShrink: 0 }}>
-                <Calendar size={12} style={{ marginRight: 4, verticalAlign: -2 }} />
-                {(t.progress.dayNames as string[])[i] || `${t.adaptive.dayN} ${d.day}`}
-              </button>
-            ))}
-          </div>
-          {openDay !== null && plan.days[openDay] && (
-            <div style={{ ...CARD_COMPACT, border: "1px solid rgba(255,90,54,0.12)", padding: "14px 14px", animation: "slideUp 0.3s ease" }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", marginBottom: 12 }}>{plan.days[openDay].title}</div>
-              {(plan.days[openDay].tasks || []).map((task, ti) => (
-                <div key={ti} role={task.type === "test" ? "button" : undefined} tabIndex={task.type === "test" ? 0 : undefined} onClick={() => { if (task.type === "test" && task.subject) nav("test", task.subject, task.topic || null); }} onKeyDown={task.type === "test" ? (e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (task.subject) nav("test", task.subject, task.topic || null); } }) : undefined} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 12px", marginBottom: 6, borderRadius: R.md, background: task.type === "test" ? "rgba(255,90,54,0.06)" : task.type === "review" ? "rgba(255,90,54,0.06)" : "rgba(234,179,8,0.06)", border: `1px solid ${task.type === "test" ? "rgba(255,90,54,0.12)" : task.type === "review" ? "rgba(255,90,54,0.12)" : "rgba(234,179,8,0.12)"}`, cursor: task.type === "test" ? "pointer" : "default", transition: "all 0.2s" }} onMouseEnter={e => { if (task.type === "test") (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,90,54,0.3)"; }} onMouseLeave={e => { if (task.type === "test") (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,90,54,0.12)"; }}>
-                  <div style={{ marginTop: 2, flexShrink: 0 }}>{taskIcon(task.type)}</div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, color: "var(--text-body)", lineHeight: 1.4 }}>{task.text}</div>
-                    {task.type === "test" && (
-                      <div style={{ fontSize: 11, color: COLORS.teal, marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
-                        {t.adaptive.startTest} <ChevronRight size={12} />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      );
-    }
-    return (
-      <div style={{ ...CARD_COMPACT, background: "var(--bg-elevated)", border: "1px solid rgba(255,90,54,0.18)", padding: "20px 16px", marginBottom: 28, textAlign: "center" }}>
-        <Sparkles size={28} color={COLORS.cyan} style={{ marginBottom: 10 }} />
-        <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text)", marginBottom: 6 }}>
-          {planIsOld ? t.adaptive.planOutdated : t.adaptive.aiPlan}
-        </div>
-        <div style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 14, lineHeight: 1.5 }}>
-          {planIsOld ? t.adaptive.planOutdatedDesc : t.adaptive.planDesc}
-        </div>
-        {planError && <div style={{ fontSize: 12, color: COLORS.red, marginBottom: 10 }}>{planError}</div>}
-        <button onClick={generatePlan} disabled={planLoading} style={{ background: planLoading ? "rgba(255,90,54,0.15)" : COLORS.streak, border: "2px solid var(--ink)", borderBottom: planLoading ? "2px solid var(--ink)" : "4px solid var(--ink)", borderRadius: 12, padding: "12px 24px", color: "#fff", fontSize: 13, fontWeight: 700, cursor: planLoading ? "wait" : "pointer", display: "inline-flex", alignItems: "center", gap: 8, transition: "all 0.2s" }}>
-          {planLoading ? <><Loader size={16} style={{ animation: "spin 1s linear infinite" }} /> {t.adaptive.generating}</> : <><Sparkles size={16} />{' '}{planIsOld ? t.adaptive.refreshPlan : t.adaptive.createPlan}</>}
+  // ── Week-view study plan ─────────────────────────────────────────────────
+  const ctaStyle: React.CSSProperties = {
+    display: 'inline-flex', alignItems: 'center', gap: SP.sm,
+    background: COLORS.streak, color: '#fff',
+    border: '2px solid var(--ink)', boxShadow: '0 3px 0 0 var(--ink)',
+    borderRadius: R.md, padding: `${SP.md}px ${SP.xl}px`,
+    fontSize: FS.md, fontWeight: 700, fontFamily: FF.body, cursor: 'pointer',
+  };
+
+  const checkboxStyle = (done: boolean): React.CSSProperties => ({
+    width: 24, height: 24, flexShrink: 0,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    borderRadius: R.sm, border: '2px solid var(--ink)',
+    background: done ? COLORS.win : 'var(--bg-card)',
+    cursor: 'pointer', padding: 0,
+  });
+
+  const startBtnStyle = (color: string): React.CSSProperties => ({
+    display: 'inline-flex', alignItems: 'center', gap: SP.xs, flexShrink: 0,
+    background: color, color: '#fff',
+    border: '2px solid var(--ink)', boxShadow: '0 3px 0 0 var(--ink)',
+    borderRadius: R.sm, padding: `${SP.sm}px ${SP.md}px`,
+    fontSize: FS.base, fontWeight: 700, fontFamily: FF.body, cursor: 'pointer',
+  });
+
+  const navBtnStyle = (disabled: boolean): React.CSSProperties => ({
+    width: 40, height: 40, flexShrink: 0,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    borderRadius: R.sm, border: '2px solid var(--ink)', background: 'var(--bg-card)',
+    color: disabled ? 'var(--text-muted)' : 'var(--text)',
+    cursor: disabled ? 'default' : 'pointer', padding: 0,
+  });
+
+  const renderTaskRow = (task: StudyTask, locked: boolean, showCta: boolean, lockReason: 'week3Plus' | 'challenge') => {
+    const done = !!planSnap?.completion[task.id]?.done;
+    const color = subjColor(task.subject);
+    const inner = (
+      <div style={{ display: 'flex', alignItems: 'center', gap: SP.md, ...(locked ? { filter: 'blur(3px)', opacity: 0.6, pointerEvents: 'none' as const, userSelect: 'none' as const } : {}) }}>
+        <button onClick={() => handleToggle(task.id)} disabled={locked} aria-label={t.study_plan.done} style={checkboxStyle(done)}>
+          {done && <Check size={ICON.sm} color="#fff" strokeWidth={3} />}
         </button>
-        {planLoading && (() => {
-          const shimmer: React.CSSProperties = {
-            background: 'linear-gradient(90deg, var(--skeleton-bg) 25%, var(--border-light) 50%, var(--skeleton-bg) 75%)',
-            backgroundSize: '200% 100%',
-            animation: 'shimmer 1.5s ease-in-out infinite',
-          };
-          return (
-            <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}>
-              <div style={{ ...shimmer, height: 48, borderRadius: R.md, animationDelay: '0s' }} />
-              {[0, 1, 2].map(i => (
-                <div key={i} style={{ ...shimmer, height: 36, borderRadius: 8, animationDelay: `${0.1 + i * 0.08}s` }} />
-              ))}
-            </div>
-          );
-        })()}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ ...TYPE.body, fontSize: FS.lg, fontWeight: 600, color: done ? 'var(--text-muted)' : 'var(--text)', textDecoration: done ? 'line-through' : 'none', lineHeight: 1.3 }}>{taskTitle(task)}</div>
+          <div style={{ fontSize: FS.base, color: 'var(--text-secondary)', fontFamily: FF.body, marginTop: 2 }}>{taskMeta(task)}</div>
+        </div>
+        {hasStart(task) && !done && (
+          <button onClick={() => handleStart(task)} style={startBtnStyle(color)}>
+            <Play size={ICON.sm} fill="#fff" /> {t.study_plan.start}
+          </button>
+        )}
       </div>
     );
+    if (!locked) {
+      return <div key={task.id} style={{ ...CARD_COMPACT, marginBottom: SP.sm }}>{inner}</div>;
+    }
+    return (
+      <div key={task.id} style={{ ...CARD_COMPACT, marginBottom: SP.sm, position: 'relative', overflow: 'hidden' }}>
+        {inner}
+        {showCta ? (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: SP.sm, padding: SP.md, background: 'var(--bg-card)', borderRadius: R.md }}>
+            <Lock size={28} color={COLORS.purple} />
+            <div style={{ ...TYPE.body, fontWeight: 700, color: 'var(--text)', textAlign: 'center' }}>{t.study_plan.proLock[lockReason]}</div>
+            <button onClick={() => openLock(lockReason)} style={{ display: 'inline-flex', alignItems: 'center', gap: SP.xs, background: COLORS.purple, color: '#fff', border: '2px solid var(--ink)', boxShadow: '0 3px 0 0 var(--ink)', borderRadius: R.sm, padding: `${SP.sm}px ${SP.lg}px`, fontSize: FS.base, fontWeight: 700, fontFamily: FF.body, cursor: 'pointer' }}>
+              {t.study_plan.proLock.unlock}
+            </button>
+          </div>
+        ) : (
+          <div style={{ position: 'absolute', top: SP.sm, right: SP.sm, display: 'inline-flex', alignItems: 'center', gap: 3, color: COLORS.purple }}>
+            <Lock size={ICON.sm} />
+            <span style={{ fontSize: FS.xs, fontWeight: 700, fontFamily: FF.mono }}>PRO</span>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderWeekView = () => {
+    if (!planSnap) return null;
+    const weeks = planSnap.plan.weeks;
+    const idx = Math.min(Math.max(weekIdx ?? defaultWeekIndex(weeks, todayISO()), 0), weeks.length - 1);
+    const week = weeks[idx];
+    const weekTasks = week.tasks;
+    // Premium tasks a free user cannot toggle are excluded from the progress
+    // denominator, so weekly progress can still reach 100% (otherwise the
+    // always-premium challenge would cap it at (n-1)/n).
+    const countableTasks = weekTasks.filter(tk => isPremium || !tk.premium);
+    const doneCount = countableTasks.filter(tk => planSnap.completion[tk.id]?.done).length;
+    const pct = countableTasks.length ? Math.round((doneCount / countableTasks.length) * 100) : 0;
+    const firstLockId = weekTasks.find(tk => !isPremium && tk.premium)?.id;
+    const lockReason: 'week3Plus' | 'challenge' = week.premium ? 'week3Plus' : 'challenge';
+
+    // Group tasks by day (ISO date), ascending.
+    const byDay: { date: string; tasks: StudyTask[] }[] = [];
+    for (const tk of weekTasks) {
+      let g = byDay.find(x => x.date === tk.date);
+      if (!g) { g = { date: tk.date, tasks: [] }; byDay.push(g); }
+      g.tasks.push(tk);
+    }
+    byDay.sort((a, b) => (a.date < b.date ? -1 : 1));
+
+    return (
+      <div style={{ marginBottom: SP.xxl }}>
+        {/* Header: eyebrow + regenerate */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: SP.md }}>
+          <div style={TYPE.eyebrow}>{t.study_plan.myPlan}</div>
+          <button onClick={() => setShowRegenConfirm(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: SP.xs, background: 'none', border: 'none', color: COLORS.streak, fontSize: FS.base, fontWeight: 700, fontFamily: FF.body, cursor: 'pointer', padding: 0 }}>
+            <RefreshCw size={ICON.sm} /> {t.study_plan.regeneratePlan}
+          </button>
+        </div>
+
+        {/* Week navigation */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: SP.md, marginBottom: SP.md }}>
+          <button onClick={() => idx > 0 && setWeekIdx(idx - 1)} disabled={idx === 0} aria-label={t.study_plan.weekLabel} style={navBtnStyle(idx === 0)}>
+            <ChevronLeft size={ICON.lg} />
+          </button>
+          <div style={{ flex: 1, textAlign: 'center', minWidth: 0 }}>
+            <div style={{ ...TYPE.h3, fontSize: FS.xxl }}>{t.study_plan.weekLabel} {week.weekNum} {t.study_plan.weekOf} {weeks.length}</div>
+            <div style={{ fontSize: FS.base, color: 'var(--text-secondary)', fontFamily: FF.body }}>{fmtRange(week.startDate, week.endDate)}</div>
+          </div>
+          <button onClick={() => idx < weeks.length - 1 && setWeekIdx(idx + 1)} disabled={idx === weeks.length - 1} aria-label={t.study_plan.weekLabel} style={navBtnStyle(idx === weeks.length - 1)}>
+            <ChevronRight size={ICON.lg} />
+          </button>
+        </div>
+
+        {/* Progress this week */}
+        <div style={{ marginBottom: SP.lg }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: SP.xs }}>
+            <span style={{ fontSize: FS.base, color: 'var(--text-secondary)', fontFamily: FF.body }}>{t.study_plan.progressThisWeek}</span>
+            <span style={{ fontSize: FS.base, fontWeight: 700, fontFamily: FF.mono, fontVariantNumeric: 'tabular-nums', color: 'var(--text)' }}>{pct}%</span>
+          </div>
+          <div style={{ height: 8, borderRadius: R.pill, background: 'var(--bg-subtle)', border: '1px solid var(--ink)', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${pct}%`, background: COLORS.win, transition: 'width 0.4s cubic-bezier(0.16,1,0.3,1)' }} />
+          </div>
+        </div>
+
+        {/* Day-grouped task list */}
+        {byDay.map((g, di) => (
+          <div key={g.date}>
+            <div style={{ fontSize: FS.base, fontWeight: 600, color: 'var(--text-secondary)', fontFamily: FF.body, textTransform: 'capitalize', margin: `${SP.md}px 0 ${SP.sm}px`, paddingTop: di === 0 ? 0 : SP.sm, borderTop: di === 0 ? 'none' : '1px solid var(--border)' }}>{fmtDay(g.date)}</div>
+            {g.tasks.map(task => {
+              const locked = !isPremium && task.premium;
+              return renderTaskRow(task, locked, locked && task.id === firstLockId, lockReason);
+            })}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const renderPlanSection = () => {
+    if (totalTests === 0) return null;
+    if (!planSnap) {
+      return (
+        <div style={{ ...CARD_HERO, marginBottom: SP.xxl, textAlign: 'center' }}>
+          <Sparkles size={28} color={COLORS.streak} style={{ marginBottom: SP.sm }} />
+          <div style={{ ...TYPE.h3, marginBottom: SP.xs }}>{t.study_plan.empty}</div>
+          <div style={{ fontSize: FS.base, color: 'var(--text-secondary)', fontFamily: FF.body, marginBottom: SP.lg, lineHeight: 1.5 }}>{t.study_plan.createPlanDesc}</div>
+          <button onClick={handleGenerate} style={ctaStyle}>
+            <Sparkles size={ICON.sm} /> {t.study_plan.createPlan}
+          </button>
+        </div>
+      );
+    }
+    return renderWeekView();
   };
 
   return (
@@ -362,7 +483,7 @@ export default function Adaptive() {
           <h1 style={{ ...TYPE.h1, fontSize: 22, margin: "6px 0 10px" }}>{t.adaptive.subtitle}</h1>
           <div style={{ display: "flex", gap: 20 }}>
             <div>
-              <div style={{ fontSize: 24, fontWeight: 800, color: totalTests > 0 ? COLORS.accent : "var(--text-muted)", fontFamily: FF.display }}>{totalTests > 0 ? overall + "%" : "\u2014"}</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: totalTests > 0 ? COLORS.accent : "var(--text-muted)", fontFamily: FF.display }}>{totalTests > 0 ? overall + "%" : "—"}</div>
               <div style={{ fontSize: 10, color: "var(--text-secondary)" }}>{t.adaptive.avgScore}</div>
             </div>
             <div>
@@ -427,6 +548,24 @@ export default function Adaptive() {
             </button>
           }
         />
+      )}
+
+      {/* Regenerate confirm — wiping completion progress is destructive */}
+      {showRegenConfirm && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: SP.xl }}>
+          <div ref={regenDlgRef} role="dialog" aria-modal="true" aria-label={t.study_plan.regenerateConfirm} tabIndex={-1} style={{ background: 'var(--bg-card)', border: '2px solid var(--ink)', boxShadow: '0 3px 0 0 var(--ink)', borderRadius: R.lg, padding: `${SP.xxl}px ${SP.xl}px`, maxWidth: 320, width: '100%', textAlign: 'center' }}>
+            <h2 style={{ ...TYPE.h3, margin: `0 0 ${SP.xs}px` }}>{t.study_plan.regenerateConfirm}</h2>
+            <div style={{ fontSize: FS.md, color: 'var(--text-secondary)', fontFamily: FF.body, marginBottom: SP.xl, lineHeight: 1.5 }}>{t.study_plan.regenerateConfirmDesc}</div>
+            <div style={{ display: 'flex', gap: SP.sm }}>
+              <button onClick={() => setShowRegenConfirm(false)} style={{ flex: 1, padding: `${SP.md}px 0`, borderRadius: R.md, border: '1px solid var(--border)', background: 'none', color: 'var(--text)', fontSize: FS.lg, fontWeight: 600, fontFamily: FF.body, cursor: 'pointer' }}>
+                {t.study_plan.cancel}
+              </button>
+              <button onClick={() => { setShowRegenConfirm(false); handleGenerate(); }} style={{ flex: 1, padding: `${SP.md}px 0`, borderRadius: R.md, border: '2px solid var(--ink)', background: COLORS.streak, color: '#fff', fontSize: FS.lg, fontWeight: 700, fontFamily: FF.body, cursor: 'pointer' }}>
+                {t.study_plan.regeneratePlan}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

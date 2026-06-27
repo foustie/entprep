@@ -612,7 +612,6 @@ const ru = {
 
   // ── Adaptive ────────────────────────────────────────────────────────
   adaptive: {
-    planQuotaReached: 'AI план на сегодня недоступен. Попробуйте завтра.',
     title: 'АНАЛИЗ',
     subtitle: 'Умная подготовка',
     avgScore: 'Средний балл',
@@ -634,26 +633,45 @@ const ru = {
     error1: 'ошибка',
     error2: 'ошибки',
     error5: 'ошибок',
-    // AI plan
-    aiPlan: 'AI-план подготовки',
-    aiPlanLogin: 'Войдите в аккаунт для персонального плана',
-    aiPlan7Days: 'AI-план на 7 дней',
-    refresh: 'Обновить',
-    dayN: 'День',
-    planOutdated: 'План устарел',
-    planOutdatedDesc: 'Прошло больше 3 дней. Обнови план на основе новых результатов',
-    planDesc: 'Получи персональный 7-дневный план на основе своих результатов',
-    generating: 'Генерирую план...',
-    refreshPlan: 'Обновить план',
-    createPlan: 'Составить план',
-    planAlreadyGenerated: 'AI план уже сгенерирован. Эта функция доступна 1 раз.',
-    sessionExpired: 'Сессия истекла. Перезайдите в аккаунт.',
-    sessionExpiredShort: 'Сессия истекла',
-    planError: 'Ошибка генерации плана',
-    networkError: 'Сетевая ошибка. Проверьте подключение.',
-    networkErrorShort: 'Сетевая ошибка',
     stable: 'стабильно',
     retry: 'Повторить',
+  },
+
+  // ── Study Plan (week-view long-horizon plan) ─────────────────────────
+  study_plan: {
+    myPlan: 'Мой план',
+    weekLabel: 'Неделя',
+    weekOf: 'из',
+    createPlan: 'Составить план',
+    regeneratePlan: 'Обновить план',
+    regenerateConfirm: 'Обновить план?',
+    regenerateConfirmDesc: 'Текущий план и весь отмеченный прогресс будут сброшены.',
+    cancel: 'Отмена',
+    createPlanDesc: 'Построй персональный план подготовки от сегодня до экзамена',
+    empty: 'Плана пока нет',
+    noGoal: 'Сначала укажи дату экзамена в настройках',
+    planError: 'Не удалось составить план',
+    start: 'Начать',
+    done: 'Готово',
+    progressThisWeek: 'Прогресс за неделю',
+    taskTypes: {
+      practice: 'Практика',
+      lesson: 'Урок',
+      review: 'Повторение',
+      fullent: 'Пробный ЕНТ',
+      challenge: 'Челлендж',
+      tip: 'Совет',
+    },
+    meta: {
+      subject: 'Предмет',
+      type: 'Тип',
+      duration: 'мин',
+    },
+    proLock: {
+      week3Plus: 'Полный план — в Premium',
+      challenge: 'Челленджи — в Premium',
+      unlock: 'Открыть Premium',
+    },
   },
 
   // ── Calc ─────────────────────────────────────────────────────────────

@@ -9,7 +9,6 @@ interface AIUsage {
   explainDate: string; // YYYY-MM-DD
   tutorCount: number;
   tutorDate: string;
-  planGenerated: boolean;
 }
 
 function today(): string {
@@ -18,7 +17,7 @@ function today(): string {
 }
 
 function load(): AIUsage {
-  const defaults: AIUsage = { explainCount: 0, explainDate: today(), tutorCount: 0, tutorDate: today(), planGenerated: false };
+  const defaults: AIUsage = { explainCount: 0, explainDate: today(), tutorCount: 0, tutorDate: today() };
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaults;
@@ -28,7 +27,6 @@ function load(): AIUsage {
       explainDate: parsed.explainDate ?? today(),
       tutorCount: Math.max(0, parsed.tutorCount ?? 0),
       tutorDate: parsed.tutorDate ?? today(),
-      planGenerated: !!parsed.planGenerated,
     };
   } catch {
     return defaults;
@@ -78,21 +76,6 @@ export function consumeTutor(): boolean {
   }
   if (usage.tutorCount >= DAILY_TUTOR_LIMIT) return false;
   usage.tutorCount++;
-  save(usage);
-  return true;
-}
-
-// --- AI Plan ---
-
-export function canGeneratePlan(): boolean {
-  const usage = load();
-  return !usage.planGenerated;
-}
-
-export function consumePlan(): boolean {
-  const usage = load();
-  if (usage.planGenerated) return false;
-  usage.planGenerated = true;
   save(usage);
   return true;
 }

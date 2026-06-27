@@ -5,7 +5,6 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   getExplainRemaining, consumeExplain,
   getTutorRemaining, consumeTutor,
-  canGeneratePlan, consumePlan,
 } from '../aiLimits';
 
 beforeEach(() => { localStorage.clear(); });
@@ -47,20 +46,10 @@ describe('aiLimits — tutor (free: 10/day)', () => {
   });
 });
 
-describe('aiLimits — plan (once ever)', () => {
-  it('allows one generation, then blocks', () => {
-    expect(canGeneratePlan()).toBe(true);
-    expect(consumePlan()).toBe(true);
-    expect(canGeneratePlan()).toBe(false);
-    expect(consumePlan()).toBe(false);
-  });
-});
-
 describe('aiLimits — corrupt storage falls back to defaults', () => {
   it('does not crash and grants the default allowance', () => {
     localStorage.setItem('entprep_ai_usage', 'not-json{');
     expect(getExplainRemaining()).toBe(2);
     expect(getTutorRemaining()).toBe(10);
-    expect(canGeneratePlan()).toBe(true);
   });
 });
