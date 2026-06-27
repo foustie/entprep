@@ -18,7 +18,7 @@ import { supabase } from '../config/supabase';
 import { API_BASE } from '../config/app';
 import EmptyState from './ui/EmptyState';
 import { TrendingUp, TrendingDown, Minus, ChevronDown, ChevronRight, ChevronLeft, AlertTriangle, FileText, XCircle, Sparkles, RefreshCw, Lock, Check, Play, Lightbulb } from 'lucide-react';
-import type { TopicStats, StudyPlan, StudyTask, StudyWeek, StudyPlanTopicRef } from '../types';
+import type { TopicStats, StudyPlan, StudyTask, StudyWeek, StudyPlanTopicRef, StudyWorkload } from '../types';
 
 // Shape returned by the additive /api/study-plan-focus endpoint (graceful: may be []).
 interface FocusWeek { weekNum: number; focus?: string; tips?: { text: string }[] }
@@ -69,10 +69,11 @@ export default function Adaptive() {
   // currentWeek is 0-based; null = follow the by-date default (today's week).
   const [weekIdx, setWeekIdx] = useState<number | null>(null);
 
-  // Regenerate guard: confirm before wiping completion progress.
-  const [showRegenConfirm, setShowRegenConfirm] = useState(false);
-  const regenDlgRef = useRef<HTMLDivElement>(null);
-  useFocusTrap(regenDlgRef, showRegenConfirm, () => setShowRegenConfirm(false));
+  // Workload survey: pick task density before (re)generating. 'create' = fresh plan,
+  // 'regen' = replace existing plan (also shows the "progress will be wiped" warning).
+  const [workloadOpen, setWorkloadOpen] = useState<false | 'create' | 'regen'>(false);
+  const pickerDlgRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(pickerDlgRef, !!workloadOpen, () => setWorkloadOpen(false));
 
   // ── Plan generation ──────────────────────────────────────────────────────
   const buildWeakTopics = (): StudyPlanTopicRef[] =>
@@ -85,7 +86,7 @@ export default function Adaptive() {
   const buildStrongTopics = (): StudyPlanTopicRef[] =>
     strong.map(s => ({ id: s.id, name: s.name, score: s.score }));
 
-  const handleGenerate = () => {
+  const handleGenerate = (workload: StudyWorkload) => {
     // Plan is VISIBLE to everyone, but creating one requires an account.
     if (!user) { toast.warning(t.test.loginRequired); return; }
     const examDate = st.goal?.date || getUpcomingPeriods()[0]?.examStart || '';
@@ -99,6 +100,7 @@ export default function Adaptive() {
       strongTopics: buildStrongTopics(),
       today: todayISO(),
       seed,
+      workload,
     });
     if (!next) { toast.error(t.study_plan.planError); return; }
     // Render the deterministic plan immediately…
@@ -253,6 +255,10 @@ export default function Adaptive() {
   const subjColorMap: Record<string, string> = {};
   [...weak, ...strong].forEach(s => { subjColorMap[s.id] = s.color; });
   const subjColor = (id?: string) => (id && subjColorMap[id]) || COLORS.streak;
+  // Per-task left-border accent: subject colour, else a type colour (keeps subject
+  // identity on the card so the Start button can stay quiet — one bright splash rule).
+  const rowAccent = (task: StudyTask): string =>
+    task.subject ? subjColor(task.subject) : task.type === 'fullent' ? COLORS.accent : COLORS.streak;
 
   const toggle = (id: string) => {
     if (!expanded[id] && !topicCache[id]) {
@@ -402,13 +408,15 @@ export default function Adaptive() {
     cursor: 'pointer', padding: 0,
   });
 
-  const startBtnStyle = (color: string): React.CSSProperties => ({
+  // Quiet, unified Start button (no bright fill) — subject colour lives only in the
+  // Play-icon tint + the card's left border, so the screen keeps one bright splash.
+  const startBtnStyle: React.CSSProperties = {
     display: 'inline-flex', alignItems: 'center', gap: SP.xs, flexShrink: 0,
-    background: color, color: '#fff',
-    border: '2px solid var(--ink)', boxShadow: '0 3px 0 0 var(--ink)',
+    background: 'var(--bg-card)', color: 'var(--text)',
+    border: '2px solid var(--ink)', boxShadow: '0 2px 0 0 var(--ink)',
     borderRadius: R.sm, padding: `${SP.sm}px ${SP.md}px`,
     fontSize: FS.base, fontWeight: 700, fontFamily: FF.body, cursor: 'pointer',
-  });
+  };
 
   const navBtnStyle = (disabled: boolean): React.CSSProperties => ({
     width: 40, height: 40, flexShrink: 0,
@@ -418,12 +426,13 @@ export default function Adaptive() {
     cursor: disabled ? 'default' : 'pointer', padding: 0,
   });
 
-  const renderTaskRow = (task: StudyTask, locked: boolean, showCta: boolean, lockReason: 'week3Plus' | 'challenge') => {
+  // Normal (unlocked) task card — subject accent on the left border, quiet Start button.
+  const renderTaskRow = (task: StudyTask) => {
     const done = !!planSnap?.completion[task.id]?.done;
-    const color = subjColor(task.subject);
-    const inner = (
-      <div style={{ display: 'flex', alignItems: 'center', gap: SP.md, ...(locked ? { filter: 'blur(3px)', opacity: 0.6, pointerEvents: 'none' as const, userSelect: 'none' as const } : {}) }}>
-        <button onClick={() => handleToggle(task.id)} disabled={locked} aria-label={t.study_plan.done} style={checkboxStyle(done)}>
+    const accent = rowAccent(task);
+    return (
+      <div key={task.id} style={{ ...CARD_COMPACT, marginBottom: SP.sm, borderLeft: `4px solid ${accent}`, display: 'flex', alignItems: 'center', gap: SP.md }}>
+        <button onClick={() => handleToggle(task.id)} aria-label={t.study_plan.done} style={checkboxStyle(done)}>
           {done && <Check size={ICON.sm} color="#fff" strokeWidth={3} />}
         </button>
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -431,32 +440,51 @@ export default function Adaptive() {
           <div style={{ fontSize: FS.base, color: 'var(--text-secondary)', fontFamily: FF.body, marginTop: 2 }}>{taskMeta(task)}</div>
         </div>
         {hasStart(task) && !done && (
-          <button onClick={() => handleStart(task)} style={startBtnStyle(color)}>
-            <Play size={ICON.sm} fill="#fff" /> {t.study_plan.start}
+          <button onClick={() => handleStart(task)} style={startBtnStyle}>
+            <Play size={ICON.sm} color={accent} fill={accent} /> {t.study_plan.start}
           </button>
         )}
       </div>
     );
-    if (!locked) {
-      return <div key={task.id} style={{ ...CARD_COMPACT, marginBottom: SP.sm }}>{inner}</div>;
-    }
+  };
+
+  // Locked challenge teaser inside a FREE week (1–2) — clean row, no blur, taps to paywall.
+  const renderLockedChallenge = (task: StudyTask) => (
+    <div
+      key={task.id}
+      role="button"
+      tabIndex={0}
+      onClick={() => openLock('challenge')}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openLock('challenge'); } }}
+      style={{ ...CARD_COMPACT, marginBottom: SP.sm, borderLeft: `4px solid ${COLORS.purple}`, display: 'flex', alignItems: 'center', gap: SP.md, cursor: 'pointer' }}
+    >
+      <Lock size={ICON.sm} color={COLORS.purple} style={{ flexShrink: 0 }} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ ...TYPE.body, fontSize: FS.lg, fontWeight: 600, color: 'var(--text)', lineHeight: 1.3 }}>{taskTitle(task)}</div>
+        <div style={{ fontSize: FS.base, color: 'var(--text-secondary)', fontFamily: FF.body, marginTop: 2 }}>{t.study_plan.proLock.challenge}</div>
+      </div>
+      <span style={{ flexShrink: 0, fontSize: FS.xs, fontWeight: 700, fontFamily: FF.mono, color: COLORS.purple, border: `1.5px solid ${COLORS.purple}`, borderRadius: R.sm, padding: '1px 6px' }}>PRO</span>
+    </div>
+  );
+
+  // Whole locked premium week (week >= 3, free user) — one clean card, not N blurred rows.
+  const renderPremiumWeek = (week: StudyWeek) => {
+    const count = week.tasks.filter(tk => tk.type !== 'tip').length;
+    const subs = Array.from(new Set(week.tasks.map(tk => tk.subject).filter((s): s is string => !!s)))
+      .slice(0, 4)
+      .map(id => subjectName(id))
+      .filter(Boolean)
+      .join(', ');
     return (
-      <div key={task.id} style={{ ...CARD_COMPACT, marginBottom: SP.sm, position: 'relative', overflow: 'hidden' }}>
-        {inner}
-        {showCta ? (
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: SP.sm, padding: SP.md, background: 'var(--bg-card)', borderRadius: R.md }}>
-            <Lock size={28} color={COLORS.purple} />
-            <div style={{ ...TYPE.body, fontWeight: 700, color: 'var(--text)', textAlign: 'center' }}>{t.study_plan.proLock[lockReason]}</div>
-            <button onClick={() => openLock(lockReason)} style={{ display: 'inline-flex', alignItems: 'center', gap: SP.xs, background: COLORS.purple, color: '#fff', border: '2px solid var(--ink)', boxShadow: '0 3px 0 0 var(--ink)', borderRadius: R.sm, padding: `${SP.sm}px ${SP.lg}px`, fontSize: FS.base, fontWeight: 700, fontFamily: FF.body, cursor: 'pointer' }}>
-              {t.study_plan.proLock.unlock}
-            </button>
-          </div>
-        ) : (
-          <div style={{ position: 'absolute', top: SP.sm, right: SP.sm, display: 'inline-flex', alignItems: 'center', gap: 3, color: COLORS.purple }}>
-            <Lock size={ICON.sm} />
-            <span style={{ fontSize: FS.xs, fontWeight: 700, fontFamily: FF.mono }}>PRO</span>
-          </div>
-        )}
+      <div style={{ ...CARD_COMPACT, borderLeft: `4px solid ${COLORS.purple}`, textAlign: 'center', padding: `${SP.xl}px ${SP.lg}px` }}>
+        <Lock size={28} color={COLORS.purple} style={{ marginBottom: SP.sm }} />
+        <div style={{ ...TYPE.h3, marginBottom: SP.xs }}>{t.study_plan.proLock.week3Plus}</div>
+        <div style={{ fontSize: FS.base, color: 'var(--text-secondary)', fontFamily: FF.body, marginBottom: SP.lg, lineHeight: 1.45 }}>
+          {count} {t.study_plan.tasksGen}{subs ? ` · ${subs}` : ''}
+        </div>
+        <button onClick={() => openLock('week3Plus')} style={{ display: 'inline-flex', alignItems: 'center', gap: SP.xs, background: COLORS.purple, color: '#fff', border: '2px solid var(--ink)', boxShadow: '0 3px 0 0 var(--ink)', borderRadius: R.md, padding: `${SP.md}px ${SP.xl}px`, fontSize: FS.md, fontWeight: 700, fontFamily: FF.body, cursor: 'pointer' }}>
+          {t.study_plan.proLock.unlock}
+        </button>
       </div>
     );
   };
@@ -481,8 +509,8 @@ export default function Adaptive() {
     const countableTasks = weekTasks.filter(tk => tk.type !== 'tip' && (isPremium || !tk.premium));
     const doneCount = countableTasks.filter(tk => planSnap.completion[tk.id]?.done).length;
     const pct = countableTasks.length ? Math.round((doneCount / countableTasks.length) * 100) : 0;
-    const firstLockId = weekTasks.find(tk => !isPremium && tk.premium)?.id;
-    const lockReason: 'week3Plus' | 'challenge' = week.premium ? 'week3Plus' : 'challenge';
+    // Whole week behind Premium for a free user → show one clean lock card, not a list.
+    const weekLocked = week.premium && !isPremium;
 
     // Group tasks by day (ISO date), ascending.
     const byDay: { date: string; tasks: StudyTask[] }[] = [];
@@ -498,7 +526,7 @@ export default function Adaptive() {
         {/* Header: eyebrow + regenerate */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: SP.md }}>
           <div style={TYPE.eyebrow}>{t.study_plan.myPlan}</div>
-          <button onClick={() => setShowRegenConfirm(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: SP.xs, background: 'none', border: 'none', color: COLORS.streak, fontSize: FS.base, fontWeight: 700, fontFamily: FF.body, cursor: 'pointer', padding: 0 }}>
+          <button onClick={() => setWorkloadOpen('regen')} style={{ display: 'inline-flex', alignItems: 'center', gap: SP.xs, background: 'none', border: 'none', color: COLORS.streak, fontSize: FS.base, fontWeight: 700, fontFamily: FF.body, cursor: 'pointer', padding: 0 }}>
             <RefreshCw size={ICON.sm} /> {t.study_plan.regeneratePlan}
           </button>
         </div>
@@ -517,16 +545,18 @@ export default function Adaptive() {
           </button>
         </div>
 
-        {/* Progress this week */}
-        <div style={{ marginBottom: SP.lg }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: SP.xs }}>
-            <span style={{ fontSize: FS.base, color: 'var(--text-secondary)', fontFamily: FF.body }}>{t.study_plan.progressThisWeek}</span>
-            <span style={{ fontSize: FS.base, fontWeight: 700, fontFamily: FF.mono, fontVariantNumeric: 'tabular-nums', color: 'var(--text)' }}>{pct}%</span>
+        {/* Progress this week — hidden for a fully-locked premium week (nothing to track yet) */}
+        {!weekLocked && (
+          <div style={{ marginBottom: SP.lg }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: SP.xs }}>
+              <span style={{ fontSize: FS.base, color: 'var(--text-secondary)', fontFamily: FF.body }}>{t.study_plan.progressThisWeek}</span>
+              <span style={{ fontSize: FS.base, fontWeight: 700, fontFamily: FF.mono, fontVariantNumeric: 'tabular-nums', color: 'var(--text)' }}>{pct}%</span>
+            </div>
+            <div style={{ height: 8, borderRadius: R.pill, background: 'var(--bg-subtle)', border: '1px solid var(--ink)', overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${pct}%`, background: COLORS.win, transition: 'width 0.4s cubic-bezier(0.16,1,0.3,1)' }} />
+            </div>
           </div>
-          <div style={{ height: 8, borderRadius: R.pill, background: 'var(--bg-subtle)', border: '1px solid var(--ink)', overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${pct}%`, background: COLORS.win, transition: 'width 0.4s cubic-bezier(0.16,1,0.3,1)' }} />
-          </div>
-        </div>
+        )}
 
         {/* AI weekly focus (phase 4) — readonly callout, fills in when AI returns */}
         {week.focus && (
@@ -536,17 +566,22 @@ export default function Adaptive() {
           </div>
         )}
 
-        {/* Day-grouped task list */}
-        {byDay.map((g, di) => (
-          <div key={g.date}>
-            <div style={{ fontSize: FS.base, fontWeight: 600, color: 'var(--text-secondary)', fontFamily: FF.body, textTransform: 'capitalize', margin: `${SP.md}px 0 ${SP.sm}px`, paddingTop: di === 0 ? 0 : SP.sm, borderTop: di === 0 ? 'none' : '1px solid var(--border)' }}>{fmtDay(g.date)}</div>
-            {g.tasks.map(task => {
-              if (task.type === 'tip') return renderTipRow(task);
-              const locked = !isPremium && task.premium;
-              return renderTaskRow(task, locked, locked && task.id === firstLockId, lockReason);
-            })}
-          </div>
-        ))}
+        {/* Locked premium week → one clean card; otherwise the day-grouped task list */}
+        {weekLocked ? (
+          renderPremiumWeek(week)
+        ) : (
+          byDay.map((g, di) => (
+            <div key={g.date}>
+              <div style={{ fontSize: FS.base, fontWeight: 600, color: 'var(--text-secondary)', fontFamily: FF.body, textTransform: 'capitalize', margin: `${SP.md}px 0 ${SP.sm}px`, paddingTop: di === 0 ? 0 : SP.sm, borderTop: di === 0 ? 'none' : '1px solid var(--border)' }}>{fmtDay(g.date)}</div>
+              {g.tasks.map(task => {
+                if (task.type === 'tip') return renderTipRow(task);
+                // In a free week (1–2) only the challenge is premium → clean teaser row.
+                if (!isPremium && task.premium) return renderLockedChallenge(task);
+                return renderTaskRow(task);
+              })}
+            </div>
+          ))
+        )}
       </div>
     );
   };
@@ -560,7 +595,7 @@ export default function Adaptive() {
           <Sparkles size={28} color={COLORS.streak} style={{ marginBottom: SP.sm }} />
           <div style={{ ...TYPE.h3, marginBottom: SP.xs }}>{t.study_plan.empty}</div>
           <div style={{ fontSize: FS.base, color: 'var(--text-secondary)', fontFamily: FF.body, marginBottom: SP.lg, lineHeight: 1.5 }}>{t.study_plan.createPlanDesc}</div>
-          <button onClick={handleGenerate} style={ctaStyle}>
+          <button onClick={() => { if (!user) { toast.warning(t.test.loginRequired); return; } setWorkloadOpen('create'); }} style={ctaStyle}>
             <Sparkles size={ICON.sm} /> {t.study_plan.createPlan}
           </button>
         </div>
@@ -645,20 +680,35 @@ export default function Adaptive() {
         />
       )}
 
-      {/* Regenerate confirm — wiping completion progress is destructive */}
-      {showRegenConfirm && (
+      {/* Workload survey — student picks plan density (also the create/regenerate gate) */}
+      {workloadOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: SP.xl }}>
-          <div ref={regenDlgRef} role="dialog" aria-modal="true" aria-label={t.study_plan.regenerateConfirm} tabIndex={-1} style={{ background: 'var(--bg-card)', border: '2px solid var(--ink)', boxShadow: '0 3px 0 0 var(--ink)', borderRadius: R.lg, padding: `${SP.xxl}px ${SP.xl}px`, maxWidth: 320, width: '100%', textAlign: 'center' }}>
-            <h2 style={{ ...TYPE.h3, margin: `0 0 ${SP.xs}px` }}>{t.study_plan.regenerateConfirm}</h2>
-            <div style={{ fontSize: FS.md, color: 'var(--text-secondary)', fontFamily: FF.body, marginBottom: SP.xl, lineHeight: 1.5 }}>{t.study_plan.regenerateConfirmDesc}</div>
-            <div style={{ display: 'flex', gap: SP.sm }}>
-              <button onClick={() => setShowRegenConfirm(false)} style={{ flex: 1, padding: `${SP.md}px 0`, borderRadius: R.md, border: '1px solid var(--border)', background: 'none', color: 'var(--text)', fontSize: FS.lg, fontWeight: 600, fontFamily: FF.body, cursor: 'pointer' }}>
-                {t.study_plan.cancel}
-              </button>
-              <button onClick={() => { setShowRegenConfirm(false); handleGenerate(); }} style={{ flex: 1, padding: `${SP.md}px 0`, borderRadius: R.md, border: '2px solid var(--ink)', background: COLORS.streak, color: '#fff', fontSize: FS.lg, fontWeight: 700, fontFamily: FF.body, cursor: 'pointer' }}>
-                {t.study_plan.regeneratePlan}
-              </button>
+          <div ref={pickerDlgRef} role="dialog" aria-modal="true" aria-label={t.study_plan.workloadTitle} tabIndex={-1} style={{ background: 'var(--bg-card)', border: '2px solid var(--ink)', boxShadow: '0 3px 0 0 var(--ink)', borderRadius: R.lg, padding: `${SP.xl}px ${SP.xl}px`, maxWidth: 360, width: '100%' }}>
+            <h2 style={{ ...TYPE.h3, margin: `0 0 ${SP.xs}px`, textAlign: 'center' }}>{t.study_plan.workloadTitle}</h2>
+            <div style={{ fontSize: FS.base, color: 'var(--text-secondary)', fontFamily: FF.body, marginBottom: SP.lg, lineHeight: 1.45, textAlign: 'center' }}>{t.study_plan.workloadDesc}</div>
+            {workloadOpen === 'regen' && (
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: SP.xs, fontSize: FS.base, color: COLORS.red, fontFamily: FF.body, marginBottom: SP.md, lineHeight: 1.4 }}>
+                <AlertTriangle size={ICON.sm} style={{ flexShrink: 0, marginTop: 1 }} /> {t.study_plan.regenerateConfirmDesc}
+              </div>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: SP.sm, marginBottom: SP.lg }}>
+              {(['light', 'medium', 'intense'] as StudyWorkload[]).map(key => {
+                const lvl = (t.study_plan.workload as Record<string, { label: string; desc: string }>)[key];
+                const active = (planSnap?.plan.workload ?? 'medium') === key;
+                return (
+                  <button key={key} onClick={() => { setWorkloadOpen(false); handleGenerate(key); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: SP.md, textAlign: 'left', background: active ? COLORS.streak + '14' : 'var(--bg-card)', border: '2px solid var(--ink)', boxShadow: '0 3px 0 0 var(--ink)', borderRadius: R.md, padding: `${SP.md}px ${SP.lg}px`, cursor: 'pointer', fontFamily: FF.body }}>
+                    <span style={{ minWidth: 0 }}>
+                      <span style={{ display: 'block', fontSize: FS.lg, fontWeight: 700, color: 'var(--text)' }}>{lvl.label}</span>
+                      <span style={{ display: 'block', fontSize: FS.base, color: 'var(--text-secondary)' }}>{lvl.desc}</span>
+                    </span>
+                    <ChevronRight size={ICON.md} color="var(--text-muted)" style={{ flexShrink: 0 }} />
+                  </button>
+                );
+              })}
             </div>
+            <button onClick={() => setWorkloadOpen(false)} style={{ width: '100%', padding: `${SP.md}px 0`, borderRadius: R.md, border: '1px solid var(--border)', background: 'none', color: 'var(--text)', fontSize: FS.lg, fontWeight: 600, fontFamily: FF.body, cursor: 'pointer' }}>
+              {t.study_plan.cancel}
+            </button>
           </div>
         </div>
       )}

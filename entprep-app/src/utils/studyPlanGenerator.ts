@@ -4,6 +4,7 @@ import type {
   StudyPlanTopicRef,
   StudyTask,
   StudyWeek,
+  StudyWorkload,
 } from '../types/index';
 import { TOPIC_MAP } from '../config/topics';
 
@@ -18,12 +19,22 @@ import { TOPIC_MAP } from '../config/topics';
  * 1. weeksCount = clamp(weeksBetween(today, examDate), 2, 26)
  * 2. Phases: ~40% foundation, ~40% build, ~20% review
  * 3. Weak topics drive foundation; strong appear in build/review
- * 4. 4-6 tasks/week across weekdays (lighter on weekends), exactly one challenge/week
+ * 4. Density from `workload` (default 'medium'): N tasks/weekday + fewer/weekend, MULTIPLE per day.
+ *    fullent stands alone on Saturday (mock-exam day); exactly one challenge/week on Sunday.
  * 5. Premium: weekNum >= 3 → whole week premium; all challenge tasks premium
  */
 
 // ── Mandatory ENT subjects (always covered for cold-start / fallback) ────────
 const MANDATORY_SUBJECTS = ['math', 'reading', 'history'];
+
+// ── Workload → per-day content-task quotas ───────────────────────────────────
+// weekday = tasks on each Mon–Fri; weekend = tasks on each Sat/Sun. The Saturday
+// quota is consumed by a fullent when one is included (mock-exam day stands alone).
+const WORKLOAD_QUOTA: Record<StudyWorkload, { weekday: number; weekend: number }> = {
+  light: { weekday: 2, weekend: 1 },
+  medium: { weekday: 4, weekend: 2 },
+  intense: { weekday: 6, weekend: 3 },
+};
 
 // ── Deterministic helpers ────────────────────────────────────────────────────
 
@@ -134,6 +145,8 @@ function refForSubject(refs: StudyPlanTopicRef[], subject: string): StudyPlanTop
 
 export function generateStudyPlan(input: GenerateStudyPlanInput): StudyPlan | null {
   const { examDate, target, profileSubjects, weakTopics, strongTopics, today, seed } = input;
+  const workload: StudyWorkload = input.workload ?? 'medium';
+  const quota = WORKLOAD_QUOTA[workload];
 
   // 1. Validate inputs
   const todayMs = parseISODay(today);
@@ -174,79 +187,78 @@ export function generateStudyPlan(input: GenerateStudyPlanInput): StudyPlan | nu
     // Diagnostic fullent in week 1 for cold start; fullent every review week.
     const includeFullent = phase === 'review' || (coldStart && weekNum === 1);
 
-    // 4-6 tasks/week
-    const perWeekCount = 4 + Math.floor(rng() * 3); // 4, 5 or 6
-
     // Subject pool for this week's content tasks (challenge/fullent excluded).
     let poolSubjects: string[];
     if (phase === 'foundation') {
       poolSubjects = weakSubjects.length ? weakSubjects : allSubjects;
-    } else if (phase === 'build') {
-      poolSubjects = uniq([...weakSubjects, ...strongSubjects]);
-      if (!poolSubjects.length) poolSubjects = allSubjects;
     } else {
+      // build + review draw from the same weak+strong pool.
       poolSubjects = uniq([...weakSubjects, ...strongSubjects]);
       if (!poolSubjects.length) poolSubjects = allSubjects;
     }
     const cycle = shuffleArray(poolSubjects, rng);
 
-    // Reserve slots: 1 challenge always; 1 fullent when included.
-    const contentCount = Math.max(1, perWeekCount - 1 - (includeFullent ? 1 : 0));
+    // Per-offset content-task quota for Mon..Sun (offsets 0..6), driven by workload.
+    const dayQuota = [
+      quota.weekday, quota.weekday, quota.weekday, quota.weekday, quota.weekday, // Mon–Fri
+      quota.weekend, quota.weekend, // Sat, Sun
+    ];
 
-    // Build ordered task descriptors: [fullent?] + content (subject-alternating) + challenge.
-    const descriptors: Array<Pick<StudyTask, 'type' | 'subject' | 'topic' | 'title'>> = [];
+    const tasks: StudyTask[] = [];
+    let contentIdx = 0; // drives subject rotation + foundation lesson/practice alternation
+    let seq = 0; // unique per-week id suffix
 
-    if (includeFullent) {
-      descriptors.push({
-        type: 'fullent',
-        title: coldStart && weekNum === 1 ? 'Diagnostic full ENT' : 'Full ENT simulation',
-      });
-    }
-
-    for (let i = 0; i < contentCount; i++) {
-      // Cycle distinct subjects → alternating, no back-to-back same subject (when >1 subject).
-      const subject = cycle[i % cycle.length];
+    const pushContent = (offset: number) => {
+      const subject = cycle[contentIdx % cycle.length];
       const ref = refForSubject(weakTopics, subject) ?? refForSubject(strongTopics, subject);
       const topic = resolveTopic(subject, ref);
-
-      let type: StudyTask['type'];
-      if (phase === 'foundation') {
-        type = i % 2 === 0 ? 'lesson' : 'practice';
-      } else if (phase === 'build') {
-        type = 'practice';
-      } else {
-        type = 'review';
-      }
-
-      descriptors.push({
+      const type: StudyTask['type'] =
+        phase === 'foundation'
+          ? contentIdx % 2 === 0
+            ? 'lesson'
+            : 'practice'
+          : phase === 'build'
+            ? 'practice'
+            : 'review';
+      tasks.push({
+        id: `week_${weekNum}_${seq++}`,
+        date: dateAddDays(startDate, offset),
         type,
         subject,
         topic,
         title: `${type}:${subject}${topic ? `:${topic}` : ''}`,
+        durationMin: DURATION[type],
+        premium: weekPremium,
       });
+      contentIdx++;
+    };
+
+    // Spread content across every day of the week — multiple tasks per day.
+    for (let offset = 0; offset <= 6; offset++) {
+      // Saturday (offset 5) becomes the mock-exam day when a fullent is included:
+      // a 4-hour exam stands alone, so no other tasks compete with it.
+      if (includeFullent && offset === 5) {
+        tasks.push({
+          id: `week_${weekNum}_${seq++}`,
+          date: dateAddDays(startDate, offset),
+          type: 'fullent',
+          title: coldStart && weekNum === 1 ? 'Diagnostic full ENT' : 'Full ENT simulation',
+          durationMin: DURATION.fullent,
+          premium: weekPremium,
+        });
+        continue;
+      }
+      for (let k = 0; k < dayQuota[offset]; k++) pushContent(offset);
     }
 
-    // Exactly one challenge per week (premium).
-    descriptors.push({ type: 'challenge', title: 'Weekly challenge' });
-
-    // 5. Spread across distinct weekdays — prefer Mon-Fri, spill to weekend only if needed.
-    const weekdayOffsets = shuffleArray([0, 1, 2, 3, 4], rng); // Mon..Fri
-    const weekendOffsets = shuffleArray([5, 6], rng); // Sat, Sun
-    const allOffsets = [...weekdayOffsets, ...weekendOffsets];
-    const chosenOffsets = allOffsets.slice(0, descriptors.length).sort((a, b) => a - b);
-
-    const tasks: StudyTask[] = descriptors.map((d, idx) => {
-      const isChallenge = d.type === 'challenge';
-      return {
-        id: isChallenge ? `week_${weekNum}_challenge` : `week_${weekNum}_${idx}`,
-        date: dateAddDays(startDate, chosenOffsets[idx]),
-        type: d.type,
-        subject: d.subject,
-        topic: d.topic,
-        title: d.title,
-        durationMin: DURATION[d.type],
-        premium: weekPremium || d.type === 'challenge',
-      };
+    // Exactly one challenge per week (always premium), on Sunday.
+    tasks.push({
+      id: `week_${weekNum}_challenge`,
+      date: dateAddDays(startDate, 6),
+      type: 'challenge',
+      title: 'Weekly challenge',
+      durationMin: DURATION.challenge,
+      premium: true,
     });
 
     weeks.push({
@@ -265,6 +277,7 @@ export function generateStudyPlan(input: GenerateStudyPlanInput): StudyPlan | nu
     examDate,
     target,
     weeksCount,
+    workload,
     weeks,
   };
 }

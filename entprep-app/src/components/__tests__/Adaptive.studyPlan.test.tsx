@@ -79,12 +79,15 @@ describe('Adaptive study plan — empty state', () => {
     expect(screen.getByText(ru.study_plan.empty)).toBeInTheDocument();
   });
 
-  it('clicking Create generates a plan and stores the snapshot', () => {
+  it('clicking Create opens the workload picker; choosing a level generates the plan', () => {
     render(<Adaptive />);
     fireEvent.click(screen.getByText(ru.study_plan.createPlan));
+    // workload survey is now open — choosing a level is what generates the plan
+    fireEvent.click(screen.getByText(ru.study_plan.workload.medium.label));
     expect(h.setPlanSnapshot).toHaveBeenCalledTimes(1);
     const snap = h.setPlanSnapshot.mock.calls[0][0];
     expect(snap.plan.weeks.length).toBeGreaterThan(0);
+    expect(snap.plan.workload).toBe('medium');
     expect(h.trackEvent).toHaveBeenCalledWith('Study Plan Created', expect.objectContaining({ weeks: snap.plan.weeksCount }));
   });
 

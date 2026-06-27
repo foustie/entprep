@@ -633,7 +633,6 @@ const kk: Translations = {
     weekOf: '/',
     createPlan: 'Жоспар құру',
     regeneratePlan: 'Жоспарды жаңарту',
-    regenerateConfirm: 'Жоспарды жаңарту?',
     regenerateConfirmDesc: 'Ағымдағы жоспар мен барлық белгіленген прогресс жойылады.',
     cancel: 'Болдырмау',
     createPlanDesc: 'Бүгіннен емтиханға дейінгі жеке дайындық жоспарын құр',
@@ -661,6 +660,14 @@ const kk: Translations = {
       week3Plus: 'Толық жоспар — Premium-да',
       challenge: 'Челленджер — Premium-да',
       unlock: 'Premium ашу',
+    },
+    tasksGen: 'тапсырма',
+    workloadTitle: 'Жүктемені таңда',
+    workloadDesc: 'Күніне қанша тапсырма қолыңнан келеді? Бұл жоспардың тығыздығын белгілейді.',
+    workload: {
+      light: { label: 'Жеңіл', desc: 'күніне ~2 тапсырма' },
+      medium: { label: 'Орташа', desc: 'күніне ~3–4 тапсырма' },
+      intense: { label: 'Қарқынды', desc: 'күніне ~5–6 тапсырма' },
     },
   },
 

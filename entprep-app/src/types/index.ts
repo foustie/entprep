@@ -434,6 +434,9 @@ export type CSSProperties = React.CSSProperties;
 
 // ── Study Plan Types ─────────────────────────────────────────────────────────
 
+/** How dense the generated plan is — chosen by the student via the workload survey. */
+export type StudyWorkload = 'light' | 'medium' | 'intense';
+
 export interface StudyTask {
   id: string;           // stable, e.g. "week_1_0", "week_2_challenge"
   date: string;         // ISO date string
@@ -452,7 +455,7 @@ export interface StudyWeek {
   phase: 'foundation' | 'build' | 'review';
   premium: boolean;     // true for weekNum >= 3
   focus?: string;       // AI-generated focus/tip (phase 4)
-  tasks: StudyTask[];   // 4-6 tasks spread across weekdays
+  tasks: StudyTask[];   // multiple tasks/day, density set by the plan's workload
 }
 
 export interface StudyPlan {
@@ -461,6 +464,7 @@ export interface StudyPlan {
   examDate: string;     // ISO
   target: number;       // ENT goal score
   weeksCount: number;   // clamp(weeksBetween(today, examDate), 2, 26)
+  workload?: StudyWorkload; // density chosen by the student (default 'medium'); reused on regenerate
   weeks: StudyWeek[];
 }
 
@@ -494,4 +498,5 @@ export interface GenerateStudyPlanInput {
   strongTopics: StudyPlanTopicRef[]; // strong subjects from getRecommendations()
   today: string;                     // ISO date string (deterministic seed input)
   seed: string;                      // deterministic seed (typically = createdAt ISO string)
+  workload?: StudyWorkload;          // task density (default 'medium')
 }

@@ -113,8 +113,9 @@ describe('determinism', () => {
       expect(plan.weeksCount).toBeGreaterThanOrEqual(2);
       expect(plan.weeksCount).toBeLessThanOrEqual(26);
       for (const w of plan.weeks) {
-        expect(w.tasks.length).toBeGreaterThanOrEqual(4);
-        expect(w.tasks.length).toBeLessThanOrEqual(6);
+        // medium (default) density: ~24–25 tasks/week, spread multiple per day
+        expect(w.tasks.length).toBeGreaterThanOrEqual(13);
+        expect(w.tasks.length).toBeLessThanOrEqual(40);
       }
     }
   });
@@ -157,19 +158,21 @@ describe('tasks', () => {
     }
   });
 
-  it('4-6 tasks spread across distinct weekdays (no overlapping dates)', () => {
+  it('packs multiple tasks per day, all dates within the week and ascending', () => {
     const plan = generateStudyPlan(base())!;
     for (const w of plan.weeks) {
-      expect(w.tasks.length).toBeGreaterThanOrEqual(4);
-      expect(w.tasks.length).toBeLessThanOrEqual(6);
+      expect(w.tasks.length).toBeGreaterThanOrEqual(13);
       const dates = w.tasks.map(t => t.date);
-      expect(new Set(dates).size).toBe(dates.length); // distinct
       // every task date falls within [startDate, endDate]
       for (const d of dates) {
         expect(d >= w.startDate && d <= w.endDate).toBe(true);
       }
-      // tasks sorted ascending by date
+      // tasks emitted in ascending date order
       expect([...dates].sort()).toEqual(dates);
+      // the denser plan now stacks MULTIPLE tasks onto at least one day
+      const perDay: Record<string, number> = {};
+      for (const d of dates) perDay[d] = (perDay[d] || 0) + 1;
+      expect(Math.max(...Object.values(perDay))).toBeGreaterThan(1);
     }
   });
 

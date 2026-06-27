@@ -645,7 +645,6 @@ const ru = {
     weekOf: 'из',
     createPlan: 'Составить план',
     regeneratePlan: 'Обновить план',
-    regenerateConfirm: 'Обновить план?',
     regenerateConfirmDesc: 'Текущий план и весь отмеченный прогресс будут сброшены.',
     cancel: 'Отмена',
     createPlanDesc: 'Построй персональный план подготовки от сегодня до экзамена',
@@ -673,6 +672,14 @@ const ru = {
       week3Plus: 'Полный план — в Premium',
       challenge: 'Челленджи — в Premium',
       unlock: 'Открыть Premium',
+    },
+    tasksGen: 'заданий',
+    workloadTitle: 'Выбери загруженность',
+    workloadDesc: 'Сколько заданий в день тебе по силам? Это задаёт плотность плана.',
+    workload: {
+      light: { label: 'Лёгкая', desc: '~2 задания в день' },
+      medium: { label: 'Средняя', desc: '~3–4 задания в день' },
+      intense: { label: 'Интенсивная', desc: '~5–6 заданий в день' },
     },
   },
 
