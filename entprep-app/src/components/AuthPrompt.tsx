@@ -80,9 +80,17 @@ const BENEFIT_CONFIGS: BenefitConfig[] = [
 
 interface AuthPromptProps {
   onFinish: () => void;
+  /**
+   * Test-start gate mode. When true this prompt is a hard login wall in front of a
+   * test (Test / Full ENT / Question Rush): the caller passes `onFinish={goHome}`, so
+   * both a successful sign-in (page reloads → gate re-evaluates) and the "Later" button
+   * return the user HOME. It never auto-skips into the test or re-enables profile
+   * selection, preventing logged-out users from bypassing the login requirement.
+   */
+  testStartWall?: boolean;
 }
 
-export default function AuthPrompt({ onFinish }: AuthPromptProps) {
+export default function AuthPrompt({ onFinish, testStartWall = false }: AuthPromptProps) {
   const t = useT();
   const toast = useToast();
   const [loading, setLoading] = useState<'google' | 'apple' | null>(null);
@@ -388,9 +396,11 @@ export default function AuthPrompt({ onFinish }: AuthPromptProps) {
         </button>
       </div>
 
-      {/* Later button */}
+      {/* Later button — in test-start-wall mode `onFinish` is goHome(), so this returns
+          the user HOME rather than skipping into the gated test. */}
       <button
         onClick={onFinish}
+        data-test-start-wall={testStartWall || undefined}
         style={{
           background: 'none', border: 'none',
           color: 'var(--text-muted)',

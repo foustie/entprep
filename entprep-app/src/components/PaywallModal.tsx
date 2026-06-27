@@ -122,6 +122,7 @@ export default function PaywallModal({ open, reason, onClose }: PaywallModalProp
     ai: pw.ai,
     upgrade: pw.upgradeTitle || 'ENTprep Premium',
     study_plan_locked: pw.upgradeTitle || 'ENTprep Premium',
+    test_limit: pw.testLimit || pw.upgradeTitle || 'ENTprep Premium',
   };
 
   const descs: Record<string, string> = {
@@ -130,6 +131,7 @@ export default function PaywallModal({ open, reason, onClose }: PaywallModalProp
     ai: pw.aiDesc,
     upgrade: pw.upgradeDesc || pw.dailyLimitDesc,
     study_plan_locked: pw.upgradeDesc || pw.dailyLimitDesc,
+    test_limit: pw.testLimitDesc || pw.upgradeDesc || pw.dailyLimitDesc,
   };
 
   const benefitLabels = [

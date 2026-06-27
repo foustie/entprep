@@ -11,6 +11,10 @@ interface AuthContextValue {
   user: AuthUser | null;
   profile: Profile | null;
   isPremium: boolean;
+  /** True between sign-in and the first resolution of the subscription check.
+   * While true, premium status is not yet known — callers must NOT treat the user
+   * as free (e.g. the test-start paywall defers until this settles). */
+  premiumLoading: boolean;
   isAdmin: boolean;
   needsNickname: boolean;
   refreshUser: () => Promise<void>;
@@ -24,6 +28,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [nativePremium, setNativePremium] = useState(false);
   const [dbPremium, setDbPremium] = useState(false);
+  // Tracks whether the subscription check has resolved at least once for the
+  // current user. Drives `premiumLoading` so the test-start gate never bounces a
+  // (possibly premium) user to the paywall during the async load window.
+  const [premiumChecked, setPremiumChecked] = useState(false);
 
   // Check subscriptions table (authoritative source, RLS allows reading own row).
   // maybeSingle() — return null on 0 rows instead of throwing, since most users
@@ -106,7 +114,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (u) {
         refreshProfile();
-        checkSubscription(u.id).then(setDbPremium).catch(() => setDbPremium(false));
+        checkSubscription(u.id)
+          .then(setDbPremium)
+          .catch(() => setDbPremium(false))
+          .finally(() => setPremiumChecked(true));
         try {
           await loginPurchases(u.id, u.email ?? undefined);
           const hasPremium = await checkPremiumStatus();
@@ -119,6 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setProfile(null);
         setDbPremium(false);
         setNativePremium(false);
+        setPremiumChecked(false);
         logoutPurchases().catch((err) => console.error('logoutPurchases failed:', err));
         // Clear session data to prevent bleed between users on same device
         try { sessionStorage.removeItem('entprep_challenge'); sessionStorage.removeItem('entprep_tutor_init'); } catch {}
@@ -180,10 +192,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     () => FREE_PREMIUM || isAdmin || nativePremium || dbPremium,
     [FREE_PREMIUM, isAdmin, nativePremium, dbPremium],
   );
+  // A signed-in user whose subscription check hasn't resolved yet. Admins are known
+  // synchronously from the email, so they're never considered "loading".
+  const premiumLoading = useMemo(
+    () => !!user && !isAdmin && !premiumChecked,
+    [user, isAdmin, premiumChecked],
+  );
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, profile, isPremium, isAdmin, needsNickname, refreshUser, refreshProfile }),
-    [user, profile, isPremium, isAdmin, needsNickname, refreshUser, refreshProfile],
+    () => ({ user, profile, isPremium, premiumLoading, isAdmin, needsNickname, refreshUser, refreshProfile }),
+    [user, profile, isPremium, premiumLoading, isAdmin, needsNickname, refreshUser, refreshProfile],
   );
 
   return (

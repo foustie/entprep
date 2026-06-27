@@ -27,6 +27,7 @@ import { API_BASE } from './config/app';
 import { supabase } from './config/supabase';
 import { useAuth } from './contexts/AuthContext';
 import { trackEvent } from './utils/analytics';
+import { computeTestGate } from './utils/testGate';
 import type { TestResult, SRCard } from './types';
 
 const submitLeaderboard = async (result: TestResult) => {
@@ -83,7 +84,7 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 function AppContent() {
-  const { screen, curSub, selTopic, customQs, tab, challengeData, paywallReason, navNonce, nav, goHome, changeTab, setScreen, setTab, closePaywall } = useNav();
+  const { screen, curSub, selTopic, customQs, tab, challengeData, paywallReason, navNonce, nav, goHome, changeTab, setScreen, setTab, closePaywall, openPaywall } = useNav();
   const { hist, prof, st, srCards, syncError, showAuthPrompt, addHist, confirmProfile, finishAuthPrompt, addSrFromResult, setSrCards } = useApp();
   const toast = useToast();
   const tr = useT();
@@ -186,7 +187,7 @@ function AppContent() {
   const needProfile = prof.length === 0 && screen !== SCREENS.PROFILE;
   const showNav = !needProfile && screen !== SCREENS.TEST && screen !== SCREENS.FULL_ENT && screen !== SCREENS.PROFILE && screen !== SCREENS.SUBJECT && screen !== SCREENS.ERROR_REVIEW && screen !== SCREENS.ADMIN && screen !== SCREENS.CHALLENGE && screen !== SCREENS.LEADERBOARD && screen !== SCREENS.FRIENDS && screen !== SCREENS.DUEL && screen !== SCREENS.REVIEW && screen !== SCREENS.TEACHER && screen !== SCREENS.RUSH && !showAuthPrompt;
 
-  const { user, isPremium, needsNickname } = useAuth();
+  const { user, isPremium, premiumLoading, needsNickname } = useAuth();
 
   // PRO welcome toast — show once when user first becomes premium
   useEffect(() => {
@@ -231,6 +232,23 @@ function AppContent() {
     }
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ── TEST-START GATE ────────────────────────────────────────────────────────
+  // Single chokepoint guarding the three test-start screens (Test / Full ENT /
+  // Question Rush). A logged-out user is sent to a login wall; a free user who has
+  // used up the weekly allowance is sent to the paywall. Premium and under-limit
+  // users pass through. Gating happens only on screen ENTER, never mid-test.
+  const isTestScreen = screen === SCREENS.TEST || screen === SCREENS.FULL_ENT || screen === SCREENS.RUSH;
+  const testGate = isTestScreen ? computeTestGate({ user, isPremium, premiumLoading, hist }) : 'ok';
+  // 'paywall' is handled as a side-effect (open the existing modal + return HOME) so
+  // the render stays pure — no setState during render. 'login' is a pure conditional
+  // render below (early return). 'ok' falls through to the normal test render.
+  useEffect(() => {
+    if (isTestScreen && testGate === 'paywall') {
+      openPaywall('test_limit');
+      goHome();
+    }
+  }, [isTestScreen, testGate, openPaywall, goHome]);
+
   const handleFinish = (result: TestResult) => { addHist(result); addSrFromResult(result); if (user) { submitLeaderboard(result); } };
   const handleReviewFinish = (updated: SRCard[]) => {
     setSrCards(prev => {
@@ -263,6 +281,15 @@ function AppContent() {
     </div>
   );
 
+  // TEST-START GATE — logged-out user trying to enter a test screen: hard login wall.
+  // onFinish (sign-in completes via reload, or "Later") returns HOME; never skips in.
+  if (isTestScreen && testGate === 'login') return (
+    <div style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: FF.body, maxWidth: LAYOUT.maxWidth, margin: "0 auto", position: "relative" }}>
+      <style>{`:root{${themeToCss(palette)}}${GLOBAL_STYLES}`}</style>
+      <Suspense fallback={<LoadingSpinner />}><AuthPrompt testStartWall onFinish={goHome} /></Suspense>
+    </div>
+  );
+
   const mainContent = (
     <>
       <main role="main" key={screen} style={{ paddingTop: 10, paddingBottom: !isDesktop && showNav ? 80 : 0 }}>
@@ -282,12 +309,12 @@ function AppContent() {
           </ErrorBoundary>
         )}
         <Suspense fallback={<LoadingSpinner />}>
-          {!needProfile && screen === SCREENS.TEST && curSub && (
+          {!needProfile && screen === SCREENS.TEST && curSub && testGate === 'ok' && (
             <ErrorBoundary key={`test-${navNonce}`} title={tr.errors.testTitle} message={tr.errors.testMessage} onRecover={goHome}>
               <Test sid={curSub} tid={selTopic} customQs={customQs} finish={handleFinish} />
             </ErrorBoundary>
           )}
-          {!needProfile && screen === SCREENS.RUSH && (
+          {!needProfile && screen === SCREENS.RUSH && testGate === 'ok' && (
             <ErrorBoundary key="rush" title={tr.errors.rushTitle} message={tr.errors.rushMessage} onRecover={goHome}>
               <QuestionRush save={handleFinish} />
             </ErrorBoundary>
@@ -297,7 +324,7 @@ function AppContent() {
               <Calc />
             </ErrorBoundary>
           )}
-          {!needProfile && screen === SCREENS.FULL_ENT && (
+          {!needProfile && screen === SCREENS.FULL_ENT && testGate === 'ok' && (
             <ErrorBoundary key="fullent" title={tr.errors.fullentTitle} message={tr.errors.fullentMessage} onRecover={goHome}>
               <FullENT finish={handleFinish} />
             </ErrorBoundary>

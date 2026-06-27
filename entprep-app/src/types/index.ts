@@ -147,7 +147,7 @@ export interface UserData {
   premium_until?: string; // ISO date
 }
 
-export type PaywallReason = 'daily_limit' | 'fullent' | 'ai' | 'upgrade' | 'study_plan_locked' | null;
+export type PaywallReason = 'daily_limit' | 'fullent' | 'ai' | 'upgrade' | 'study_plan_locked' | 'test_limit' | null;
 
 // ── Subject Configuration ──────────────────────────────────────────────────
 
