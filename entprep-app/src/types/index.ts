@@ -430,3 +430,67 @@ export interface DuelState {
 // ── Style Types ────────────────────────────────────────────────────────────
 
 export type CSSProperties = React.CSSProperties;
+
+// ── Study Plan Types ─────────────────────────────────────────────────────────
+
+export interface StudyTask {
+  id: string;           // stable, e.g. "week_1_0", "week_2_challenge"
+  date: string;         // ISO date string
+  type: 'lesson' | 'practice' | 'review' | 'fullent' | 'challenge' | 'tip';
+  subject?: string;     // subject id (undefined for fullent/tip)
+  topic?: string;       // topic id (undefined for reading, fullent)
+  title: string;        // localized title (ru/kk will be set at UI time)
+  durationMin: number;  // estimate: lesson 5-10, practice 3-5, review 8-15, fullent 240, challenge 15-20
+  premium: boolean;     // true if week >= 3 OR type === 'challenge'
+}
+
+export interface StudyWeek {
+  weekNum: number;      // 1..N
+  startDate: string;    // ISO, first day of week (Monday)
+  endDate: string;      // ISO, last day of week (Sunday)
+  phase: 'foundation' | 'build' | 'review';
+  premium: boolean;     // true for weekNum >= 3
+  focus?: string;       // AI-generated focus/tip (phase 4)
+  tasks: StudyTask[];   // 4-6 tasks spread across weekdays
+}
+
+export interface StudyPlan {
+  id: string;           // uuid or hash(createdAt + examDate + target + seed)
+  createdAt: string;    // ISO, also used as deterministic seed
+  examDate: string;     // ISO
+  target: number;       // ENT goal score
+  weeksCount: number;   // clamp(weeksBetween(today, examDate), 2, 26)
+  weeks: StudyWeek[];
+}
+
+export interface PlanCompletion {
+  [taskId: string]: {
+    done: boolean;
+    completedAt?: string;  // ISO timestamp
+    resultId?: string;     // TestResult.id if auto-marked
+  };
+}
+
+export type StudyPlanSnapshot = {
+  plan: StudyPlan;
+  completion: PlanCompletion;
+  updatedAt: string;  // ISO — embedded in user_data JSONB
+};
+
+/** A weak/strong topic reference, as produced by getRecommendations(). */
+export interface StudyPlanTopicRef {
+  id: string;        // subject id
+  topic?: string;    // topic / subtopic id (undefined for topic-less subjects e.g. reading)
+  name?: string;     // human label (localized upstream)
+  score?: number;    // weakness score (higher = weaker for weakTopics; <= 40 = strong)
+}
+
+export interface GenerateStudyPlanInput {
+  examDate: string;                  // ISO date string (user's ENT exam target)
+  target: number;                    // ENT score goal (e.g. 180)
+  profileSubjects: string[];         // [subjectId, ...] profile subjects selected by user
+  weakTopics: StudyPlanTopicRef[];   // weak topics from getRecommendations(), sorted weakest-first
+  strongTopics: StudyPlanTopicRef[]; // strong subjects from getRecommendations()
+  today: string;                     // ISO date string (deterministic seed input)
+  seed: string;                      // deterministic seed (typically = createdAt ISO string)
+}
