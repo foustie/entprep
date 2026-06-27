@@ -14,9 +14,14 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import SubjectIcon from './ui/SubjectIcon';
 import { useT } from '../locales';
+import { supabase } from '../config/supabase';
+import { API_BASE } from '../config/app';
 import EmptyState from './ui/EmptyState';
-import { TrendingUp, TrendingDown, Minus, ChevronDown, ChevronRight, ChevronLeft, AlertTriangle, FileText, XCircle, Sparkles, RefreshCw, Lock, Check, Play } from 'lucide-react';
-import type { TopicStats, StudyTask, StudyWeek, StudyPlanTopicRef } from '../types';
+import { TrendingUp, TrendingDown, Minus, ChevronDown, ChevronRight, ChevronLeft, AlertTriangle, FileText, XCircle, Sparkles, RefreshCw, Lock, Check, Play, Lightbulb } from 'lucide-react';
+import type { TopicStats, StudyPlan, StudyTask, StudyWeek, StudyPlanTopicRef } from '../types';
+
+// Shape returned by the additive /api/study-plan-focus endpoint (graceful: may be []).
+interface FocusWeek { weekNum: number; focus?: string; tips?: { text: string }[] }
 
 interface SubjectAnalysis {
   id: string;
@@ -94,9 +99,79 @@ export default function Adaptive() {
       seed,
     });
     if (!next) { toast.error(t.study_plan.planError); return; }
+    // Render the deterministic plan immediately…
     setPlanSnapshot({ plan: next, completion: {}, updatedAt: seed });
     setWeekIdx(defaultWeekIndex(next.weeks, todayISO()));
     trackEvent('Study Plan Created', { weeks: next.weeksCount, target: next.target });
+    // …then enrich with AI weekly focus/tips in the background (graceful: silent on failure).
+    void fetchAndMergeFocus(next, seed);
+  };
+
+  /**
+   * Phase-4 enrichment: ask /api/study-plan-focus for a weekly focus line + a few
+   * task-title tips, then merge into the snapshot (focus → Week.focus; one display-only
+   * `tip` StudyTask per tip, prepended to the week). Purely additive and graceful —
+   * the plan already rendered, so any failure (no auth, AI down, bad JSON) is silent.
+   */
+  const fetchAndMergeFocus = async (next: StudyPlan, seed: string): Promise<void> => {
+    try {
+      if (!supabase) return;
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) return;
+
+      const input = {
+        lang: isKk ? 'kk' : 'ru',
+        target: next.target,
+        examDate: next.examDate,
+        weeks: next.weeks.map(w => ({
+          weekNum: w.weekNum,
+          phase: w.phase,
+          subjects: Array.from(new Set(w.tasks.map(tk => tk.subject).filter((s): s is string => !!s))),
+          topics: Array.from(new Set(w.tasks.map(tk => tk.topic).filter((tp): tp is string => !!tp))),
+        })),
+        weak: weak.map(s => ({ name: s.name, avg: s.avg, pct: Math.round(s.score), trend: s.trend })),
+        strong: strong.map(s => ({ name: s.name, avg: s.avg })),
+      };
+
+      const res = await fetch(`${API_BASE}/api/study-plan-focus`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(input),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const focusWeeks: FocusWeek[] = Array.isArray(data?.weeks) ? data.weeks : [];
+      if (!focusWeeks.length) return;
+
+      const byNum = new Map(focusWeeks.map(w => [w.weekNum, w]));
+      const mergedWeeks: StudyWeek[] = next.weeks.map(week => {
+        const f = byNum.get(week.weekNum);
+        if (!f) return week;
+        const tipTasks: StudyTask[] = (f.tips || []).map((tip, m) => ({
+          id: `week_${week.weekNum}_tip_${m}`,
+          date: week.startDate,
+          type: 'tip' as const,
+          subject: undefined,
+          topic: undefined,
+          title: tip.text,
+          durationMin: 3,
+          premium: false,
+        }));
+        return { ...week, focus: f.focus || week.focus, tasks: [...tipTasks, ...week.tasks] };
+      });
+
+      // Identity-guarded functional merge: only patch the snapshot this focus
+      // request was seeded from, and preserve live `completion`/`updatedAt`. This
+      // avoids two races in the multi-second AI window — (A) a task toggled mid-fetch
+      // having its completion wiped back to {}, and (B) a newer regenerate's plan
+      // being clobbered by an older in-flight focus response.
+      setPlanSnapshot(prev =>
+        prev && prev.updatedAt === seed ? { ...prev, plan: { ...next, weeks: mergedWeeks } } : prev,
+      );
+    } catch {
+      /* graceful: focus is optional polish — never block or surface an error */
+    }
   };
 
   const handleToggle = (taskId: string) => {
@@ -384,16 +459,24 @@ export default function Adaptive() {
     );
   };
 
+  // AI tip task (phase 4): display-only — no checkbox, no Start button, muted.
+  const renderTipRow = (task: StudyTask) => (
+    <div key={task.id} style={{ ...CARD_COMPACT, marginBottom: SP.sm, display: 'flex', alignItems: 'center', gap: SP.md, background: 'var(--bg-subtle)' }}>
+      <Lightbulb size={ICON.sm} color={COLORS.streak} style={{ flexShrink: 0 }} />
+      <div style={{ flex: 1, minWidth: 0, ...TYPE.body, fontSize: FS.base, color: 'var(--text-secondary)', fontFamily: FF.body, lineHeight: 1.35 }}>{task.title}</div>
+    </div>
+  );
+
   const renderWeekView = () => {
     if (!planSnap) return null;
     const weeks = planSnap.plan.weeks;
     const idx = Math.min(Math.max(weekIdx ?? defaultWeekIndex(weeks, todayISO()), 0), weeks.length - 1);
     const week = weeks[idx];
     const weekTasks = week.tasks;
-    // Premium tasks a free user cannot toggle are excluded from the progress
-    // denominator, so weekly progress can still reach 100% (otherwise the
-    // always-premium challenge would cap it at (n-1)/n).
-    const countableTasks = weekTasks.filter(tk => isPremium || !tk.premium);
+    // Premium tasks a free user cannot toggle — and display-only `tip` tasks —
+    // are excluded from the progress denominator, so weekly progress can still
+    // reach 100% (otherwise the always-premium challenge or AI tips would cap it).
+    const countableTasks = weekTasks.filter(tk => tk.type !== 'tip' && (isPremium || !tk.premium));
     const doneCount = countableTasks.filter(tk => planSnap.completion[tk.id]?.done).length;
     const pct = countableTasks.length ? Math.round((doneCount / countableTasks.length) * 100) : 0;
     const firstLockId = weekTasks.find(tk => !isPremium && tk.premium)?.id;
@@ -443,11 +526,20 @@ export default function Adaptive() {
           </div>
         </div>
 
+        {/* AI weekly focus (phase 4) — readonly callout, fills in when AI returns */}
+        {week.focus && (
+          <div aria-label={t.study_plan.weekFocus} style={{ display: 'flex', alignItems: 'flex-start', gap: SP.sm, background: 'var(--bg-subtle)', border: '1px solid var(--border)', borderRadius: R.md, padding: `${SP.md}px ${SP.md}px`, marginBottom: SP.lg }}>
+            <Lightbulb size={ICON.sm} color={COLORS.streak} style={{ flexShrink: 0, marginTop: 2 }} />
+            <div style={{ fontSize: FS.base, color: 'var(--text-secondary)', fontFamily: FF.body, lineHeight: 1.45 }}>{week.focus}</div>
+          </div>
+        )}
+
         {/* Day-grouped task list */}
         {byDay.map((g, di) => (
           <div key={g.date}>
             <div style={{ fontSize: FS.base, fontWeight: 600, color: 'var(--text-secondary)', fontFamily: FF.body, textTransform: 'capitalize', margin: `${SP.md}px 0 ${SP.sm}px`, paddingTop: di === 0 ? 0 : SP.sm, borderTop: di === 0 ? 'none' : '1px solid var(--border)' }}>{fmtDay(g.date)}</div>
             {g.tasks.map(task => {
+              if (task.type === 'tip') return renderTipRow(task);
               const locked = !isPremium && task.premium;
               return renderTaskRow(task, locked, locked && task.id === firstLockId, lockReason);
             })}

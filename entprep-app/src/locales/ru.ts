@@ -654,6 +654,7 @@ const ru = {
     start: 'Начать',
     done: 'Готово',
     progressThisWeek: 'Прогресс за неделю',
+    weekFocus: 'Фокус недели',
     taskTypes: {
       practice: 'Практика',
       lesson: 'Урок',

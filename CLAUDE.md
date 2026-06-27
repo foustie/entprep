@@ -63,7 +63,7 @@ entprep-app/src/
 └── sw.ts                # Service worker (Workbox + push)
 
 entprep-app/netlify/functions/   # Serverless API (20 functions)
-├── ai-explain.mjs, ai-generate.mjs, ai-plan.mjs, ai-tutor.mjs
+├── ai-explain.mjs, ai-generate.mjs, ai-tutor.mjs, study-plan-focus.mjs
 ├── admin-action.mjs, leaderboard.mjs, social.mjs, duel.mjs, analytics.mjs
 ├── revenuecat-webhook.mjs, lemon-webhook.mjs, lemon-reconcile.mjs, lemon-subscription.mjs, promo.mjs
 ├── questions.mjs, public-questions.mjs, teacher.mjs, delete-account.mjs

@@ -642,6 +642,7 @@ const kk: Translations = {
     start: 'Бастау',
     done: 'Дайын',
     progressThisWeek: 'Апталық прогресс',
+    weekFocus: 'Апта фокусы',
     taskTypes: {
       practice: 'Жаттығу',
       lesson: 'Сабақ',

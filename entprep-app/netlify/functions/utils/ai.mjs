@@ -1,8 +1,8 @@
 /**
  * AI provider adapter for runtime Netlify Functions.
  *
- * One place that knows how to talk to either provider, so the four AI functions
- * (ai-explain, ai-plan, ai-generate, ai-tutor) stay provider-agnostic.
+ * One place that knows how to talk to either provider, so the AI functions
+ * (ai-explain, ai-generate, ai-tutor, study-plan-focus) stay provider-agnostic.
  *
  * Provider is chosen at RUNTIME from the AI_PROVIDER env var (falls back to the
  * AI_PROVIDER constant). This means switching providers — or rolling back to

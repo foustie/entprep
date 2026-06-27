@@ -29,7 +29,7 @@ interface AppContextValue {
   finishAuthPrompt: () => void;
   addSrFromResult: (result: TestResult) => void;
   setSrCards: React.Dispatch<React.SetStateAction<SRCard[]>>;
-  setPlanSnapshot: (snap: StudyPlanSnapshot | null) => void;
+  setPlanSnapshot: React.Dispatch<React.SetStateAction<StudyPlanSnapshot | null>>;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -238,7 +238,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setProf([]);
   }, []);
 
-  const setPlanSnapshot = useCallback((snap: StudyPlanSnapshot | null) => {
+  const setPlanSnapshot = useCallback<React.Dispatch<React.SetStateAction<StudyPlanSnapshot | null>>>((snap) => {
     setPlan(snap);
   }, []);
 
