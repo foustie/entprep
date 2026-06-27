@@ -31,6 +31,7 @@ const kk: Translations = {
   // ── Tab bar ───────────────────────────────────────────────────────────
   tabs: {
     home: 'Басты',
+    plan: 'Жоспар',
     profile: 'Профиль',
     adaptive: 'Талдау',
     progress: 'Прогресс',

@@ -52,7 +52,7 @@ function defaultWeekIndex(weeks: StudyWeek[], today: string): number {
 export default function Adaptive() {
   const { nav, openPaywall } = useNav();
   const { hist, prof, st, plan: planSnap, setPlanSnapshot } = useApp();
-  const { isPremium } = useAuth();
+  const { user, isPremium } = useAuth();
   const toast = useToast();
   const bp = useBreakpoint();
   const t = useT();
@@ -86,6 +86,8 @@ export default function Adaptive() {
     strong.map(s => ({ id: s.id, name: s.name, score: s.score }));
 
   const handleGenerate = () => {
+    // Plan is VISIBLE to everyone, but creating one requires an account.
+    if (!user) { toast.warning(t.test.loginRequired); return; }
     const examDate = st.goal?.date || getUpcomingPeriods()[0]?.examStart || '';
     if (!examDate) { toast.warning(t.study_plan.noGoal); return; }
     const seed = new Date().toISOString();
@@ -550,7 +552,8 @@ export default function Adaptive() {
   };
 
   const renderPlanSection = () => {
-    if (totalTests === 0) return null;
+    // Visible to everyone (even logged-out / no history) — access is gated at
+    // create time (login) and per-week (premium), not by hiding the whole section.
     if (!planSnap) {
       return (
         <div style={{ ...CARD_HERO, marginBottom: SP.xxl, textAlign: 'center' }}>

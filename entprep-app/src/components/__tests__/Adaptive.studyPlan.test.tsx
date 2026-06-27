@@ -10,6 +10,8 @@ import type { StudyPlanSnapshot } from '../../types/index';
 
 const h = vi.hoisted(() => ({
   premium: false,
+  user: { id: 'u1' } as { id: string } | null,
+  totalTests: 5,
   lang: 'ru' as 'ru' | 'kk',
   t: null as unknown,
   snapshot: null as StudyPlanSnapshot | null,
@@ -24,13 +26,13 @@ vi.mock('../../locales', () => ({ useT: () => h.t }));
 vi.mock('../../contexts/AppContext', () => ({
   useApp: () => ({ hist: [], prof: ['physics'], st: { lang: h.lang, goal: h.goal }, plan: h.snapshot, setPlanSnapshot: h.setPlanSnapshot }),
 }));
-vi.mock('../../contexts/AuthContext', () => ({ useAuth: () => ({ isPremium: h.premium }) }));
+vi.mock('../../contexts/AuthContext', () => ({ useAuth: () => ({ user: h.user, isPremium: h.premium }) }));
 vi.mock('../../contexts/NavigationContext', () => ({ useNav: () => ({ nav: h.nav, openPaywall: h.openPaywall }) }));
 vi.mock('../../contexts/ToastContext', () => ({ useToast: () => ({ warning: vi.fn(), error: vi.fn(), success: vi.fn(), info: vi.fn() }) }));
 vi.mock('../../hooks/useBreakpoint', () => ({ useBreakpoint: () => 'mobile' }));
 vi.mock('../../utils/analytics', () => ({ trackEvent: h.trackEvent }));
 vi.mock('../../utils/adaptiveHelpers', () => ({
-  getRecommendations: () => ({ weak: [], strong: [], overall: 50, totalTests: 5 }),
+  getRecommendations: () => ({ weak: [], strong: [], overall: 50, totalTests: h.totalTests }),
   calcTopicStats: () => null,
   calcSubtopicStats: () => null,
   getWrongQuestions: () => [],
@@ -58,6 +60,8 @@ function makeSnapshot(weeksAhead: number): StudyPlanSnapshot {
 beforeEach(() => {
   cleanup();
   h.premium = false;
+  h.user = { id: 'u1' };
+  h.totalTests = 5;
   h.lang = 'ru';
   h.t = ru;
   h.snapshot = null;
@@ -82,6 +86,19 @@ describe('Adaptive study plan — empty state', () => {
     const snap = h.setPlanSnapshot.mock.calls[0][0];
     expect(snap.plan.weeks.length).toBeGreaterThan(0);
     expect(h.trackEvent).toHaveBeenCalledWith('Study Plan Created', expect.objectContaining({ weeks: snap.plan.weeksCount }));
+  });
+
+  it('keeps the plan VISIBLE with no test history (totalTests=0) — visible to all', () => {
+    h.totalTests = 0;
+    render(<Adaptive />);
+    expect(screen.getByText(ru.study_plan.createPlan)).toBeInTheDocument();
+  });
+
+  it('gates creation on login — a logged-out click does not create a plan', () => {
+    h.user = null;
+    render(<Adaptive />);
+    fireEvent.click(screen.getByText(ru.study_plan.createPlan));
+    expect(h.setPlanSnapshot).not.toHaveBeenCalled();
   });
 });
 
