@@ -3,7 +3,8 @@ import { loadData, saveData } from '../utils/storage';
 import { cloudLoad, cloudSave, mergeData } from '../utils/cloudSync';
 import { useAuth } from './AuthContext';
 import { addWrongAnswers } from '../utils/srEngine';
-import type { TestResult, Settings, GoalSettings, SRCard } from '../types/index';
+import { autoCompleteFromResult } from '../utils/studyPlanStore';
+import type { TestResult, Settings, GoalSettings, SRCard, StudyPlanSnapshot } from '../types/index';
 
 /** Stable unique id for a test result, stamped on insert. Lets cloud-sync dedup
  *  the same run appearing once locally and once from cloud (see mergeData). */
@@ -17,6 +18,7 @@ interface AppContextValue {
   prof: string[];
   st: Settings;
   srCards: SRCard[];
+  plan: StudyPlanSnapshot | null;
   syncError: string | null;
   showAuthPrompt: boolean;
   addHist: (result: TestResult) => void;
@@ -27,6 +29,7 @@ interface AppContextValue {
   finishAuthPrompt: () => void;
   addSrFromResult: (result: TestResult) => void;
   setSrCards: React.Dispatch<React.SetStateAction<SRCard[]>>;
+  setPlanSnapshot: (snap: StudyPlanSnapshot | null) => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -88,6 +91,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [prof, setProf] = useState<string[]>(() => loadData()?.prof || []);
   const [st, setSt] = useState<Settings>(() => loadData()?.st || { exp: true, tmr: true, shf: true });
   const [srCards, setSrCards] = useState<SRCard[]>(() => loadData()?.srCards || []);
+  const [plan, setPlan] = useState<StudyPlanSnapshot | null>(() => loadData()?.plan ?? null);
 
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
@@ -95,12 +99,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
 
-  const debouncedCloudSave = useCallback((userId: string, _data: { hist: TestResult[]; prof: string[]; st: Settings; srCards?: SRCard[] }) => {
+  const debouncedCloudSave = useCallback((userId: string, _data: { hist: TestResult[]; prof: string[]; st: Settings; srCards?: SRCard[]; plan?: StudyPlanSnapshot }) => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
       // Read fresh data from localStorage to avoid stale closure
       const fresh = loadData();
-      const data = fresh ? { hist: fresh.hist || [], prof: fresh.prof || [], st: fresh.st || _data.st, srCards: fresh.srCards || _data.srCards || [] } : _data;
+      const data = fresh ? { hist: fresh.hist || [], prof: fresh.prof || [], st: fresh.st || _data.st, srCards: fresh.srCards || _data.srCards || [], plan: fresh.plan ?? _data.plan } : _data;
       const result = await cloudSave(userId, data);
       if (!result.ok) setSyncError(result.error ?? null);
       else setSyncError(null);
@@ -126,12 +130,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
       const cloud = result.status === 'ok' ? result.data : null;
       const stored = loadData();
-      const local = { hist: stored?.hist || [], prof: stored?.prof || [], st: stored?.st || { exp: true, tmr: true, shf: true }, srCards: stored?.srCards || [] };
+      const local = { hist: stored?.hist || [], prof: stored?.prof || [], st: stored?.st || { exp: true, tmr: true, shf: true }, srCards: stored?.srCards || [], plan: stored?.plan };
       const merged = mergeData(local, cloud);
       setHist(merged.hist);
       setProf(merged.prof);
       setSt(merged.st);
       setSrCards(merged.srCards || []);
+      setPlan(merged.plan ?? null);
       syncedRef.current = true;
       await cloudSave(user.id, merged);
     })();
@@ -144,20 +149,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [st.theme]);
 
   useEffect(() => {
-    saveData({ hist, st, prof, srCards, lastLogin: new Date().toISOString() });
-    if (user && syncedRef.current) debouncedCloudSave(user.id, { hist, prof, st, srCards });
-  }, [hist, st, prof, srCards]); // eslint-disable-line react-hooks/exhaustive-deps
+    saveData({ hist, st, prof, srCards, plan: plan ?? undefined, lastLogin: new Date().toISOString() });
+    if (user && syncedRef.current) debouncedCloudSave(user.id, { hist, prof, st, srCards, plan: plan ?? undefined });
+  }, [hist, st, prof, srCards, plan]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sync state from other tabs writing to localStorage
   useEffect(() => {
     const handler = (e: StorageEvent) => {
       if (e.key !== 'entprep_data' || !e.newValue) return;
       try {
-        const fresh = JSON.parse(e.newValue) as { hist?: TestResult[]; prof?: string[]; st?: Settings; srCards?: SRCard[] };
+        const fresh = JSON.parse(e.newValue) as { hist?: TestResult[]; prof?: string[]; st?: Settings; srCards?: SRCard[]; plan?: StudyPlanSnapshot };
         if (fresh.hist) setHist(fresh.hist);
         if (fresh.prof) setProf(fresh.prof);
         if (fresh.st) setSt(fresh.st);
         if (fresh.srCards) setSrCards(fresh.srCards);
+        if ('plan' in fresh) setPlan(fresh.plan ?? null);
       } catch { /* ignore malformed data */ }
     };
     window.addEventListener('storage', handler);
@@ -171,6 +177,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     // the copy that comes back from cloud) instead of keeping both — see mergeData.
     const stamped: TestResult = { ...clean, id: clean.id ?? newResultId() };
     setHist(prev => [...prev, stamped]);
+    // Auto-complete the earliest matching pending plan task (idempotent via resultId).
+    setPlan(prev => {
+      if (!prev) return prev;
+      const nextCompletion = autoCompleteFromResult(prev.plan, prev.completion, stamped, new Date().toISOString());
+      if (nextCompletion === prev.completion) return prev; // no match → no write, no updatedAt bump
+      return { ...prev, completion: nextCompletion, updatedAt: new Date().toISOString() };
+    });
   }, []);
 
   const clearHist = useCallback(() => {
@@ -225,6 +238,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setProf([]);
   }, []);
 
+  const setPlanSnapshot = useCallback((snap: StudyPlanSnapshot | null) => {
+    setPlan(snap);
+  }, []);
+
   const finishAuthPrompt = useCallback(() => {
     // Read hist.length via functional setHist to avoid adding it as a dep —
     // otherwise finishAuthPrompt rebuilds on every test completion, cascading
@@ -235,14 +252,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<AppContextValue>(
     () => ({
-      hist, prof, st, srCards, syncError,
+      hist, prof, st, srCards, plan, syncError,
       showAuthPrompt,
       addHist, clearHist, updSt,
       confirmProfile, resetProfile,
       finishAuthPrompt,
-      addSrFromResult, setSrCards,
+      addSrFromResult, setSrCards, setPlanSnapshot,
     }),
-    [hist, prof, st, srCards, syncError, showAuthPrompt, addHist, clearHist, updSt, confirmProfile, resetProfile, finishAuthPrompt, addSrFromResult],
+    [hist, prof, st, srCards, plan, syncError, showAuthPrompt, addHist, clearHist, updSt, confirmProfile, resetProfile, finishAuthPrompt, addSrFromResult, setPlanSnapshot],
   );
 
   return (

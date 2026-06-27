@@ -141,6 +141,7 @@ export interface UserData {
   hist: TestResult[];
   st: Settings;
   srCards?: SRCard[];   // spaced repetition cards
+  plan?: StudyPlanSnapshot; // study-plan snapshot + completion (embedded, synced)
   lastLogin?: string;
   is_premium?: boolean;
   premium_until?: string; // ISO date

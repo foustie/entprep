@@ -1,5 +1,5 @@
 import { supabase } from '../config/supabase';
-import type { TestResult, Settings, SRCard } from '../types/index';
+import type { TestResult, Settings, SRCard, StudyPlanSnapshot } from '../types/index';
 import { syncProfileStats } from './socialHelpers';
 import { calcTotalXP, getLevel } from './xpHelpers';
 import { calcStreak } from './adaptiveHelpers';
@@ -11,6 +11,7 @@ interface CloudData {
   prof: string[];
   st: Settings;
   srCards?: SRCard[];
+  plan?: StudyPlanSnapshot; // study-plan snapshot; packed into `st` column (no schema change)
 }
 
 export type CloudLoadResult =
@@ -38,21 +39,25 @@ export async function cloudLoad(userId: string): Promise<CloudLoadResult> {
       if (attempt < 2) await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
       continue;
     }
-    const raw = data as { hist: TestResult[]; prof: string[]; st: Settings & { srCards?: SRCard[] } };
+    const raw = data as { hist: TestResult[]; prof: string[]; st: Settings & { srCards?: SRCard[]; plan?: StudyPlanSnapshot } };
     const srCards = raw.st?.srCards || [];
+    const plan = raw.st?.plan;
     const st = { ...raw.st };
     delete (st as Record<string, unknown>).srCards;
-    return { status: 'ok', data: { hist: raw.hist, prof: raw.prof, st, srCards } };
+    delete (st as Record<string, unknown>).plan;
+    return { status: 'ok', data: { hist: raw.hist, prof: raw.prof, st, srCards, plan } };
   }
   const errMsg = lastErr?.message || 'cloudLoad failed';
   captureError(new Error(errMsg), { context: 'cloudLoad.failedAll3Attempts', userId, code: lastErr?.code });
   return { status: 'failed', error: lastErr?.message || 'cloudLoad failed after 3 attempts' };
 }
 
-export async function cloudSave(userId: string, { hist, prof, st, srCards }: CloudData): Promise<{ ok: boolean; error?: string }> {
+export async function cloudSave(userId: string, { hist, prof, st, srCards, plan }: CloudData): Promise<{ ok: boolean; error?: string }> {
   if (!supabase) return { ok: false, error: 'no supabase' };
-  // Pack srCards into st field to avoid schema changes
-  const stWithSr = srCards && srCards.length > 0 ? { ...st, srCards } : st;
+  // Pack srCards + plan into st field to avoid schema changes
+  let stWithSr: Settings & { srCards?: SRCard[]; plan?: StudyPlanSnapshot } = st;
+  if (srCards && srCards.length > 0) stWithSr = { ...stWithSr, srCards };
+  if (plan) stWithSr = { ...stWithSr, plan };
   // Retry with backoff on transient failures
   let lastError: string | undefined;
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -76,6 +81,14 @@ export async function cloudSave(userId: string, { hist, prof, st, srCards }: Clo
   } catch (e) { captureError(e, { context: 'cloudSave.profileStatsSync' }); }
 
   return { ok: true };
+}
+
+/** Plan snapshot merge: LAST-WRITE-WINS by `updatedAt` (cloud wins ties). This is a
+ *  snapshot, NOT append-only history — never run array-dedup logic on it. */
+function mergePlan(localPlan?: StudyPlanSnapshot, cloudPlan?: StudyPlanSnapshot): StudyPlanSnapshot | undefined {
+  if (!localPlan) return cloudPlan;
+  if (!cloudPlan) return localPlan;
+  return cloudPlan.updatedAt >= localPlan.updatedAt ? cloudPlan : localPlan;
 }
 
 /** Dedup identity for a history entry: a stable id when present, else a composite
@@ -118,7 +131,7 @@ export function mergeData(local: CloudData | null, cloud: CloudData | null): Clo
     const localKeys = new Set(localHist.map(histKey));
     const cloudOnly = (cloud.hist || []).filter(h => !localKeys.has(histKey(h)));
     captureError(new Error(`mergeData lost entries: uniqLocal=${uniqLocal} merged=${hist.length}`), { context: 'mergeData.safety' });
-    return { hist: [...localHist, ...cloudOnly], prof: local.prof || cloud.prof || [], st: { ...(cloud.st || {}), ...(local.st || {}) } as Settings, srCards: mergeSrCards(local.srCards || [], cloud.srCards || []) };
+    return { hist: [...localHist, ...cloudOnly], prof: local.prof || cloud.prof || [], st: { ...(cloud.st || {}), ...(local.st || {}) } as Settings, srCards: mergeSrCards(local.srCards || [], cloud.srCards || []), plan: mergePlan(local.plan, cloud.plan) };
   }
 
   const prof = (cloud.prof?.length > 0) ? cloud.prof : (local.prof || []);
@@ -127,5 +140,6 @@ export function mergeData(local: CloudData | null, cloud: CloudData | null): Clo
   if (!st.tmr && st.tmr !== false) st.tmr = true;
   if (!st.shf && st.shf !== false) st.shf = true;
   const srCards = mergeSrCards(local.srCards || [], cloud.srCards || []);
-  return { hist, prof, st, srCards };
+  const plan = mergePlan(local.plan, cloud.plan);
+  return { hist, prof, st, srCards, plan };
 }
