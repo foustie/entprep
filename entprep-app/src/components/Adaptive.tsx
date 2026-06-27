@@ -40,6 +40,16 @@ function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+/** ISO date `n` whole months from today (used by the duration quick-pick chips). */
+function isoAddMonths(n: number): string {
+  const d = new Date();
+  d.setMonth(d.getMonth() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Quick-pick durations (months until ЕНТ) offered in the survey. */
+const MONTH_OPTIONS = [1, 3, 6, 9] as const;
+
 /** Index of the week containing `today` (clamped to [0, last]). */
 function defaultWeekIndex(weeks: StudyWeek[], today: string): number {
   for (let i = 0; i < weeks.length; i++) {
@@ -51,7 +61,7 @@ function defaultWeekIndex(weeks: StudyWeek[], today: string): number {
 
 export default function Adaptive() {
   const { nav, openPaywall } = useNav();
-  const { hist, prof, st, plan: planSnap, setPlanSnapshot } = useApp();
+  const { hist, prof, st, plan: planSnap, setPlanSnapshot, updSt } = useApp();
   const { user, isPremium } = useAuth();
   const toast = useToast();
   const bp = useBreakpoint();
@@ -69,11 +79,45 @@ export default function Adaptive() {
   // currentWeek is 0-based; null = follow the by-date default (today's week).
   const [weekIdx, setWeekIdx] = useState<number | null>(null);
 
-  // Workload survey: pick task density before (re)generating. 'create' = fresh plan,
-  // 'regen' = replace existing plan (also shows the "progress will be wiped" warning).
+  // Plan-setup survey: pick exam date (duration) + task density before (re)generating.
+  // 'create' = fresh plan, 'regen' = replace existing (shows the "progress wiped" warning).
   const [workloadOpen, setWorkloadOpen] = useState<false | 'create' | 'regen'>(false);
+  const [workloadSel, setWorkloadSel] = useState<StudyWorkload>('medium');
+  const [dateSel, setDateSel] = useState<string>('');       // chosen exam date (ISO)
+  const [monthsSel, setMonthsSel] = useState<number | null>(null); // active month chip (highlight)
   const pickerDlgRef = useRef<HTMLDivElement>(null);
   useFocusTrap(pickerDlgRef, !!workloadOpen, () => setWorkloadOpen(false));
+
+  // Open the survey, seeding the inputs from the existing plan/goal. Create requires login.
+  const openSurvey = (mode: 'create' | 'regen') => {
+    if (!user) { toast.warning(t.test.loginRequired); return; }
+    const today = todayISO();
+    // Never seed a stale (past) date — many users carry a goal.date for an ENT period
+    // that has already started; fall back to the next upcoming period instead.
+    const futureOrNext = (d?: string) => (d && d >= today ? d : getUpcomingPeriods()[0]?.examStart || '');
+    if (mode === 'regen') {
+      setWorkloadSel(planSnap?.plan.workload ?? 'medium');
+      setDateSel(futureOrNext(planSnap?.plan.examDate || st.goal?.date));
+    } else {
+      setWorkloadSel('medium');
+      setDateSel(futureOrNext(st.goal?.date));
+    }
+    setMonthsSel(null); // the seed is an actual date, not a month-count — no chip highlighted
+    setWorkloadOpen(mode);
+  };
+
+  const pickMonths = (n: number) => { setMonthsSel(n); setDateSel(isoAddMonths(n)); };
+
+  // Commit the survey: generate FIRST, and only on success persist the exam date to the
+  // global goal + close the modal — so a failed/past-date generate never corrupts goal state.
+  const submitSurvey = () => {
+    const examDate = dateSel || getUpcomingPeriods()[0]?.examStart || '';
+    if (!examDate || examDate < todayISO()) { toast.warning(t.study_plan.noGoal); return; }
+    const next = handleGenerate(workloadSel, examDate);
+    if (!next) return; // generation failed (toast already shown) — keep the survey open to fix
+    updSt({ ...st, goal: { target: st.goal?.target || 122, date: examDate } });
+    setWorkloadOpen(false);
+  };
 
   // ── Plan generation ──────────────────────────────────────────────────────
   const buildWeakTopics = (): StudyPlanTopicRef[] =>
@@ -86,11 +130,10 @@ export default function Adaptive() {
   const buildStrongTopics = (): StudyPlanTopicRef[] =>
     strong.map(s => ({ id: s.id, name: s.name, score: s.score }));
 
-  const handleGenerate = (workload: StudyWorkload) => {
+  const handleGenerate = (workload: StudyWorkload, examDate: string): StudyPlan | null => {
     // Plan is VISIBLE to everyone, but creating one requires an account.
-    if (!user) { toast.warning(t.test.loginRequired); return; }
-    const examDate = st.goal?.date || getUpcomingPeriods()[0]?.examStart || '';
-    if (!examDate) { toast.warning(t.study_plan.noGoal); return; }
+    if (!user) { toast.warning(t.test.loginRequired); return null; }
+    if (!examDate) { toast.warning(t.study_plan.noGoal); return null; }
     const seed = new Date().toISOString();
     const next = generateStudyPlan({
       examDate,
@@ -102,13 +145,14 @@ export default function Adaptive() {
       seed,
       workload,
     });
-    if (!next) { toast.error(t.study_plan.planError); return; }
+    if (!next) { toast.error(t.study_plan.planError); return null; }
     // Render the deterministic plan immediately…
     setPlanSnapshot({ plan: next, completion: {}, updatedAt: seed });
     setWeekIdx(defaultWeekIndex(next.weeks, todayISO()));
     trackEvent('Study Plan Created', { weeks: next.weeksCount, target: next.target });
     // …then enrich with AI weekly focus/tips in the background (graceful: silent on failure).
     void fetchAndMergeFocus(next, seed);
+    return next;
   };
 
   /**
@@ -526,7 +570,7 @@ export default function Adaptive() {
         {/* Header: eyebrow + regenerate */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: SP.md }}>
           <div style={TYPE.eyebrow}>{t.study_plan.myPlan}</div>
-          <button onClick={() => setWorkloadOpen('regen')} style={{ display: 'inline-flex', alignItems: 'center', gap: SP.xs, background: 'none', border: 'none', color: COLORS.streak, fontSize: FS.base, fontWeight: 700, fontFamily: FF.body, cursor: 'pointer', padding: 0 }}>
+          <button onClick={() => openSurvey('regen')} style={{ display: 'inline-flex', alignItems: 'center', gap: SP.xs, background: 'none', border: 'none', color: COLORS.streak, fontSize: FS.base, fontWeight: 700, fontFamily: FF.body, cursor: 'pointer', padding: 0 }}>
             <RefreshCw size={ICON.sm} /> {t.study_plan.regeneratePlan}
           </button>
         </div>
@@ -595,7 +639,7 @@ export default function Adaptive() {
           <Sparkles size={28} color={COLORS.streak} style={{ marginBottom: SP.sm }} />
           <div style={{ ...TYPE.h3, marginBottom: SP.xs }}>{t.study_plan.empty}</div>
           <div style={{ fontSize: FS.base, color: 'var(--text-secondary)', fontFamily: FF.body, marginBottom: SP.lg, lineHeight: 1.5 }}>{t.study_plan.createPlanDesc}</div>
-          <button onClick={() => { if (!user) { toast.warning(t.test.loginRequired); return; } setWorkloadOpen('create'); }} style={ctaStyle}>
+          <button onClick={() => openSurvey('create')} style={ctaStyle}>
             <Sparkles size={ICON.sm} /> {t.study_plan.createPlan}
           </button>
         </div>
@@ -680,32 +724,61 @@ export default function Adaptive() {
         />
       )}
 
-      {/* Workload survey — student picks plan density (also the create/regenerate gate) */}
+      {/* Plan-setup survey — student picks exam date (duration) + density (also the create/regen gate) */}
       {workloadOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: SP.xl }}>
-          <div ref={pickerDlgRef} role="dialog" aria-modal="true" aria-label={t.study_plan.workloadTitle} tabIndex={-1} style={{ background: 'var(--bg-card)', border: '2px solid var(--ink)', boxShadow: '0 3px 0 0 var(--ink)', borderRadius: R.lg, padding: `${SP.xl}px ${SP.xl}px`, maxWidth: 360, width: '100%' }}>
-            <h2 style={{ ...TYPE.h3, margin: `0 0 ${SP.xs}px`, textAlign: 'center' }}>{t.study_plan.workloadTitle}</h2>
-            <div style={{ fontSize: FS.base, color: 'var(--text-secondary)', fontFamily: FF.body, marginBottom: SP.lg, lineHeight: 1.45, textAlign: 'center' }}>{t.study_plan.workloadDesc}</div>
+          <div ref={pickerDlgRef} role="dialog" aria-modal="true" aria-label={t.study_plan.setupTitle} tabIndex={-1} style={{ background: 'var(--bg-card)', border: '2px solid var(--ink)', boxShadow: '0 3px 0 0 var(--ink)', borderRadius: R.lg, padding: `${SP.xl}px ${SP.xl}px`, maxWidth: 380, width: '100%', maxHeight: '88vh', overflowY: 'auto' }}>
+            <h2 style={{ ...TYPE.h3, margin: `0 0 ${SP.xs}px`, textAlign: 'center' }}>{t.study_plan.setupTitle}</h2>
+            <div style={{ fontSize: FS.base, color: 'var(--text-secondary)', fontFamily: FF.body, marginBottom: SP.lg, lineHeight: 1.45, textAlign: 'center' }}>{t.study_plan.setupDesc}</div>
             {workloadOpen === 'regen' && (
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: SP.xs, fontSize: FS.base, color: COLORS.red, fontFamily: FF.body, marginBottom: SP.md, lineHeight: 1.4 }}>
-                <AlertTriangle size={ICON.sm} style={{ flexShrink: 0, marginTop: 1 }} /> {t.study_plan.regenerateConfirmDesc}
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: SP.xs, fontSize: FS.base, color: COLORS.redText, fontFamily: FF.body, marginBottom: SP.md, lineHeight: 1.4 }}>
+                <AlertTriangle size={ICON.sm} color={COLORS.red} style={{ flexShrink: 0, marginTop: 1 }} /> {t.study_plan.regenerateConfirmDesc}
               </div>
             )}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: SP.sm, marginBottom: SP.lg }}>
-              {(['light', 'medium', 'intense'] as StudyWorkload[]).map(key => {
-                const lvl = (t.study_plan.workload as Record<string, { label: string; desc: string }>)[key];
-                const active = (planSnap?.plan.workload ?? 'medium') === key;
+
+            {/* Duration — quick month chips + exact date */}
+            <div style={{ ...TYPE.eyebrow, marginBottom: SP.sm }}>{t.study_plan.whenExam}</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: SP.sm, marginBottom: SP.md }}>
+              {MONTH_OPTIONS.map(n => {
+                const active = monthsSel === n;
                 return (
-                  <button key={key} onClick={() => { setWorkloadOpen(false); handleGenerate(key); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: SP.md, textAlign: 'left', background: active ? COLORS.streak + '14' : 'var(--bg-card)', border: '2px solid var(--ink)', boxShadow: '0 3px 0 0 var(--ink)', borderRadius: R.md, padding: `${SP.md}px ${SP.lg}px`, cursor: 'pointer', fontFamily: FF.body }}>
-                    <span style={{ minWidth: 0 }}>
-                      <span style={{ display: 'block', fontSize: FS.lg, fontWeight: 700, color: 'var(--text)' }}>{lvl.label}</span>
-                      <span style={{ display: 'block', fontSize: FS.base, color: 'var(--text-secondary)' }}>{lvl.desc}</span>
-                    </span>
-                    <ChevronRight size={ICON.md} color="var(--text-muted)" style={{ flexShrink: 0 }} />
+                  <button key={n} onClick={() => pickMonths(n)} aria-pressed={active} style={{ flex: '1 1 0', minWidth: 64, padding: `${SP.sm}px ${SP.xs}px`, borderRadius: R.md, border: active ? `2px solid ${COLORS.streak}` : '2px solid var(--ink)', boxShadow: '0 2px 0 0 var(--ink)', background: active ? COLORS.streak + '28' : 'var(--bg-card)', color: 'var(--text)', fontSize: FS.base, fontWeight: 700, fontFamily: FF.body, cursor: 'pointer' }}>
+                    {n} {t.study_plan.monthsShort}
                   </button>
                 );
               })}
             </div>
+            <label style={{ display: 'block', fontSize: FS.base, color: 'var(--text-secondary)', fontFamily: FF.body, marginBottom: SP.xs }}>{t.study_plan.orExactDate}</label>
+            <input
+              type="date"
+              value={dateSel}
+              min={todayISO()}
+              onChange={e => { setDateSel(e.target.value); setMonthsSel(null); }}
+              aria-label={t.study_plan.orExactDate}
+              style={{ display: 'block', width: '100%', boxSizing: 'border-box', padding: `${SP.sm}px ${SP.md}px`, marginBottom: SP.lg, background: 'var(--bg-subtle-2)', border: '2px solid var(--ink)', borderRadius: R.md, color: 'var(--text)', fontSize: FS.lg, fontFamily: FF.body, colorScheme: 'var(--color-scheme)', WebkitAppearance: 'none', appearance: 'none' }}
+            />
+
+            {/* Workload — density */}
+            <div style={{ ...TYPE.eyebrow, marginBottom: SP.sm }}>{t.study_plan.workloadLabel}</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: SP.sm, marginBottom: SP.lg }}>
+              {(['light', 'medium', 'intense'] as StudyWorkload[]).map(key => {
+                const lvl = (t.study_plan.workload as Record<string, { label: string; desc: string }>)[key];
+                const active = workloadSel === key;
+                return (
+                  <button key={key} onClick={() => setWorkloadSel(key)} aria-pressed={active} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: SP.md, textAlign: 'left', background: active ? COLORS.streak + '28' : 'var(--bg-card)', border: '2px solid var(--ink)', boxShadow: '0 3px 0 0 var(--ink)', borderRadius: R.md, padding: `${SP.md}px ${SP.lg}px`, cursor: 'pointer', fontFamily: FF.body }}>
+                    <span style={{ minWidth: 0 }}>
+                      <span style={{ display: 'block', fontSize: FS.lg, fontWeight: 700, color: 'var(--text)' }}>{lvl.label}</span>
+                      <span style={{ display: 'block', fontSize: FS.base, color: 'var(--text-secondary)' }}>{lvl.desc}</span>
+                    </span>
+                    {active && <Check size={ICON.md} color={COLORS.win} strokeWidth={3} style={{ flexShrink: 0 }} />}
+                  </button>
+                );
+              })}
+            </div>
+
+            <button onClick={submitSurvey} style={{ ...ctaStyle, width: '100%', justifyContent: 'center', marginBottom: SP.sm }}>
+              <Sparkles size={ICON.sm} /> {t.study_plan.createPlan}
+            </button>
             <button onClick={() => setWorkloadOpen(false)} style={{ width: '100%', padding: `${SP.md}px 0`, borderRadius: R.md, border: '1px solid var(--border)', background: 'none', color: 'var(--text)', fontSize: FS.lg, fontWeight: 600, fontFamily: FF.body, cursor: 'pointer' }}>
               {t.study_plan.cancel}
             </button>

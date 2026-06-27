@@ -16,7 +16,7 @@ import { TOPIC_MAP } from '../config/topics';
  * Returns null on invalid input (examDate < today, malformed dates).
  *
  * Algorithm (see blueprint):
- * 1. weeksCount = clamp(weeksBetween(today, examDate), 2, 26)
+ * 1. weeksCount = clamp(weeksBetween(today, examDate), 2, 40)
  * 2. Phases: ~40% foundation, ~40% build, ~20% review
  * 3. Weak topics drive foundation; strong appear in build/review
  * 4. Density from `workload` (default 'medium'): N tasks/weekday + fewer/weekend, MULTIPLE per day.
@@ -155,8 +155,8 @@ export function generateStudyPlan(input: GenerateStudyPlanInput): StudyPlan | nu
   if (examMs < todayMs) return null;
   if (!seed || typeof seed !== 'string') return null;
 
-  // 1b. weeksCount = clamp(weeksBetween, 2, 26)
-  const weeksCount = clamp(weeksBetween(today, examDate), 2, 26);
+  // 1b. weeksCount = clamp(weeksBetween, 2, 40) — supports up to ~9-month horizons
+  const weeksCount = clamp(weeksBetween(today, examDate), 2, 40);
 
   // 2. PRNG
   const rng = mulberry32(hashString(seed));
@@ -226,7 +226,7 @@ export function generateStudyPlan(input: GenerateStudyPlanInput): StudyPlan | nu
         type,
         subject,
         topic,
-        title: `${type}:${subject}${topic ? `:${topic}` : ''}`,
+        title: '', // derived at render from type/subject/topic; kept empty to keep snapshots small
         durationMin: DURATION[type],
         premium: weekPremium,
       });
@@ -242,7 +242,7 @@ export function generateStudyPlan(input: GenerateStudyPlanInput): StudyPlan | nu
           id: `week_${weekNum}_${seq++}`,
           date: dateAddDays(startDate, offset),
           type: 'fullent',
-          title: coldStart && weekNum === 1 ? 'Diagnostic full ENT' : 'Full ENT simulation',
+          title: '', // label derived at render
           durationMin: DURATION.fullent,
           premium: weekPremium,
         });
@@ -256,7 +256,7 @@ export function generateStudyPlan(input: GenerateStudyPlanInput): StudyPlan | nu
       id: `week_${weekNum}_challenge`,
       date: dateAddDays(startDate, 6),
       type: 'challenge',
-      title: 'Weekly challenge',
+      title: '', // label derived at render
       durationMin: DURATION.challenge,
       premium: true,
     });

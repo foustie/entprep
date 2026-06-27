@@ -463,7 +463,7 @@ export interface StudyPlan {
   createdAt: string;    // ISO, also used as deterministic seed
   examDate: string;     // ISO
   target: number;       // ENT goal score
-  weeksCount: number;   // clamp(weeksBetween(today, examDate), 2, 26)
+  weeksCount: number;   // clamp(weeksBetween(today, examDate), 2, 40)
   workload?: StudyWorkload; // density chosen by the student (default 'medium'); reused on regenerate
   weeks: StudyWeek[];
 }

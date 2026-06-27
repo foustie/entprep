@@ -47,7 +47,7 @@ export function validateFocusInput(body) {
   if (lang !== "ru" && lang !== "kk") return "Invalid lang";
   if (typeof target !== "number" || target < 80 || target > 140) return "Invalid target";
   if (typeof examDate !== "string" || !/^\d{4}-\d{2}-\d{2}/.test(examDate)) return "Invalid examDate";
-  if (!Array.isArray(weeks) || weeks.length < 2 || weeks.length > 26) return "Invalid weeks";
+  if (!Array.isArray(weeks) || weeks.length < 2 || weeks.length > 40) return "Invalid weeks";
   for (const w of weeks) {
     if (!w || typeof w.weekNum !== "number") return "Invalid week";
     if (!VALID_PHASES.has(w.phase)) return "Invalid week phase";

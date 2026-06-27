@@ -55,10 +55,10 @@ describe('weeksCount', () => {
     expect(plan.weeks).toHaveLength(13);
   });
 
-  it('clamps far-future exam dates to 26', () => {
+  it('clamps far-future exam dates to 40', () => {
     const plan = generateStudyPlan(base({ examDate: '2028-12-31' }))!;
-    expect(plan.weeksCount).toBe(26);
-    expect(plan.weeks).toHaveLength(26);
+    expect(plan.weeksCount).toBe(40);
+    expect(plan.weeks).toHaveLength(40);
   });
 
   it('clamps very short runway to a 2-week crash plan', () => {
@@ -111,7 +111,7 @@ describe('determinism', () => {
       const plan = generateStudyPlan(base({ seed: `seed-${i}` }))!;
       expect(plan).not.toBeNull();
       expect(plan.weeksCount).toBeGreaterThanOrEqual(2);
-      expect(plan.weeksCount).toBeLessThanOrEqual(26);
+      expect(plan.weeksCount).toBeLessThanOrEqual(40);
       for (const w of plan.weeks) {
         // medium (default) density: ~24–25 tasks/week, spread multiple per day
         expect(w.tasks.length).toBeGreaterThanOrEqual(13);

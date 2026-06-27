@@ -17,6 +17,7 @@ const h = vi.hoisted(() => ({
   snapshot: null as StudyPlanSnapshot | null,
   goal: { date: '', target: 130 } as { date: string; target: number } | undefined,
   setPlanSnapshot: vi.fn(),
+  updSt: vi.fn(),
   nav: vi.fn(),
   openPaywall: vi.fn(),
   trackEvent: vi.fn(),
@@ -24,7 +25,7 @@ const h = vi.hoisted(() => ({
 
 vi.mock('../../locales', () => ({ useT: () => h.t }));
 vi.mock('../../contexts/AppContext', () => ({
-  useApp: () => ({ hist: [], prof: ['physics'], st: { lang: h.lang, goal: h.goal }, plan: h.snapshot, setPlanSnapshot: h.setPlanSnapshot }),
+  useApp: () => ({ hist: [], prof: ['physics'], st: { lang: h.lang, goal: h.goal }, plan: h.snapshot, setPlanSnapshot: h.setPlanSnapshot, updSt: h.updSt }),
 }));
 vi.mock('../../contexts/AuthContext', () => ({ useAuth: () => ({ user: h.user, isPremium: h.premium }) }));
 vi.mock('../../contexts/NavigationContext', () => ({ useNav: () => ({ nav: h.nav, openPaywall: h.openPaywall }) }));
@@ -79,16 +80,58 @@ describe('Adaptive study plan — empty state', () => {
     expect(screen.getByText(ru.study_plan.empty)).toBeInTheDocument();
   });
 
-  it('clicking Create opens the workload picker; choosing a level generates the plan', () => {
+  it('Create opens the setup survey; choosing a NON-default density submits that density', () => {
     render(<Adaptive />);
-    fireEvent.click(screen.getByText(ru.study_plan.createPlan));
-    // workload survey is now open — choosing a level is what generates the plan
-    fireEvent.click(screen.getByText(ru.study_plan.workload.medium.label));
+    fireEvent.click(screen.getByText(ru.study_plan.createPlan)); // empty-state CTA opens the survey
+    fireEvent.click(screen.getByText(ru.study_plan.workload.intense.label)); // pick a non-default level
+    // submit — both the empty-state CTA and the modal button share this label; the modal's is last
+    const submits = screen.getAllByText(ru.study_plan.createPlan);
+    fireEvent.click(submits[submits.length - 1]);
     expect(h.setPlanSnapshot).toHaveBeenCalledTimes(1);
     const snap = h.setPlanSnapshot.mock.calls[0][0];
     expect(snap.plan.weeks.length).toBeGreaterThan(0);
-    expect(snap.plan.workload).toBe('medium');
+    expect(snap.plan.workload).toBe('intense'); // proves the card onClick → setWorkloadSel → generate path
+    // exam date is persisted back to the global goal
+    expect(h.updSt).toHaveBeenCalledWith(expect.objectContaining({ goal: expect.objectContaining({ date: expect.any(String) }) }));
     expect(h.trackEvent).toHaveBeenCalledWith('Study Plan Created', expect.objectContaining({ weeks: snap.plan.weeksCount }));
+  });
+
+  it('a month chip sets the exam date N months out and persists it to the goal', () => {
+    render(<Adaptive />);
+    fireEvent.click(screen.getByText(ru.study_plan.createPlan));
+    fireEvent.click(screen.getByRole('button', { name: `3 ${ru.study_plan.monthsShort}` })); // 3-month chip
+    const submits = screen.getAllByText(ru.study_plan.createPlan);
+    fireEvent.click(submits[submits.length - 1]);
+    // mirror isoAddMonths(3) exactly so the assertion is deterministic across month-overflow
+    const exp = new Date(); exp.setMonth(exp.getMonth() + 3);
+    const expectedISO = exp.toISOString().slice(0, 10);
+    expect(h.updSt).toHaveBeenCalledWith(expect.objectContaining({ goal: expect.objectContaining({ date: expectedISO }) }));
+    const snap = h.setPlanSnapshot.mock.calls[0][0];
+    expect(snap.plan.weeksCount).toBeGreaterThanOrEqual(12);
+    expect(snap.plan.weeksCount).toBeLessThanOrEqual(14);
+  });
+
+  it('regenerate opens the survey prefilled (with wipe warning) and rebuilds at the chosen density', () => {
+    h.snapshot = makeSnapshot(8); // existing plan (default medium)
+    render(<Adaptive />);
+    fireEvent.click(screen.getByText(ru.study_plan.regeneratePlan)); // opens the regen survey
+    expect(screen.getByText(ru.study_plan.regenerateConfirmDesc)).toBeInTheDocument(); // wipe warning
+    fireEvent.click(screen.getByText(ru.study_plan.workload.intense.label)); // change density
+    fireEvent.click(screen.getByText(ru.study_plan.createPlan)); // submit (only the modal has this here)
+    const calls = h.setPlanSnapshot.mock.calls;
+    const snap = calls[calls.length - 1][0];
+    expect(snap.plan.workload).toBe('intense');
+    expect(snap.completion).toEqual({}); // progress wiped on regenerate
+  });
+
+  it('seeds a FUTURE exam date even when the saved goal date is already in the past', () => {
+    h.goal = { date: '2020-01-01', target: 130 }; // stale: an ENT period that long since passed
+    render(<Adaptive />);
+    fireEvent.click(screen.getByText(ru.study_plan.createPlan));
+    const dateInput = document.querySelector('input[type="date"]') as HTMLInputElement;
+    expect(dateInput).toBeTruthy();
+    expect(dateInput.value).not.toBe('2020-01-01'); // never pre-fills the stale past date
+    expect(dateInput.value >= new Date().toISOString().slice(0, 10)).toBe(true); // future
   });
 
   it('keeps the plan VISIBLE with no test history (totalTests=0) — visible to all', () => {

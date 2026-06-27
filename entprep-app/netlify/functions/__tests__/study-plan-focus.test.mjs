@@ -149,7 +149,11 @@ describe("validateFocusInput", () => {
     expect(validateFocusInput(baseBody({ target: 200 }))).toMatch(/target/);
     expect(validateFocusInput(baseBody({ examDate: "08/2026" }))).toMatch(/examDate/);
     expect(validateFocusInput(baseBody({ weeks: makeWeeks(1) }))).toMatch(/weeks/);
+    expect(validateFocusInput(baseBody({ weeks: makeWeeks(41) }))).toMatch(/weeks/); // > 40 rejected
     expect(validateFocusInput(baseBody({ weeks: [{ weekNum: 1, phase: "x", subjects: [], topics: [] }, { weekNum: 2, phase: "build", subjects: [], topics: [] }] }))).toMatch(/phase/);
+  });
+  it("accepts up to 40 weeks (matches the generator clamp)", () => {
+    expect(validateFocusInput(baseBody({ weeks: makeWeeks(40) }))).toBeNull();
   });
 });
 
@@ -170,6 +174,12 @@ describe("chunkWeeks", () => {
     const batches = chunkWeeks(makeWeeks(26));
     expect(batches.every((b) => b.length <= 14)).toBe(true);
     expect(batches.reduce((n, b) => n + b.length, 0)).toBe(26);
+  });
+  it("splits 40 weeks (max horizon) into batches each <= 14", () => {
+    const batches = chunkWeeks(makeWeeks(40));
+    expect(batches).toHaveLength(3);
+    expect(batches.every((b) => b.length <= 14)).toBe(true);
+    expect(batches.reduce((n, b) => n + b.length, 0)).toBe(40);
   });
 });
 
