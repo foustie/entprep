@@ -162,7 +162,7 @@ export default function FullENT({ finish }: FullENTProps) {
 
   // Keyboard navigation for answer options
   useEffect(() => {
-    if (phase !== 'test' || paused || offline || !sections) return;
+    if (phase !== 'test' || paused || offline || !sections || reportIdx !== null || showFinishConfirm) return;
     const currentSec = sections[curSec];
     const currentQ = currentSec?.qs[curQ];
     if (!currentQ || getQType(currentQ) !== 'single') return;
@@ -186,7 +186,7 @@ export default function FullENT({ finish }: FullENTProps) {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [phase, paused, offline, sections, curSec, curQ, focused]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [phase, paused, offline, sections, curSec, curQ, focused, reportIdx, showFinishConfirm]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const sec = sections?.[curSec];
   const q = sec?.qs[curQ];

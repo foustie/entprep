@@ -30,7 +30,20 @@ export default function MatchingCard({
     [pairs.length],
   );
 
-  const [mapping, setMapping] = useState<Record<number, number>>(() => userAnswer || {});
+  const [mapping, setMapping] = useState<Record<number, number>>(() => {
+    // userAnswer holds REAL right-side indices, but the <select> works in SHUFFLED positions
+    // and shuffledRightIndices re-shuffles on remount — translate the saved answer back to the
+    // current shuffled positions so a revisited matching question displays (and re-confirms /
+    // re-scores) correctly instead of mapping real indices through a fresh shuffle.
+    if (!userAnswer) return {};
+    const m: Record<number, number> = {};
+    for (const key of Object.keys(userAnswer)) {
+      const leftIdx = Number(key);
+      const pos = shuffledRightIndices.indexOf(userAnswer[leftIdx]);
+      if (pos >= 0) m[leftIdx] = pos;
+    }
+    return m;
+  });
   // Tracks whether user tried to confirm with unfilled pairs — highlights missing ones
   const [showMissing, setShowMissing] = useState(false);
   const selectRefs = useRef<(HTMLSelectElement | null)[]>([]);

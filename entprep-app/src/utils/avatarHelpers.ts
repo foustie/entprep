@@ -42,7 +42,8 @@ function resizeImage(file: File, size: number): Promise<Blob> {
 
 export async function uploadAvatar(userId: string, file: File): Promise<string> {
   if (!supabase) throw new Error('Supabase not configured');
-  if (file.size > MAX_FILE_SIZE) throw new Error('Файл слишком большой (макс. 5 МБ)');
+  // Sentinel (not a user-facing string): caller maps it to a localized toast.
+  if (file.size > MAX_FILE_SIZE) throw new Error('AVATAR_TOO_LARGE');
 
   const blob = await resizeImage(file, AVATAR_SIZE);
   const ext = blob.type === 'image/webp' ? 'webp' : 'jpg';

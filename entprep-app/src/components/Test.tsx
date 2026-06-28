@@ -132,7 +132,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
   useEffect(() => { qShownAtRef.current = Date.now(); }, [cur, loading]);
 
   useEffect(() => {
-    if (loading || !qs || fin) return;
+    if (loading || !qs || fin || showLeaveConfirm || reportIdx !== null) return;
     const handler = (e: KeyboardEvent) => {
       const optCount = qs[cur]?.o?.length || 4;
       if (!show) {
@@ -162,7 +162,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [loading, qs, fin, cur, show, focused]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [loading, qs, fin, cur, show, focused, showLeaveConfirm, reportIdx]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Pause timer when offline
   useEffect(() => {
@@ -562,6 +562,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
     {tot - cc > 0 && (
       <button
         onClick={() => {
+          if (challenge) sessionStorage.removeItem("entprep_challenge");
           const errorQs = qs.filter((_, i) => ans[i] !== undefined && !scoreQuestion(qs[i], ans[i]).correct);
           if (errorQs.length > 0) {
             const qd = buildQd(qs, ans, qTimesRef.current);
@@ -582,6 +583,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
     )}
     <button
       onClick={() => {
+        if (challenge) sessionStorage.removeItem("entprep_challenge");
         const qd = buildQd(qs, ans, qTimesRef.current);
         const result = { su: sid, tp: tid || undefined, co: cc, to: tot, sc: pct, dt: new Date().toLocaleDateString("ru-RU"), tm: timerSec - tl, qd, _leaderboard: buildLeaderboardData() };
         recordResult(result);

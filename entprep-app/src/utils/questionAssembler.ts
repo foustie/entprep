@@ -21,19 +21,23 @@ export async function assembleProfileSection(
   if (!pool || pool.length === 0) return [];
 
   const result: Question[] = [];
+  // Track every question already placed (by stable pool index _oi) so the same question —
+  // e.g. a shared context/passage question — can't be picked again in a later block.
+  const usedOi = new Set<number | undefined>();
 
   for (const block of blocks) {
     const { count, questionType } = block;
 
-    // Filter pool by question type or block field
+    // Filter pool by question type or block field, excluding anything already used.
     let candidates: Question[];
     if (questionType === 'single' && block.key === 'context') {
       // Context block: look for questions with block='context' or those with passages
       candidates = pool.filter(q =>
-        q.block === 'context' || (q.pt && q.px)
+        !usedOi.has(q._oi) && (q.block === 'context' || (q.pt && q.px))
       );
     } else {
       candidates = pool.filter(q => {
+        if (usedOi.has(q._oi)) return false;
         const qt = q.type || 'single';
         return qt === questionType;
       });
@@ -44,14 +48,16 @@ export async function assembleProfileSection(
       ? shuffleArray(candidates).slice(0, count)
       : candidates.slice(0, count);
 
-    // If not enough questions of this type, fill with single-choice
+    // If not enough questions of this type, fill with single-choice (still de-duped).
     if (picked.length < count) {
-      const usedOis = new Set([...result.map(q => q._oi), ...picked.map(q => q._oi)]);
+      const usedOis = new Set([...usedOi, ...picked.map(q => q._oi)]);
       const fillers = pool
         .filter(q => !usedOis.has(q._oi) && (q.type || 'single') === 'single')
         .slice(0, count - picked.length);
       picked.push(...fillers);
     }
+
+    for (const q of picked) usedOi.add(q._oi);
 
     // Shuffle options and add to result
     const processed = shuffle

@@ -160,11 +160,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (e.key !== 'entprep_data' || !e.newValue) return;
       try {
         const fresh = JSON.parse(e.newValue) as { hist?: TestResult[]; prof?: string[]; st?: Settings; srCards?: SRCard[]; plan?: StudyPlanSnapshot };
-        if (fresh.hist) setHist(fresh.hist);
-        if (fresh.prof) setProf(fresh.prof);
-        if (fresh.st) setSt(fresh.st);
-        if (fresh.srCards) setSrCards(fresh.srCards);
-        if ('plan' in fresh) setPlan(fresh.plan ?? null);
+        // Guard each setter on content equality: the persist effect bumps lastLogin on
+        // every save, so this event fires even when nothing meaningful changed. Without
+        // the guard, JSON.parse yields fresh references → React never bails out → the
+        // persist effect re-fires → two open tabs ping-pong forever (CPU + cloud-save spam).
+        if (fresh.hist) setHist(prev => JSON.stringify(prev) === JSON.stringify(fresh.hist) ? prev : fresh.hist!);
+        if (fresh.prof) setProf(prev => JSON.stringify(prev) === JSON.stringify(fresh.prof) ? prev : fresh.prof!);
+        if (fresh.st) setSt(prev => JSON.stringify(prev) === JSON.stringify(fresh.st) ? prev : fresh.st!);
+        if (fresh.srCards) setSrCards(prev => JSON.stringify(prev) === JSON.stringify(fresh.srCards) ? prev : fresh.srCards!);
+        if ('plan' in fresh) setPlan(prev => JSON.stringify(prev) === JSON.stringify(fresh.plan ?? null) ? prev : (fresh.plan ?? null));
       } catch { /* ignore malformed data */ }
     };
     window.addEventListener('storage', handler);

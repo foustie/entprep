@@ -125,6 +125,8 @@ export default function Auth({ user, onSignOut }: AuthProps) {
       if (msg.startsWith('AVATAR_PARTIAL:')) {
         try { await Promise.all([refreshUser(), refreshProfile()]); } catch { /* ignore */ }
         toast.warning(t.auth.photoPartial || t.auth.photoUpdated);
+      } else if (msg === 'AVATAR_TOO_LARGE') {
+        toast.error(t.auth.photoTooLarge);
       } else {
         toast.error(msg);
       }
