@@ -723,7 +723,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
       {q.o.map((opt, idx) => {
         const picked = ans[cur] === idx; const correct = getSingleCorrect(q) === idx;
         let bg = "var(--bg-card)", bd = "1px solid var(--border)", tc = "var(--text-body)";
-        if (show && correct) { bg = "rgba(184,236,200,0.5)"; bd = "2px solid #58CC02"; tc = COLORS.greenText; }
+        if (show && correct) { bg = COLORS.winSoft; bd = "2px solid #58CC02"; tc = "#166534"; }
         else if (show && picked && !correct) { bg = "rgba(239,68,68,0.08)"; bd = "2px solid #EF4444"; tc = COLORS.red; }
         else if (picked) { bg = "rgba(255,90,54,0.1)"; bd = "1.5px solid rgba(255,90,54,0.55)"; tc = COLORS.streak; }
         const isFocused = !show && focused === idx;
