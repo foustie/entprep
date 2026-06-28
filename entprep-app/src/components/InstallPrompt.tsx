@@ -43,16 +43,20 @@ export default function InstallPrompt() {
       return () => clearTimeout(timer);
     }
 
+    let promptTimer: ReturnType<typeof setTimeout> | undefined;
     const handler = (e: BeforeInstallPromptEvent) => {
       e.preventDefault();
       deferredPrompt.current = e;
       const dismissed = sessionStorage.getItem('entprep_install_dismissed');
       if (!dismissed) {
-        setTimeout(() => setShow(true), 30000);
+        promptTimer = setTimeout(() => setShow(true), 30000);
       }
     };
     window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler);
+      if (promptTimer) clearTimeout(promptTimer);
+    };
   }, []);
 
   const handleInstall = async () => {

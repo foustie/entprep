@@ -167,8 +167,8 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
   // Pause timer when offline
   useEffect(() => {
     if (loading || fin) return;
-    const goOffline = () => { setOffline(true); toast.warning((t.test as unknown as Record<string, string>).connectionLost); };
-    const goOnline = () => { setOffline(false); toast.success((t.test as unknown as Record<string, string>).connectionRestored); };
+    const goOffline = () => { setOffline(true); toast.warning(t.test.connectionLost); };
+    const goOnline = () => { setOffline(false); toast.success(t.test.connectionRestored); };
     window.addEventListener('offline', goOffline);
     window.addEventListener('online', goOnline);
     return () => { window.removeEventListener('offline', goOffline); window.removeEventListener('online', goOnline); };
@@ -687,8 +687,8 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
     </div>
     {offline && <div style={{ ...CARD, background: "linear-gradient(135deg,rgba(26,26,50,0.95),rgba(22,33,62,0.95))", borderRadius: 18, padding: "32px 20px", textAlign: "center", marginBottom: 16, animation: "slideUp 0.3s cubic-bezier(0.16,1,0.3,1)" }}>
       <WifiOff size={32} color={COLORS.red} style={{ marginBottom: 10 }} />
-      <div style={{ fontSize: FS.xl, fontWeight: 700, color: COLORS.red, marginBottom: 6 }}>{(t.test as unknown as Record<string, string>).connectionLost}</div>
-      <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{(t.test as unknown as Record<string, string>).timerPaused}</div>
+      <div style={{ fontSize: FS.xl, fontWeight: 700, color: COLORS.red, marginBottom: 6 }}>{t.test.connectionLost}</div>
+      <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{t.test.timerPaused}</div>
     </div>}
     {!offline && <div key={`qblock-${cur}`}>
     {isR && <div style={{ ...CARD_COMPACT, background: "rgba(255,90,54,0.06)", border: "1px solid rgba(255,90,54,0.18)", padding: "12px 14px", marginBottom: 12 }}>

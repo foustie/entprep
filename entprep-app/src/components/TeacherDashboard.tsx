@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { CARD, CARD_COMPACT, COLORS, TINT, TYPE, SECTION_LABEL, scoreColor, R, FF, FS } from '../constants/styles';
 import { SUBJECT_META } from '../config/subjects';
 import { TOPIC_MAP } from '../config/topics';
@@ -98,6 +98,8 @@ export default function TeacherDashboard({ onBack }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => { if (copyTimer.current) clearTimeout(copyTimer.current); }, []);
   const [filterSubject, setFilterSubject] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'score' | 'tests' | 'active'>('score');
 
@@ -144,7 +146,8 @@ export default function TeacherDashboard({ onBack }: Props) {
     try {
       await navigator.clipboard.writeText(cls.invite_code);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (copyTimer.current) clearTimeout(copyTimer.current);
+      copyTimer.current = setTimeout(() => setCopied(false), 2000);
     } catch {
       // Fallback for iOS Safari
       const ta = document.createElement('textarea');
@@ -156,7 +159,8 @@ export default function TeacherDashboard({ onBack }: Props) {
       document.execCommand('copy');
       document.body.removeChild(ta);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (copyTimer.current) clearTimeout(copyTimer.current);
+      copyTimer.current = setTimeout(() => setCopied(false), 2000);
     }
   };
 

@@ -164,7 +164,7 @@ export default function Duel() {
       toast.error(t.duel.duelExpired);
       setPhase('menu');
     }
-  }, [toast]);
+  }, [toast, t]);
 
   // Subscribe to Realtime updates
   const setupRealtime = useCallback((id: number, amCreator: boolean) => {

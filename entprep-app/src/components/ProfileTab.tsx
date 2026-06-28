@@ -207,7 +207,7 @@ export default function ProfileTab() {
       }}>
         <StatCard
           value={regular.length}
-          label={(t.progress as unknown as Record<string, string>).testsCount?.replace(/\s*$/, '') || 'Тестов'}
+          label={t.progress.testsCount?.replace(/\s*$/, '') || 'Тестов'}
           color={COLORS.text}
         />
         <StatCard

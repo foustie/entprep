@@ -87,11 +87,12 @@ function shouldReTriggerAuthPrompt(state: AuthPromptState, histLength: number): 
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const [hist, setHist] = useState<TestResult[]>(() => loadData()?.hist || []);
-  const [prof, setProf] = useState<string[]>(() => loadData()?.prof || []);
-  const [st, setSt] = useState<Settings>(() => loadData()?.st || { exp: true, tmr: true, shf: true });
-  const [srCards, setSrCards] = useState<SRCard[]>(() => loadData()?.srCards || []);
-  const [plan, setPlan] = useState<StudyPlanSnapshot | null>(() => loadData()?.plan ?? null);
+  const [initial] = useState(() => loadData());
+  const [hist, setHist] = useState<TestResult[]>(initial?.hist || []);
+  const [prof, setProf] = useState<string[]>(initial?.prof || []);
+  const [st, setSt] = useState<Settings>(initial?.st || { exp: true, tmr: true, shf: true });
+  const [srCards, setSrCards] = useState<SRCard[]>(initial?.srCards || []);
+  const [plan, setPlan] = useState<StudyPlanSnapshot | null>(initial?.plan ?? null);
 
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
@@ -206,7 +207,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const currentSt = current?.st || { exp: true, tmr: true, shf: true };
       const newSt = goal ? { ...currentSt, goal } : currentSt;
       if (goal) setSt(newSt);
-      saveData({ hist: current?.hist || [], st: newSt, prof: sel, lastLogin: new Date().toISOString() });
+      saveData({ hist: current?.hist || [], st: newSt, prof: sel, srCards: current?.srCards || [], plan: current?.plan, lastLogin: new Date().toISOString() });
     } catch {}
     // Show auth prompt for unauthenticated first-time users (no prior state = never shown)
     if (!user && loadAuthPromptState() === null) {

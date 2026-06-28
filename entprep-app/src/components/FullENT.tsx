@@ -153,8 +153,8 @@ export default function FullENT({ finish }: FullENTProps) {
   // Pause timer when offline
   useEffect(() => {
     if (phase !== "test") return;
-    const goOffline = () => { setOffline(true); toast.warning((t.test as unknown as Record<string, string>).connectionLost); };
-    const goOnline = () => { setOffline(false); toast.success((t.test as unknown as Record<string, string>).connectionRestored); };
+    const goOffline = () => { setOffline(true); toast.warning(t.test.connectionLost); };
+    const goOnline = () => { setOffline(false); toast.success(t.test.connectionRestored); };
     window.addEventListener('offline', goOffline);
     window.addEventListener('online', goOnline);
     return () => { window.removeEventListener('offline', goOffline); window.removeEventListener('online', goOnline); };
@@ -659,8 +659,8 @@ export default function FullENT({ finish }: FullENTProps) {
       </div>}
       {offline && <div style={{ ...CARD, background: COLORS.streakSoft, padding: "48px 20px", textAlign: "center", marginBottom: 16, animation: "slideUp 0.3s cubic-bezier(0.16,1,0.3,1)" }}>
         <WifiOff size={40} color={COLORS.red} style={{ marginBottom: 12 }} />
-        <div style={{ fontSize: 18, fontWeight: 700, color: COLORS.red, marginBottom: 8 }}>{(t.test as unknown as Record<string, string>).connectionLost}</div>
-        <div style={{ fontSize: 12, color: "var(--ink-soft)", marginBottom: 16 }}>{(t.test as unknown as Record<string, string>).timerPaused}</div>
+        <div style={{ fontSize: 18, fontWeight: 700, color: COLORS.red, marginBottom: 8 }}>{t.test.connectionLost}</div>
+        <div style={{ fontSize: 12, color: "var(--ink-soft)", marginBottom: 16 }}>{t.test.timerPaused}</div>
         <div style={{ fontSize: 11, color: "var(--ink-soft)" }}>{t.fullent.pauseStats} {totalAnswered}/120 {t.fullent.pauseRemaining} {fm(timeLeft)}</div>
       </div>}
       {!paused && !offline && <><div style={{ display: "flex", gap: 4, marginBottom: 12, overflowX: "auto" }}>

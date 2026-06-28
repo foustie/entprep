@@ -123,6 +123,9 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Stop any in-flight voice recognition when leaving the tutor (mic privacy/cleanup)
+  useEffect(() => () => { stopRecordingRef.current?.(); }, []);
+
   const handleSend = async (text?: string, images?: string[]) => {
     const msg = text || input.trim();
     if (!msg && !(images && images.length)) return;

@@ -347,13 +347,16 @@ function Leaderboard({ subjects, names }: { subjects: string[]; names: Record<st
 
   useEffect(() => {
     if (!supabase || unavailable) return;
+    let cancelled = false;
     setLoading(true);
     supabase.from('leaderboard').select('user_name,score,subject').eq('subject', sub).order('score', { ascending: false }).limit(10)
       .then(({ data, error }) => {
+        if (cancelled) return;
         if (error) { setUnavailable(true); setLoading(false); return; }
         setRows((data || []) as LeaderEntry[]);
         setLoading(false);
       });
+    return () => { cancelled = true; };
   }, [sub, unavailable]);
 
   if (unavailable || !supabase) return null;
