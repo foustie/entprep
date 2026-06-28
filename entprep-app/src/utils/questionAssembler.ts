@@ -25,17 +25,22 @@ export async function assembleProfileSection(
   for (const block of blocks) {
     const { count, questionType } = block;
 
+    // Exclude questions already chosen by an earlier block so the same question
+    // can't appear twice in one section. Context questions are type 'single', so
+    // without this the 'single' block and the 'context' block could both pick them.
+    const used = new Set(result.map(q => q._oi));
+
     // Filter pool by question type or block field
     let candidates: Question[];
     if (questionType === 'single' && block.key === 'context') {
       // Context block: look for questions with block='context' or those with passages
       candidates = pool.filter(q =>
-        q.block === 'context' || (q.pt && q.px)
+        !used.has(q._oi) && (q.block === 'context' || (q.pt && q.px))
       );
     } else {
       candidates = pool.filter(q => {
         const qt = q.type || 'single';
-        return qt === questionType;
+        return !used.has(q._oi) && qt === questionType;
       });
     }
 
