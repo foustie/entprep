@@ -98,7 +98,7 @@ export default function Calc() {
     return { safe, realistic, dream };
   }, [allScored]);
 
-  const pct = Math.round((sc - 50) / 90 * 100);
+  const pct = Math.max(0, Math.min(100, Math.round((sc - 50) / 90 * 100)));
   const sliderColor = sc >= 100 ? COLORS.win : sc >= 75 ? COLORS.xp : COLORS.streak;
   const chanceTxt: Record<Chance, string> = { high: t.calc.highChance, mid: t.calc.midChance, low: t.calc.lowChance };
 
