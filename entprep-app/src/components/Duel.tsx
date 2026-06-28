@@ -77,13 +77,11 @@ export default function Duel() {
   const [oppScore, setOppScore] = useState(0);
   const [oppProgress, setOppProgress] = useState(0);
   const [oppDone, setOppDone] = useState(false);
-  const [myDone, setMyDone] = useState(false);
   const [timer, setTimer] = useState(QUESTION_TIME);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [answerResult, setAnswerResult] = useState<{ correct: boolean; correctIdx: number } | null>(null);
   const [waitingForOpponent, setWaitingForOpponent] = useState(false);
   const [myAnswers, setMyAnswers] = useState<(boolean | null)[]>([]);
-  const [oppAnswers, setOppAnswers] = useState<(boolean | null)[]>([]);
 
   // Results
   const [finalCreatorScore, setFinalCreatorScore] = useState(0);
@@ -325,22 +323,12 @@ export default function Duel() {
       await new Promise(r => setTimeout(r, 800));
 
       if (result.done) {
-        setMyDone(true);
         if (oppDone) {
           // Both done — get final state
           try {
             const final = await getDuel(duelId);
             setFinalCreatorScore(final.duel.creator_score);
             setFinalOpponentScore(final.duel.opponent_score);
-            // Reconstruct opponent answers for per-question grid
-            // creator_answers/opponent_answers are included in safeDuel when status=finished
-            const oppAns = final.duel[isCreator ? 'opponent_answers' : 'creator_answers'] || {};
-            const oppCorrectList: (boolean | null)[] = [];
-            for (let i = 0; i < TOTAL_QUESTIONS; i++) {
-              const a = oppAns[String(i)];
-              oppCorrectList.push(a !== undefined ? a !== null : null);
-            }
-            setOppAnswers(oppCorrectList);
           } catch { /* will get results via realtime */ }
           setPhase('results');
         } else {
@@ -413,12 +401,10 @@ export default function Duel() {
     setOppScore(0);
     setOppProgress(0);
     setOppDone(false);
-    setMyDone(false);
     setSelectedAnswer(null);
     setAnswerResult(null);
     setWaitingForOpponent(false);
     setMyAnswers([]);
-    setOppAnswers([]);
     resultSaved.current = false;
     if (unsubRef.current) { unsubRef.current(); unsubRef.current = null; }
     // Auto-create with same subject
