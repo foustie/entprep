@@ -35,6 +35,16 @@ const ru = {
     progress: 'Прогресс',
     settings: 'Настройки',
     subjects: 'Предметы',
+    bank: 'Банк',
+    theory: 'Теория',
+  },
+
+  // ── Банк вопросов (navigation panel; theory.* below is extended too) ─────
+  bank: {
+    eyebrow: 'Практика',
+    title: 'Банк вопросов',
+    subtitle: 'Все предметы и разделы — выбирай тему и решай вопросы',
+    cardSub: 'Вопросы по разделам',
   },
 
   // ── Subjects (keyed by subject ID) ──────────────────────────────────
@@ -1322,6 +1332,10 @@ const ru = {
   },
   theory: {
     title: 'Теория',
+    eyebrow: 'Конспекты',
+    subtitle: 'Краткие конспекты по каждому разделу',
+    pickSubject: 'Выбери предмет, чтобы открыть конспекты',
+    cardSub: 'Конспекты по темам',
     topicSummary: 'Конспект по теме',
     checkYourself: 'Проверь себя',
     fix: 'Исправить',

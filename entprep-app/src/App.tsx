@@ -13,12 +13,14 @@ import { useT } from './locales';
 import ErrorBoundary from './components/ErrorBoundary';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import BrandMark from './components/ui/BrandMark';
-import { Home as HomeIcon, User, BarChart3, CalendarDays } from 'lucide-react';
+import { Home as HomeIcon, User, BarChart3, CalendarDays, Library, NotebookText } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import ProfileSelect from './components/ProfileSelect';
 import CoachHome from './components/CoachHome';
 import ProfileTab from './components/ProfileTab';
 import SubjectDetail from './components/SubjectDetail';
+import QuestionBank from './components/QuestionBank';
+import Theory from './components/Theory';
 import Challenge from './components/Challenge';
 import InstallPrompt from './components/InstallPrompt';
 import OfflineBanner from './components/OfflineBanner';
@@ -72,12 +74,16 @@ const QuestionRush = React.lazy(() => import('./components/QuestionRush'));
 
 interface NavItem {
   id: string;
-  key: 'home' | 'profile' | 'progress' | 'plan';
+  key: 'home' | 'profile' | 'progress' | 'plan' | 'bank' | 'theory';
   Icon: LucideIcon;
+  /** Shown in the desktop sidebar but NOT the mobile bottom nav (which can't fit 6 tabs). */
+  desktopOnly?: boolean;
 }
 
 const NAV_ITEMS: NavItem[] = [
   { id: "home", key: "home", Icon: HomeIcon },
+  { id: "bank", key: "bank", Icon: Library },
+  { id: "theory", key: "theory", Icon: NotebookText, desktopOnly: true },
   { id: "adaptive", key: "plan", Icon: CalendarDays },
   { id: "profile_tab", key: "profile", Icon: User },
   { id: "prog", key: "progress", Icon: BarChart3 },
@@ -296,6 +302,8 @@ function AppContent() {
         {needProfile && <ProfileSelect onConfirm={handleConfirmProfile} />}
         {!needProfile && screen === SCREENS.PROFILE && <ProfileSelect onConfirm={handleConfirmProfile} />}
         {!needProfile && screen === SCREENS.HOME && <CoachHome />}
+        {!needProfile && screen === SCREENS.BANK && <QuestionBank />}
+        {!needProfile && screen === SCREENS.THEORY && <Theory />}
         {!needProfile && screen === 'profile_tab' && <ProfileTab />}
         {!needProfile && screen === 'tutor' && <Suspense fallback={<LoadingSpinner />}><AiTutor /></Suspense>}
         {!needProfile && screen === SCREENS.SUBJECT && curSub && (
@@ -404,7 +412,7 @@ function AppContent() {
 
   const bottomNav = (
     <nav role="navigation" aria-label={tr.tabs.home} style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: LAYOUT.maxWidth, background: "var(--bg-footer)", borderTop: "2px solid #0F0F10", padding: "10px 16px 14px", display: "flex" }}>
-      {NAV_ITEMS.map(ni => {
+      {NAV_ITEMS.filter(ni => !ni.desktopOnly).map(ni => {
         const active = tab === ni.id;
         const label = tr.tabs[ni.key];
         return (

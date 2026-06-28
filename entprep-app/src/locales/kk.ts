@@ -37,6 +37,16 @@ const kk: Translations = {
     progress: 'Прогресс',
     settings: 'Баптау',
     subjects: 'Пәндер',
+    bank: 'Банк',
+    theory: 'Теория',
+  },
+
+  // ── Сұрақтар банкі (navigation panel; theory.* below is extended too) ────
+  bank: {
+    eyebrow: 'Жаттығу',
+    title: 'Сұрақтар банкі',
+    subtitle: 'Барлық пәндер мен бөлімдер — тақырыпты таңдап, сұрақтарды шеш',
+    cardSub: 'Бөлімдер бойынша сұрақтар',
   },
 
   // ── Subjects ────────────────────────────────────────────────────────
@@ -1308,6 +1318,10 @@ const kk: Translations = {
   },
   theory: {
     title: 'Конспекттер',
+    eyebrow: 'Конспект',
+    subtitle: 'Әр бөлім бойынша қысқаша конспект',
+    pickSubject: 'Конспектілерді ашу үшін пәнді таңда',
+    cardSub: 'Тақырып конспектілері',
     topicSummary: 'Тақырып бойынша конспект',
     checkYourself: 'Тест тапсыру',
     fix: 'Түзету',

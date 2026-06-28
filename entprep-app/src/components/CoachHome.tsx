@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import { ALL_PROFILES, SUBS } from '../config/questionPools';
 import { calcStreak } from '../utils/adaptiveHelpers';
 import { getEntCountdown } from '../config/ent';
 import { PILL, PROGRESS_BAR, PROGRESS_FILL, COLORS, SP, FF, FS, R } from '../constants/styles';
@@ -10,14 +9,11 @@ import { useAuth } from '../contexts/AuthContext';
 import { useT } from '../locales';
 import { getRecommendation, getAndySpeech } from '../utils/recommendationEngine';
 import { SUBJECT_META } from '../config/subjects';
-import { getPersonalBests, getGoalProgress } from '../utils/competitionHelpers';
-import { prefetchCounts, getPoolSize } from '../utils/questionStore';
+import { getGoalProgress } from '../utils/competitionHelpers';
 import { pluralizeForms } from '../utils/formatters';
-import HomeSubjectGrid from './HomeSubjectGrid';
 import SendToMomSheet from './SendToMomSheet';
 import SubjectIcon from './ui/SubjectIcon';
-import { ArrowRight, GraduationCap, Trophy, ChevronDown, ChevronUp, X, KeyRound, Target, Flame, Zap, MessageSquare, BookOpen, Sparkles } from 'lucide-react';
-import type { SubjectConfig } from '../types';
+import { ArrowRight, GraduationCap, Trophy, X, KeyRound, Target, Flame, Zap, MessageSquare, BookOpen, Sparkles, Library, NotebookText } from 'lucide-react';
 import type { EntCountdown } from '../config/ent';
 
 // ── Animation (plays once per session) ──────────────────────────────────
@@ -59,7 +55,7 @@ function press3D(darkColor: string) {
 }
 
 export default function CoachHome() {
-  const { nav } = useNav();
+  const { nav, changeTab } = useNav();
   const { hist, prof, st } = useApp();
   const { user, isPremium } = useAuth();
   const bp = useBreakpoint();
@@ -88,23 +84,6 @@ export default function CoachHome() {
   const prognosis = goalProg ? Math.round(goalProg.approxScore) : null;
   const grantTarget = st.goal?.target ?? 122;
   const [showMomSheet, setShowMomSheet] = useState(false);
-
-  // Subjects expand (power users)
-  const [showSubjects, setShowSubjects] = useState(false);
-  const [poolSizes, setPoolSizes] = useState<Record<string, number>>({});
-  useEffect(() => {
-    prefetchCounts().then((updated) => {
-      if (updated) {
-        const allSids = [...Object.keys(SUBS), ...ALL_PROFILES.map(p => p.id)];
-        const sizes: Record<string, number> = {};
-        for (const sid of [...new Set(allSids)]) sizes[sid] = getPoolSize(sid);
-        setPoolSizes(sizes);
-      }
-    });
-  }, []);
-  const profSubs = prof.map(id => ALL_PROFILES.find(p => p.id === id)).filter(Boolean) as SubjectConfig[];
-  const mandatorySubs = Object.values(SUBS);
-  const bests = getPersonalBests(hist);
 
   const hour = new Date().getHours();
   const [authNudgeDismissed, setAuthNudgeDismissed] = useState(
@@ -436,53 +415,58 @@ export default function CoachHome() {
         </div>
       </Stagger>
 
-      {/* ═══ "Все предметы" section — v2 header + expand body ═══ */}
+      {/* ═══ Банк вопросов + Теория — prominent entries (replace the faint subject list) ═══ */}
       <Stagger index={5}>
-        <button
-          onClick={() => setShowSubjects(s => !s)}
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
-            width: '100%', padding: '10px 14px',
-            background: showSubjects ? 'var(--bg-card)' : 'var(--bg-subtle)',
-            border: `1.5px solid ${showSubjects ? INK : COLORS.cardBorder}`,
-            borderRadius: 12,
-            cursor: 'pointer',
-            transition: 'all 0.18s',
-            marginBottom: showSubjects ? SP.md : 0,
-          }}
-        >
-          <span style={{
-            fontFamily: FF.mono, fontSize: 11, fontWeight: 800,
-            letterSpacing: '0.14em', textTransform: 'uppercase',
-            color: showSubjects ? COLORS.text : COLORS.textSecondary,
-          }}>
-            {t.home.allSubjects}
-          </span>
-          <span style={{
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            width: 24, height: 24, borderRadius: 8,
-            background: showSubjects ? COLORS.streak : 'var(--bg-card)',
-            color: showSubjects ? '#fff' : COLORS.textSecondary,
-            border: `1.5px solid ${showSubjects ? INK : COLORS.cardBorder}`,
-            transition: 'all 0.18s',
-          }}>
-            {showSubjects ? <ChevronUp size={14} strokeWidth={3} /> : <ChevronDown size={14} strokeWidth={3} />}
-          </span>
-        </button>
-
-        {showSubjects && (
-          <div style={{ animation: 'fadeIn 0.25s ease', marginTop: SP.sm }}>
-            <HomeSubjectGrid
-              mandatory={mandatorySubs}
-              profile={profSubs}
-              hist={hist}
-              poolSizes={poolSizes}
-              bests={bests}
-            />
-          </div>
-        )}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: SP.lg }}>
+          <HomeNavCard Icon={Library} title={t.bank.title} sub={t.bank.cardSub} color={COLORS.streak} onClick={() => changeTab('bank')} />
+          <HomeNavCard Icon={NotebookText} title={t.theory.title} sub={t.theory.cardSub} color={COLORS.purple} onClick={() => changeTab('theory')} />
+        </div>
       </Stagger>
     </div>
+  );
+}
+
+// ── Prominent home nav card (Банк / Теория) ──────────────────────────────
+function HomeNavCard({
+  Icon, title, sub, color, onClick,
+}: {
+  Icon: React.ComponentType<{ size?: number; strokeWidth?: number }>;
+  title: string;
+  sub: string;
+  color: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      {...press3D(INK)}
+      style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8,
+        padding: '14px 14px',
+        background: 'var(--bg-card)',
+        border: `2px solid ${INK}`,
+        borderBottom: `4px solid ${INK}`,
+        borderRadius: R.lg,
+        cursor: 'pointer', textAlign: 'left',
+        transition: 'transform 80ms, border-bottom 80ms',
+      }}
+    >
+      <span style={{
+        width: 38, height: 38, borderRadius: R.md,
+        background: `${color}1F`, border: `1.5px solid ${color}`, color,
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <Icon size={19} strokeWidth={2.5} />
+      </span>
+      <span style={{
+        fontFamily: FF.display, fontSize: 14, fontWeight: 900,
+        letterSpacing: '-0.015em', color: COLORS.text, lineHeight: 1.15,
+      }}>{title}</span>
+      <span style={{
+        fontFamily: FF.body, fontSize: FS.xs, fontWeight: 700,
+        color: COLORS.textMuted, lineHeight: 1.3,
+      }}>{sub}</span>
+    </button>
   );
 }
 

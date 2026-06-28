@@ -16,11 +16,16 @@ interface Props {
   hist: TestResult[];
   poolSizes: Record<string, number>;
   bests: Record<string, { best: number }>;
+  /** When set, tapping a subject calls this instead of navigating to its detail
+   *  (used by the Theory screen to open конспекты instead of the question bank). */
+  onPick?: (sid: string) => void;
 }
 
-export default function HomeSubjectGrid({ mandatory, profile, hist, poolSizes, bests }: Props) {
+export default function HomeSubjectGrid({ mandatory, profile, hist, poolSizes, bests, onPick }: Props) {
   const { nav } = useNav();
   const t = useT();
+  const pick = (sid: string) =>
+    onPick ? onPick(sid) : nav(sid === 'reading' ? 'test' : 'topics', sid);
 
   const subName = (id: string) => (t.subjects as Record<string, string>)[id] || id;
 
@@ -46,7 +51,7 @@ export default function HomeSubjectGrid({ mandatory, profile, hist, poolSizes, b
             name={subName(s.id)}
             stats={getStats(s)}
             poolLabel={poolLabel}
-            onClick={() => nav(s.id === 'reading' ? 'test' : 'topics', s.id)}
+            onClick={() => pick(s.id)}
           />
         ))}
       </div>
@@ -63,7 +68,7 @@ export default function HomeSubjectGrid({ mandatory, profile, hist, poolSizes, b
                 name={subName(s.id)}
                 stats={getStats(s)}
                 poolLabel={poolLabel}
-                onClick={() => nav('topics', s.id)}
+                onClick={() => pick(s.id)}
               />
             ))}
           </div>

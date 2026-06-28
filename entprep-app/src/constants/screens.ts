@@ -1,5 +1,7 @@
 export const SCREENS = {
   HOME: 'home',
+  BANK: 'bank',
+  THEORY: 'theory',
   PROFILE: 'profile',
   SUBJECT: 'topics',
   TEST: 'test',

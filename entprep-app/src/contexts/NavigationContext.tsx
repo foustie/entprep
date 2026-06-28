@@ -122,6 +122,8 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
     else if (t === 'prog') setScreen(SCREENS.PROGRESS);
     else if (t === 'set') setScreen(SCREENS.SETTINGS);
     else if (t === 'adaptive') setScreen(SCREENS.ADAPTIVE);
+    else if (t === 'bank') setScreen(SCREENS.BANK);
+    else if (t === 'theory') setScreen(SCREENS.THEORY);
     else setScreen(SCREENS.HOME);
   }, []);
 

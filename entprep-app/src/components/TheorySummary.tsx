@@ -14,11 +14,14 @@ interface Props {
   sid: string;
   topicId: string;
   topicName?: string;
+  /** Top-level back handler. When set, the back button at the subject root calls this
+   *  (e.g. the Theory screen returns to its subject picker) instead of nav('topics'). */
+  onBack?: () => void;
 }
 
 type SummaryData = Record<string, { ru: string; kk?: string }>;
 
-export default function TheorySummary({ sid, topicId }: Props) {
+export default function TheorySummary({ sid, topicId, onBack }: Props) {
   const { nav } = useNav();
   const { st } = useApp();
   const t = useT();
@@ -47,6 +50,8 @@ export default function TheorySummary({ sid, topicId }: Props) {
   const handleBack = () => {
     if (selectedTopic) {
       setSelectedTopic(null);
+    } else if (onBack) {
+      onBack();
     } else {
       nav('topics', sid);
     }
