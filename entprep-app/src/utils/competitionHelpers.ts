@@ -16,7 +16,7 @@ const DAILY_KEY = 'entprep_daily';
 function getPersonalBests(hist: TestResult[]): Record<string, PersonalBest> {
   const bests: Record<string, PersonalBest> = {};
   for (const t of hist) {
-    if (t.type === 'fullent' || t.type === 'rush' || !t.su || t.sc == null) continue;
+    if (t.type === 'fullent' || t.type === 'rush' || t.type === 'duel' || !t.su || t.sc == null) continue;
     const prev = bests[t.su];
     if (!prev || t.sc > prev.best) {
       bests[t.su] = { best: t.sc, date: t.dt, count: (prev?.count || 0) + 1 };
@@ -29,7 +29,7 @@ function getPersonalBests(hist: TestResult[]): Record<string, PersonalBest> {
 
 function isNewRecord(hist: TestResult[], result: { su: string; sc: number }): { isRecord: boolean; prevBest: number; improvement: number } {
   const { su, sc } = result;
-  const tests = hist.filter(t => t.su === su && t.type !== 'fullent' && t.type !== 'rush');
+  const tests = hist.filter(t => t.su === su && t.type !== 'fullent' && t.type !== 'rush' && t.type !== 'duel');
   if (tests.length === 0) return { isRecord: true, prevBest: 0, improvement: sc };
   const prevBest = Math.max(...tests.map(t => t.sc || 0));
   if (sc > prevBest) return { isRecord: true, prevBest, improvement: sc - prevBest };
@@ -84,7 +84,7 @@ function getGoalProgress(hist: TestResult[], goal: { target?: number; date?: str
   targetDate.setHours(0, 0, 0, 0);
   const daysLeft = Math.max(0, Math.ceil((targetDate.getTime() - now.getTime()) / 86400000));
 
-  const regular = hist.filter(t => t.type !== 'fullent' && t.type !== 'rush');
+  const regular = hist.filter(t => t.type !== 'fullent' && t.type !== 'rush' && t.type !== 'duel');
   if (regular.length === 0) return { currentAvg: 0, approxScore: 0, target: goal.target, pct: 0, daysLeft, onTrack: false };
 
   const recent = regular.slice(-10);
@@ -102,7 +102,7 @@ function getGoalProgress(hist: TestResult[], goal: { target?: number; date?: str
 
 function getScoreHistory(hist: TestResult[], sid: string): { date: string; score: number; index: number }[] {
   return hist
-    .filter(t => t.su === sid && t.type !== 'fullent' && t.type !== 'rush')
+    .filter(t => t.su === sid && t.type !== 'fullent' && t.type !== 'rush' && t.type !== 'duel')
     .map((t, i) => ({ date: t.dt, score: t.sc || 0, index: i }));
 }
 
