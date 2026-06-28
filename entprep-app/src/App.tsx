@@ -301,11 +301,31 @@ function AppContent() {
       <main role="main" key={screen} style={{ paddingTop: 10, paddingBottom: !isDesktop && showNav ? 80 : 0 }}>
         {needProfile && <ProfileSelect onConfirm={handleConfirmProfile} />}
         {!needProfile && screen === SCREENS.PROFILE && <ProfileSelect onConfirm={handleConfirmProfile} />}
-        {!needProfile && screen === SCREENS.HOME && <CoachHome />}
-        {!needProfile && screen === SCREENS.BANK && <QuestionBank />}
-        {!needProfile && screen === SCREENS.THEORY && <Theory />}
-        {!needProfile && screen === 'profile_tab' && <ProfileTab />}
-        {!needProfile && screen === 'tutor' && <Suspense fallback={<LoadingSpinner />}><AiTutor /></Suspense>}
+        {!needProfile && screen === SCREENS.HOME && (
+          <ErrorBoundary key="home" onRecover={goHome}>
+            <CoachHome />
+          </ErrorBoundary>
+        )}
+        {!needProfile && screen === SCREENS.BANK && (
+          <ErrorBoundary key="bank" onRecover={goHome}>
+            <QuestionBank />
+          </ErrorBoundary>
+        )}
+        {!needProfile && screen === SCREENS.THEORY && (
+          <ErrorBoundary key="theory" onRecover={goHome}>
+            <Theory />
+          </ErrorBoundary>
+        )}
+        {!needProfile && screen === 'profile_tab' && (
+          <ErrorBoundary key="profile_tab" onRecover={goHome}>
+            <ProfileTab />
+          </ErrorBoundary>
+        )}
+        {!needProfile && screen === 'tutor' && (
+          <ErrorBoundary key="tutor" onRecover={goHome}>
+            <Suspense fallback={<LoadingSpinner />}><AiTutor /></Suspense>
+          </ErrorBoundary>
+        )}
         {!needProfile && screen === SCREENS.SUBJECT && curSub && (
           <ErrorBoundary key="subject" title={tr.errors.subjectTitle} message={tr.errors.subjectMessage} onRecover={goHome}>
             <SubjectDetail sid={curSub} />
@@ -368,7 +388,9 @@ function AppContent() {
             </ErrorBoundary>
           )}
           {!needProfile && screen === SCREENS.TEACHER && (
-            <TeacherDashboard onBack={goHome} />
+            <ErrorBoundary key="teacher" onRecover={goHome}>
+              <TeacherDashboard onBack={goHome} />
+            </ErrorBoundary>
           )}
         </Suspense>
         <Suspense fallback={<LoadingSpinner />}>

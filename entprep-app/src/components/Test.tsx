@@ -428,7 +428,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
     {/* v2 Result hero — xp splash, ink shadow, celebratory */}
     <div style={{
       position: 'relative',
-      background: pct >= 70 ? '#B8ECC8' : pct >= 50 ? COLORS.xpSoft : 'rgba(255,90,54,0.16)',
+      background: pct >= 70 ? '#B8ECC8' : pct >= 50 ? COLORS.xpSoft : COLORS.streakSoft,
       border: `2px solid var(--ink)`,
       borderRadius: 22,
       padding: "28px 20px 22px",
@@ -723,7 +723,7 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
       {q.o.map((opt, idx) => {
         const picked = ans[cur] === idx; const correct = getSingleCorrect(q) === idx;
         let bg = "var(--bg-card)", bd = "1px solid var(--border)", tc = "var(--text-body)";
-        if (show && correct) { bg = "rgba(184,236,200,0.5)"; bd = "2px solid #58CC02"; tc = "#2B7A1A"; }
+        if (show && correct) { bg = "rgba(184,236,200,0.5)"; bd = "2px solid #58CC02"; tc = COLORS.greenText; }
         else if (show && picked && !correct) { bg = "rgba(239,68,68,0.08)"; bd = "2px solid #EF4444"; tc = COLORS.red; }
         else if (picked) { bg = "rgba(255,90,54,0.1)"; bd = "1.5px solid rgba(255,90,54,0.55)"; tc = COLORS.streak; }
         const isFocused = !show && focused === idx;

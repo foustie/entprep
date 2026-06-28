@@ -26,7 +26,7 @@ export async function reconcileMyOrder(lemonOrderId: string): Promise<ReconcileR
     body: JSON.stringify({ mode: 'self', lemonOrderId }),
   });
 
-  const data = await res.json();
+  const data = await res.json().catch(() => ({}) as { error?: string });
   if (!res.ok) {
     throw new Error(data.error || 'Не удалось восстановить подписку');
   }

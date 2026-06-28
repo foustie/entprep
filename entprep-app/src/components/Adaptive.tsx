@@ -234,7 +234,14 @@ export default function Adaptive() {
     } else if (task.type === 'fullent') {
       nav('fullent');
     } else if (task.type === 'lesson') {
-      nav('tutor', task.subject || null, task.topic || null);
+      // AiTutor initialises from `entprep_tutor_init` (NOT nav args) — pre-seed the topic so
+      // the lesson opens an on-topic tutor, mirroring Test.tsx's "explain this" handoff.
+      if (task.subject) {
+        const topic = topicName(task.subject, task.topic) || subjectName(task.subject);
+        const message = t.tutor.explainTopicPrompt.replace('{topic}', topic);
+        try { sessionStorage.setItem('entprep_tutor_init', JSON.stringify({ subject: task.subject, message })); } catch { /* ignore */ }
+      }
+      nav('tutor');
     }
     // challenge: deferred to phase 4 (locked / placeholder); tip: display-only
   };

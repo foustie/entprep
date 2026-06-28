@@ -1,9 +1,10 @@
 import { COLORS, FF, FS, FW, SP, R } from '../constants/styles';
 import { shareToWhatsApp, copyText } from '../utils/shareHelpers';
 import { X } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import type { CSSProperties } from 'react';
 import { useT } from '../locales';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 /**
  * Bottom-sheet modal prompting the student to share prognosis with a parent via WhatsApp.
@@ -22,18 +23,16 @@ export default function SendToMomSheet({
 }) {
   const t = useT();
   const tm = t.sendToMom;
+  const sheetRef = useRef<HTMLDivElement>(null);
+  // Dialog a11y: move focus into the sheet, trap Tab, Escape to close, restore focus on close.
+  useFocusTrap(sheetRef, true, onClose);
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
-      document.removeEventListener('keydown', onKey);
       document.body.style.overflow = prev;
     };
-  }, [onClose]);
+  }, []);
 
   const shareText = tm.shareText
     .replace('{prognosis}', String(prognosis))
@@ -52,7 +51,15 @@ export default function SendToMomSheet({
 
   return (
     <div style={backdrop} onClick={onClose}>
-      <div style={sheet} onClick={(e) => e.stopPropagation()}>
+      <div
+        ref={sheetRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={tm.title}
+        tabIndex={-1}
+        style={sheet}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div style={handle} />
 
         <div style={headerRow}>

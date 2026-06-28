@@ -32,6 +32,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // current user. Drives `premiumLoading` so the test-start gate never bounces a
   // (possibly premium) user to the paywall during the async load window.
   const [premiumChecked, setPremiumChecked] = useState(false);
+  // Same idea for the RevenueCat native check — on web it's an instant no-op, on native it
+  // resolves a beat later. premiumLoading waits for BOTH so a native subscriber (premium only
+  // in RC, not the DB) isn't briefly bounced to the paywall before RC settles.
+  const [nativeChecked, setNativeChecked] = useState(false);
 
   // Check subscriptions table (authoritative source, RLS allows reading own row).
   // maybeSingle() — return null on 0 rows instead of throwing, since most users
@@ -124,6 +128,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setNativePremium(hasPremium);
         } catch (err) {
           console.error('RevenueCat login/check failed:', err);
+        } finally {
+          setNativeChecked(true);
         }
       } else if (event === 'SIGNED_OUT') {
         // Only clear state on explicit SIGNED_OUT, not on INITIAL_SESSION with null
@@ -131,6 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setDbPremium(false);
         setNativePremium(false);
         setPremiumChecked(false);
+        setNativeChecked(false);
         logoutPurchases().catch((err) => console.error('logoutPurchases failed:', err));
         // Clear session data to prevent bleed between users on same device
         try { sessionStorage.removeItem('entprep_challenge'); sessionStorage.removeItem('entprep_tutor_init'); } catch {}
@@ -195,8 +202,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // A signed-in user whose subscription check hasn't resolved yet. Admins are known
   // synchronously from the email, so they're never considered "loading".
   const premiumLoading = useMemo(
-    () => !!user && !isAdmin && !premiumChecked,
-    [user, isAdmin, premiumChecked],
+    () => !!user && !isAdmin && !(premiumChecked && nativeChecked),
+    [user, isAdmin, premiumChecked, nativeChecked],
   );
 
   const value = useMemo<AuthContextValue>(

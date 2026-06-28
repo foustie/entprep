@@ -155,7 +155,7 @@ export default function ProfileTab() {
               <Zap size={11} color="#C77D00" strokeWidth={2.8} fill="#FFC233" />
               <span style={{
                 fontFamily: FF.mono, fontSize: 10, fontWeight: 800,
-                color: '#8A5B00', letterSpacing: '0.05em',
+                color: COLORS.amberText, letterSpacing: '0.05em',
               }}>
                 {t.profile.levelShort} {lvl.level} · {totalXP} XP
               </span>
