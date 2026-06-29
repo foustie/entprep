@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App'
 import { initSentry } from './config/sentry'
 import { Capacitor } from '@capacitor/core'
-import { captureRefFromUrl, getPendingReferral, flushPendingReferral } from './utils/referralHelpers'
+import { captureRefFromUrl, getPendingReferral, flushPendingReferral, savePendingReferral } from './utils/referralHelpers'
 
 initSentry();
 
@@ -37,6 +37,11 @@ if (Capacitor.isNativePlatform()) {
 
       try {
         const urlObj = new URL(url);
+
+        // Referral deep link: capture a ?ref=<code> from the native link into pending
+        // storage (web captureRefFromUrl handles browser URLs). Validated + first-wins
+        // inside savePendingReferral; flushed to the backend on a later signed-in load.
+        savePendingReferral(urlObj.searchParams.get('ref'));
 
         // OAuth error (user denied, provider error, etc.)
         const oauthError = urlObj.searchParams.get('error_description') || urlObj.searchParams.get('error');
