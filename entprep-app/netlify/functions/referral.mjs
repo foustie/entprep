@@ -1,19 +1,28 @@
 // Referral system: issue a referral code, bind an inviter's code at signup, and
-// grant the inviter 7 days of Premium when the referee qualifies — EXACTLY ONCE.
+// grant the inviter 7 days of Premium when the referee QUALIFIES — exactly once.
 //
-// SECURITY — this is a NEW free-Premium path, so it must be farm-proof:
-//   • No self-referral: the caller (referee) can never be the code owner (referrer)
-//     — guarded here AND by a DB CHECK (referrer_id <> referee_id) in the migration.
-//   • One reward per referee: UNIQUE(referrals.referee_id) makes binding idempotent.
-//   • Exactly-once grant: the 7-day extension is gated by INSERTing a payments row
-//     with kaspi_tx_id = `referral_<refereeId>`, UNIQUE(kaspi_tx_id). A replay or a
-//     race loses the INSERT (Postgres 23505 / HTTP 409) and grants nothing extra.
-//     The subscription is extended ONLY on the winning INSERT, so the *relative*
-//     (+7d) extension can never double-apply.
-//   • Qualification gate: only a confirmed referee account earns the reward.
+// This is a NEW free-Premium path, so it is built farm-proof. The hardening below
+// maps to the reviewer (S8) acceptance bar C1–C4 + CAP + QUAL:
+//   • C1 — the grant follows the PERSISTENT referrals binding (the referrer_id
+//     returned by the atomic CAS), never the code in the current request. A replay
+//     with a different code can't hijack/redirect the reward.
+//   • C2 — the payments audit marker is written ONLY after a successful extend, and
+//     a failed extend rolls `credited` back to false — so nothing is ever stranded
+//     in a state that permanently blocks a legitimate retry.
+//   • C3 — the relative (+7d) extend happens STRICTLY after the CAS win, so it can
+//     never double-apply.
+//   • C4 — self-referral is blocked here AND by a DB CHECK (referrals_no_self_referral).
+//   • CAP — a referrer earns for at most REFERRAL_CAP referees (bounds farm radius).
+//   • QUAL — the referee must be a genuinely NEW account AND have completed ≥1
+//     server-verified test (a leaderboard row). Both are checked server-side; the
+//     client never decides who gets premium. Because "completed a test" happens
+//     after signup, the credit is DEFERRED: the client re-attempts bind and the
+//     backend credits on the first attempt where the referee qualifies.
 //
-// The subscriptions table is the authoritative premium source (PAY-3); we do NOT
-// touch the referrer's user_metadata (a blind PUT would clobber their other fields).
+// Exactly-once rests on the atomic CAS (UPDATE ... WHERE credited=false RETURNING),
+// with UNIQUE(payments.kaspi_tx_id)=`referral_<refereeId>` as a second hard barrier.
+// subscriptions is the authoritative premium source (PAY-3); we do NOT touch the
+// referrer's user_metadata (a blind PUT would clobber their other fields).
 import {
   CORS_HEADERS,
   corsResponse,
@@ -26,6 +35,8 @@ import { captureFunctionError } from "./utils/sentry.mjs";
 import { randomBytes } from "node:crypto";
 
 const REFERRAL_DAYS = 7;
+export const REFERRAL_CAP = 10; // max credited referrals rewarded per referrer
+const NEW_ACCOUNT_MAX_AGE_DAYS = 30; // a referee must be this fresh to qualify
 const CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // no 0/O/1/I/L (unambiguous)
 const CODE_LEN = 7;
 
@@ -57,27 +68,24 @@ export function generateReferralCode(len = CODE_LEN) {
   return out;
 }
 
-// Idempotency key for the grant. STABLE per referee, DISTINCT per referee, and
-// null on a missing id so it can NEVER collapse all referrals into one grant slot
-// (the same failure mode deriveRcTxId guards against for webhooks).
+// Idempotency key for the grant. STABLE per referee, DISTINCT per referee, and null
+// on a missing id so it can NEVER collapse all referrals into one grant slot.
 export function deriveReferralTxId(refereeId) {
   if (typeof refereeId !== "string" || refereeId.length === 0) return null;
   return `referral_${refereeId}`;
 }
 
 export function isSelfReferral(referrerId, refereeId) {
-  // A missing id is never a valid (non-self) pairing.
-  if (!referrerId || !refereeId) return true;
+  if (!referrerId || !refereeId) return true; // a missing id is never a valid pair
   return referrerId === refereeId;
 }
 
-// Qualification gate: only a confirmed account earns the referrer a reward. OAuth
-// signups (Google/Apple — the dominant path) are auto-confirmed; raw unconfirmed
-// email signups earn nothing until they confirm. Swappable for a stricter gate
-// (activity threshold / device / IP throttle) without touching the grant logic.
-export function isQualifiedReferee(user) {
-  if (!user || typeof user !== "object") return false;
-  return !!(user.email_confirmed_at || user.confirmed_at);
+// Qualification part 1: genuinely new signup (anti-farm on reactivated old alts).
+export function isNewAccount(user, nowMs, maxAgeDays = NEW_ACCOUNT_MAX_AGE_DAYS) {
+  if (!user || !user.created_at) return false;
+  const created = Date.parse(user.created_at);
+  if (Number.isNaN(created)) return false;
+  return nowMs - created <= maxAgeDays * 24 * 60 * 60 * 1000;
 }
 
 // Pure date math for the +7d extension. Stacks on a future expiry; ignores a past one.
@@ -88,6 +96,117 @@ export function computeReferralExpiry(currentExpiryIso, nowMs, days = REFERRAL_D
     if (!Number.isNaN(cur) && cur > nowMs) base = cur;
   }
   return new Date(base + days * 24 * 60 * 60 * 1000).toISOString();
+}
+
+// ── Supabase REST helpers ─────────────────────────────────────────────────────
+
+// Qualification part 2: the referee has ≥1 server-verified completed test. The
+// leaderboard row is written by leaderboard.mjs after it RECOMPUTES the score from
+// the real questions, so it cannot be forged by the client.
+async function hasCompletedTest(userId) {
+  const res = await fetch(
+    `${sbUrl()}/rest/v1/leaderboard?user_id=eq.${userId}&select=id&limit=1`,
+    { headers: sbHeaders() },
+  );
+  if (!res.ok) return false;
+  const rows = await res.json();
+  return Array.isArray(rows) && rows.length > 0;
+}
+
+// The authoritative, persistent binding for this referee (C1 source of truth).
+async function readReferral(refereeId) {
+  const res = await fetch(
+    `${sbUrl()}/rest/v1/referrals?referee_id=eq.${refereeId}&select=referrer_id,credited&limit=1`,
+    { headers: sbHeaders() },
+  );
+  if (!res.ok) return null;
+  const rows = await res.json();
+  return rows[0] || null;
+}
+
+async function countCreditedReferrals(referrerId) {
+  const res = await fetch(
+    `${sbUrl()}/rest/v1/referrals?referrer_id=eq.${referrerId}&credited=eq.true&select=referee_id`,
+    { headers: sbHeaders() },
+  );
+  if (!res.ok) return 0;
+  const rows = await res.json();
+  return Array.isArray(rows) ? rows.length : 0;
+}
+
+// Atomic compare-and-swap: UPDATE ... WHERE referee_id=X AND credited=false RETURNING.
+// Exactly one concurrent caller flips false→true and gets the row back; the rest get
+// []. The returned referrer_id is the persistent binding's (C1).
+async function claimCredit(refereeId) {
+  const res = await fetch(
+    `${sbUrl()}/rest/v1/referrals?referee_id=eq.${refereeId}&credited=eq.false`,
+    {
+      method: "PATCH",
+      headers: { ...sbHeaders(), Prefer: "return=representation" },
+      body: JSON.stringify({ credited: true }),
+    },
+  );
+  if (!res.ok) throw new Error("CAS claim failed: " + (await res.text()));
+  const rows = await res.json();
+  return Array.isArray(rows) && rows.length ? rows[0] : null;
+}
+
+async function rollbackCredit(refereeId) {
+  await fetch(`${sbUrl()}/rest/v1/referrals?referee_id=eq.${refereeId}`, {
+    method: "PATCH",
+    headers: { ...sbHeaders(), Prefer: "return=minimal" },
+    body: JSON.stringify({ credited: false }),
+  });
+}
+
+// Extend the referrer's premium by 7 days (relative) then write the audit marker.
+// Caller guarantees this runs ONLY after a CAS win (C3). Throws on extend failure
+// so the caller can roll back; the marker is written ONLY after a successful extend
+// so a rollback never strands it (C2).
+async function grantReferral(referrerId, refereeId) {
+  let currentExpiry = null;
+  const subRes = await fetch(
+    `${sbUrl()}/rest/v1/subscriptions?user_id=eq.${referrerId}&select=is_active,expires_at`,
+    { headers: sbHeaders() },
+  );
+  if (subRes.ok) {
+    const rows = await subRes.json();
+    const ex = rows[0];
+    if (ex?.is_active && ex.expires_at) currentExpiry = ex.expires_at;
+  }
+  const premiumUntil = computeReferralExpiry(currentExpiry, Date.now(), REFERRAL_DAYS);
+
+  const upRes = await fetch(`${sbUrl()}/rest/v1/subscriptions`, {
+    method: "POST",
+    headers: { ...sbHeaders(), Prefer: "resolution=merge-duplicates,return=minimal" },
+    body: JSON.stringify({
+      user_id: referrerId,
+      is_active: true,
+      plan: "referral",
+      expires_at: premiumUntil,
+      updated_at: new Date().toISOString(),
+    }),
+  });
+  if (!upRes.ok) throw new Error("subscription extend failed: " + (await upRes.text()));
+
+  // Audit marker AFTER the successful extend (C2). UNIQUE(kaspi_tx_id) is a second
+  // hard barrier against over-grant; best-effort — a failed audit never fails the grant.
+  const txId = deriveReferralTxId(refereeId);
+  if (txId) {
+    await fetch(`${sbUrl()}/rest/v1/payments`, {
+      method: "POST",
+      headers: { ...sbHeaders(), Prefer: "return=minimal" },
+      body: JSON.stringify({
+        user_id: referrerId,
+        amount: 0,
+        plan: "referral",
+        kaspi_tx_id: txId,
+        status: "completed",
+        premium_until: premiumUntil,
+      }),
+    }).catch(() => {});
+  }
+  return premiumUntil;
 }
 
 // ── Action: get-or-create the caller's own referral code ──────────────────────
@@ -101,7 +220,6 @@ async function handleGetCode(user) {
     const rows = await existRes.json();
     if (rows.length > 0) return Response.json({ code: rows[0].code }, { headers: CORS_HEADERS });
   }
-  // Create — retry a few times to dodge a UNIQUE(code) collision.
   for (let attempt = 0; attempt < 5; attempt++) {
     const code = generateReferralCode();
     const insRes = await fetch(`${sbUrl()}/rest/v1/referral_codes`, {
@@ -122,12 +240,12 @@ async function handleGetCode(user) {
         if (rows.length) return Response.json({ code: rows[0].code }, { headers: CORS_HEADERS });
       }
     }
-    // Otherwise it was likely a code collision → loop and try a fresh code.
+    // Otherwise it was likely a code collision → loop with a fresh code.
   }
   throw new Error("Failed to allocate referral code");
 }
 
-// ── Action: bind an inviter's code (at referee signup) + qualify + credit ─────
+// ── Action: bind an inviter's code (at signup) → qualify → credit ─────────────
 
 async function handleBind(user, code) {
   const refereeId = user.id;
@@ -136,7 +254,7 @@ async function handleBind(user, code) {
   if (codeErr) return Response.json({ error: codeErr }, { status: 400, headers: CORS_HEADERS });
   const norm = normalizeCode(code);
 
-  // Resolve code → referrer.
+  // Resolve the code → referrer (used ONLY for the first binding).
   const lookRes = await fetch(
     `${sbUrl()}/rest/v1/referral_codes?code=eq.${encodeURIComponent(norm)}&select=user_id&limit=1`,
     { headers: sbHeaders() },
@@ -144,102 +262,63 @@ async function handleBind(user, code) {
   if (!lookRes.ok) throw new Error("code lookup failed: " + (await lookRes.text()));
   const found = await lookRes.json();
   if (!found.length) return Response.json({ error: "Code not found" }, { status: 404, headers: CORS_HEADERS });
-  const referrerId = found[0].user_id;
+  const codeReferrerId = found[0].user_id;
 
-  // Anti-fraud: no self-referral (also enforced by a DB CHECK constraint).
-  if (isSelfReferral(referrerId, refereeId)) {
+  // C4: no self-referral (app guard; DB CHECK is the backstop).
+  if (isSelfReferral(codeReferrerId, refereeId)) {
     return Response.json({ error: "self_referral" }, { status: 400, headers: CORS_HEADERS });
   }
 
-  // Bind — idempotent via UNIQUE(referee_id). A 23505/409 means "already bound";
-  // fall through to the (also idempotent) credit attempt rather than erroring.
+  // Bind — idempotent via UNIQUE(referee_id). The FIRST binding wins; a 23505/409
+  // means "already bound" (possibly to a different referrer) → fall through.
   const bindRes = await fetch(`${sbUrl()}/rest/v1/referrals`, {
     method: "POST",
     headers: { ...sbHeaders(), Prefer: "return=minimal" },
-    body: JSON.stringify({ referrer_id: referrerId, referee_id: refereeId, credited: false }),
+    body: JSON.stringify({ referrer_id: codeReferrerId, referee_id: refereeId, credited: false }),
   });
   if (!bindRes.ok) {
     const txt = await bindRes.text();
     if (!isDuplicatePaymentResponse(bindRes.status, txt)) throw new Error("bind failed: " + txt);
   }
 
-  // Qualification gate — an unconfirmed referee binds but earns the referrer nothing yet.
-  if (!isQualifiedReferee(user)) {
+  // C1: from here the credit follows the PERSISTENT binding, not this request's code.
+  const row = await readReferral(refereeId);
+  if (!row) throw new Error("referral row missing after bind");
+  if (row.credited) {
+    return Response.json({ ok: true, credited: true, alreadyCredited: true }, { headers: CORS_HEADERS });
+  }
+  const referrerId = row.referrer_id;
+
+  // QUAL: genuinely new referee AND ≥1 server-verified completed test. Deferred —
+  // an unqualified referee binds (credited:false) and earns nothing until they qualify.
+  const qualified =
+    isNewAccount(user, Date.now(), NEW_ACCOUNT_MAX_AGE_DAYS) && (await hasCompletedTest(refereeId));
+  if (!qualified) {
     return Response.json({ ok: true, qualified: false, credited: false }, { headers: CORS_HEADERS });
   }
 
-  const result = await creditReferrer(referrerId, refereeId);
-  return Response.json({ ok: true, qualified: true, ...result }, { headers: CORS_HEADERS });
-}
-
-// ── Exactly-once 7-day grant to the referrer ──────────────────────────────────
-
-async function creditReferrer(referrerId, refereeId) {
-  const txId = deriveReferralTxId(refereeId);
-  if (!txId) throw new Error("missing referee id for referral tx"); // defensive
-
-  // Read the referrer's current expiry so the +7d stacks instead of overwriting.
-  let currentExpiry = null;
-  const subRes = await fetch(
-    `${sbUrl()}/rest/v1/subscriptions?user_id=eq.${referrerId}&select=is_active,expires_at`,
-    { headers: sbHeaders() },
-  );
-  if (subRes.ok) {
-    const rows = await subRes.json();
-    const existing = rows[0];
-    if (existing?.is_active && existing.expires_at) currentExpiry = existing.expires_at;
-  }
-  const premiumUntil = computeReferralExpiry(currentExpiry, Date.now(), REFERRAL_DAYS);
-
-  // EXACTLY-ONCE GATE: claim the grant via UNIQUE(payments.kaspi_tx_id). A replay
-  // or a concurrent race loses this INSERT (23505/409) and returns without writing
-  // the subscription — so the relative extension is applied by the winner only.
-  const payRes = await fetch(`${sbUrl()}/rest/v1/payments`, {
-    method: "POST",
-    headers: { ...sbHeaders(), Prefer: "return=minimal" },
-    body: JSON.stringify({
-      user_id: referrerId,
-      amount: 0,
-      plan: "referral",
-      kaspi_tx_id: txId,
-      status: "completed",
-      premium_until: premiumUntil,
-    }),
-  });
-  if (!payRes.ok) {
-    const txt = await payRes.text();
-    if (isDuplicatePaymentResponse(payRes.status, txt)) {
-      return { credited: true, alreadyCredited: true }; // idempotent — no double grant
-    }
-    throw new Error("grant claim failed: " + txt);
+  // CAP: bound farm radius — a referrer is rewarded for at most REFERRAL_CAP referees.
+  if ((await countCreditedReferrals(referrerId)) >= REFERRAL_CAP) {
+    return Response.json({ ok: true, capped: true, credited: false }, { headers: CORS_HEADERS });
   }
 
-  // We won the claim — extend the referrer's premium exactly once.
-  const upsertRes = await fetch(`${sbUrl()}/rest/v1/subscriptions`, {
-    method: "POST",
-    headers: { ...sbHeaders(), Prefer: "resolution=merge-duplicates,return=minimal" },
-    body: JSON.stringify({
-      user_id: referrerId,
-      is_active: true,
-      plan: "referral",
-      expires_at: premiumUntil,
-      updated_at: new Date().toISOString(),
-    }),
-  });
-  if (!upsertRes.ok) throw new Error("subscription extend failed: " + (await upsertRes.text()));
+  // Atomic CAS claim — exactly one winner. The returned row's referrer_id is the
+  // authoritative target of the grant (C1).
+  const claimed = await claimCredit(refereeId);
+  if (!claimed) {
+    return Response.json({ ok: true, credited: true, alreadyCredited: true }, { headers: CORS_HEADERS });
+  }
 
-  // Bookkeeping: mark the referral credited (audit trail; the payments UNIQUE tx,
-  // not this flag, is the idempotency gate).
-  await fetch(
-    `${sbUrl()}/rest/v1/referrals?referee_id=eq.${refereeId}&credited=eq.false`,
-    {
-      method: "PATCH",
-      headers: { ...sbHeaders(), Prefer: "return=minimal" },
-      body: JSON.stringify({ credited: true }),
-    },
-  );
-
-  return { credited: true };
+  // C3: relative extend STRICTLY after the CAS win. On failure, roll `credited`
+  // back so a retry can re-claim (C2: the marker is written only after extend, so
+  // nothing is stranded).
+  try {
+    await grantReferral(claimed.referrer_id, refereeId);
+  } catch (err) {
+    await rollbackCredit(refereeId).catch(() => {});
+    throw err;
+  }
+  return Response.json({ ok: true, qualified: true, credited: true }, { headers: CORS_HEADERS });
 }
 
 // ── Handler ───────────────────────────────────────────────────────────────────
