@@ -1,4 +1,4 @@
--- Referral system: track who invited whom, grant 7-day Premium to both
+-- Referral system: track who invited whom, grant 7-day Premium to the referrer
 CREATE TABLE IF NOT EXISTS referrals (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   referrer_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
