@@ -23,6 +23,9 @@
 - **Node.js 20+ / npm** (built on Windows with Node 24 / npm 11; any recent LTS is fine).
 - **Apple Developer** access under team `85MH8SWD4T` with a valid Apple Distribution certificate + provisioning. Automatic signing will fetch/create these.
 - **No CocoaPods.** This project is **SPM-based** (`ios/App/CapApp-SPM`). There is **no `Podfile`** and **no `.xcworkspace`** — **do NOT run `pod install`.**
+- **Build-time env from the owner.** You need `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`
+  (gitignored — not in the pulled repo) before building; see step 3. Without them the archived
+  app has dead auth / cloud sync / leaderboard.
 
 ## 2. Pull the branch
 ```bash
@@ -31,18 +34,42 @@ git checkout fleet/ios
 git pull origin fleet/ios
 ```
 
-## 3. Install deps + build the web bundle
-`node_modules/` and `dist/` are gitignored, so install fresh and build on the Mac:
+## 3. Install deps + build the web bundle  ⚠️ env-critical
+
+`node_modules/` and `dist/` are gitignored, so install fresh on the Mac. **Three `VITE_*`
+env vars MUST be present at build time** — Vite inlines them into the bundle, and a build
+without them compiles fine but ships a **broken app**:
+
+| Var | If missing → silent failure in the shipped app |
+|---|---|
+| `VITE_SUPABASE_URL` | `supabase = null` → **auth, cloud sync, leaderboard dead** (this is the 2026-06 prod break) |
+| `VITE_SUPABASE_ANON_KEY` | same as above |
+| `VITE_RC_API_KEY_APPLE` | RevenueCat not configured → **StoreKit purchases silently fail** (money flow) |
+
+`VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` are **not in the repo** (`.env*` is gitignored).
+**Get their values from the project owner** (or copy the owner's `entprep-app/.env.local`).
+The RC Apple key is public and fixed: `appl_hSiijbsNKsMxZEeQDZLYTtjSwmw`.
+
 ```bash
 cd entprep-app
 npm ci
-VITE_RC_API_KEY_APPLE=appl_hSiijbsNKsMxZEeQDZLYTtjSwmw npm run build
-```
-> **The RC Apple key MUST be on the build command.** Vite inlines it into the bundle;
-> omit it and StoreKit purchases silently fail (same class of bug as a missing Supabase key).
-> Verified present in the bundle during the Windows build.
 
-Expect: `✓ built in …s`, then the PWA service worker build, `precache NN entries`, no errors.
+# Export all three in THIS shell (so the post-build gate can verify their exact values):
+export VITE_SUPABASE_URL='https://api.entprep.org'         # confirm with owner
+export VITE_SUPABASE_ANON_KEY='<owner-provides-anon-key>'  # gitignored; from owner
+export VITE_RC_API_KEY_APPLE='appl_hSiijbsNKsMxZEeQDZLYTtjSwmw'
+
+npm run build
+node scripts/predeploy-check.mjs   # ← GATE: must print "✓ predeploy-check passed"
+```
+> **Do not skip `predeploy-check.mjs`.** Run it in the **same shell** right after `npm run build`.
+> It exits non-zero if the Supabase host / anon-key JWT (and the RC key, when exported here) are
+> missing from `dist/` — i.e. it catches a build made without the env *before* you waste time
+> archiving a dead binary. (Alternatively the three vars can live in `entprep-app/.env.local`,
+> which `npm run build` auto-reads; exporting them also lets the gate exact-match each value.)
+
+Expect from the build: `✓ built in …s`, then the PWA service-worker build, `precache NN entries`,
+no errors; then `✓ predeploy-check passed — Supabase host (api.entprep.org) + anon key present`.
 
 ## 4. Sync web → iOS
 ```bash
@@ -88,7 +115,9 @@ open ios/App/App.xcodeproj   # .xcodeproj, NOT a workspace (SPM project)
 
 ## Notes from the build stream (S5)
 - **No source/logic changed** for this release — only the build number (17→18) and this runbook.
-  The web build is identical to web prod except for the inlined RC Apple key.
+  The web build is the same code as web prod; correctness depends entirely on the three `VITE_*`
+  env vars being inlined at build time (step 3) — that is the single biggest "silent failure"
+  risk for this archive, hence the `predeploy-check.mjs` gate.
 - **Stray duplicate file (pre-existing, left untouched):** `ios/App/App/AppleSignInPlugin.swift`
   exists alongside the compiled `ios/App/AppleSignInPlugin.swift`. Only the latter is in the
   Xcode **Sources** build phase, so the duplicate is inert and does not cause a duplicate-symbol
