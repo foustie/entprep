@@ -10,6 +10,7 @@ import { createClient } from '@supabase/supabase-js';
 import { writeFileSync, mkdirSync, existsSync, readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { splitData } from './utils/lang-split.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -150,8 +151,20 @@ async function main() {
     const json = JSON.stringify(data);
     const path = join(OUT_DIR, `${sid}.json`);
     writeFileSync(path, json);
+
+    // PERF-2: also emit language-split files so RU sessions never download the KK half.
+    // Combined <sid>.json stays as the canonical artifact for the guards (check-kk-index)
+    // and audit tooling; the runtime fetches only <sid>.ru.json / <sid>.kk.json.
+    const { ru, kk } = splitData(data);
+    const ruJson = JSON.stringify(ru);
+    const kkJson = JSON.stringify(kk);
+    writeFileSync(join(OUT_DIR, `${sid}.ru.json`), ruJson);
+    writeFileSync(join(OUT_DIR, `${sid}.kk.json`), kkJson);
+
     const kb = Math.round(json.length / 1024);
-    console.log(` ${manifest[sid]} questions (${kb} KB)`);
+    const ruKb = Math.round(ruJson.length / 1024);
+    const kkKb = Math.round(kkJson.length / 1024);
+    console.log(` ${manifest[sid]} questions (${kb} KB → ru ${ruKb} / kk ${kkKb} KB)`);
   }
 
   // Write manifest

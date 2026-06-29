@@ -6,11 +6,14 @@ import { captureError } from '../config/sentry';
 const CACHE_KEY = 'entprep_qcache';
 const COUNTS_KEY = 'entprep_qcounts';
 const DATA_VERSION_KEY = 'entprep_qversion';
-const DATA_VERSION = 18; // bump: 16 pure duplicates removed (15 лит-ру, 1 гео) + matching type inference fix
+const DATA_VERSION = 19; // bump: PERF-2 language-split CDN files (ru/kk) — invalidates old single-file localStorage cache
 
-// Memory caches
+// Memory caches. Keyed by `${sid}__${lang}` since the CDN now serves language-split
+// files (PERF-2): a RU pool and a KK pool for the same subject hold different content,
+// so they must not collide. The runtime array-index `_oi` is identical across both
+// (rows are split 1:1 in order — see scripts/utils/lang-split.mjs).
 const memCache: Record<string, Question[]> = {};
-const passageCache: { data: Passage[] | null } = { data: null };
+const passageCache: Record<string, (Passage & { t_kk?: string; tx_kk?: string })[]> = {};
 let countsCache: Record<string, number> | null = null;
 
 // Quarantine: questions with <10% user accuracy (auto-detected bad answers)
@@ -255,21 +258,28 @@ function clonePool(pool: Question[], lang?: Lang): Question[] {
 
 async function getPool(sid: string, lang?: Lang): Promise<Question[]> {
   await loadQuarantine();
-  if (memCache[sid]) return clonePool(memCache[sid], lang);
+  // PERF-2: the CDN serves language-split files, so the cache key is per (subject, language).
+  // The fallback tiers (Supabase/localStorage/static) still carry both languages inline and
+  // are resolved at return by clonePool(lang) — so a KK pool built from a fallback tier is
+  // correct too. `_oi` is identical across ru/kk (rows split 1:1 in order).
+  const langKey: Lang = lang === 'kk' ? 'kk' : 'ru';
+  const ck = `${sid}__${langKey}`;
+  if (memCache[ck]) return clonePool(memCache[ck], lang);
 
-  if (pending[sid]) {
-    const raw = await pending[sid];
+  if (pending[ck]) {
+    const raw = await pending[ck];
     return clonePool(raw, lang);
   }
 
-  pending[sid] = (async () => {
+  pending[ck] = (async () => {
     try {
-      // 1. CDN JSON files (fastest — served from Netlify edge, ~100ms)
+      // 1. CDN JSON files (fastest — served from Netlify edge, ~100ms). Language-split:
+      // RU sessions fetch only <sid>.ru.json, KK sessions only <sid>.kk.json (PERF-2).
       const cdnSid = sid === 'literature' ? 'literature_russian' : sid;
       try {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 5000);
-        const resp = await fetch(`/data/${cdnSid}.json`, { signal: controller.signal });
+        const resp = await fetch(`/data/${cdnSid}.${langKey}.json`, { signal: controller.signal });
         clearTimeout(timeout);
         if (resp.ok) {
           const rawRows = await resp.json();
@@ -277,7 +287,8 @@ async function getPool(sid: string, lang?: Lang): Promise<Question[]> {
           // for passages) — normalize to the Supabase column names supabaseRowToQuestion
           // reads. Without the passage remap, non-reading 'context' questions (e.g. English
           // reading-comprehension) silently lose their passage: q.px is never set → isR=false
-          // → the passage block is not rendered.
+          // → the passage block is not rendered. (Split files are already language-resolved,
+          // so _kk fields are absent and clonePool(lang) is a no-op override on them.)
           const rows: SupabaseRow[] = rawRows.map((r: Record<string, unknown>) => ({
             ...r,
             topic: r.topic || r._topic || '',
@@ -290,101 +301,103 @@ async function getPool(sid: string, lang?: Lang): Promise<Question[]> {
           if (rows.length > 0) {
             if (sid === 'reading') {
               const passages = buildPassagesFromRows(rows);
-              passageCache.data = passages;
+              passageCache[langKey] = passages;
               const flat: Question[] = [];
               passages.forEach((p, pi) => {
                 p.qs.forEach((q, qi) => flat.push(deepFreezeQuestion({ ...q, _oi: pi * 5 + qi, pt: p.t, px: p.tx, pt_kk: 't_kk' in p ? (p as { t_kk?: string }).t_kk : undefined, px_kk: 'tx_kk' in p ? (p as { tx_kk?: string }).tx_kk : undefined })));
               });
-              memCache[sid] = flat;
+              memCache[ck] = flat;
               passages.forEach(p => p.qs.forEach(q => { if (q.o) Object.freeze(q.o); Object.freeze(q); }));
             } else {
-              memCache[sid] = rows.map((r, i) => deepFreezeQuestion({ ...supabaseRowToQuestion(r), _oi: i }));
+              memCache[ck] = rows.map((r, i) => deepFreezeQuestion({ ...supabaseRowToQuestion(r), _oi: i }));
             }
             const counts = loadCounts();
-            memCache[sid] = filterQuarantined(sid, memCache[sid]);
-            counts[sid] = memCache[sid].length;
+            memCache[ck] = filterQuarantined(sid, memCache[ck]);
+            counts[sid] = memCache[ck].length;
             saveCounts(counts);
-            return memCache[sid];
+            return memCache[ck];
           }
         }
       } catch { /* CDN failed, fall through to Supabase */ }
 
-      // 2. Supabase (fallback if CDN fails)
+      // 2. Supabase (fallback if CDN fails). Rows carry both languages; clonePool(lang)
+      // resolves the active language at return.
       const result = await fetchFromSupabase(sid);
       if (result && result.rows.length > 0) {
         const rows = result.rows;
         if (sid === 'reading') {
           const passages = buildPassagesFromRows(rows);
-          passageCache.data = passages;
+          passageCache[langKey] = passages;
           const flat: Question[] = [];
           passages.forEach((p, pi) => {
             p.qs.forEach((q, qi) => flat.push(deepFreezeQuestion({ ...q, _oi: pi * 5 + qi, pt: p.t, px: p.tx, pt_kk: 't_kk' in p ? (p as { t_kk?: string }).t_kk : undefined, px_kk: 'tx_kk' in p ? (p as { tx_kk?: string }).tx_kk : undefined })));
           });
-          memCache[sid] = flat;
+          memCache[ck] = flat;
           passages.forEach(p => p.qs.forEach(q => { if (q.o) Object.freeze(q.o); Object.freeze(q); }));
         } else {
-          memCache[sid] = rows.map((r, i) => deepFreezeQuestion({ ...supabaseRowToQuestion(r), _oi: i }));
+          memCache[ck] = rows.map((r, i) => deepFreezeQuestion({ ...supabaseRowToQuestion(r), _oi: i }));
         }
-        memCache[sid] = filterQuarantined(sid, memCache[sid]);
+        memCache[ck] = filterQuarantined(sid, memCache[ck]);
         if (result.complete) {
           const counts = loadCounts();
-          counts[sid] = memCache[sid].length;
+          counts[sid] = memCache[ck].length;
           saveCounts(counts);
           lsWrite(sid, rows);
         }
-        return memCache[sid];
+        return memCache[ck];
       }
 
-      // 3. localStorage cache
+      // 3. localStorage cache (combined rows; clonePool(lang) resolves at return)
       const lsData = lsRead(sid);
       if (lsData && lsData.length > 0) {
         if (sid === 'reading') {
           const passages = buildPassagesFromRows(lsData);
-          passageCache.data = passages;
+          passageCache[langKey] = passages;
           const flat: Question[] = [];
           passages.forEach((p, pi) => {
             p.qs.forEach((q, qi) => flat.push(deepFreezeQuestion({ ...q, _oi: pi * 5 + qi, pt: p.t, px: p.tx, pt_kk: 't_kk' in p ? (p as { t_kk?: string }).t_kk : undefined, px_kk: 'tx_kk' in p ? (p as { tx_kk?: string }).tx_kk : undefined })));
           });
-          memCache[sid] = flat;
+          memCache[ck] = flat;
           passages.forEach(p => p.qs.forEach(q => { if (q.o) Object.freeze(q.o); Object.freeze(q); }));
         } else {
-          memCache[sid] = lsData.map((r, i) => deepFreezeQuestion({ ...supabaseRowToQuestion(r), _oi: i }));
+          memCache[ck] = lsData.map((r, i) => deepFreezeQuestion({ ...supabaseRowToQuestion(r), _oi: i }));
         }
-        memCache[sid] = filterQuarantined(sid, memCache[sid]);
-        return memCache[sid];
+        memCache[ck] = filterQuarantined(sid, memCache[ck]);
+        return memCache[ck];
       }
 
-      // 4. Static fallback (dynamic import — bundled JS, last resort)
+      // 4. Static fallback (dynamic import — bundled JS, last resort; combined rows)
       const loader = STATIC_FILES[sid];
       if (!loader) return [];
       const staticData = await loader();
       if (sid === 'reading') {
-        passageCache.data = staticData as Passage[];
+        passageCache[langKey] = staticData as Passage[];
         const flat: Question[] = [];
         (staticData as Passage[]).forEach((p, pi) => {
           p.qs.forEach((q, qi) => flat.push(deepFreezeQuestion({ ...q, _oi: pi * 5 + qi, pt: p.t, px: p.tx, pt_kk: 't_kk' in p ? (p as { t_kk?: string }).t_kk : undefined, px_kk: 'tx_kk' in p ? (p as { tx_kk?: string }).tx_kk : undefined })));
         });
-        memCache[sid] = flat;
+        memCache[ck] = flat;
         (staticData as Passage[]).forEach(p => p.qs.forEach(q => { if (q.o) Object.freeze(q.o); Object.freeze(q); }));
       } else {
-        memCache[sid] = (staticData as Question[]).map((q, i) => deepFreezeQuestion({ ...q, _oi: i }));
+        memCache[ck] = (staticData as Question[]).map((q, i) => deepFreezeQuestion({ ...q, _oi: i }));
       }
-      memCache[sid] = filterQuarantined(sid, memCache[sid]);
-      return memCache[sid];
+      memCache[ck] = filterQuarantined(sid, memCache[ck]);
+      return memCache[ck];
     } finally {
-      delete pending[sid];
+      delete pending[ck];
     }
   })();
 
-  const raw = await pending[sid]!;
+  const raw = await pending[ck]!;
   return clonePool(raw, lang);
 }
 
 async function getPassages(lang?: Lang): Promise<Passage[]> {
-  if (!passageCache.data) {
-    await getPool('reading');
+  const langKey: Lang = lang === 'kk' ? 'kk' : 'ru';
+  if (!passageCache[langKey]) {
+    await getPool('reading', lang);
   }
-  const cached = passageCache.data as (Passage & { t_kk?: string; tx_kk?: string })[] | null;
+  const cached = passageCache[langKey] as (Passage & { t_kk?: string; tx_kk?: string })[] | undefined;
   if (!cached) return [];
   const useKk = lang === 'kk';
   return cached.map(p => ({
