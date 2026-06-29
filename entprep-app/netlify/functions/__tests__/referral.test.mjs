@@ -3,35 +3,13 @@ import {
   normalizeCode,
   validateBindCode,
   generateReferralCode,
-  deriveReferralTxId,
   isSelfReferral,
   isNewAccount,
-  computeReferralExpiry,
   REFERRAL_CAP,
 } from '../referral.mjs';
 import handler from '../referral.mjs';
 
 const DAY = 24 * 60 * 60 * 1000;
-
-// ── deriveReferralTxId (idempotency key — mirrors deriveRcTxId) ────────────────
-describe('deriveReferralTxId (referral idempotency key)', () => {
-  it('derives a stable per-referee id from the referee id', () => {
-    expect(deriveReferralTxId('refUUID-1')).toBe('referral_refUUID-1');
-  });
-  it('yields the SAME key for a replayed credit (idempotent)', () => {
-    const referee = 'b2c3-referee';
-    expect(deriveReferralTxId(referee)).toBe(deriveReferralTxId(referee));
-  });
-  it('yields DISTINCT keys for distinct referees', () => {
-    expect(deriveReferralTxId('referee-A')).not.toBe(deriveReferralTxId('referee-B'));
-  });
-  it('returns null on a missing/empty referee id (never collapses to a shared key)', () => {
-    expect(deriveReferralTxId('')).toBeNull();
-    expect(deriveReferralTxId(null)).toBeNull();
-    expect(deriveReferralTxId(undefined)).toBeNull();
-    expect(deriveReferralTxId(123)).toBeNull();
-  });
-});
 
 // ── isSelfReferral (anti-fraud) ───────────────────────────────────────────────
 describe('isSelfReferral', () => {
@@ -94,38 +72,22 @@ describe('generateReferralCode', () => {
   });
 });
 
-// ── computeReferralExpiry (correct 7-day extension / stacking) ─────────────────
-describe('computeReferralExpiry', () => {
-  const now = Date.parse('2026-06-29T00:00:00Z');
-  it('grants 7 days from now when there is no active premium', () => {
-    expect(Date.parse(computeReferralExpiry(null, now, 7))).toBe(now + 7 * DAY);
-  });
-  it('stacks 7 days on top of an existing future expiry', () => {
-    const existing = new Date(now + 10 * DAY).toISOString();
-    expect(Date.parse(computeReferralExpiry(existing, now, 7))).toBe(now + 17 * DAY);
-  });
-  it('ignores an already-expired premium (extends from now)', () => {
-    const expired = new Date(now - 10 * DAY).toISOString();
-    expect(Date.parse(computeReferralExpiry(expired, now, 7))).toBe(now + 7 * DAY);
-  });
-});
-
 // ── Stateful Supabase fake ────────────────────────────────────────────────────
-// Models the invariants the exactly-once + anti-fraud guarantees rest on:
-//   • UNIQUE(referrals.referee_id) and UNIQUE(payments.kaspi_tx_id) reject a dup
-//     INSERT with 409 + 23505 (as PostgREST does);
-//   • PATCH ...?credited=eq.false {credited:true} is an atomic compare-and-swap
-//     (only rows still matching credited=false flip and are RETURNED);
-//   • leaderboard rows are the server-verified "completed a test" signal.
+// Models the DB invariants the guarantees rest on. The fraud-critical grant is a
+// SINGLE atomic transaction (grant_referral_reward RPC): the fake mirrors its
+// sequence — per-referee exactly-once (credited flag), the per-referrer cap counter
+// (referral_credits), and the GREATEST(current,now)+days extend. failExtend models a
+// whole-transaction failure (atomic rollback: nothing is mutated), which is exactly
+// why a retry after a perceived failure is safe.
 function makeSupabaseFake(users) {
   const db = {
     users,
     codes: [],
     referrals: [],
-    payments: [],
     subscriptions: [],
+    referralCredits: [], // { referrer_id, credited_count }
     leaderboard: [],
-    failExtend: false, // flip to force an extend failure (C2 rollback test)
+    failExtend: false,
   };
   const ok = (status, data) => ({
     ok: status >= 200 && status < 300,
@@ -166,70 +128,9 @@ function makeSupabaseFake(users) {
     }
 
     if (url.includes('/rest/v1/referrals')) {
-      if (method === 'GET') {
-        const referee = matchEq(url, 'referee_id');
-        const referrer = matchEq(url, 'referrer_id');
-        const credited = matchEq(url, 'credited');
-        let rows = db.referrals;
-        if (referee) rows = rows.filter((r) => r.referee_id === referee);
-        if (referrer) rows = rows.filter((r) => r.referrer_id === referrer);
-        if (credited != null) rows = rows.filter((r) => String(r.credited) === credited);
-        return ok(200, rows.map((r) => ({ ...r })));
-      }
       if (method === 'POST') {
         if (db.referrals.some((r) => r.referee_id === body.referee_id)) return conflict();
         db.referrals.push({ referrer_id: body.referrer_id, referee_id: body.referee_id, credited: false });
-        return ok(201, []);
-      }
-      if (method === 'PATCH') {
-        const referee = matchEq(url, 'referee_id');
-        const wantCredited = matchEq(url, 'credited'); // CAS predicate ('false') or absent
-        let rows = db.referrals.filter((r) => r.referee_id === referee);
-        if (wantCredited != null) rows = rows.filter((r) => String(r.credited) === wantCredited);
-        rows.forEach((r) => { r.credited = body.credited; });
-        return ok(200, rows.map((r) => ({ ...r })));
-      }
-    }
-
-    if (url.includes('/rest/v1/subscriptions')) {
-      if (method === 'GET') {
-        const uid = matchEq(url, 'user_id');
-        return ok(200, db.subscriptions.filter((s) => s.user_id === uid));
-      }
-      if (method === 'POST') {
-        const existing = db.subscriptions.find((s) => s.user_id === body.user_id);
-        if (existing) Object.assign(existing, body);
-        else db.subscriptions.push({ ...body });
-        return ok(201, []);
-      }
-    }
-
-    // Atomic premium extend (extend_premium_days RPC) — models GREATEST(current,now)
-    // + days in one statement: never reduces a larger existing expiry, preserves a
-    // paid plan label, and stacks. The grant path uses ONLY this (no read-then-write).
-    if (url.includes('/rest/v1/rpc/extend_premium_days')) {
-      if (method === 'POST') {
-        if (db.failExtend) { db.failExtend = false; return ok(500, { error: 'forced' }); }
-        const now = Date.now();
-        const existing = db.subscriptions.find((s) => s.user_id === body.p_user_id);
-        const cur = existing && existing.expires_at ? Date.parse(existing.expires_at) : 0;
-        const base = cur > now ? cur : now;
-        const until = new Date(base + body.p_days * DAY).toISOString();
-        if (existing) {
-          existing.expires_at = until;
-          existing.is_active = true;
-          if (!['monthly', 'yearly'].includes(existing.plan)) existing.plan = 'referral';
-        } else {
-          db.subscriptions.push({ user_id: body.p_user_id, is_active: true, plan: 'referral', expires_at: until });
-        }
-        return ok(200, until);
-      }
-    }
-
-    if (url.includes('/rest/v1/payments')) {
-      if (method === 'POST') {
-        if (db.payments.some((p) => p.kaspi_tx_id === body.kaspi_tx_id)) return conflict();
-        db.payments.push({ ...body });
         return ok(201, []);
       }
     }
@@ -238,6 +139,39 @@ function makeSupabaseFake(users) {
       if (method === 'GET') {
         const uid = matchEq(url, 'user_id');
         return ok(200, db.leaderboard.filter((l) => l.user_id === uid).slice(0, 1));
+      }
+    }
+
+    // The atomic grant. Mirrors grant_referral_reward(p_referee, p_days, p_cap).
+    if (url.includes('/rest/v1/rpc/grant_referral_reward')) {
+      if (method === 'POST') {
+        // Whole-transaction failure → nothing mutated (atomic rollback).
+        if (db.failExtend) { db.failExtend = false; return ok(500, { error: 'forced' }); }
+        const referee = body.p_referee;
+        const row = db.referrals.find((r) => r.referee_id === referee);
+        if (!row) return ok(200, [{ result: 'no_binding', premium_until: null }]);
+        if (row.credited) {
+          const sub = db.subscriptions.find((s) => s.user_id === row.referrer_id);
+          return ok(200, [{ result: 'already', premium_until: sub?.expires_at ?? null }]);
+        }
+        const referrer = row.referrer_id;
+        let cc = db.referralCredits.find((c) => c.referrer_id === referrer);
+        if (!cc) { cc = { referrer_id: referrer, credited_count: 0 }; db.referralCredits.push(cc); }
+        if (cc.credited_count >= body.p_cap) return ok(200, [{ result: 'capped', premium_until: null }]);
+        cc.credited_count += 1;
+        row.credited = true;
+        const now = Date.now();
+        const existing = db.subscriptions.find((s) => s.user_id === referrer);
+        const cur = existing && existing.expires_at ? Date.parse(existing.expires_at) : 0;
+        const until = new Date((cur > now ? cur : now) + body.p_days * DAY).toISOString();
+        if (existing) {
+          existing.expires_at = until;
+          existing.is_active = true;
+          if (!['monthly', 'yearly'].includes(existing.plan)) existing.plan = 'referral';
+        } else {
+          db.subscriptions.push({ user_id: referrer, is_active: true, plan: 'referral', expires_at: until });
+        }
+        return ok(200, [{ result: 'granted', premium_until: until }]);
       }
     }
 
@@ -255,10 +189,9 @@ function bindReq(token, code) {
   };
 }
 
-// A genuinely-qualified referee fixture: new account + (test row added in seed).
 const newAcct = (id, email) => ({ id, email, created_at: new Date(Date.now() - 1 * DAY).toISOString() });
 
-describe('referral handler — exactly-once, anti-fraud, C1–C4 + CAP + QUAL (DoD)', () => {
+describe('referral handler — atomic exactly-once + cap + QUAL (DoD)', () => {
   const REFERRER = 'referrer-uuid';
   const REFEREE = 'referee-uuid';
 
@@ -272,29 +205,25 @@ describe('referral handler — exactly-once, anti-fraud, C1–C4 + CAP + QUAL (D
     vi.restoreAllMocks();
   });
 
-  // A fully-qualified referee (new account + 1 completed test).
   function seedQualified() {
     const { db, fetchFake } = makeSupabaseFake({
       [REFEREE]: newAcct(REFEREE, 'newbie@x.kz'),
       [REFERRER]: newAcct(REFERRER, 'inviter@x.kz'),
     });
     db.codes.push({ user_id: REFERRER, code: 'INVITE7' });
-    db.leaderboard.push({ user_id: REFEREE }); // referee completed a test
+    db.leaderboard.push({ user_id: REFEREE });
     vi.stubGlobal('fetch', fetchFake);
     return { db, fetchFake };
   }
 
   it('credits the referrer exactly once across a replayed bind (idempotent, +7d not +14)', async () => {
     const { db } = seedQualified();
-    const r1 = await handler(bindReq(REFEREE, 'INVITE7'));
-    expect(r1.status).toBe(200);
-    const r2 = await handler(bindReq(REFEREE, 'INVITE7')); // replay
-    expect(r2.status).toBe(200);
+    expect((await handler(bindReq(REFEREE, 'INVITE7'))).status).toBe(200);
+    expect((await handler(bindReq(REFEREE, 'INVITE7'))).status).toBe(200); // replay
 
     expect(db.referrals).toHaveLength(1);
     expect(db.referrals[0].credited).toBe(true);
-    expect(db.payments.filter((p) => p.kaspi_tx_id === `referral_${REFEREE}`)).toHaveLength(1);
-
+    expect(db.referralCredits.find((c) => c.referrer_id === REFERRER).credited_count).toBe(1); // bumped once
     const sub = db.subscriptions.find((s) => s.user_id === REFERRER);
     const grantedMs = Date.parse(sub.expires_at) - Date.now();
     expect(grantedMs).toBeGreaterThan(6.5 * DAY);
@@ -305,11 +234,10 @@ describe('referral handler — exactly-once, anti-fraud, C1–C4 + CAP + QUAL (D
     const { db } = seedQualified();
     const res = await handler(bindReq(REFERRER, 'INVITE7'));
     expect(res.status).toBe(400);
-    expect(db.payments).toHaveLength(0);
     expect(db.subscriptions).toHaveLength(0);
   });
 
-  // C1: the grant must follow the PERSISTENT binding, not the code in the request.
+  // C1: the grant follows the PERSISTENT binding, not the code in the request.
   it('C1: a later bind with a DIFFERENT code never hijacks the credit to a new referrer', async () => {
     const ALICE = 'alice-referrer';
     const BOB = 'bob-attacker';
@@ -319,46 +247,37 @@ describe('referral handler — exactly-once, anti-fraud, C1–C4 + CAP + QUAL (D
       [BOB]: newAcct(BOB, 'bob@x.kz'),
     });
     db.codes.push({ user_id: ALICE, code: 'ALICE1' }, { user_id: BOB, code: 'BOBBB1' });
-    // Referee is already (persistently) bound to ALICE but not yet credited.
-    db.referrals.push({ referrer_id: ALICE, referee_id: REFEREE, credited: false });
+    db.referrals.push({ referrer_id: ALICE, referee_id: REFEREE, credited: false }); // persistent: ALICE
     db.leaderboard.push({ user_id: REFEREE });
     vi.stubGlobal('fetch', fetchFake);
 
-    // Attacker tries to bind the same referee to BOB's code.
     const res = await handler(bindReq(REFEREE, 'BOBBB1'));
     expect(res.status).toBe(200);
-
-    // The reward goes to ALICE (persistent binding), never BOB.
     expect(db.subscriptions.find((s) => s.user_id === ALICE)).toBeTruthy();
     expect(db.subscriptions.find((s) => s.user_id === BOB)).toBeUndefined();
-    expect(db.payments.every((p) => p.user_id === ALICE)).toBe(true);
   });
 
-  // QUAL: an unconfirmed-as-real referee (no completed test) binds but earns nothing.
+  // QUAL: no completed test → bound but not credited; credits once the test exists.
   it('QUAL: binds but does NOT credit until the referee has completed a test', async () => {
     const { db, fetchFake } = makeSupabaseFake({
       [REFEREE]: newAcct(REFEREE, 'newbie@x.kz'),
       [REFERRER]: newAcct(REFERRER, 'inviter@x.kz'),
     });
     db.codes.push({ user_id: REFERRER, code: 'INVITE7' });
-    // NO leaderboard row → not qualified yet.
     vi.stubGlobal('fetch', fetchFake);
 
     const res = await handler(bindReq(REFEREE, 'INVITE7'));
     expect(res.status).toBe(200);
-    expect(db.referrals).toHaveLength(1);
     expect(db.referrals[0].credited).toBe(false);
-    expect(db.payments).toHaveLength(0);
+    expect(db.subscriptions).toHaveLength(0);
 
-    // Later, the referee completes a test → a retry credits exactly once.
-    db.leaderboard.push({ user_id: REFEREE });
+    db.leaderboard.push({ user_id: REFEREE }); // referee completes a test
     const res2 = await handler(bindReq(REFEREE, 'INVITE7'));
     expect(res2.status).toBe(200);
     expect(db.referrals[0].credited).toBe(true);
-    expect(db.payments.filter((p) => p.kaspi_tx_id === `referral_${REFEREE}`)).toHaveLength(1);
+    expect(db.subscriptions.find((s) => s.user_id === REFERRER)).toBeTruthy();
   });
 
-  // QUAL: an OLD account can never be the referee (anti-farm on reactivated alts).
   it('QUAL: an old referee account is never credited even with a completed test', async () => {
     const { db, fetchFake } = makeSupabaseFake({
       [REFEREE]: { id: REFEREE, email: 'old@x.kz', created_at: new Date(Date.now() - 200 * DAY).toISOString() },
@@ -370,19 +289,16 @@ describe('referral handler — exactly-once, anti-fraud, C1–C4 + CAP + QUAL (D
 
     const res = await handler(bindReq(REFEREE, 'INVITE7'));
     expect(res.status).toBe(200);
-    expect(db.payments).toHaveLength(0);
+    expect(db.subscriptions).toHaveLength(0);
   });
 
-  // CAP: a referrer can only be rewarded for REFERRAL_CAP referees.
+  // CAP: a referrer at the cap earns nothing more.
   it('CAP: stops crediting a referrer past the per-account cap', async () => {
     const { db, fetchFake } = makeSupabaseFake({
       [REFERRER]: newAcct(REFERRER, 'inviter@x.kz'),
     });
     db.codes.push({ user_id: REFERRER, code: 'INVITE7' });
-    // Referrer already at the cap (REFERRAL_CAP credited referees).
-    for (let i = 0; i < REFERRAL_CAP; i++) {
-      db.referrals.push({ referrer_id: REFERRER, referee_id: `prior-${i}`, credited: true });
-    }
+    db.referralCredits.push({ referrer_id: REFERRER, credited_count: REFERRAL_CAP }); // already at cap
     const FRESH = 'fresh-referee';
     db.users[FRESH] = newAcct(FRESH, 'fresh@x.kz');
     db.leaderboard.push({ user_id: FRESH });
@@ -390,42 +306,37 @@ describe('referral handler — exactly-once, anti-fraud, C1–C4 + CAP + QUAL (D
 
     const res = await handler(bindReq(FRESH, 'INVITE7'));
     expect(res.status).toBe(200);
-    // No NEW grant for this referrer beyond the cap.
-    expect(db.payments.filter((p) => p.kaspi_tx_id === `referral_${FRESH}`)).toHaveLength(0);
+    expect(db.subscriptions.find((s) => s.user_id === REFERRER)).toBeUndefined(); // no grant
+    expect(db.referrals.find((r) => r.referee_id === FRESH).credited).toBe(false);
   });
 
-  // C2: if the extend fails after the CAS win, credited rolls back and no marker
-  // is left behind, so a later retry can re-claim and grant.
-  it('C2: a failed extend rolls back cleanly and a retry still grants exactly once', async () => {
+  // F2/C2: a failed grant transaction mutates nothing, and a retry grants once.
+  it('a failed grant transaction rolls back fully and a retry grants exactly once', async () => {
     const { db } = seedQualified();
-    db.failExtend = true; // first extend attempt fails
+    db.failExtend = true;
 
     const r1 = await handler(bindReq(REFEREE, 'INVITE7'));
     expect(r1.status).toBe(500);
-    // Rolled back: not credited, no payment marker stranded.
-    expect(db.referrals[0].credited).toBe(false);
-    expect(db.payments.filter((p) => p.kaspi_tx_id === `referral_${REFEREE}`)).toHaveLength(0);
+    expect(db.referrals[0].credited).toBe(false);            // nothing mutated
+    expect(db.referralCredits).toHaveLength(0);
+    expect(db.subscriptions).toHaveLength(0);
 
-    // Retry succeeds and grants exactly once.
     const r2 = await handler(bindReq(REFEREE, 'INVITE7'));
     expect(r2.status).toBe(200);
     expect(db.referrals[0].credited).toBe(true);
-    expect(db.payments.filter((p) => p.kaspi_tx_id === `referral_${REFEREE}`)).toHaveLength(1);
+    expect(db.referralCredits.find((c) => c.referrer_id === REFERRER).credited_count).toBe(1);
     const sub = db.subscriptions.find((s) => s.user_id === REFERRER);
     const grantedMs = Date.parse(sub.expires_at) - Date.now();
     expect(grantedMs).toBeGreaterThan(6.5 * DAY);
     expect(grantedMs).toBeLessThan(7.5 * DAY);
   });
 
-  // Atomic extend: the +7 stacks on an existing larger (e.g. just-purchased) expiry
-  // and NEVER reduces it or clobbers the paid plan label. This is the observable side
-  // of the lost-update fix S8 flagged (a concurrent purchase being downgraded to 7d).
+  // Atomic extend: +7 stacks on an existing larger (e.g. purchased) expiry and never
+  // reduces it or clobbers the paid plan label.
   it('stacks +7 on an existing purchased expiry and preserves the paid plan (no clobber)', async () => {
     const { db } = seedQualified();
     db.subscriptions.push({
-      user_id: REFERRER,
-      is_active: true,
-      plan: 'monthly',
+      user_id: REFERRER, is_active: true, plan: 'monthly',
       expires_at: new Date(Date.now() + 30 * DAY).toISOString(),
     });
     const res = await handler(bindReq(REFEREE, 'INVITE7'));
@@ -441,7 +352,7 @@ describe('referral handler — exactly-once, anti-fraud, C1–C4 + CAP + QUAL (D
     const { db } = seedQualified();
     const res = await handler(bindReq(REFEREE, 'NOSUCH'));
     expect(res.status).toBe(404);
-    expect(db.payments).toHaveLength(0);
+    expect(db.subscriptions).toHaveLength(0);
   });
 
   it('rejects an unauthenticated caller', async () => {
