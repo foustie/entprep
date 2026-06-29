@@ -236,6 +236,10 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
         body: JSON.stringify({ question: qItem.q, options: qItem.o, userAnswer: ans[index], correctAnswer: qItem.c, explanation: qItem.e, questionType: getQType(qItem), pairs: qItem.pairs, lang: st.lang, subject: sid })
       });
+      // 402 = free daily AI-explain allowance exhausted server-side (durable cap; fires
+      // even if the client localStorage counter was cleared to bypass consumeExplain).
+      // Surface the paywall instead of a generic error.
+      if (res.status === 402) { trackEvent('AI Explain Limit Hit', { subject: sid }); setShowPaywall(true); setAiLoad(p => ({ ...p, [index]: false })); return; }
       if (res.status === 403) { setAiText(p => ({ ...p, [index]: { short: t.test.aiDailyLimit, detailed: t.test.aiDailyLimit } })); setAiLoad(p => ({ ...p, [index]: false })); return; }
       const data = await res.json();
       if (data.short) setAiText(p => ({ ...p, [index]: { short: data.short, detailed: data.detailed || data.short } }));
