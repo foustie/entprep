@@ -18,6 +18,8 @@ import {
   verifyAuth,
   createRateLimiter,
   rateLimitResponse,
+  checkPremium,
+  checkDailyLimit,
 } from "./utils/shared.mjs";
 import { callAI, aiConfigured } from "./utils/ai.mjs";
 import { parseLooseJson, sanitizeMath } from "./utils/text.mjs";
@@ -27,6 +29,13 @@ import { parseLooseJson, sanitizeMath } from "./utils/text.mjs";
 export const MAX_WEEKS_PER_CALL = 14;
 
 const checkRate = createRateLimiter("focus", { max: 5, windowSec: 60 });
+
+// PAY-9 (soft): study-plan focus is a graceful, visible-to-all polish on top of the
+// rule-based plan, so it gets a durable per-user daily COST-cap rather than a hard premium
+// gate (orchestrator-ratified). Over the cap we skip the AI call and return empty focus
+// (status 200) — the plan still renders, just without AI polish. Free 3/day, premium 30/day.
+const FOCUS_FREE_DAILY = 3;
+const FOCUS_PREMIUM_DAILY = 30;
 
 const VALID_TRENDS = new Set(["improving", "declining", "stable", "none"]);
 const VALID_PHASES = new Set(["foundation", "build", "review"]);
@@ -270,6 +279,14 @@ export default async function handler(req) {
   if (!aiConfigured()) return Response.json({ weeks: [] }, { status: 200, headers: CORS_HEADERS });
 
   const { lang, target, examDate, weeks, weak, strong } = body;
+
+  // PAY-9 soft cost-cap (durable): bound AI spend per user/day WITHOUT degrading the
+  // visible-to-all plan. Over the cap → graceful empty focus (the plan is already rendered
+  // client-side), never a hard 402. Premium gets a higher ceiling. Fails OPEN on a DB hiccup.
+  const isPremium = await checkPremium(user.id);
+  const focusCap = isPremium ? FOCUS_PREMIUM_DAILY : FOCUS_FREE_DAILY;
+  const { allowed } = await checkDailyLimit(user.id, "focus", focusCap);
+  if (!allowed) return Response.json({ weeks: [] }, { status: 200, headers: CORS_HEADERS });
 
   try {
     const batches = chunkWeeks(weeks);

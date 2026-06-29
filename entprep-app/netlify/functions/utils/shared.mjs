@@ -110,9 +110,11 @@ export function kzDay(now = new Date()) {
 // costs one unit (no refund path — avoids a second non-atomic write).
 //
 // FAIL-OPEN on any infrastructure error (RPC down / network / unconfigured env): a
-// paying user must never be blocked because the DB hiccuped, and the in-memory burst
-// limiter remains the abuse floor. `degraded:true` marks a fail-open allow so callers
-// and logs can tell it from a real allow.
+// paying user must never be blocked because the DB hiccuped. Where an endpoint keeps a
+// per-minute in-memory limiter (ai-explain / study-plan-focus / ai-generate) that stays
+// the abuse floor during such an outage; ai-tutor adds a dedicated in-mem burst backstop
+// for the same reason (it has no other in-mem cap). `degraded:true` marks a fail-open
+// allow so callers and logs can tell it from a real allow.
 export async function checkDailyLimit(userId, bucket, max, { day = kzDay() } = {}) {
   if (!process.env.VITE_SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
     return { allowed: true, count: 0, degraded: true }; // unconfigured → fail-open

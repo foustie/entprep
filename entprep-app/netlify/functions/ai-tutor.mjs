@@ -1,7 +1,7 @@
 // AI Tutor: Socratic method, personalized, caring, RAG-powered
 // Streaming response for fast UX
 
-import { CORS_HEADERS, corsResponse, verifyAuth, checkDailyLimit, checkPremium } from "./utils/shared.mjs";
+import { CORS_HEADERS, corsResponse, verifyAuth, createRateLimiter, rateLimitResponse, checkDailyLimit, checkPremium } from "./utils/shared.mjs";
 import { callAI, aiConfigured, buildAIRequest } from "./utils/ai.mjs";
 import { sanitizeMath } from "./utils/text.mjs";
 
@@ -18,6 +18,14 @@ const TUTOR_PREMIUM_DAILY = 50;
 // Vision turns cost ~10x a text turn — a separate daily sub-cap (premium-only) on
 // top of the text cap bounds image spend. Counts only image-bearing requests.
 const VISION_DAILY = 20;
+
+// S4-R1 defense-in-depth: a cheap in-memory per-minute burst backstop. The durable daily
+// cap (checkDailyLimit) fails OPEN on a Supabase outage, and — unlike explain/focus — the
+// tutor has no other in-mem limiter, so an outage would leave its (vision-capable, most
+// expensive) AI spend unbounded. A generous 20/min ceiling is invisible to real users (the
+// client blocks overlapping sends) but bounds runaway abuse. Per-instance is fine for a
+// backstop; the durable store is the real monetization cap.
+const checkBurst = createRateLimiter("tutor-burst", { max: 20, windowSec: 60 });
 
 const SITE_URL = process.env.URL || "https://entprep.org";
 const summaryCache = new Map();
@@ -146,6 +154,10 @@ export default async function handler(req) {
 
   const user = await verifyAuth(req);
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401, headers: CORS_HEADERS });
+
+  // S4-R1 burst backstop (per-minute, in-memory) — outage/abuse floor for AI spend.
+  const burstWait = checkBurst(user.id);
+  if (burstWait) return rateLimitResponse(burstWait);
 
   const isPremium = await checkPremium(user.id);
   const dailyLimit = isPremium ? TUTOR_PREMIUM_DAILY : TUTOR_FREE_DAILY;
