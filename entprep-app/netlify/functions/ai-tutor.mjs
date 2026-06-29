@@ -1,7 +1,7 @@
 // AI Tutor: Socratic method, personalized, caring, RAG-powered
 // Streaming response for fast UX
 
-import { CORS_HEADERS, corsResponse, verifyAuth, createRateLimiter, checkPremium } from "./utils/shared.mjs";
+import { CORS_HEADERS, corsResponse, verifyAuth, checkDailyLimit, checkPremium } from "./utils/shared.mjs";
 import { callAI, aiConfigured, buildAIRequest } from "./utils/ai.mjs";
 import { sanitizeMath } from "./utils/text.mjs";
 
@@ -10,14 +10,14 @@ import { sanitizeMath } from "./utils/text.mjs";
 const TUTOR_FREE_DAILY = 10;
 const TUTOR_PREMIUM_DAILY = 50;
 
-// Single shared bucket — tier cap is applied per-request via maxOverride.
-// This prevents free→premium (or premium→free) transitions mid-window from resetting the counter.
-const checkRate = createRateLimiter("tutor", { max: TUTOR_PREMIUM_DAILY, windowSec: 86400 });
+// PAY-8/OPS-7: the daily caps are DURABLE (usage_limits table via checkDailyLimit), so
+// they hold across Netlify instances and cold starts instead of multiplying per-instance.
+// A single shared "tutor" bucket carries the per-request tier cap (free 10 / premium 50),
+// so a free→premium (or premium→free) transition mid-day keeps the same counter.
 
 // Vision turns cost ~10x a text turn — a separate daily sub-cap (premium-only) on
 // top of the text cap bounds image spend. Counts only image-bearing requests.
 const VISION_DAILY = 20;
-const checkVisionRate = createRateLimiter("tutor-vision", { max: VISION_DAILY, windowSec: 86400 });
 
 const SITE_URL = process.env.URL || "https://entprep.org";
 const summaryCache = new Map();
@@ -150,8 +150,8 @@ export default async function handler(req) {
   const isPremium = await checkPremium(user.id);
   const dailyLimit = isPremium ? TUTOR_PREMIUM_DAILY : TUTOR_FREE_DAILY;
 
-  const retryAfter = checkRate(user.id, dailyLimit);
-  if (retryAfter) return Response.json({
+  const { allowed } = await checkDailyLimit(user.id, "tutor", dailyLimit);
+  if (!allowed) return Response.json({
     error: `Лимит сообщений на сегодня исчерпан. Завтра у тебя будет ещё ${dailyLimit} — ты справишься!`,
   }, { status: 429, headers: CORS_HEADERS });
 
@@ -176,8 +176,8 @@ export default async function handler(req) {
 
   // Vision-specific daily sub-cap (only image-bearing turns count toward it).
   if (hasImage) {
-    const vRetry = checkVisionRate(user.id);
-    if (vRetry) return Response.json({
+    const v = await checkDailyLimit(user.id, "tutor-vision", VISION_DAILY);
+    if (!v.allowed) return Response.json({
       error: lang === 'kk'
         ? 'Бүгінге сурет бойынша талдау лимиті бітті. Ертең қайтадан!'
         : 'Лимит разборов по фото на сегодня исчерпан. Завтра снова!',
