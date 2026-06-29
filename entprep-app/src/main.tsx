@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App'
 import { initSentry } from './config/sentry'
 import { Capacitor } from '@capacitor/core'
+import { captureRefFromUrl, getPendingReferral, flushPendingReferral } from './utils/referralHelpers'
 
 initSentry();
 
@@ -75,6 +76,27 @@ if (Capacitor.isNativePlatform()) {
       }
     });
   });
+}
+
+// Referral deep link: capture an incoming ?ref=<code> (web link or native
+// appUrlOpen-scrubbed query) into pending storage, then flush it to the backend once
+// the user is signed in. Independent of AuthContext — Supabase allows multiple
+// onAuthStateChange listeners, so this touches neither App.tsx routing nor the auth
+// provider. The backend decides qualification; an unqualified referee just keeps the
+// pending code and retries on a later session (deferred reward).
+captureRefFromUrl();
+if (getPendingReferral()) {
+  import('./config/supabase').then(({ supabase: sb }) => {
+    if (!sb) return;
+    let flushed = false;
+    sb.auth.onAuthStateChange((event, session) => {
+      if (flushed) return;
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
+        flushed = true; // once per page load; a non-terminal result retries next load
+        flushPendingReferral().catch(() => { /* transient — retried next session */ });
+      }
+    });
+  }).catch(() => { /* supabase unavailable — referral flush simply waits */ });
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
