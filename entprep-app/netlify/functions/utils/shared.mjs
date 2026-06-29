@@ -117,7 +117,8 @@ export function kzDay(now = new Date()) {
 // allow so callers and logs can tell it from a real allow.
 export async function checkDailyLimit(userId, bucket, max, { day = kzDay() } = {}) {
   if (!process.env.VITE_SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
-    return { allowed: true, count: 0, degraded: true }; // unconfigured → fail-open
+    // Misconfiguration (no env), not a runtime outage — fail open silently.
+    return { allowed: true, count: 0, degraded: true };
   }
   try {
     const res = await fetch(`${process.env.VITE_SUPABASE_URL}/rest/v1/rpc/increment_usage`, {
@@ -129,7 +130,7 @@ export async function checkDailyLimit(userId, bucket, max, { day = kzDay() } = {
       },
       body: JSON.stringify({ p_user_id: userId, p_bucket: bucket, p_day: day, p_max: max }),
     });
-    if (!res.ok) return { allowed: true, count: 0, degraded: true }; // fail-open
+    if (!res.ok) return degradedAllow(bucket, `RPC HTTP ${res.status}`); // fail-open
 
     // A scalar `RETURNS integer` RPC comes back as a bare number; be tolerant of the
     // array / {increment_usage} shapes other PostgREST versions can emit.
@@ -137,12 +138,21 @@ export async function checkDailyLimit(userId, bucket, max, { day = kzDay() } = {
     if (Array.isArray(val)) val = val[0];
     if (val && typeof val === "object") val = val.increment_usage;
     const newCount = typeof val === "number" ? val : Number(val);
-    if (!Number.isFinite(newCount)) return { allowed: true, count: 0, degraded: true }; // fail-open
+    if (!Number.isFinite(newCount)) return degradedAllow(bucket, "non-numeric RPC response"); // fail-open
     if (newCount === -1) return { allowed: false, count: max }; // cap reached, nothing consumed
     return { allowed: true, count: newCount };
-  } catch {
-    return { allowed: true, count: 0, degraded: true }; // fail-open
+  } catch (err) {
+    return degradedAllow(bucket, `fetch threw: ${err?.message || err}`); // fail-open
   }
+}
+
+// A fail-open ALLOW caused by a Supabase RUNTIME error (RPC down / network / bad shape)
+// means the durable daily cap is NOT being enforced for this request. Log a warning so
+// the outage — and the unbounded-spend window it opens — is observable in function logs,
+// instead of silently letting every request through.
+function degradedAllow(bucket, reason) {
+  console.warn(`[checkDailyLimit] degraded fail-open: daily cap for "${bucket}" NOT enforced (${reason})`);
+  return { allowed: true, count: 0, degraded: true };
 }
 
 // 402 Payment Required — a free user hit their daily allowance on a premium endpoint
@@ -209,7 +219,9 @@ export function validatePlan(body) {
 
 // ── Premium check (subscriptions table) ─────────────────────────────────────
 // Authoritative server-side premium check. Queries the subscriptions table
-// (only service_role can write). Falls back to user_metadata if table missing.
+// (only service_role can write). Fails CLOSED (returns false) on any error or missing
+// table — there is NO user_metadata fallback (PAY-3 dropped it), so a client can't grant
+// itself premium via metadata it controls.
 
 export async function checkPremium(userId) {
   try {
