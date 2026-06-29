@@ -28,7 +28,9 @@ export async function assembleProfileSection(
   for (const block of blocks) {
     const { count, questionType } = block;
 
-    // Filter pool by question type or block field, excluding anything already used.
+    // Filter pool by question type or block field, excluding anything already used
+    // (cross-block dedup via the running usedOi set — context questions are type
+    // 'single', so without this the 'single' and 'context' blocks could both pick one).
     let candidates: Question[];
     if (questionType === 'single' && block.key === 'context') {
       // Context block: look for questions with block='context' or those with passages

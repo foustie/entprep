@@ -107,6 +107,10 @@ export default function FullENT({ finish }: FullENTProps) {
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
   const finishConfirmRef = useRef<HTMLDivElement>(null);
   useFocusTrap(finishConfirmRef, showFinishConfirm, () => setShowFinishConfirm(false));
+  // FLOW-2: confirm before abandoning an in-progress exam via the header Back button.
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const leaveConfirmRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(leaveConfirmRef, showLeaveConfirm, () => setShowLeaveConfirm(false));
   // Reset passage to open when navigating to a new question
   useEffect(() => { setPassageOpen(true); }, [curSec, curQ]);
   // Reset focus when question changes
@@ -641,7 +645,7 @@ export default function FullENT({ finish }: FullENTProps) {
   return (
     <div style={{ padding: `0 var(--content-padding) ${isDesktop ? 40 : 100}px` }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <BackButton onClick={goHome} label={t.test.exit} style={{ padding: "7px 11px" }} />
+        <BackButton onClick={() => (totalAnswered > 0 ? setShowLeaveConfirm(true) : goHome())} label={t.test.exit} style={{ padding: "7px 11px" }} />
         <div aria-label={`${t.fullent.answeredCount}: ${totalAnswered}/120`} style={{ fontSize: 11, color: "var(--text-secondary)" }}>{totalAnswered}/120</div>
         <button onClick={() => setPaused(p => !p)} style={{ ...CARD_COMPACT, background: paused ? "rgba(234,179,8,0.12)" : "var(--bg-card)", border: `1px solid ${paused ? "rgba(234,179,8,0.3)" : "var(--border)"}`, padding: "7px 9px", cursor: "pointer", color: paused ? COLORS.yellow : "var(--text-muted)", fontSize: 10, display: "inline-flex", alignItems: "center", gap: 3 }}>
           {paused ? <><Play size={12} />{t.fullent.resume}</> : <><Pause size={12} />{t.fullent.pause}</>}
@@ -752,6 +756,16 @@ export default function FullENT({ finish }: FullENTProps) {
       </div>}
       </div>
       </>}
+      {showLeaveConfirm && <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => setShowLeaveConfirm(false)}>
+        <div ref={leaveConfirmRef} role="dialog" aria-modal="true" aria-label={t.test.leaveTestConfirm} tabIndex={-1} style={{ background: "var(--bg-card)", borderRadius: 16, padding: "24px 20px", maxWidth: 320, width: "100%", textAlign: "center" }} onClick={e => e.stopPropagation()}>
+          <h2 style={{ margin: "0 0 8px", fontSize: FS.xl, fontWeight: 700, color: "var(--text)" }}>{t.test.leaveTestConfirm}</h2>
+          <div style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 20 }}>{totalAnswered}/120</div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={() => setShowLeaveConfirm(false)} style={{ flex: 1, padding: "12px 0", borderRadius: R.md, border: "1px solid var(--border)", background: "none", color: "var(--text)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>{t.test.continue}</button>
+            <button onClick={() => { setShowLeaveConfirm(false); goHome(); }} style={{ flex: 1, padding: "12px 0", borderRadius: R.md, border: "none", background: COLORS.red, color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>{t.test.exit}</button>
+          </div>
+        </div>
+      </div>}
       <ReportSheet visible={reportIdx !== null} questionText={reportIdx !== null && sections ? (() => { const [si, qi] = reportIdx.split('-').map(Number); return sections[si]?.qs[qi]?.q; })() : undefined} comment={reportComment} loading={reportLoading} onClose={() => { setReportIdx(null); setReportComment(''); }} onCommentChange={setReportComment} onReport={reason => reportQuestion(reportIdx!, reason)} />
     </div>
   );

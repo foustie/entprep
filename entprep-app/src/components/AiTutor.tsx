@@ -129,13 +129,11 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
   const handleSend = async (text?: string, images?: string[]) => {
     const msg = text || input.trim();
     if (!msg && !(images && images.length)) return;
-    // Reset stuck state — if loading was stuck from a previous failed attempt, force reset
-    if (loading || sendingRef.current) {
-      setLoading(false);
-      sendingRef.current = false;
-      // Allow this send to proceed on next tick
-      await new Promise(r => setTimeout(r, 0));
-    }
+    // Re-entrancy guard: ignore a new send while one is already in flight. Prevents
+    // overlapping requests (a permanently-stuck '⏳' bubble, mis-indexed responses, and a
+    // free-quota edge bypass). The finally block always resets sendingRef, so a send can
+    // never get permanently stuck and block future sends.
+    if (sendingRef.current) return;
     sendingRef.current = true;
     if (!user) { toast.error(t.test.loginRequired); sendingRef.current = false; return; }
     // Gate only — do NOT consume here. The quota is consumed after a successful
@@ -153,9 +151,12 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
     setInput('');
     setLoading(true);
 
+    // Index where the '⏳' placeholder lives — used to replace it on success or error.
+    // Valid because the re-entrancy guard above prevents an overlapping send from
+    // shifting message indices mid-request.
+    const placeholderIdx = newMessages.length;
+
     try {
-      // Add placeholder
-      const placeholderIdx = newMessages.length;
       setMessages(prev => [...prev, { role: 'assistant', content: '⏳', timestamp: Date.now() }]);
 
       const res = await sendTutorMessage(newMessages, profileRef.current, {
@@ -178,11 +179,12 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
       trackEvent('tutor_message', { subject, mode });
     } catch (e: unknown) {
       const errMsg = e instanceof Error ? e.message : t.tutor.errorWord;
-      // Replace placeholder with error message
+      // Replace the placeholder (by its captured index) with the error message, so the
+      // '⏳' is always cleared even if it is no longer the last message.
       setMessages(prev => {
         const updated = [...prev];
-        if (updated.length > 0 && updated[updated.length - 1]?.content === '⏳') {
-          updated[updated.length - 1] = {
+        if (updated[placeholderIdx]?.content === '⏳') {
+          updated[placeholderIdx] = {
             role: 'assistant',
             content: errMsg.includes('Лимит')
               ? errMsg.replace(/^Error:\s*/, '')
