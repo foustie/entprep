@@ -64,3 +64,45 @@ CREATE POLICY "Service role can manage referral codes"
   ON referral_codes FOR ALL
   USING (auth.role() = 'service_role')
   WITH CHECK (auth.role() = 'service_role');
+
+-- Atomic premium extension used by the referral grant (referral.mjs grantReferral).
+-- A SINGLE statement extends from the CURRENT committed expiry, so it can never
+-- clobber a concurrently-written larger expiry — e.g. a subscription the referrer
+-- JUST purchased, which a read-then-write upsert could downgrade to 7 days (harming
+-- a paying user) — and it correctly STACKS multiple referral rewards. A paid plan
+-- label (monthly/yearly) is preserved; only a non-paid row is labelled 'referral'.
+--
+-- SECURITY — this writes premium, so it must NEVER be a client-callable tap:
+--   • SECURITY INVOKER (the default — not DEFINER): the body runs with the CALLER's
+--     privileges. Called by the Netlify function (service_role) it bypasses RLS and
+--     works; called by anon/authenticated it is blocked by the subscriptions RLS
+--     (which has no INSERT/UPDATE policy for those roles) even if it were reachable.
+--   • EXECUTE is revoked from PUBLIC/anon/authenticated so PostgREST does not expose
+--     it to clients at all; only service_role may call it.
+--   • p_days is hard-bounded (1..31) as defense in depth.
+CREATE OR REPLACE FUNCTION extend_premium_days(p_user_id uuid, p_days int)
+RETURNS timestamptz
+LANGUAGE plpgsql
+SET search_path = public
+AS $$
+DECLARE
+  v_until timestamptz;
+BEGIN
+  IF p_days IS NULL OR p_days <= 0 OR p_days > 31 THEN
+    RAISE EXCEPTION 'extend_premium_days: invalid p_days %', p_days;
+  END IF;
+  INSERT INTO subscriptions (user_id, is_active, plan, expires_at, updated_at)
+  VALUES (p_user_id, true, 'referral', now() + make_interval(days => p_days), now())
+  ON CONFLICT (user_id) DO UPDATE
+    SET expires_at = GREATEST(COALESCE(subscriptions.expires_at, now()), now()) + make_interval(days => p_days),
+        is_active = true,
+        plan = CASE WHEN subscriptions.plan IN ('monthly', 'yearly') THEN subscriptions.plan ELSE 'referral' END,
+        updated_at = now()
+  RETURNING expires_at INTO v_until;
+  RETURN v_until;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION extend_premium_days(uuid, int) FROM PUBLIC;
+REVOKE ALL ON FUNCTION extend_premium_days(uuid, int) FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION extend_premium_days(uuid, int) TO service_role;

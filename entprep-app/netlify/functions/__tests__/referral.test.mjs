@@ -125,7 +125,7 @@ function makeSupabaseFake(users) {
     payments: [],
     subscriptions: [],
     leaderboard: [],
-    failSubscriptionUpsert: false, // flip to force an extend failure (C2 rollback test)
+    failExtend: false, // flip to force an extend failure (C2 rollback test)
   };
   const ok = (status, data) => ({
     ok: status >= 200 && status < 300,
@@ -197,11 +197,32 @@ function makeSupabaseFake(users) {
         return ok(200, db.subscriptions.filter((s) => s.user_id === uid));
       }
       if (method === 'POST') {
-        if (db.failSubscriptionUpsert) { db.failSubscriptionUpsert = false; return ok(500, { error: 'forced' }); }
         const existing = db.subscriptions.find((s) => s.user_id === body.user_id);
         if (existing) Object.assign(existing, body);
         else db.subscriptions.push({ ...body });
         return ok(201, []);
+      }
+    }
+
+    // Atomic premium extend (extend_premium_days RPC) — models GREATEST(current,now)
+    // + days in one statement: never reduces a larger existing expiry, preserves a
+    // paid plan label, and stacks. The grant path uses ONLY this (no read-then-write).
+    if (url.includes('/rest/v1/rpc/extend_premium_days')) {
+      if (method === 'POST') {
+        if (db.failExtend) { db.failExtend = false; return ok(500, { error: 'forced' }); }
+        const now = Date.now();
+        const existing = db.subscriptions.find((s) => s.user_id === body.p_user_id);
+        const cur = existing && existing.expires_at ? Date.parse(existing.expires_at) : 0;
+        const base = cur > now ? cur : now;
+        const until = new Date(base + body.p_days * DAY).toISOString();
+        if (existing) {
+          existing.expires_at = until;
+          existing.is_active = true;
+          if (!['monthly', 'yearly'].includes(existing.plan)) existing.plan = 'referral';
+        } else {
+          db.subscriptions.push({ user_id: body.p_user_id, is_active: true, plan: 'referral', expires_at: until });
+        }
+        return ok(200, until);
       }
     }
 
@@ -377,7 +398,7 @@ describe('referral handler — exactly-once, anti-fraud, C1–C4 + CAP + QUAL (D
   // is left behind, so a later retry can re-claim and grant.
   it('C2: a failed extend rolls back cleanly and a retry still grants exactly once', async () => {
     const { db } = seedQualified();
-    db.failSubscriptionUpsert = true; // first extend attempt fails
+    db.failExtend = true; // first extend attempt fails
 
     const r1 = await handler(bindReq(REFEREE, 'INVITE7'));
     expect(r1.status).toBe(500);
@@ -394,6 +415,26 @@ describe('referral handler — exactly-once, anti-fraud, C1–C4 + CAP + QUAL (D
     const grantedMs = Date.parse(sub.expires_at) - Date.now();
     expect(grantedMs).toBeGreaterThan(6.5 * DAY);
     expect(grantedMs).toBeLessThan(7.5 * DAY);
+  });
+
+  // Atomic extend: the +7 stacks on an existing larger (e.g. just-purchased) expiry
+  // and NEVER reduces it or clobbers the paid plan label. This is the observable side
+  // of the lost-update fix S8 flagged (a concurrent purchase being downgraded to 7d).
+  it('stacks +7 on an existing purchased expiry and preserves the paid plan (no clobber)', async () => {
+    const { db } = seedQualified();
+    db.subscriptions.push({
+      user_id: REFERRER,
+      is_active: true,
+      plan: 'monthly',
+      expires_at: new Date(Date.now() + 30 * DAY).toISOString(),
+    });
+    const res = await handler(bindReq(REFEREE, 'INVITE7'));
+    expect(res.status).toBe(200);
+    const sub = db.subscriptions.find((s) => s.user_id === REFERRER);
+    const remaining = Date.parse(sub.expires_at) - Date.now();
+    expect(remaining).toBeGreaterThan(36.5 * DAY); // 30 + 7, never reduced
+    expect(remaining).toBeLessThan(37.5 * DAY);
+    expect(sub.plan).toBe('monthly'); // a referral grant must not downgrade a paid plan
   });
 
   it('rejects an unknown referral code', async () => {

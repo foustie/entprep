@@ -159,35 +159,24 @@ async function rollbackCredit(refereeId) {
   });
 }
 
-// Extend the referrer's premium by 7 days (relative) then write the audit marker.
-// Caller guarantees this runs ONLY after a CAS win (C3). Throws on extend failure
-// so the caller can roll back; the marker is written ONLY after a successful extend
-// so a rollback never strands it (C2).
+// Extend the referrer's premium by 7 days then write the audit marker. Caller
+// guarantees this runs ONLY after a CAS win (C3). Throws on extend failure so the
+// caller can roll back; the marker is written ONLY after a successful extend so a
+// rollback never strands it (C2).
+//
+// The extend is a SINGLE atomic statement (extend_premium_days RPC) computing
+// expires_at = GREATEST(current, now) + 7d. Unlike a read-then-write upsert it can
+// never clobber a concurrently-written larger expiry — e.g. a subscription the
+// referrer JUST purchased (which the lost-update window would have downgraded to 7
+// days, harming a paying user) — and it correctly STACKS multiple referral rewards.
 async function grantReferral(referrerId, refereeId) {
-  let currentExpiry = null;
-  const subRes = await fetch(
-    `${sbUrl()}/rest/v1/subscriptions?user_id=eq.${referrerId}&select=is_active,expires_at`,
-    { headers: sbHeaders() },
-  );
-  if (subRes.ok) {
-    const rows = await subRes.json();
-    const ex = rows[0];
-    if (ex?.is_active && ex.expires_at) currentExpiry = ex.expires_at;
-  }
-  const premiumUntil = computeReferralExpiry(currentExpiry, Date.now(), REFERRAL_DAYS);
-
-  const upRes = await fetch(`${sbUrl()}/rest/v1/subscriptions`, {
+  const rpcRes = await fetch(`${sbUrl()}/rest/v1/rpc/extend_premium_days`, {
     method: "POST",
-    headers: { ...sbHeaders(), Prefer: "resolution=merge-duplicates,return=minimal" },
-    body: JSON.stringify({
-      user_id: referrerId,
-      is_active: true,
-      plan: "referral",
-      expires_at: premiumUntil,
-      updated_at: new Date().toISOString(),
-    }),
+    headers: sbHeaders(),
+    body: JSON.stringify({ p_user_id: referrerId, p_days: REFERRAL_DAYS }),
   });
-  if (!upRes.ok) throw new Error("subscription extend failed: " + (await upRes.text()));
+  if (!rpcRes.ok) throw new Error("extend rpc failed: " + (await rpcRes.text()));
+  const premiumUntil = await rpcRes.json(); // scalar timestamptz (ISO string)
 
   // Audit marker AFTER the successful extend (C2). UNIQUE(kaspi_tx_id) is a second
   // hard barrier against over-grant; best-effort — a failed audit never fails the grant.
