@@ -39,6 +39,10 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
   const [topicCounts, setTopicCounts] = useState<Record<string, number>>({});
   const [subtopicCounts, setSubtopicCounts] = useState<Record<string, number>>({});
   const [hasSubtopics, setHasSubtopics] = useState(false);
+  // True once counts come from a DB-backed source (meta file or a pool that carries
+  // `_topic`). When true, a known section absent from topicCounts genuinely has 0
+  // questions and must render 0 — not the static range estimate (getTopicCount).
+  const [hasDbCounts, setHasDbCounts] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [poolLoading, setPoolLoading] = useState(true);
   const [showTheory, setShowTheory] = useState(false);
@@ -53,6 +57,7 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
     const fromPool = (pool: Question[]) => {
       setPoolSize(pool.length);
       const hasDbTopics = pool.some(q => q._topic);
+      setHasDbCounts(hasDbTopics);
       if (hasDbTopics) {
         const counts: Record<string, number> = {};
         for (const tp of topics) {
@@ -87,6 +92,7 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
         if (cancelled) return;
         setPoolSize(meta.total);
         setTopicCounts(meta.topicCounts || {});
+        setHasDbCounts(true);
         setHasSubtopics(!!meta.hasSubtopics);
         setSubtopicCounts(meta.subtopicCounts || {});
         setPoolLoading(false);
@@ -112,7 +118,7 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
     if (examLoading) return;
     setExamLoading(true);
     try {
-      const qs = await assembleProfileSection(sid, PROFILE_BLOCKS, true);
+      const qs = await assembleProfileSection(sid, PROFILE_BLOCKS, true, settings.lang);
       if (qs.length > 0) {
         setCustomQs(qs);
         setCurSub(sid);
@@ -226,7 +232,9 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
             {[0, 1, 2, 3, 4].map(i => <SkeletonCard key={i} style={{ animationDelay: `${i * 0.08}s` }} />)}
           </>
         ) : topics.map((tp, tpIdx) => {
-          const cnt = topicCounts[tp.id] ?? getTopicCount(tp.ranges);
+          // DB-backed subjects: a known section missing from topicCounts means 0 questions.
+          // Static-fallback subjects (no DB counts): use the curriculum range estimate.
+          const cnt = hasDbCounts ? (topicCounts[tp.id] ?? 0) : getTopicCount(tp.ranges);
           const tpHist = subHist.filter(t => t.tp === tp.id);
           const lastSc = tpHist.length ? tpHist[tpHist.length - 1].sc : null;
           const subs = tp.subtopics || [];
