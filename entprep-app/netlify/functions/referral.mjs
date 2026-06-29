@@ -54,7 +54,9 @@ export function normalizeCode(code) {
 export function validateBindCode(code) {
   if (typeof code !== "string") return "Invalid code";
   const c = normalizeCode(code);
-  if (c.length < 4 || c.length > 32) return "Invalid code";
+  // Enforce the code alphabet (A–Z, 0–9) and length, not length alone — mirrors the
+  // frontend CODE_RE so malformed codes are rejected before any DB lookup.
+  if (!/^[A-Z0-9]{4,32}$/.test(c)) return "Invalid code";
   return null;
 }
 
