@@ -1,5 +1,13 @@
 [build]
-  command = "npm run build"
+  # OPS-1: gate the Netlify auto-deploy/build path with predeploy-check so an auto-publish
+  # can never ship the silent-auth-dead bundle (a build made without VITE_SUPABASE_* inlines
+  # nothing → config/supabase.ts = null → auth/sync/leaderboard dead with no error). The gate
+  # reads dist/ only (no creds) and exits 1 if the Supabase host + anon key are missing, which
+  # fails the deploy. The hand-run prod chain in CLAUDE.md uses `netlify deploy --no-build`, so
+  # it does NOT run this command — it runs the full dump-questions/compute-quarantine/build/
+  # predeploy-check chain itself; those data-regen scripts are intentionally NOT added here
+  # because they need build-time DB creds and belong to the explicit CLI deploy, not auto-build.
+  command = "npm run build && node scripts/predeploy-check.mjs"
   publish = "dist"
 
 # Cache Vite build artifacts between deploys
