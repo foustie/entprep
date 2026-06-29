@@ -97,3 +97,38 @@ $$;
 -- authenticated/anon are NOT granted, so a client can't drive the counter directly.
 REVOKE ALL ON FUNCTION public.increment_usage(UUID, TEXT, DATE, INTEGER) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.increment_usage(UUID, TEXT, DATE, INTEGER) TO service_role;
+
+-- ── Cleanup: bound table growth ───────────────────────────────────────────────
+-- usage_limits gains one row per (user, bucket, KZ-day) and is otherwise never deleted,
+-- so it grows without limit. The limiter only ever reads/writes the CURRENT KZ day, so
+-- any row older than a day is dead weight. purge_usage_limits() deletes rows older than
+-- 2 days (a generous margin over the single-day TZ skew), reclaiming space. It is
+-- idempotent (CREATE OR REPLACE) and safe to call any number of times.
+CREATE OR REPLACE FUNCTION public.purge_usage_limits()
+RETURNS void
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  DELETE FROM public.usage_limits WHERE day < (CURRENT_DATE - 2);
+$$;
+
+REVOKE ALL ON FUNCTION public.purge_usage_limits() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.purge_usage_limits() TO service_role;
+
+-- Schedule a daily purge via pg_cron IF that extension is installed (Supabase ships it,
+-- but it may be disabled on a given project). The DO block is guarded and idempotent:
+-- it unschedules any prior job of the same name before (re)scheduling, so re-running this
+-- migration never stacks duplicate cron jobs. If pg_cron is unavailable this is a no-op —
+-- run the purge from an external scheduler instead, e.g. daily:
+--     SELECT public.purge_usage_limits();
+--   (equivalently: DELETE FROM public.usage_limits WHERE day < CURRENT_DATE - 2;)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron') THEN
+    IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'purge_usage_limits') THEN
+      PERFORM cron.unschedule('purge_usage_limits');
+    END IF;
+    PERFORM cron.schedule('purge_usage_limits', '17 0 * * *', 'SELECT public.purge_usage_limits();');
+  END IF;
+END $$;
