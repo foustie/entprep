@@ -8,6 +8,9 @@ import {
   REFERRAL_CAP,
 } from '../referral.mjs';
 import handler from '../referral.mjs';
+// The frontend's deferred-retry decision — exercised here against real backend
+// responses to prove the end-to-end contract (Phase 4 сквозной test).
+import { isReferralResolved } from '../../../src/utils/referralHelpers';
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -359,5 +362,50 @@ describe('referral handler — atomic exactly-once + cap + QUAL (DoD)', () => {
     seedQualified();
     const res = await handler(bindReq('not-a-real-token', 'INVITE7'));
     expect(res.status).toBe(401);
+  });
+
+  // ── Phase 4: end-to-end л, frontend decision ⨉ backend flow ──────────────────
+  // The whole lifecycle: a referee arrives via a link, binds BEFORE doing anything,
+  // earns the referrer nothing; only after a real server-verified test does the
+  // reward fire — exactly once, never doubling on replay. The frontend's
+  // isReferralResolved is checked against each real response to prove it keeps the
+  // pending code until (and clears it exactly when) the backend reaches a terminal state.
+  it('END-TO-END: deferred reward fires once for a real qualified referral, never doubles', async () => {
+    const REF = 'e2e-referrer';
+    const REE = 'e2e-referee';
+    const { db, fetchFake } = makeSupabaseFake({
+      [REE]: newAcct(REE, 'ree@x.kz'),
+      [REF]: newAcct(REF, 'ref@x.kz'),
+    });
+    db.codes.push({ user_id: REF, code: 'E2ECODE' });
+    vi.stubGlobal('fetch', fetchFake);
+
+    // (1) Arrives via link, binds before doing any test → bound, NOT credited.
+    const r1 = await handler(bindReq(REE, 'E2ECODE'));
+    const d1 = await r1.json();
+    expect(r1.status).toBe(200);
+    expect(d1.qualified).toBe(false);
+    expect(db.referrals.find((r) => r.referee_id === REE).credited).toBe(false);
+    expect(db.subscriptions).toHaveLength(0);
+    expect(isReferralResolved(d1, r1.status)).toBe(false); // frontend KEEPS the pending code
+
+    // (2) Referee completes a server-verified test (a leaderboard row appears).
+    db.leaderboard.push({ user_id: REE });
+
+    // (3) A later session re-attempts the bind → referrer credited exactly once (+7d).
+    const r2 = await handler(bindReq(REE, 'E2ECODE'));
+    const d2 = await r2.json();
+    expect(d2.credited).toBe(true);
+    expect(isReferralResolved(d2, r2.status)).toBe(true); // frontend CLEARS the pending code
+    const grantedMs = Date.parse(db.subscriptions.find((s) => s.user_id === REF).expires_at) - Date.now();
+    expect(grantedMs).toBeGreaterThan(6.5 * DAY);
+    expect(grantedMs).toBeLessThan(7.5 * DAY);
+
+    // (4) Any number of replays never double-grant (cap counter stays 1, +7 not +14…).
+    await handler(bindReq(REE, 'E2ECODE'));
+    await handler(bindReq(REE, 'E2ECODE'));
+    expect(db.referralCredits.find((c) => c.referrer_id === REF).credited_count).toBe(1);
+    const finalMs = Date.parse(db.subscriptions.find((s) => s.user_id === REF).expires_at) - Date.now();
+    expect(finalMs).toBeLessThan(7.5 * DAY);
   });
 });
