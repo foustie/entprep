@@ -62,6 +62,27 @@ describe('ai-tutor handler gate', () => {
     expect((await res.json()).error).toContain('Лимит'); // custom tutor daily message
   });
 
+  it('malformed JSON body → 400, durable quota NOT consumed', async () => {
+    const { calls } = mockBackend({ userId: 't-badjson' });
+    const req = new Request('https://entprep.org/api/ai-tutor', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', authorization: 'Bearer test-token' },
+      body: 'not json{',
+    });
+    const res = await handler(req);
+    expect(res.status).toBe(400);
+    expect(calls).not.toContain('quota'); // gate runs AFTER validation now (fix #1)
+    expect(calls).not.toContain('ai');
+  });
+
+  it('empty messages array → 400, durable quota NOT consumed', async () => {
+    const { calls } = mockBackend({ userId: 't-empty' });
+    const res = await handler(makeReq({ messages: [], lang: 'ru' }));
+    expect(res.status).toBe(400);
+    expect(calls).not.toContain('quota');
+    expect(calls).not.toContain('ai');
+  });
+
   it('within limits → 200 with text', async () => {
     const { calls } = mockBackend({ userId: 't-ok' });
     const res = await handler(makeReq());

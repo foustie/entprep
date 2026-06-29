@@ -159,14 +159,9 @@ export default async function handler(req) {
   const burstWait = checkBurst(user.id);
   if (burstWait) return rateLimitResponse(burstWait);
 
-  const isPremium = await checkPremium(user.id);
-  const dailyLimit = isPremium ? TUTOR_PREMIUM_DAILY : TUTOR_FREE_DAILY;
-
-  const { allowed } = await checkDailyLimit(user.id, "tutor", dailyLimit);
-  if (!allowed) return Response.json({
-    error: `Лимит сообщений на сегодня исчерпан. Завтра у тебя будет ещё ${dailyLimit} — ты справишься!`,
-  }, { status: 429, headers: CORS_HEADERS });
-
+  // Parse + validate BEFORE consuming any durable daily unit (mirrors ai-explain): a
+  // malformed-JSON (400), empty-messages (400), or AI-not-configured (500) request must
+  // never burn a user's daily quota.
   let body;
   try { body = await req.json(); } catch {
     return Response.json({ error: "Invalid JSON" }, { status: 400, headers: CORS_HEADERS });
@@ -180,13 +175,18 @@ export default async function handler(req) {
 
   if (!aiConfigured()) return Response.json({ error: "AI not configured" }, { status: 500, headers: CORS_HEADERS });
 
-  // Fetch summary (parallel-safe, cached after first call)
-  const summary = await fetchSummary(subject, topicId, lang);
+  // Premium gate + tier cap are resolved only after validation succeeds.
+  const isPremium = await checkPremium(user.id);
+  const dailyLimit = isPremium ? TUTOR_PREMIUM_DAILY : TUTOR_FREE_DAILY;
+
   // Vision is a premium feature — enforce server-side (camera is client-gated only,
   // so a non-premium user could POST images directly to the expensive vision path).
+  // buildRecentMessages is pure/in-memory, so resolve hasImage before any quota write.
   const { recentMessages, hasImage } = buildRecentMessages(messages, { allowImages: isPremium });
 
-  // Vision-specific daily sub-cap (only image-bearing turns count toward it).
+  // Vision-specific daily sub-cap (only image-bearing turns count toward it). Checked
+  // BEFORE the main "tutor" unit so a request blocked by the vision sub-cap never first
+  // consumes a main daily unit (no double-count).
   if (hasImage) {
     const v = await checkDailyLimit(user.id, "tutor-vision", VISION_DAILY);
     if (!v.allowed) return Response.json({
@@ -195,6 +195,16 @@ export default async function handler(req) {
         : 'Лимит разборов по фото на сегодня исчерпан. Завтра снова!',
     }, { status: 429, headers: CORS_HEADERS });
   }
+
+  // Main durable daily cap (consumes one unit). Only reached once the request is known
+  // to be well-formed, AI is configured, and any vision sub-cap has passed.
+  const { allowed } = await checkDailyLimit(user.id, "tutor", dailyLimit);
+  if (!allowed) return Response.json({
+    error: `Лимит сообщений на сегодня исчерпан. Завтра у тебя будет ещё ${dailyLimit} — ты справишься!`,
+  }, { status: 429, headers: CORS_HEADERS });
+
+  // Fetch summary (parallel-safe, cached after first call) — only after caps pass.
+  const summary = await fetchSummary(subject, topicId, lang);
 
   const systemPrompt = buildSystemPrompt(profile, summary, lang, mode || 'chat')
     + (hasImage ? '\n\nНа фото — задача ученика: прочитай условие с изображения и реши пошагово с числами до финального ответа.' : '');
