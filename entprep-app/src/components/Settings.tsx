@@ -16,6 +16,7 @@ import { setNickname } from '../utils/socialHelpers';
 import { getSubscriptionStatus, cancelSubscription, resumeSubscription, type SubscriptionStatus } from '../utils/subscriptionHelpers';
 import Toggle from './ui/Toggle';
 import ProgressBar from './ui/ProgressBar';
+import InviteFriend from './InviteFriend';
 import { Settings as SettingsIcon, BarChart2, Trash2, Target, Wrench, Trophy, AtSign, Check, Globe, User, BookOpen, Palette, Database, Bell, Shield, Users, GraduationCap, Heart, ExternalLink, Instagram, MessageCircle, Send, Mail, Sun, Moon, CreditCard } from 'lucide-react';
 import { isPushSupported, getPushPermission, subscribeToPush, unsubscribeFromPush, syncPushPrefs } from '../utils/pushHelpers';
 
@@ -328,6 +329,15 @@ export default function Settings() {
             )}
           </div>
         </Section>
+      )}
+
+      {/* ════════ INVITE A FRIEND ════════ */}
+      {/* Referrer's invite surface — requires a signed-in user (the code fetch is
+          authenticated). Self-contained card with its own title/icon. */}
+      {supabase && user && (
+        <div style={{ marginBottom: 22 }}>
+          <InviteFriend />
+        </div>
       )}
 
       {/* ════════ APPEARANCE ════════ */}
