@@ -52,7 +52,9 @@ registerRoute(
   new NetworkFirst({
     cacheName: 'cdn-data',
     networkTimeoutSeconds: 3,
-    plugins: [new ExpirationPlugin({ maxEntries: 30, maxAgeSeconds: 86400 })],
+    // 60 entries: each subject now fetches a small <sid>.meta.json plus its pool/summary
+    // JSON, so a session touches more /data entries than before (was 30).
+    plugins: [new ExpirationPlugin({ maxEntries: 60, maxAgeSeconds: 86400 })],
   })
 );
 
