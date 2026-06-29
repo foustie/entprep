@@ -256,6 +256,15 @@ function clonePool(pool: Question[], lang?: Lang): Question[] {
   });
 }
 
+// reading.<lang>.json (and combined reading.json) is passage-shape — an array of
+// { t, tx, qs:[...] } — not flat question rows. Detect it so the CDN tier consumes it
+// directly instead of running the flat-row normalize (which would hit cleanOptions(row.o)
+// with row.o === undefined → TypeError → reading silently dropped to Supabase, PERF-2 win
+// lost for reading). Mirrors isPassageShape in scripts/utils/lang-split.mjs.
+function isPassageArray(x: unknown): x is (Passage & { t_kk?: string; tx_kk?: string })[] {
+  return Array.isArray(x) && x.length > 0 && Array.isArray((x[0] as { qs?: unknown })?.qs);
+}
+
 async function getPool(sid: string, lang?: Lang): Promise<Question[]> {
   await loadQuarantine();
   // PERF-2: the CDN serves language-split files, so the cache key is per (subject, language).
@@ -300,7 +309,9 @@ async function getPool(sid: string, lang?: Lang): Promise<Question[]> {
           }));
           if (rows.length > 0) {
             if (sid === 'reading') {
-              const passages = buildPassagesFromRows(rows);
+              // reading.<lang>.json is passage-shape — consume it directly. Flat rows
+              // (Supabase-shaped, e.g. test mocks) still go via buildPassagesFromRows.
+              const passages = isPassageArray(rawRows) ? rawRows : buildPassagesFromRows(rows);
               passageCache[langKey] = passages;
               const flat: Question[] = [];
               passages.forEach((p, pi) => {

@@ -1,6 +1,10 @@
-#!/usr/bin/env node
 /**
  * PERF-2 — language split for the dumped question JSON.
+ *
+ * NOTE: no `#!/usr/bin/env node` shebang — this module is only ever IMPORTED
+ * (dump-questions.mjs, split-lang.mjs, the vitest regression). With a shebang it is
+ * checked out CRLF by git on Windows and esbuild/vitest then chokes on `#!...\r`
+ * (`SyntaxError: Invalid or unexpected token`), silently disabling the invariant tests.
  *
  * SINGLE SOURCE OF TRUTH for turning a combined `<sid>.json` (RU + KK inline) into
  * two language-self-contained files:
