@@ -477,10 +477,6 @@ async function prefetchCounts(): Promise<boolean> {
   return false;
 }
 
-async function prefetchSubjects(sids: string[]): Promise<void> {
-  await Promise.all(sids.map(sid => getPool(sid)));
-}
-
 async function resolveQuestion(sid: string, idx: number, lang?: Lang): Promise<Question | null> {
   const pool = await getPool(sid, lang);
   if (sid === 'reading') {
@@ -491,4 +487,4 @@ async function resolveQuestion(sid: string, idx: number, lang?: Lang): Promise<Q
   return found ? { ...found, o: [...found.o] } : null;
 }
 
-export { getPool, getPassages, getPoolSize, getTotalQ, prefetchCounts, prefetchSubjects, resolveQuestion };
+export { getPool, getPassages, getPoolSize, getTotalQ, prefetchCounts, resolveQuestion };

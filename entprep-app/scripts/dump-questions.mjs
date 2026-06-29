@@ -11,6 +11,7 @@ import { writeFileSync, mkdirSync, existsSync, readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { splitData } from './utils/lang-split.mjs';
+import { writeAllMeta } from './utils/meta.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -169,6 +170,14 @@ async function main() {
 
   // Write manifest
   writeFileSync(join(OUT_DIR, 'manifest.json'), JSON.stringify(manifest, null, 2));
+
+  // PERF-1: emit tiny <sid>.meta.json (post-quarantine counts) so SubjectDetail can show
+  // topic/subtopic counts on mount without downloading the full pool. NOTE: this uses the
+  // quarantine.json present now; the deploy chain runs compute-quarantine.mjs AFTER this,
+  // so for fully-consistent counts re-run `node scripts/gen-meta.mjs` after compute-quarantine.
+  const metaReport = writeAllMeta(OUT_DIR);
+  const maxMetaKb = (Math.max(...metaReport.map(m => m.bytes)) / 1024).toFixed(2);
+  console.log(`  meta: ${metaReport.length} <sid>.meta.json written (max ${maxMetaKb} KB)`);
 
   const total = Object.values(manifest).reduce((s, n) => s + n, 0);
   console.log(`\nDone! ${total} total questions in ${Object.keys(manifest).length} files.`);

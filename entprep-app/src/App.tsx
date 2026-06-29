@@ -1,6 +1,6 @@
 import React, { Suspense, useEffect, useRef, useState } from "react";
 import { TOTAL_Q } from './config/questionPools';
-import { prefetchCounts, getTotalQ, prefetchSubjects } from './utils/questionStore';
+import { prefetchCounts, getTotalQ } from './utils/questionStore';
 import { GLOBAL_STYLES, LAYOUT, COLORS, FF } from './constants/styles';
 import { LIGHT, DARK, themeToCss } from './constants/themes';
 import { SCREENS } from './constants/screens';
@@ -144,20 +144,13 @@ function AppContent() {
 
   const [totalQ, setTotalQ] = useState(TOTAL_Q);
   useEffect(() => {
+    // Counts-only prefetch (cheap COUNT(*), no pool download) — powers the question-total display.
     prefetchCounts().then(ok => { if (ok) setTotalQ(getTotalQ()); });
-    // Background prefetch ENT subjects so Full ENT loads instantly. Each subject pool is
-    // multi-MB, so skip the eager fetch on data-saver / slow connections — hauling ~12MB+
-    // for a visitor who may never start a test is wasteful there (PERF-3). On-demand getPool
-    // still fires when a test actually starts; unsupported browsers (no Network Info API,
-    // e.g. Safari) keep the previous behaviour.
-    const conn = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
-    if (conn && (conn.saveData === true || conn.effectiveType === '2g' || conn.effectiveType === 'slow-2g')) return;
-    const t1 = setTimeout(() => prefetchSubjects(['math', 'reading', 'history']), 1000);
-    const t2 = setTimeout(() => {
-      const profileSubs = JSON.parse(localStorage.getItem('entprep_profile') || '[]');
-      if (profileSubs.length > 0) prefetchSubjects(profileSubs);
-    }, 3000);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
+    // PERF-1/PERF-3: no eager subject-pool prefetch on app mount. A visitor who only browses
+    // the home screen now pulls 0 multi-MB pools. Full-ENT warms its own pools when its screen
+    // mounts (FullENT getQs / assembleProfileSection); regular tests load the pool on Start;
+    // SubjectDetail shows counts from the tiny <sid>.meta.json. This replaces the previous
+    // connection-gated background prefetch of math/reading/history (+ profile subjects).
   }, []);
 
   // Persist UTM params for users who haven't signed in yet

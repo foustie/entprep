@@ -46,7 +46,11 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
   useEffect(() => {
     if (!topics) return;
     setPoolLoading(true);
-    getPool(sid).then((pool: Question[]) => {
+    let cancelled = false;
+
+    // Counts derived from the full pool — the previous (pre-meta) behaviour, kept as the
+    // fallback when the tiny meta file is unavailable.
+    const fromPool = (pool: Question[]) => {
       setPoolSize(pool.length);
       const hasDbTopics = pool.some(q => q._topic);
       if (hasDbTopics) {
@@ -56,20 +60,52 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
         }
         setTopicCounts(counts);
       }
-      // Subtopic counts — single pass
       const hasStp = pool.some(q => q._subtopic);
       setHasSubtopics(hasStp);
       if (hasStp) {
         const stCounts: Record<string, number> = {};
         for (const q of pool) {
-          if (q._subtopic) {
-            stCounts[q._subtopic] = (stCounts[q._subtopic] || 0) + 1;
-          }
+          if (q._subtopic) stCounts[q._subtopic] = (stCounts[q._subtopic] || 0) + 1;
         }
         setSubtopicCounts(stCounts);
       }
       setPoolLoading(false);
-    }).catch(err => { captureError(err, { context: 'SubjectDetail.getPool', sid }); setPoolLoading(false); });
+    };
+
+    // PERF-1: read the tiny <sid>.meta.json (post-quarantine counts) instead of downloading
+    // and parsing the entire multi-MB subject pool just to render topic counts + Start. The
+    // full pool is fetched lazily only when a test actually starts (getQs / assembleProfileSection).
+    const cdnSid = sid === 'literature' ? 'literature_russian' : sid;
+    (async () => {
+      try {
+        const resp = await fetch(`/data/${cdnSid}.meta.json`);
+        if (!resp.ok) throw new Error(`meta ${resp.status}`);
+        const meta: {
+          total: number; hasSubtopics: boolean;
+          topicCounts: Record<string, number>; subtopicCounts: Record<string, number>;
+        } = await resp.json();
+        if (cancelled) return;
+        setPoolSize(meta.total);
+        setTopicCounts(meta.topicCounts || {});
+        setHasSubtopics(!!meta.hasSubtopics);
+        setSubtopicCounts(meta.subtopicCounts || {});
+        setPoolLoading(false);
+      } catch (err) {
+        // Meta missing/unreadable → fall back to deriving counts from the full pool.
+        captureError(err, { context: 'SubjectDetail.meta', sid });
+        try {
+          const pool = await getPool(sid);
+          if (cancelled) return;
+          fromPool(pool);
+        } catch (err2) {
+          if (cancelled) return;
+          captureError(err2, { context: 'SubjectDetail.getPool', sid });
+          setPoolLoading(false);
+        }
+      }
+    })();
+
+    return () => { cancelled = true; };
   }, [sid, topics]);
 
   const startExam = async () => {
