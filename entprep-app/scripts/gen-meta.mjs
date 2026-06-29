@@ -19,7 +19,7 @@
  */
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
-import { writeAllMeta, loadQuarantineBySid, computeMeta } from './utils/meta.mjs';
+import { writeAllMeta, loadQuarantineBySid, computeMeta, isCombinedSubjectFile } from './utils/meta.mjs';
 import { readFileSync, readdirSync } from 'fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -31,9 +31,7 @@ const kb = (n) => (n / 1024).toFixed(2).padStart(7) + ' KB';
 if (DRY_RUN) {
   // Compute + report without writing.
   const quar = loadQuarantineBySid(DATA_DIR);
-  const files = readdirSync(DATA_DIR).filter(f =>
-    f.endsWith('.json') && f !== 'manifest.json' && f !== 'quarantine.json'
-    && !f.endsWith('.ru.json') && !f.endsWith('.kk.json') && !f.endsWith('.meta.json')).sort();
+  const files = readdirSync(DATA_DIR).filter(isCombinedSubjectFile).sort();
   let max = 0;
   console.log(`${'subject'.padEnd(22)} ${'meta'.padStart(10)}  total`);
   for (const f of files) {

@@ -60,7 +60,8 @@ export function loadQuarantineBySid(dataDir) {
 }
 
 const SKIP = new Set(['manifest.json', 'quarantine.json']);
-function isCombinedSubjectFile(f) {
+/** True for a combined per-subject data file (skips manifest, quarantine, lang splits, meta). */
+export function isCombinedSubjectFile(f) {
   return f.endsWith('.json') && !SKIP.has(f)
     && !f.endsWith('.ru.json') && !f.endsWith('.kk.json') && !f.endsWith('.meta.json');
 }
