@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * Shared detection logic for I18N-1 — Kazakh answer-index mismatch.
  *
@@ -9,6 +8,8 @@
  *   - scripts/__tests__/kk-index.test.ts (vitest regression test)
  *
  * Do NOT duplicate this logic anywhere — import from here.
+ * No shebang — this module is imported, never executed directly (a shebang makes
+ * vitest fail to parse it; same fix applied to lang-split.mjs / meta.mjs).
  */
 import fs from 'fs';
 import path from 'path';
