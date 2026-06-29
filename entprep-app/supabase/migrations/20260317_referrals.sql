@@ -113,7 +113,8 @@ DECLARE
   v_count int;
   v_until timestamptz;
 BEGIN
-  IF p_days IS NULL OR p_days <= 0 OR p_days > 31 OR p_cap IS NULL OR p_cap <= 0 THEN
+  IF p_days IS NULL OR p_days <= 0 OR p_days > 31
+     OR p_cap IS NULL OR p_cap <= 0 OR p_cap > 1000 THEN
     RAISE EXCEPTION 'grant_referral_reward: invalid args (days=%, cap=%)', p_days, p_cap;
   END IF;
 
@@ -181,6 +182,8 @@ BEGIN
     SELECT 1 FROM information_schema.tables
     WHERE table_schema = 'public' AND table_name = 'leaderboard'
   ) THEN
-    EXECUTE 'REVOKE INSERT, UPDATE, DELETE ON public.leaderboard FROM anon, authenticated';
+    -- FROM PUBLIC too: anon/authenticated inherit PUBLIC grants, so revoking only
+    -- the named roles would leave a PUBLIC INSERT grant as a bypass.
+    EXECUTE 'REVOKE INSERT, UPDATE, DELETE ON public.leaderboard FROM PUBLIC, anon, authenticated';
   END IF;
 END $$;
