@@ -94,8 +94,11 @@ END;
 $$;
 
 -- Only service_role may execute the RPC (the functions call it with the service key).
--- authenticated/anon are NOT granted, so a client can't drive the counter directly.
-REVOKE ALL ON FUNCTION public.increment_usage(UUID, TEXT, DATE, INTEGER) FROM PUBLIC;
+-- IMPORTANT: Supabase's default privileges grant EXECUTE on new functions DIRECTLY to
+-- anon/authenticated (not only via PUBLIC), so revoking PUBLIC alone is not enough —
+-- verified live 2026-07-02: with only "FROM PUBLIC" the anon key could still call the
+-- RPC and drive counters. Revoke the direct grants too.
+REVOKE ALL ON FUNCTION public.increment_usage(UUID, TEXT, DATE, INTEGER) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.increment_usage(UUID, TEXT, DATE, INTEGER) TO service_role;
 
 -- ── Cleanup: bound table growth ───────────────────────────────────────────────
@@ -113,7 +116,7 @@ AS $$
   DELETE FROM public.usage_limits WHERE day < (CURRENT_DATE - 2);
 $$;
 
-REVOKE ALL ON FUNCTION public.purge_usage_limits() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.purge_usage_limits() FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.purge_usage_limits() TO service_role;
 
 -- Schedule a daily purge via pg_cron IF that extension is installed (Supabase ships it,
