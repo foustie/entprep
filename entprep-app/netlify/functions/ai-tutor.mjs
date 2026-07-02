@@ -1,7 +1,7 @@
 // AI Tutor: Socratic method, personalized, caring, RAG-powered
 // Streaming response for fast UX
 
-import { CORS_HEADERS, corsResponse, verifyAuth, createRateLimiter, checkPremium } from "./utils/shared.mjs";
+import { CORS_HEADERS, corsResponse, verifyAuth, createRateLimiter, rateLimitResponse, checkDailyLimit, checkPremium } from "./utils/shared.mjs";
 import { callAI, aiConfigured, buildAIRequest } from "./utils/ai.mjs";
 import { sanitizeMath } from "./utils/text.mjs";
 
@@ -10,14 +10,22 @@ import { sanitizeMath } from "./utils/text.mjs";
 const TUTOR_FREE_DAILY = 10;
 const TUTOR_PREMIUM_DAILY = 50;
 
-// Single shared bucket — tier cap is applied per-request via maxOverride.
-// This prevents free→premium (or premium→free) transitions mid-window from resetting the counter.
-const checkRate = createRateLimiter("tutor", { max: TUTOR_PREMIUM_DAILY, windowSec: 86400 });
+// PAY-8/OPS-7: the daily caps are DURABLE (usage_limits table via checkDailyLimit), so
+// they hold across Netlify instances and cold starts instead of multiplying per-instance.
+// A single shared "tutor" bucket carries the per-request tier cap (free 10 / premium 50),
+// so a free→premium (or premium→free) transition mid-day keeps the same counter.
 
 // Vision turns cost ~10x a text turn — a separate daily sub-cap (premium-only) on
 // top of the text cap bounds image spend. Counts only image-bearing requests.
 const VISION_DAILY = 20;
-const checkVisionRate = createRateLimiter("tutor-vision", { max: VISION_DAILY, windowSec: 86400 });
+
+// S4-R1 defense-in-depth: a cheap in-memory per-minute burst backstop. The durable daily
+// cap (checkDailyLimit) fails OPEN on a Supabase outage, and — unlike explain/focus — the
+// tutor has no other in-mem limiter, so an outage would leave its (vision-capable, most
+// expensive) AI spend unbounded. A generous 20/min ceiling is invisible to real users (the
+// client blocks overlapping sends) but bounds runaway abuse. Per-instance is fine for a
+// backstop; the durable store is the real monetization cap.
+const checkBurst = createRateLimiter("tutor-burst", { max: 20, windowSec: 60 });
 
 const SITE_URL = process.env.URL || "https://entprep.org";
 const summaryCache = new Map();
@@ -147,14 +155,13 @@ export default async function handler(req) {
   const user = await verifyAuth(req);
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401, headers: CORS_HEADERS });
 
-  const isPremium = await checkPremium(user.id);
-  const dailyLimit = isPremium ? TUTOR_PREMIUM_DAILY : TUTOR_FREE_DAILY;
+  // S4-R1 burst backstop (per-minute, in-memory) — outage/abuse floor for AI spend.
+  const burstWait = checkBurst(user.id);
+  if (burstWait) return rateLimitResponse(burstWait);
 
-  const retryAfter = checkRate(user.id, dailyLimit);
-  if (retryAfter) return Response.json({
-    error: `Лимит сообщений на сегодня исчерпан. Завтра у тебя будет ещё ${dailyLimit} — ты справишься!`,
-  }, { status: 429, headers: CORS_HEADERS });
-
+  // Parse + validate BEFORE consuming any durable daily unit (mirrors ai-explain): a
+  // malformed-JSON (400), empty-messages (400), or AI-not-configured (500) request must
+  // never burn a user's daily quota.
   let body;
   try { body = await req.json(); } catch {
     return Response.json({ error: "Invalid JSON" }, { status: 400, headers: CORS_HEADERS });
@@ -168,21 +175,36 @@ export default async function handler(req) {
 
   if (!aiConfigured()) return Response.json({ error: "AI not configured" }, { status: 500, headers: CORS_HEADERS });
 
-  // Fetch summary (parallel-safe, cached after first call)
-  const summary = await fetchSummary(subject, topicId, lang);
+  // Premium gate + tier cap are resolved only after validation succeeds.
+  const isPremium = await checkPremium(user.id);
+  const dailyLimit = isPremium ? TUTOR_PREMIUM_DAILY : TUTOR_FREE_DAILY;
+
   // Vision is a premium feature — enforce server-side (camera is client-gated only,
   // so a non-premium user could POST images directly to the expensive vision path).
+  // buildRecentMessages is pure/in-memory, so resolve hasImage before any quota write.
   const { recentMessages, hasImage } = buildRecentMessages(messages, { allowImages: isPremium });
 
-  // Vision-specific daily sub-cap (only image-bearing turns count toward it).
+  // Vision-specific daily sub-cap (only image-bearing turns count toward it). Checked
+  // BEFORE the main "tutor" unit so a request blocked by the vision sub-cap never first
+  // consumes a main daily unit (no double-count).
   if (hasImage) {
-    const vRetry = checkVisionRate(user.id);
-    if (vRetry) return Response.json({
+    const v = await checkDailyLimit(user.id, "tutor-vision", VISION_DAILY);
+    if (!v.allowed) return Response.json({
       error: lang === 'kk'
         ? 'Бүгінге сурет бойынша талдау лимиті бітті. Ертең қайтадан!'
         : 'Лимит разборов по фото на сегодня исчерпан. Завтра снова!',
     }, { status: 429, headers: CORS_HEADERS });
   }
+
+  // Main durable daily cap (consumes one unit). Only reached once the request is known
+  // to be well-formed, AI is configured, and any vision sub-cap has passed.
+  const { allowed } = await checkDailyLimit(user.id, "tutor", dailyLimit);
+  if (!allowed) return Response.json({
+    error: `Лимит сообщений на сегодня исчерпан. Завтра у тебя будет ещё ${dailyLimit} — ты справишься!`,
+  }, { status: 429, headers: CORS_HEADERS });
+
+  // Fetch summary (parallel-safe, cached after first call) — only after caps pass.
+  const summary = await fetchSummary(subject, topicId, lang);
 
   const systemPrompt = buildSystemPrompt(profile, summary, lang, mode || 'chat')
     + (hasImage ? '\n\nНа фото — задача ученика: прочитай условие с изображения и реши пошагово с числами до финального ответа.' : '');

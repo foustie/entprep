@@ -1,10 +1,19 @@
-import { corsResponse, CORS_HEADERS, verifyAuth, createRateLimiter, rateLimitResponse, validateExplain, checkPremium } from "./utils/shared.mjs";
+import { corsResponse, CORS_HEADERS, verifyAuth, createRateLimiter, rateLimitResponse, validateExplain, checkPremium, checkDailyLimit, dailyLimitResponse } from "./utils/shared.mjs";
 import { callAI, aiConfigured } from "./utils/ai.mjs";
 import { getContext } from "./utils/rag.mjs";
 import { STEM_SUBJECTS, getTemperature, getSTEMPrefix } from "./utils/constants.mjs";
 import { parseLooseJson, sanitizeMath } from "./utils/text.mjs";
 
+// Per-minute burst guard (in-memory, best-effort — OPS-7). Distinct from the durable
+// daily free quota below.
 const checkRate = createRateLimiter("explain", { max: 30, windowSec: 60 });
+
+// PAY-9: free users get DAILY_EXPLAIN_FREE AI explanations/day, enforced SERVER-SIDE on the
+// durable usage_limits store. The client cap in src/utils/aiLimits.ts (also 2/day) is
+// bypassable by clearing localStorage; this closes that bypass at strict PARITY — an honest
+// free user sees no change, only the bypass is blocked. Premium users are uncapped.
+// Orchestrator-ratified (PAY-9 default, _ORCHESTRATOR.md).
+const DAILY_EXPLAIN_FREE = 2;
 
 export default async function handler(req) {
   if (req.method === "OPTIONS") return corsResponse();
@@ -14,9 +23,10 @@ export default async function handler(req) {
   const user = await verifyAuth(req);
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401, headers: CORS_HEADERS });
 
-  // AI explanations now free for all authenticated users (rate-limited below)
+  // Premium gate is applied after validation (see DAILY_EXPLAIN_FREE below) so a
+  // malformed request never consumes a quota unit.
 
-  // Rate limit
+  // Rate limit (per-minute burst)
   const retryAfter = checkRate(user.id);
   if (retryAfter) return rateLimitResponse(retryAfter);
 
@@ -31,6 +41,23 @@ export default async function handler(req) {
 
   // AI provider key (OpenRouter by default — see utils/ai.mjs)
   if (!aiConfigured()) return Response.json({ error: "AI not configured" }, { status: 500, headers: CORS_HEADERS });
+
+  // PAY-9 server gate: free users are capped at DAILY_EXPLAIN_FREE/day on the durable
+  // store (premium uncapped). Checked AFTER aiConfigured so a server-side AI outage never
+  // burns a user's quota. checkDailyLimit consumes one unit atomically and fails OPEN on a
+  // DB hiccup (never blocks a paying user). 402 = free daily allowance used up.
+  const isPremium = await checkPremium(user.id);
+  if (!isPremium) {
+    const { allowed } = await checkDailyLimit(user.id, "explain", DAILY_EXPLAIN_FREE);
+    if (!allowed) {
+      return dailyLimitResponse(
+        lang === "kk"
+          ? "Бүгінге тегін AI-түсіндірмелер бітті. Жалғастыру үшін Premium қажет."
+          : "Бесплатные AI-объяснения на сегодня закончились. Оформи Premium, чтобы продолжить.",
+        402,
+      );
+    }
+  }
 
   // RAG: fetch textbook context for supported subjects
   const ragContext = subject ? await getContext(subject, question).catch(() => null) : null;

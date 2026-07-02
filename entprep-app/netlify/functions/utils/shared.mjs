@@ -81,6 +81,86 @@ export function rateLimitResponse(retryAfter) {
   );
 }
 
+// ── Durable daily usage limiter (Supabase-backed) ───────────────────────────
+// PAY-8 / OPS-7: the in-memory createRateLimiter above is per-instance and resets on
+// cold start, so it cannot enforce a DAILY monetization cap across Netlify's
+// horizontally-scaled functions (a free user spread over N warm instances got N x the
+// cap, and any cold start reset it to 0). This counter lives in the usage_limits table
+// (service-key writes, RLS service-role-only) and is incremented ATOMICALLY by the
+// increment_usage RPC (migration 20260629_usage_limits.sql), so the cap holds across
+// all instances and cold starts. Keep createRateLimiter for short-window (per-minute)
+// BURST protection only, where a per-instance best-effort ceiling is acceptable.
+
+// KZ-local calendar day (Asia/Almaty) as YYYY-MM-DD. Uses Intl so it is correct
+// regardless of the server's TZ — same convention as push-cron.mjs's KZ clock — and
+// lines up with the client's local-day reset in src/utils/aiLimits.ts.
+export function kzDay(now = new Date()) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Almaty",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+}
+
+// Atomically consume one unit of a user's daily quota for `bucket`, capped at `max`.
+// Returns { allowed, count }: allowed=false means the cap was already reached (NOTHING
+// consumed — the RPC only increments when it lets you through). The increment happens
+// at the gate (before the AI call), matching ai-tutor, so a later AI failure still
+// costs one unit (no refund path — avoids a second non-atomic write).
+//
+// FAIL-OPEN on any infrastructure error (RPC down / network / unconfigured env): a
+// paying user must never be blocked because the DB hiccuped. Where an endpoint keeps a
+// per-minute in-memory limiter (ai-explain / study-plan-focus / ai-generate) that stays
+// the abuse floor during such an outage; ai-tutor adds a dedicated in-mem burst backstop
+// for the same reason (it has no other in-mem cap). `degraded:true` marks a fail-open
+// allow so callers and logs can tell it from a real allow.
+export async function checkDailyLimit(userId, bucket, max, { day = kzDay() } = {}) {
+  if (!process.env.VITE_SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
+    // Misconfiguration (no env), not a runtime outage — fail open silently.
+    return { allowed: true, count: 0, degraded: true };
+  }
+  try {
+    const res = await fetch(`${process.env.VITE_SUPABASE_URL}/rest/v1/rpc/increment_usage`, {
+      method: "POST",
+      headers: {
+        apikey: process.env.SUPABASE_SERVICE_KEY,
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ p_user_id: userId, p_bucket: bucket, p_day: day, p_max: max }),
+    });
+    if (!res.ok) return degradedAllow(bucket, `RPC HTTP ${res.status}`); // fail-open
+
+    // A scalar `RETURNS integer` RPC comes back as a bare number; be tolerant of the
+    // array / {increment_usage} shapes other PostgREST versions can emit.
+    let val = await res.json();
+    if (Array.isArray(val)) val = val[0];
+    if (val && typeof val === "object") val = val.increment_usage;
+    const newCount = typeof val === "number" ? val : Number(val);
+    if (!Number.isFinite(newCount)) return degradedAllow(bucket, "non-numeric RPC response"); // fail-open
+    if (newCount === -1) return { allowed: false, count: max }; // cap reached, nothing consumed
+    return { allowed: true, count: newCount };
+  } catch (err) {
+    return degradedAllow(bucket, `fetch threw: ${err?.message || err}`); // fail-open
+  }
+}
+
+// A fail-open ALLOW caused by a Supabase RUNTIME error (RPC down / network / bad shape)
+// means the durable daily cap is NOT being enforced for this request. Log a warning so
+// the outage — and the unbounded-spend window it opens — is observable in function logs,
+// instead of silently letting every request through.
+function degradedAllow(bucket, reason) {
+  console.warn(`[checkDailyLimit] degraded fail-open: daily cap for "${bucket}" NOT enforced (${reason})`);
+  return { allowed: true, count: 0, degraded: true };
+}
+
+// 402 Payment Required — a free user hit their daily allowance on a premium endpoint
+// (distinct from 429, which is the per-minute burst limit). The message is user-facing.
+export function dailyLimitResponse(message, status = 402) {
+  return Response.json({ error: message }, { status, headers: CORS_HEADERS });
+}
+
 // ── Validation ──────────────────────────────────────────────────────────────
 
 // VALID_SUBJECTS imported from ./constants.mjs
@@ -139,7 +219,9 @@ export function validatePlan(body) {
 
 // ── Premium check (subscriptions table) ─────────────────────────────────────
 // Authoritative server-side premium check. Queries the subscriptions table
-// (only service_role can write). Falls back to user_metadata if table missing.
+// (only service_role can write). Fails CLOSED (returns false) on any error or missing
+// table — there is NO user_metadata fallback (PAY-3 dropped it), so a client can't grant
+// itself premium via metadata it controls.
 
 export async function checkPremium(userId) {
   try {

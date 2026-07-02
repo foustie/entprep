@@ -1,14 +1,30 @@
 name: CI
 
+# Single source of truth for CI (OPS-3). The previous second workflow
+# (entprep-app/.github/workflows/ci.yml) triggered only on [main] — never the default
+# branch `master` — and ran with no working-directory, so `npm ci` failed at the repo
+# root where there is no package.json. It is removed in this change. This workflow runs
+# the SAME invariants the prod deploy chain enforces (typecheck, lint, test, build,
+# predeploy-check), so a green CI actually means a deployable, auth-alive bundle (OPS-1):
+# without the VITE_SUPABASE_* secrets the build still succeeds but produces the
+# silent-auth-dead bundle, and predeploy-check then fails the run.
+#
+# Required GitHub repo secrets (Settings → Secrets and variables → Actions):
+#   VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY  (mandatory — predeploy-check asserts them)
+#   VITE_RC_API_KEY_APPLE                       (optional — iOS paywall key)
+
 on:
   push:
-    branches: [main, master]
+    branches: [master]
   pull_request:
-    branches: [main, master]
+    branches: [master]
 
 jobs:
-  build:
+  verify:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: entprep-app
     steps:
       - uses: actions/checkout@v4
 
@@ -19,11 +35,26 @@ jobs:
           cache-dependency-path: entprep-app/package-lock.json
 
       - name: Install dependencies
-        working-directory: entprep-app
         run: npm ci
 
-      - name: Build
-        working-directory: entprep-app
-        run: npm run build
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      # Build and the predeploy gate share ONE step so they see the SAME env: the gate
+      # asserts the just-built bundle actually inlined the Supabase URL + anon key (and, if
+      # set, the RC key). With those secrets absent the build still succeeds but ships the
+      # silent-auth-dead bundle (config/supabase.ts → null); predeploy-check then exits 1
+      # and FAILS CI — exactly the OPS-1 guarantee.
+      - name: Build + predeploy gate
+        run: npm run build && node scripts/predeploy-check.mjs
         env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_RC_API_KEY_APPLE: ${{ secrets.VITE_RC_API_KEY_APPLE }}
           NODE_OPTIONS: --max-old-space-size=4096
