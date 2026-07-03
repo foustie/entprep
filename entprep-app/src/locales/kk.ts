@@ -405,6 +405,7 @@ const kk: Translations = {
     textsCount: 'мәтін',
     unisFormat: 'ЖОО • ҰБТ форматы 2025/2026 • 140 балл макс.',
     privacy: 'Құпиялылық саясаты',
+    offer: 'Жария оферта',
     signOutConfirm: 'Аккаунттан шығу?',
     signOutConfirmDesc: 'Деректер жергілікті сақталған, бірақ синхрондау тоқтайды.',
     resetProfileConfirm: 'Бейіндік пәндерді қалпына келтіру?',

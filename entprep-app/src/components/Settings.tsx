@@ -714,6 +714,9 @@ export default function Settings() {
           <a href="/terms.html" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'var(--text-muted)', textDecoration: 'none' }}>
             <Shield size={10} /> {t.settings.terms}
           </a>
+          <a href="/offer.html" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'var(--text-muted)', textDecoration: 'none' }}>
+            <Shield size={10} /> {t.settings.offer}
+          </a>
         </div>
       </div>
     </div>
