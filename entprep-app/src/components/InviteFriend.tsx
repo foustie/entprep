@@ -1,15 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Copy, Check, Send, Gift } from 'lucide-react';
+import { Copy, Check, Send } from 'lucide-react';
 import { useT } from '../locales';
-import { COLORS, SP, R, FS, FF, TYPE, CARD_HERO, BUTTON } from '../constants/styles';
+import { COLORS, SP, R, FS, FF, TYPE, BUTTON } from '../constants/styles';
 import { getReferralCode, buildReferralLink } from '../utils/referralHelpers';
 import { shareToWhatsApp, shareToTelegram, copyText } from '../utils/shareHelpers';
 
 /**
- * "Invite a friend" card — the referrer's surface to fetch their referral code and
- * share the link. Isolated and self-contained: it is NOT wired into App.tsx routing
- * here (the integration session mounts it). All strings go through useT() (ru + kk)
- * and every value comes from a design token.
+ * "Invite a friend" — the referrer's surface to fetch their referral code and share
+ * the link. Renders as the CONTENT of a standard Settings `Section` (the parent
+ * provides the mono section label + full-width bordered box, like every other
+ * Settings section) — no card chrome of its own. All strings go through useT()
+ * (ru + kk) and every value comes from a design token.
  */
 export default function InviteFriend() {
   const t = useT();
@@ -49,25 +50,8 @@ export default function InviteFriend() {
   };
 
   return (
-    <div style={{ ...CARD_HERO, maxWidth: 480, margin: '0 auto' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: SP.sm, marginBottom: SP.sm }}>
-        <span
-          aria-hidden
-          style={{
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            width: 36, height: 36, borderRadius: R.md,
-            background: COLORS.xpSoft, border: '2px solid var(--ink)', color: 'var(--ink)',
-          }}
-        >
-          <Gift size={18} />
-        </span>
-        <div>
-          <div style={{ ...TYPE.eyebrow }}>ENTprep</div>
-          <h2 style={{ ...TYPE.h2 }}>{t.settings.inviteFriend}</h2>
-        </div>
-      </div>
-
-      <p style={{ ...TYPE.bodySmall, marginBottom: SP.lg }}>{t.settings.inviteFriendDesc}</p>
+    <div style={{ padding: '14px 16px' }}>
+      <p style={{ ...TYPE.bodySmall, margin: `0 0 ${SP.md}px` }}>{t.settings.inviteFriendDesc}</p>
 
       {failed ? (
         <p style={{ ...TYPE.bodySmall, color: COLORS.redText }}>{t.settings.inviteError}</p>

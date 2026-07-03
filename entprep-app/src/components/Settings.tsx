@@ -17,7 +17,7 @@ import { getSubscriptionStatus, cancelSubscription, resumeSubscription, type Sub
 import Toggle from './ui/Toggle';
 import ProgressBar from './ui/ProgressBar';
 import InviteFriend from './InviteFriend';
-import { Settings as SettingsIcon, BarChart2, Trash2, Target, Wrench, Trophy, AtSign, Check, Globe, User, BookOpen, Palette, Database, Bell, Shield, Users, GraduationCap, Heart, ExternalLink, Instagram, MessageCircle, Send, Mail, Sun, Moon, CreditCard } from 'lucide-react';
+import { Settings as SettingsIcon, BarChart2, Trash2, Target, Wrench, Trophy, AtSign, Check, Globe, User, BookOpen, Palette, Database, Bell, Shield, Users, GraduationCap, Heart, ExternalLink, Instagram, MessageCircle, Send, Mail, Sun, Moon, CreditCard, Gift } from 'lucide-react';
 import { isPushSupported, getPushPermission, subscribeToPush, unsubscribeFromPush, syncPushPrefs } from '../utils/pushHelpers';
 
 /* ─── Section wrapper — v2 ink-bordered card ─── */
@@ -333,11 +333,11 @@ export default function Settings() {
 
       {/* ════════ INVITE A FRIEND ════════ */}
       {/* Referrer's invite surface — requires a signed-in user (the code fetch is
-          authenticated). Self-contained card with its own title/icon. */}
+          authenticated). Rendered as a standard Section like every other block here. */}
       {supabase && user && (
-        <div style={{ marginBottom: 22 }}>
+        <Section icon={<Gift size={11} />} label={t.settings.inviteFriend}>
           <InviteFriend />
-        </div>
+        </Section>
       )}
 
       {/* ════════ APPEARANCE ════════ */}
