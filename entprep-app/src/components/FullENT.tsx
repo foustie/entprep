@@ -692,10 +692,11 @@ export default function FullENT({ finish }: FullENTProps) {
       <div key={`qblock-${curSec}-${curQ}`}>
       {isR && <div style={{ ...CARD_COMPACT, background: "rgba(255,90,54,0.06)", border: "1px solid rgba(255,90,54,0.18)", padding: passageOpen ? "12px 14px" : "8px 14px", marginBottom: 12, position: "sticky", top: 0, zIndex: 10, maxHeight: passageOpen ? "40vh" : "auto", overflowY: passageOpen ? "auto" : "hidden", transition: "all 0.2s" }}>
         <button onClick={() => setPassageOpen(p => !p)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer" }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.teal, display: "flex", alignItems: "center", gap: 4 }}><BookOpen size={12} />{q!.pt}</div>
+          <div style={{ fontSize: FS.md, fontWeight: 600, color: COLORS.teal, display: "flex", alignItems: "center", gap: 4 }}><BookOpen size={13} />{q!.pt}</div>
           {passageOpen ? <ChevronUp size={14} color={COLORS.teal} /> : <ChevronDown size={14} color={COLORS.teal} />}
         </button>
-        {passageOpen && <div style={{ fontSize: 11, color: "var(--text-light)", lineHeight: 1.7, marginTop: 4 }}>{q!.px}</div>}
+        {/* The passage IS exam content — question-level size/contrast, not caption-styled */}
+        {passageOpen && <div style={{ fontSize: FS.xl, color: "var(--text)", lineHeight: 1.7, marginTop: 6 }}>{q!.px}</div>}
       </div>}
       {(() => { const isProfile = sec!.cnt === ENT_CONFIG.profileCnt; const block = isProfile ? getBlockForIndex(curQ, PROFILE_BLOCKS) : null; return block ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>

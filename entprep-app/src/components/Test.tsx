@@ -698,8 +698,9 @@ export default function Test({ sid, tid, customQs = null, finish }: TestProps) {
     </div>}
     {!offline && <div key={`qblock-${cur}`}>
     {isR && <div style={{ ...CARD_COMPACT, background: "rgba(255,90,54,0.06)", border: "1px solid rgba(255,90,54,0.18)", padding: "12px 14px", marginBottom: 12 }}>
-      <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.teal, marginBottom: 4 }}>{"\uD83D\uDCD6"} {q.pt}</div>
-      <div style={{ fontSize: 12, color: "var(--text-light)", lineHeight: 1.75 }}>{q.px}</div>
+      <div style={{ fontSize: FS.md, fontWeight: 600, color: COLORS.teal, marginBottom: 6 }}>{"\uD83D\uDCD6"} {q.pt}</div>
+      {/* The passage IS exam content the student must read to answer \u2014 question-level size/contrast, not caption-styled */}
+      <div style={{ fontSize: FS.xl, color: "var(--text)", lineHeight: 1.7 }}>{q.px}</div>
     </div>}
     <div style={{ ...CARD, padding: "20px 16px", marginBottom: 12, animation: "slideUp 0.35s cubic-bezier(0.16,1,0.3,1)" }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
