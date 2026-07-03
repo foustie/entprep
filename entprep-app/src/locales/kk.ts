@@ -951,6 +951,7 @@ const kk: Translations = {
     legalTermsLink: 'Пайдалану шарттары',
     legalConjunction: ' және ',
     legalPrivacyLink: 'Құпиялылық саясаты',
+    legalOfferLink: 'Жария офертамен',
     legalRenewalNotice: 'Жазылым автоматты түрде ұзартылады. Ақы төленген кезеңнің соңына дейін Apple ID параметрлерінде бас тартуға болады.',
     // PaywallScreen (LemonSqueezy web)
     explainTitle: 'Бүгінгі түсіндірмелер бітті',
@@ -1267,6 +1268,22 @@ const kk: Translations = {
     needHelp: 'Көмек керек пе?',
     whatsapp: 'WhatsApp-қа жазыңыз',
     format: 'ҰБТ форматы 2026',
+    // Pricing block (payment-provider compliance: tariffs in ₸ visible on the landing)
+    pricingEyebrow: '• ТАРИФТЕР •',
+    pricingTitle: 'Тарифтер',
+    planFree: 'Тегін',
+    planFreePrice: '0 ₸',
+    planFreeDesc: 'Сұрақтар банкі, аптасына 2 тест, күніне 2 AI-түсіндірме, статистика және дуэльдер.',
+    planPremium: 'Premium',
+    premPriceMonth: '2 990 ₸/ай',
+    premPriceSeason: 'немесе ҰБТ маусымына 9 990 ₸',
+    premFeat1: 'Шексіз тесттер және толық ҰБТ симуляциялары',
+    premFeat2: 'Шексіз AI-түсіндірмелер және AI-репетитор',
+    premFeat3: 'Толық жеке дайындық жоспары',
+    // Legal links (footer)
+    legalOffer: 'Жария оферта',
+    legalPrivacy: 'Құпиялылық саясаты',
+    legalTerms: 'Пайдалану шарттары',
   },
 
   // ── Send to Mom (parent-share sheet) ─────────────────────────────

@@ -341,6 +341,37 @@ export default function Landing({ onStart, totalQ }: Props) {
         </div>
       </section>
 
+      {/* Pricing — tariffs in ₸ (payment-provider compliance: prices must be visible on the site) */}
+      <section style={{ padding: '20px 20px 8px', maxWidth: 440, margin: '0 auto' }}>
+        <div style={{ ...TYPE.eyebrow, textAlign: 'center', marginBottom: 12 }}>{tl.pricingEyebrow}</div>
+        <div style={{ display: 'grid', gap: 12 }}>
+          {/* Free plan */}
+          <div style={{ ...CARD, padding: '18px 18px' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 8 }}>
+              <h3 style={{ ...TYPE.h3, fontSize: FS.xxl, color: INK }}>{tl.planFree}</h3>
+              <div style={{ fontFamily: FF.display, fontWeight: 800, fontSize: FS.xxl, color: INK }}>{tl.planFreePrice}</div>
+            </div>
+            <p style={{ ...TYPE.bodySmall, fontSize: FS.lg, lineHeight: 1.55, color: INK, opacity: 0.8 }}>{tl.planFreeDesc}</p>
+          </div>
+          {/* Premium plan */}
+          <div style={{ ...CARD, padding: '18px 18px' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 2 }}>
+              <h3 style={{ ...TYPE.h3, fontSize: FS.xxl, color: INK }}>{tl.planPremium}</h3>
+              <div style={{ fontFamily: FF.display, fontWeight: 800, fontSize: FS.xxl, color: COLORS.streak }}>{tl.premPriceMonth}</div>
+            </div>
+            <div style={{ ...TYPE.caption, textAlign: 'right', marginBottom: 12 }}>{tl.premPriceSeason}</div>
+            <div style={{ display: 'grid', gap: 8 }}>
+              {[tl.premFeat1, tl.premFeat2, tl.premFeat3].map((item, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <CheckCircle2 size={16} color={COLORS.streak} strokeWidth={2.5} style={{ flexShrink: 0 }} />
+                  <span style={{ ...TYPE.body, fontSize: 14, color: INK }}>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* For Schools — ink card */}
       <section style={{ padding: '20px 20px 12px', maxWidth: 440, margin: '0 auto' }}>
         <div style={{ ...CARD, textAlign: 'center', padding: '24px 18px' }}>
@@ -397,6 +428,19 @@ export default function Landing({ onStart, totalQ }: Props) {
         </div>
         <div style={{ ...TYPE.caption, marginBottom: 10, fontWeight: 600, color: INK, opacity: 0.75 }}>
           {tl.madeBy}
+        </div>
+        {/* Legal links — offer / privacy / terms must be findable from the landing (payment-provider requirement) */}
+        <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '4px 14px', marginBottom: 12 }}>
+          {[
+            { href: '/offer.html', label: tl.legalOffer },
+            { href: '/privacy.html', label: tl.legalPrivacy },
+            { href: '/terms.html', label: tl.legalTerms },
+          ].map(l => (
+            <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer"
+               style={{ ...TYPE.caption, color: INK, opacity: 0.65, textDecoration: 'underline' }}>
+              {l.label}
+            </a>
+          ))}
         </div>
         <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
           {[

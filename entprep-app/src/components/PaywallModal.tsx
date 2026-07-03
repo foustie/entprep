@@ -313,6 +313,8 @@ export default function PaywallModal({ open, reason, onClose }: PaywallModalProp
             <div style={{ marginBottom: 6 }}>{t.paywall.legalRenewalNotice}</div>
           )}
           {t.paywall.legalPrefix}{' '}
+          <a href="https://entprep.org/offer.html" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-muted)', textDecoration: 'underline' }}>{t.paywall.legalOfferLink}</a>
+          {', '}
           <a href="https://entprep.org/terms.html" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-muted)', textDecoration: 'underline' }}>{t.paywall.legalTermsLink}</a>
           {t.paywall.legalConjunction}
           <a href="https://entprep.org/privacy.html" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-muted)', textDecoration: 'underline' }}>{t.paywall.legalPrivacyLink}</a>

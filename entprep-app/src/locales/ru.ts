@@ -964,6 +964,7 @@ const ru = {
     legalTermsLink: 'Условиями использования',
     legalConjunction: ' и ',
     legalPrivacyLink: 'Политикой конфиденциальности',
+    legalOfferLink: 'Публичной офертой',
     legalRenewalNotice: 'Подписка продлевается автоматически. Отменить можно в настройках Apple ID до конца оплаченного периода.',
     // PaywallScreen (LemonSqueezy web)
     explainTitle: 'Объяснения на сегодня закончились',
@@ -1281,6 +1282,22 @@ const ru = {
     needHelp: 'Нужна помощь?',
     whatsapp: 'Напишите в WhatsApp',
     format: 'Формат ЕНТ 2026',
+    // Pricing block (payment-provider compliance: tariffs in ₸ visible on the landing)
+    pricingEyebrow: '• ТАРИФЫ •',
+    pricingTitle: 'Тарифы',
+    planFree: 'Бесплатно',
+    planFreePrice: '0 ₸',
+    planFreeDesc: 'Банк вопросов, 2 теста в неделю, 2 AI-объяснения в день, статистика и дуэли.',
+    planPremium: 'Premium',
+    premPriceMonth: '2 990 ₸/мес',
+    premPriceSeason: 'или 9 990 ₸ за сезон до ЕНТ',
+    premFeat1: 'Безлимитные тесты и полные симуляции ЕНТ',
+    premFeat2: 'Безлимитные AI-объяснения и AI-репетитор',
+    premFeat3: 'Полный персональный план подготовки',
+    // Legal links (footer)
+    legalOffer: 'Публичная оферта',
+    legalPrivacy: 'Политика конфиденциальности',
+    legalTerms: 'Условия использования',
   },
 
   // ── Send to Mom (parent-share sheet) ─────────────────────────────
