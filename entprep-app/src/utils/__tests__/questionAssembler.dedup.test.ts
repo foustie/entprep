@@ -7,7 +7,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // land in BOTH blocks — a duplicate inside one 40-question section. The fix excludes
 // already-picked questions (by _oi) from every block's candidates.
 
-vi.mock('../questionStore', () => ({ getPool: vi.fn() }));
+vi.mock('../questionStore', () => ({ getPool: vi.fn(), resolveLiteratureCdnSid: vi.fn(() => 'literature_russian') }));
 
 import { assembleProfileSection } from '../questionAssembler';
 import { getPool } from '../questionStore';

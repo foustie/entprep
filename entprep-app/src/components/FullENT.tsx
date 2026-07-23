@@ -69,9 +69,9 @@ export default function FullENT({ finish }: FullENTProps) {
     const p2 = ALL_PROFILES.find(p => p.id === prof[1]);
     const lang = st.lang;
     const [mandatoryQs, prof0Qs, prof1Qs] = await Promise.all([
-      Promise.all(ENT_CONFIG.sections.map(s => getQs(s.sid, s.cnt, true, null, lang))),
-      assembleProfileSection(prof[0], PROFILE_BLOCKS, true, lang),
-      assembleProfileSection(prof[1], PROFILE_BLOCKS, true, lang),
+      Promise.all(ENT_CONFIG.sections.map(s => getQs(s.sid, s.cnt, true, null, lang, prof))),
+      assembleProfileSection(prof[0], PROFILE_BLOCKS, true, lang, prof),
+      assembleProfileSection(prof[1], PROFILE_BLOCKS, true, lang, prof),
     ]);
     if (cancelled) return;
     // Compute real maxPts based on actual question types in the section

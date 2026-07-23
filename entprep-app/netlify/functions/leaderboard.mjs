@@ -9,6 +9,7 @@ const checkRate = createRateLimiter("leaderboard", { max: 10, windowSec: 60 });
 const VALID_SUBJECTS = new Set([
   "math", "reading", "history", "geography", "english", "math_profile",
   "physics", "biology", "chemistry", "world_history", "informatics", "law", "literature",
+  "russian_lang", "kazakh_lang",
 ]);
 
 function getSbConfig() {

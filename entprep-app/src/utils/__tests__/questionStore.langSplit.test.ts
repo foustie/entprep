@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterAll, vi } from 'vitest';
-import { getPool } from '../questionStore';
+import { getPool, resolveLiteratureCdnSid } from '../questionStore';
 
 // PERF-2 regression: the CDN is language-split, so a RU session must fetch ONLY
 // <sid>.ru.json and never download the KK half (and vice-versa). The `literature`
@@ -9,6 +9,7 @@ import { getPool } from '../questionStore';
 // Realistic split files: ru.json has RU content (no _kk fields); kk.json has KK baked in.
 const mathRu = [{ q: 'RU вопрос', o: ['a', 'b', 'c', 'd'], c: 1, e: 'RU объяснение', _topic: 'algebra' }];
 const mathKk = [{ q: 'KK сұрақ', o: ['a', 'b', 'c', 'd'], c: 1, e: 'KK түсіндірме', _topic: 'algebra' }];
+const litKazakh = [{ q: 'Қазақ әдебиеті сұрағы', o: ['a', 'b', 'c', 'd'], c: 0, e: '', _topic: 'kaz_lit' }];
 
 const requested: string[] = [];
 const realFetch = global.fetch;
@@ -19,6 +20,7 @@ global.fetch = vi.fn(async (input: RequestInfo | URL) => {
   if (url.endsWith('/data/math.ru.json')) return { ok: true, json: async () => mathRu } as Response;
   if (url.endsWith('/data/math.kk.json')) return { ok: true, json: async () => mathKk } as Response;
   if (url.endsWith('/data/literature_russian.ru.json')) return { ok: true, json: async () => mathRu } as Response;
+  if (url.endsWith('/data/literature_kazakh.ru.json')) return { ok: true, json: async () => litKazakh } as Response;
   return { ok: false, json: async () => [] } as Response;
 }) as typeof fetch;
 afterAll(() => { global.fetch = realFetch; });
@@ -57,8 +59,29 @@ describe('getPool — language-split CDN (PERF-2)', () => {
     expect(ru[0].c).toBe(kk[0].c); // correct-index unchanged
   });
 
-  it('literature alias resolves to literature_russian.ru.json', async () => {
+  it('literature alias resolves to literature_russian.ru.json by default', async () => {
     await getPool('literature');
     expect(subjectUrls().some(u => u.endsWith('/data/literature_russian.ru.json'))).toBe(true);
+  });
+
+  it('literature with an explicit kazakh_lang variant fetches literature_kazakh.ru.json, not literature_russian', async () => {
+    const pool = await getPool('literature', 'ru', resolveLiteratureCdnSid(['kazakh_lang', 'literature']));
+    expect(pool[0].q).toBe('Қазақ әдебиеті сұрағы');
+    const urls = subjectUrls();
+    expect(urls.some(u => u.endsWith('/data/literature_kazakh.ru.json'))).toBe(true);
+    expect(urls.some(u => u.endsWith('/data/literature_russian.ru.json'))).toBe(false);
+  });
+
+  describe('resolveLiteratureCdnSid', () => {
+    it('resolves kazakh_lang pairing to literature_kazakh', () => {
+      expect(resolveLiteratureCdnSid(['kazakh_lang', 'literature'])).toBe('literature_kazakh');
+    });
+    it('resolves russian_lang pairing to literature_russian', () => {
+      expect(resolveLiteratureCdnSid(['russian_lang', 'literature'])).toBe('literature_russian');
+    });
+    it('defaults to literature_russian when profileSubjects is missing', () => {
+      expect(resolveLiteratureCdnSid(undefined)).toBe('literature_russian');
+      expect(resolveLiteratureCdnSid(null)).toBe('literature_russian');
+    });
   });
 });

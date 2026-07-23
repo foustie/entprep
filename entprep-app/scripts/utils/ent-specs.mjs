@@ -1121,6 +1121,147 @@ export const SPEC_LAW = {
   ],
 };
 
+// ── 14. Қазақ тілі (Kazakh Language) ──────────────────────────────────────────
+// DRAFT — pending the real testcenter.kz spec. Structurally modeled on
+// SPEC_ENGLISH (the closest existing "language mechanics" precedent) because
+// the official section/topic breakdown for this subject has not yet been
+// sourced. Do NOT treat the section/topic names below as verified curriculum —
+// replace with the real spec before generating content against this.
+
+export const SPEC_KAZAKH_LANG = {
+  subject: 'kazakh_lang',
+  totalQuestions: 40,
+  difficulty: DIFFICULTY,
+  questionTypes: { single: 25, context: 5, multiple: 5, matching: 5 },
+  sections: [
+    {
+      id: 'vocabulary_orthography',
+      name: 'Лексика және орфография',
+      weight: 0.2,
+      topics: [
+        { num: 1, id: 'vocabulary_orthography', name: 'Синонимдер, антонимдер. Сөздердің тіркесімділігі. Көп мағыналы сөздер. Тұрақты тіркестер' },
+      ],
+    },
+    {
+      id: 'morphology',
+      name: 'Морфология',
+      weight: 0.2,
+      topics: [
+        { num: 2, id: 'parts_of_speech', name: 'Сөз таптары. Сөзжасам' },
+      ],
+    },
+    {
+      id: 'syntax',
+      name: 'Синтаксис',
+      weight: 0.2,
+      topics: [
+        { num: 3, id: 'sentences', name: 'Сөйлем мүшелері мен түрлері' },
+        { num: 4, id: 'constructions', name: 'Синтаксистік құрылымдар' },
+      ],
+    },
+    {
+      id: 'synthesis_analysis',
+      name: 'Талдау және синтез',
+      weight: 0.2,
+      topics: [
+        { num: 5, id: 'speech_norms', name: 'Тіл нормаларымен жұмыс' },
+      ],
+    },
+    {
+      id: 'reading',
+      name: 'Мәтінмен жұмыс',
+      weight: 0.2,
+      topics: [
+        { num: 6, id: 'text_work', name: 'Мәтінді талдау' },
+      ],
+    },
+  ],
+};
+
+// ── 15. Русский язык (Russian Language) ──────────────────────────────────────
+// Profile subject paired with Russian literature (ЕНТ combo «Русский язык —
+// Русская литература»). Section/topic breakdown follows the NCT-approved
+// Russian-language curriculum topics (phonetics→stylistics) as used in ENT
+// prep materials and the published test specification topic list, regrouped
+// into 6 exam sections for the modern 40-question profile format
+// (25 single + 5 context + 5 multiple + 5 matching).
+
+export const SPEC_RUSSIAN_LANG = {
+  subject: 'russian_lang',
+  totalQuestions: 40,
+  difficulty: DIFFICULTY,
+  questionTypes: { single: 25, context: 5, multiple: 5, matching: 5 },
+  sections: [
+    {
+      id: 'phonetics_orthography',
+      name: 'Фонетика. Графика. Орфоэпия. Орфография',
+      weight: 0.12, // 3/25 content topics
+      topics: [
+        { num: 1, id: 'phonetics_graphics', name: 'Звуки речи. Слог. Ударение. Графика. Буквы Ь и Ъ. Правописание гласных после шипящих и Ц' },
+        { num: 2, id: 'orthoepy', name: 'Орфоэпические нормы. Произношение гласных и согласных' },
+        { num: 3, id: 'root_affix_spelling', name: 'Правописание гласных и согласных в корне. Правописание приставок. Чередование в корне' },
+      ],
+    },
+    {
+      id: 'word_formation',
+      name: 'Морфемика. Словообразование. Орфография',
+      weight: 0.08, // 2/25
+      topics: [
+        { num: 4, id: 'morphemics', name: 'Состав слова. Морфемы. Значимые части слова' },
+        { num: 5, id: 'word_formation_ways', name: 'Основные способы словообразования. Правописание сложных слов' },
+      ],
+    },
+    {
+      id: 'lexicology_phraseology',
+      name: 'Лексикология и фразеология',
+      weight: 0.08, // 2/25
+      topics: [
+        { num: 6, id: 'lexicology', name: 'Лексическое значение. Синонимы, антонимы, омонимы. Многозначность. Паронимы' },
+        { num: 7, id: 'phraseology', name: 'Фразеологизмы. Устойчивые выражения. Лексические нормы' },
+      ],
+    },
+    {
+      id: 'morphology_orthography',
+      name: 'Морфология и орфография',
+      weight: 0.36, // 9/25
+      topics: [
+        { num: 8, id: 'noun', name: 'Имя существительное: разряды, склонение, правописание' },
+        { num: 9, id: 'adjective', name: 'Имя прилагательное: разряды, степени сравнения, Н/НН' },
+        { num: 10, id: 'numeral', name: 'Имя числительное: разряды, склонение, сочетаемость' },
+        { num: 11, id: 'pronoun', name: 'Местоимение: разряды, склонение, правописание' },
+        { num: 12, id: 'verb', name: 'Глагол: спряжение, виды, наклонения, личные окончания' },
+        { num: 13, id: 'participle', name: 'Причастие: образование, признаки, Н/НН, НЕ с причастиями' },
+        { num: 14, id: 'adverbial_participle', name: 'Деепричастие: образование, признаки, обособление' },
+        { num: 15, id: 'adverb', name: 'Наречие: разряды, степени сравнения, правописание' },
+        { num: 16, id: 'function_words', name: 'Служебные части речи. Слитное, дефисное, раздельное написание. НЕ и НИ' },
+      ],
+    },
+    {
+      id: 'syntax_punctuation',
+      name: 'Синтаксис и пунктуация',
+      weight: 0.32, // 8/25
+      topics: [
+        { num: 17, id: 'phrase', name: 'Словосочетание. Виды связи слов' },
+        { num: 18, id: 'simple_sentence', name: 'Простое предложение. Главные и второстепенные члены. Типы по составу' },
+        { num: 19, id: 'isolated_members', name: 'Обособленные и уточняющие члены предложения. Обращение. Вводные конструкции' },
+        { num: 20, id: 'compound_sentence', name: 'Сложносочинённые предложения. Знаки препинания' },
+        { num: 21, id: 'complex_sentence', name: 'Сложноподчинённые предложения. Виды придаточных' },
+        { num: 22, id: 'nonunion_complex', name: 'Бессоюзные сложные предложения. Знаки препинания' },
+        { num: 23, id: 'mixed_complex', name: 'Сложные предложения с разными типами связи. Несколько придаточных' },
+        { num: 24, id: 'direct_speech', name: 'Прямая и косвенная речь. Цитирование. Диалог' },
+      ],
+    },
+    {
+      id: 'text_stylistics',
+      name: 'Текст. Функциональные стили речи',
+      weight: 0.04, // 1/25 (+ context block)
+      topics: [
+        { num: 25, id: 'text_work', name: 'Текст. Стили и типы речи. Анализ текста. Речевые нормы' },
+      ],
+    },
+  ],
+};
+
 // ═════════════════════════════════════════════════════════════════════════════
 // UNIFIED MAP
 // ═════════════════════════════════════════════════════════════════════════════
@@ -1142,6 +1283,8 @@ export const ENT_SPECS = {
   informatics:   SPEC_INFORMATICS,
   law:           SPEC_LAW,
   literature:    SPEC_LITERATURE,
+  kazakh_lang:   SPEC_KAZAKH_LANG,   // DRAFT — see comment above SPEC_KAZAKH_LANG
+  russian_lang:  SPEC_RUSSIAN_LANG,
 };
 
 // ═════════════════════════════════════════════════════════════════════════════

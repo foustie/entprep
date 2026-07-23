@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { SUBS, ALL_PROFILES } from '../config/questionPools';
-import { resolveQuestion } from '../utils/questionStore';
+import { resolveQuestion, resolveLiteratureCdnSid } from '../utils/questionStore';
 import { reviewCard, getDueCards } from '../utils/srEngine';
 import { scoreQuestion } from '../utils/scoringEngine';
 import { CARD_COMPACT, COLORS, TINT, FF, FS, R } from '../constants/styles';
@@ -21,7 +21,7 @@ interface ReviewSessionProps {
 }
 
 export default function ReviewSession({ cards, onFinish }: ReviewSessionProps) {
-  const { st } = useApp();
+  const { st, prof } = useApp();
   const { goHome } = useNav();
   const t = useT();
   const review = t.review as Record<string, string>;
@@ -41,7 +41,7 @@ export default function ReviewSession({ cards, onFinish }: ReviewSessionProps) {
     let cancelled = false;
     (async () => {
       const qs = await Promise.all(
-        dueCards.map(c => resolveQuestion(c.sid, c.oi, st.lang))
+        dueCards.map(c => resolveQuestion(c.sid, c.oi, st.lang, resolveLiteratureCdnSid(prof)))
       );
       if (!cancelled) {
         setQuestions(qs);

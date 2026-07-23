@@ -18,6 +18,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const PROFILE_SUBJECTS = [
   'math_profile', 'physics', 'biology', 'english',
   'chemistry', 'geography', 'world_history', 'informatics', 'law', 'literature',
+  'russian_lang',
 ];
 
 // History gets context questions too

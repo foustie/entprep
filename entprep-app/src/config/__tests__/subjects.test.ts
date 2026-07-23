@@ -40,12 +40,14 @@ describe('PROFILE_PAIRS / PROFILE_PARTNERS — official ЕНТ combinations', ()
     }
   });
 
-  it('the язык↔литература pair exists but both subjects are locked (available:false)', () => {
-    expect(PROFILE_PARTNERS.native_lang).toEqual(['literature']);
-    expect(PROFILE_PARTNERS.literature).toEqual(['native_lang']);
+  it('литература↔язык pairs: russian track unlocked, kazakh_lang still locked', () => {
+    expect(PROFILE_PARTNERS.kazakh_lang).toEqual(['literature']);
+    expect(PROFILE_PARTNERS.russian_lang).toEqual(['literature']);
+    expect(partners('literature')).toEqual(['kazakh_lang', 'russian_lang']);
     const base = Object.fromEntries(ALL_PROFILES_BASE.map(p => [p.id, p.available]));
-    expect(base.native_lang).toBe(false);
-    expect(base.literature).toBe(false);
+    expect(base.kazakh_lang).toBe(false);
+    expect(base.russian_lang).toBe(true);
+    expect(base.literature).toBe(true);
   });
 
   it('every subject in a pair exists in ALL_PROFILES_BASE', () => {

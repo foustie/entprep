@@ -55,6 +55,7 @@ const STATIC_FILES: Record<string, () => Promise<Question[] | Passage[]>> = {
   informatics: () => import('../data/questions/informatics').then(m => m.INFO),
   law: () => import('../data/questions/law').then(m => m.LAW),
   literature: () => import('../data/questions/literature').then(m => m.LIT),
+  russian_lang: () => import('../data/questions/russian_lang').then(m => m.RUL),
 };
 
 // --- version check: clear stale question cache (deferred to avoid blocking init) ---
@@ -136,7 +137,8 @@ function getDefaultCounts(): Record<string, number> {
     math:2171, reading:2025, history:2546, geography:2124, english:2019,
     math_profile:2165, physics:2085, biology:2038, chemistry:2038,
     world_history:2551, informatics:2032, law:2091,
-    literature_russian:2298, literature_kazakh:236,
+    literature:2411, literature_russian:2411, literature_kazakh:232,
+    russian_lang:945,
   };
 }
 
@@ -265,14 +267,25 @@ function isPassageArray(x: unknown): x is (Passage & { t_kk?: string; tx_kk?: st
   return Array.isArray(x) && x.length > 0 && Array.isArray((x[0] as { qs?: unknown })?.qs);
 }
 
-async function getPool(sid: string, lang?: Lang): Promise<Question[]> {
+// literature has two independent CDN variants — literature_russian (RU-medium curriculum)
+// and literature_kazakh (KK-medium curriculum) — with different row counts, not a
+// lang-split pair of the same content. Which one a student sees depends on which of the
+// two native-language profile subjects they paired literature with.
+function resolveLiteratureCdnSid(profileSubjects?: string[] | null): string {
+  return profileSubjects?.includes('kazakh_lang') ? 'literature_kazakh' : 'literature_russian';
+}
+
+async function getPool(sid: string, lang?: Lang, literatureCdnSid?: string): Promise<Question[]> {
   await loadQuarantine();
   // PERF-2: the CDN serves language-split files, so the cache key is per (subject, language).
   // The fallback tiers (Supabase/localStorage/static) still carry both languages inline and
   // are resolved at return by clonePool(lang) — so a KK pool built from a fallback tier is
   // correct too. `_oi` is identical across ru/kk (rows split 1:1 in order).
   const langKey: Lang = lang === 'kk' ? 'kk' : 'ru';
-  const ck = `${sid}__${langKey}`;
+  // Resolve literature's variant before computing the cache key — literature_russian and
+  // literature_kazakh must never share a memCache/pending slot (see resolveLiteratureCdnSid).
+  const cdnSid = sid === 'literature' ? (literatureCdnSid || 'literature_russian') : sid;
+  const ck = `${cdnSid}__${langKey}`;
   if (memCache[ck]) return clonePool(memCache[ck], lang);
 
   if (pending[ck]) {
@@ -284,7 +297,6 @@ async function getPool(sid: string, lang?: Lang): Promise<Question[]> {
     try {
       // 1. CDN JSON files (fastest — served from Netlify edge, ~100ms). Language-split:
       // RU sessions fetch only <sid>.ru.json, KK sessions only <sid>.kk.json (PERF-2).
-      const cdnSid = sid === 'literature' ? 'literature_russian' : sid;
       try {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 5000);
@@ -325,6 +337,9 @@ async function getPool(sid: string, lang?: Lang): Promise<Question[]> {
             const counts = loadCounts();
             memCache[ck] = filterQuarantined(sid, memCache[ck]);
             counts[sid] = memCache[ck].length;
+            // literature CDN variants must also update their own key so
+            // getPoolSize('literature') / getPoolSize('literature_russian') agree.
+            if (cdnSid !== sid) counts[cdnSid] = memCache[ck].length;
             saveCounts(counts);
             return memCache[ck];
           }
@@ -332,8 +347,10 @@ async function getPool(sid: string, lang?: Lang): Promise<Question[]> {
       } catch { /* CDN failed, fall through to Supabase */ }
 
       // 2. Supabase (fallback if CDN fails). Rows carry both languages; clonePool(lang)
-      // resolves the active language at return.
-      const result = await fetchFromSupabase(sid);
+      // resolves the active language at return. Literature is stored under the CDN
+      // variant ids (literature_russian / literature_kazakh) after the split — query
+      // those, not the UI alias `literature`.
+      const result = await fetchFromSupabase(cdnSid);
       if (result && result.rows.length > 0) {
         const rows = result.rows;
         if (sid === 'reading') {
@@ -352,14 +369,15 @@ async function getPool(sid: string, lang?: Lang): Promise<Question[]> {
         if (result.complete) {
           const counts = loadCounts();
           counts[sid] = memCache[ck].length;
+          if (cdnSid !== sid) counts[cdnSid] = memCache[ck].length;
           saveCounts(counts);
-          lsWrite(sid, rows);
+          lsWrite(cdnSid, rows);
         }
         return memCache[ck];
       }
 
       // 3. localStorage cache (combined rows; clonePool(lang) resolves at return)
-      const lsData = lsRead(sid);
+      const lsData = lsRead(cdnSid) || (cdnSid !== sid ? lsRead(sid) : null);
       if (lsData && lsData.length > 0) {
         if (sid === 'reading') {
           const passages = buildPassagesFromRows(lsData);
@@ -431,6 +449,9 @@ async function getPassages(lang?: Lang): Promise<Passage[]> {
 
 function getPoolSize(sid: string): number {
   const counts = loadCounts();
+  if (sid === 'literature') {
+    return counts.literature || counts.literature_russian || 150;
+  }
   return counts[sid] || 150;
 }
 
@@ -477,8 +498,8 @@ async function prefetchCounts(): Promise<boolean> {
   return false;
 }
 
-async function resolveQuestion(sid: string, idx: number, lang?: Lang): Promise<Question | null> {
-  const pool = await getPool(sid, lang);
+async function resolveQuestion(sid: string, idx: number, lang?: Lang, literatureCdnSid?: string): Promise<Question | null> {
+  const pool = await getPool(sid, lang, literatureCdnSid);
   if (sid === 'reading') {
     const found = pool.find(q => q._oi === idx);
     return found ? { ...found, o: [...found.o] } : null;
@@ -487,4 +508,4 @@ async function resolveQuestion(sid: string, idx: number, lang?: Lang): Promise<Q
   return found ? { ...found, o: [...found.o] } : null;
 }
 
-export { getPool, getPassages, getPoolSize, getTotalQ, prefetchCounts, resolveQuestion };
+export { getPool, getPassages, getPoolSize, getTotalQ, prefetchCounts, resolveQuestion, resolveLiteratureCdnSid };

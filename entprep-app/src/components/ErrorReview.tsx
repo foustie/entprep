@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { SUBS, ALL_PROFILES } from '../config/questionPools';
-import { resolveQuestion } from '../utils/questionStore';
+import { resolveQuestion, resolveLiteratureCdnSid } from '../utils/questionStore';
 import { getWrongQuestions } from '../utils/adaptiveHelpers';
 import { shuffleOptions } from '../utils/questionHelpers';
 import { CARD_COMPACT, CARD_HERO, TYPE, COLORS, FF, R, FS } from '../constants/styles';
@@ -43,7 +43,7 @@ interface GroupedSubject {
 
 export default function ErrorReview() {
   const bp = useBreakpoint(); const isDesktop = bp === 'desktop';
-  const { hist, st } = useApp();
+  const { hist, st, prof } = useApp();
   const { navToErrorTest, setScreen, setTab } = useNav();
   const t = useT();
   const wrongs = useMemo(() => getWrongQuestions(hist), [hist]);
@@ -68,7 +68,7 @@ export default function ErrorReview() {
       for (const [su, items] of Object.entries(m)) {
         const resolved = await Promise.all(
           items.map(async w => {
-            const q = await resolveQuestion(w.su, w.oi, st.lang);
+            const q = await resolveQuestion(w.su, w.oi, st.lang, resolveLiteratureCdnSid(prof));
             return { ...w, q };
           })
         );
@@ -80,7 +80,7 @@ export default function ErrorReview() {
       if (!cancelled) { setGrouped(groups); setLoading(false); }
     })();
     return () => { cancelled = true; };
-  }, [wrongs]);
+  }, [wrongs, st.lang, prof]);
 
   if (loading) return (
     <div style={{ padding: `0 var(--content-padding) ${isDesktop ? 40 : 100}px` }}>

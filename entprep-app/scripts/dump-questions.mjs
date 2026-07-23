@@ -39,7 +39,7 @@ const SUBJECTS = [
   'math', 'reading', 'history', 'geography', 'english',
   'math_profile', 'physics', 'biology', 'chemistry',
   'world_history', 'informatics', 'law',
-  'literature_russian', 'literature_kazakh',
+  'literature_russian', 'literature_kazakh', 'russian_lang',
 ];
 
 const COLS = 'idx,topic,subtopic,q,o,c,e,passage_group,passage_title,passage_text,type,correct_indices,pairs,difficulty,block,q_kk,o_kk,e_kk,pairs_kk,passage_title_kk,passage_text_kk';

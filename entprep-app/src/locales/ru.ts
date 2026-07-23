@@ -62,7 +62,8 @@ const ru = {
     informatics: 'Информатика',
     law: 'Основы права',
     literature: 'Литература',
-    native_lang: 'Каз/Рус язык',
+    kazakh_lang: 'Қазақ тілі',
+    russian_lang: 'Русский язык',
   },
   // Short names for profile selection
   subjectsShort: {
@@ -76,7 +77,8 @@ const ru = {
     informatics: 'Информатика',
     law: 'Основы права',
     literature: 'Литература',
-    native_lang: 'Каз/Рус язык',
+    kazakh_lang: 'Қазақ тілі',
+    russian_lang: 'Русский язык',
   },
   // Long name for mandatory history
   historyLong: 'История Казахстана',
@@ -168,6 +170,13 @@ const ru = {
     literature_world: 'Мировая литература',
     literature_theory: 'Теория литературы',
     literature_folklore: 'Фольклор',
+    // russian_lang
+    russian_lang_phonetics_orthography: 'Фонетика и орфография',
+    russian_lang_word_formation: 'Словообразование',
+    russian_lang_lexicology_phraseology: 'Лексика и фразеология',
+    russian_lang_morphology_orthography: 'Морфология',
+    russian_lang_syntax_punctuation: 'Синтаксис',
+    russian_lang_text_stylistics: 'Текст и стили',
   },
 
   // ── Levels ──────────────────────────────────────────────────────────

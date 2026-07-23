@@ -103,7 +103,7 @@ export default async function handler(req) {
         const rl = createLimit(user.id);
         if (rl) return rateLimitResponse(rl);
 
-        const VALID_SUBJECTS = ["math","reading","history","geography","english","math_profile","physics","biology","chemistry","world_history","informatics","law","literature"];
+        const VALID_SUBJECTS = ["math","reading","history","geography","english","math_profile","physics","biology","chemistry","world_history","informatics","law","literature","russian_lang","kazakh_lang"];
         const { subject } = body;
         if (!subject || !VALID_SUBJECTS.includes(subject)) {
           return Response.json({ error: "Invalid subject" }, { status: 400, headers: CORS_HEADERS });

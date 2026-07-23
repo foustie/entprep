@@ -1,5 +1,5 @@
 import type { Question, ProfileBlock } from '../types/index';
-import { getPool } from './questionStore';
+import { getPool, resolveLiteratureCdnSid } from './questionStore';
 import { shuffleArray } from './questionHelpers';
 import { shuffleOptions } from './questionHelpers';
 
@@ -16,8 +16,9 @@ export async function assembleProfileSection(
   blocks: ProfileBlock[],
   shuffle: boolean = true,
   lang?: 'ru' | 'kk',
+  profileSubjects?: string[],
 ): Promise<Question[]> {
-  const pool = await getPool(sid, lang);
+  const pool = await getPool(sid, lang, resolveLiteratureCdnSid(profileSubjects));
   if (!pool || pool.length === 0) return [];
 
   const result: Question[] = [];

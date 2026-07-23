@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { SUBS, ALL_PROFILES } from '../config/questionPools';
 import { TOPIC_MAP, getTopicQuestions } from '../config/topics';
-import { getPool } from '../utils/questionStore';
+import { getPool, resolveLiteratureCdnSid } from '../utils/questionStore';
 import { shuffleArray, shuffleOptions } from '../utils/questionHelpers';
 import { getQType, getSingleCorrect } from '../types';
 import { clampQdTime, qdDifficulty } from '../utils/qdHelpers';
@@ -59,7 +59,7 @@ function press3D(darkColor: string) {
 }
 
 export default function QuestionRush({ save }: RushProps) {
-  const { st, hist } = useApp();
+  const { st, hist, prof } = useApp();
   const { isPremium } = useAuth();
   const { goHome, openPaywall } = useNav();
   const toast = useToast();
@@ -111,7 +111,7 @@ export default function QuestionRush({ save }: RushProps) {
     setSubject(sid);
     setPhase('loading');
     try {
-      const pool = await getPool(sid, lang);
+      const pool = await getPool(sid, lang, resolveLiteratureCdnSid(prof));
       poolRef.current = pool;
       const singles = pool.filter(q => getQType(q) === 'single');
       const sections = TOPIC_MAP[sid];

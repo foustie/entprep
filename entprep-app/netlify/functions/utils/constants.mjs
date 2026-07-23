@@ -9,7 +9,7 @@
 export const VALID_SUBJECTS = [
   "math", "reading", "history", "math_profile", "physics", "biology",
   "english", "chemistry", "geography", "world_history", "informatics",
-  "law", "literature",
+  "law", "literature", "kazakh_lang", "russian_lang",
 ];
 
 // ── Subject ID → Russian display name ─────────────────────────────────────────
@@ -27,6 +27,8 @@ export const SUBJECT_NAMES = {
   informatics: "Информатика",
   law: "Основы права",
   literature: "Литература",
+  kazakh_lang: "Қазақ тілі",
+  russian_lang: "Русский язык",
 };
 
 // ── STEM subjects — use lower temperature + chain-of-thought ──────────────────

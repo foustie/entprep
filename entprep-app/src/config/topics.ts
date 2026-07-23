@@ -666,6 +666,67 @@ export const TOPIC_MAP: Record<string, Topic[] | null> = {
       ],
     },
   ],
+
+  // No content yet — kept null (like `reading`) rather than fabricating index
+  // ranges against a pool that doesn't exist. ingest-questions.mjs's --topic
+  // validation still works via the ENT_SPECS entries (SPEC_KAZAKH_LANG in
+  // scripts/utils/ent-specs.mjs), which is checked in addition to TOPIC_MAP.
+  // Replace with real sections once content is dumped.
+  kazakh_lang: null,
+
+  // Mirrors SPEC_RUSSIAN_LANG (NCT topic list, 6 sections / 25 topics).
+  // Static ranges cover the bundled fallback (~150q); live CDN uses `_topic`.
+  russian_lang: [
+    { id: 'phonetics_orthography', name: 'Фонетика и орфография', name_kk: 'Фонетика және орфография', icon: '🔊', ranges: [[0, 17]],
+      subtopics: [
+        { id: 'phonetics_graphics', name: 'Фонетика и графика', name_kk: 'Фонетика және графика' },
+        { id: 'orthoepy', name: 'Орфоэпия', name_kk: 'Орфоэпия' },
+        { id: 'root_affix_spelling', name: 'Правописание корней и приставок', name_kk: 'Түбір мен жұрнақ жазылуы' },
+      ],
+    },
+    { id: 'word_formation', name: 'Словообразование', name_kk: 'Сөзжасам', icon: '🧩', ranges: [[18, 29]],
+      subtopics: [
+        { id: 'morphemics', name: 'Морфемика', name_kk: 'Морфемика' },
+        { id: 'word_formation_ways', name: 'Способы словообразования', name_kk: 'Сөзжасам тәсілдері' },
+      ],
+    },
+    { id: 'lexicology_phraseology', name: 'Лексика и фразеология', name_kk: 'Лексика және фразеология', icon: '📖', ranges: [[30, 41]],
+      subtopics: [
+        { id: 'lexicology', name: 'Лексикология', name_kk: 'Лексикология' },
+        { id: 'phraseology', name: 'Фразеология', name_kk: 'Фразеология' },
+      ],
+    },
+    { id: 'morphology_orthography', name: 'Морфология', name_kk: 'Морфология', icon: '📝', ranges: [[42, 95]],
+      subtopics: [
+        { id: 'noun', name: 'Существительное', name_kk: 'Зат есім' },
+        { id: 'adjective', name: 'Прилагательное', name_kk: 'Сын есім' },
+        { id: 'numeral', name: 'Числительное', name_kk: 'Сан есім' },
+        { id: 'pronoun', name: 'Местоимение', name_kk: 'Есімдік' },
+        { id: 'verb', name: 'Глагол', name_kk: 'Етістік' },
+        { id: 'participle', name: 'Причастие', name_kk: 'Есімше' },
+        { id: 'adverbial_participle', name: 'Деепричастие', name_kk: 'Көсемше' },
+        { id: 'adverb', name: 'Наречие', name_kk: 'Үстеу' },
+        { id: 'function_words', name: 'Служебные слова', name_kk: 'Көмекші сөздер' },
+      ],
+    },
+    { id: 'syntax_punctuation', name: 'Синтаксис', name_kk: 'Синтаксис', icon: '✏️', ranges: [[96, 137]],
+      subtopics: [
+        { id: 'phrase', name: 'Словосочетание', name_kk: 'Сөз тіркесі' },
+        { id: 'simple_sentence', name: 'Простое предложение', name_kk: 'Жай сөйлем' },
+        { id: 'isolated_members', name: 'Обособленные члены', name_kk: 'Оқшау мүшелер' },
+        { id: 'compound_sentence', name: 'ССП', name_kk: 'Құрмалас салалас' },
+        { id: 'complex_sentence', name: 'СПП', name_kk: 'Құрмалас сабақтас' },
+        { id: 'nonunion_complex', name: 'Бессоюзные', name_kk: 'Байланыссыз' },
+        { id: 'mixed_complex', name: 'Смешанная связь', name_kk: 'Аралас байланыс' },
+        { id: 'direct_speech', name: 'Прямая речь', name_kk: 'Тікелей сөз' },
+      ],
+    },
+    { id: 'text_stylistics', name: 'Текст и стили', name_kk: 'Мәтін және стиль', icon: '💬', ranges: [[138, 149]],
+      subtopics: [
+        { id: 'text_work', name: 'Работа с текстом', name_kk: 'Мәтінмен жұмыс' },
+      ],
+    },
+  ],
 };
 
 export function getTopicQuestions<T>(pool: T[], ranges: [number, number][]): T[] {

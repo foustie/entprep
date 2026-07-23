@@ -64,7 +64,8 @@ const kk: Translations = {
     informatics: 'Информатика',
     law: 'Құқық негіздері',
     literature: 'Әдебиет',
-    native_lang: 'Қаз/Орыс тілі',
+    kazakh_lang: 'Қазақ тілі',
+    russian_lang: 'Орыс тілі',
   },
   subjectsShort: {
     geography: 'География',
@@ -77,7 +78,8 @@ const kk: Translations = {
     informatics: 'Информатика',
     law: 'Құқық негіздері',
     literature: 'Әдебиет',
-    native_lang: 'Қаз/Орыс тілі',
+    kazakh_lang: 'Қазақ тілі',
+    russian_lang: 'Орыс тілі',
   },
   historyLong: 'Қазақстан тарихы',
 
@@ -168,6 +170,13 @@ const kk: Translations = {
     literature_world: 'Дүниежүзілік әдебиет',
     literature_theory: 'Әдебиет теориясы',
     literature_folklore: 'Фольклор',
+    // russian_lang
+    russian_lang_phonetics_orthography: 'Фонетика және орфография',
+    russian_lang_word_formation: 'Сөзжасам',
+    russian_lang_lexicology_phraseology: 'Лексика және фразеология',
+    russian_lang_morphology_orthography: 'Морфология',
+    russian_lang_syntax_punctuation: 'Синтаксис',
+    russian_lang_text_stylistics: 'Мәтін және стиль',
   },
 
   // ── Levels ──────────────────────────────────────────────────────────

@@ -1,6 +1,6 @@
 import {
   Calculator, BookOpen, Landmark, Globe, BookA, Pi, Atom,
-  Leaf, FlaskConical, ScrollText, Monitor, Scale, BookMarked, Languages,
+  Leaf, FlaskConical, ScrollText, Monitor, Scale, BookMarked, Languages, SpellCheck2,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { SUBJECT_META } from '../../config/subjects';
@@ -21,7 +21,8 @@ const ICON_MAP: Record<string, LucideIcon> = {
   informatics: Monitor,
   law: Scale,
   literature: BookMarked,
-  native_lang: Languages,
+  kazakh_lang: Languages,
+  russian_lang: SpellCheck2,
 };
 
 interface Props {

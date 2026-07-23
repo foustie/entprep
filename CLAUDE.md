@@ -39,7 +39,7 @@ Make small atomic commits scoped to one bug/task ID with a clear message; stage 
 
 ## Project Overview
 
-ENTprep is a TypeScript + React educational web app for Kazakhstan's Unified National Testing (ЕНТ). Practice tests across 13 subjects with **33 244 questions** (authored in Supabase, served at runtime as dumped CDN JSON in `public/data/`; 87 sections / 270 subtopics; 13-file static import fallback), AI explanations, adaptive learning, full ЕНТ simulation, leaderboard, social features, real-time duels, and a university grant calculator.
+ENTprep is a TypeScript + React educational web app for Kazakhstan's Unified National Testing (ЕНТ). Practice tests across **14 subjects** (profile pair **Русский язык + Литература** unlocked; `kazakh_lang` still locked) with **29 026 questions** in CDN dumps (`public/data/`; literature split into `literature_russian` / `literature_kazakh`; 14-file static import fallback), AI explanations, adaptive learning, full ЕНТ simulation, leaderboard, social features, real-time duels, and a university grant calculator.
 
 **Live URL:** https://entprep.org
 
@@ -58,7 +58,7 @@ entprep-app/src/
 ├── config/              # 11 files: subjects, ent, questionPools, supabase, sentry, topics, payment, purchases, app, aiPrompt, regions
 ├── constants/           # styles, screens, themes
 ├── utils/               # 25 files: questionStore, questionHelpers, questionAssembler, storage, cloudSync, analytics, analyticsHelpers, aiLimits, avatarHelpers, pushHelpers, shareHelpers, socialHelpers, duelHelpers, scoringEngine, xpHelpers, adaptiveHelpers, competitionHelpers, formatters, srEngine, predictScore, qdHelpers, recommendationEngine, reconcileHelpers, subscriptionHelpers, tutorHelpers
-├── data/questions/      # 13 static fallback files (150q each, .ts)
+├── data/questions/      # 14 static fallback files (.ts) including russian_lang.ts
 ├── data/universities.ts # 52 universities
 └── sw.ts                # Service worker (Workbox + push)
 
@@ -96,7 +96,8 @@ entprep-app/scripts/             # Build, deploy & question-generation scripts (
 | `locales/index.ts` | i18n: `useT()` hook, `getT()` function |
 
 ## Key Features
-- 13 ENT subjects, 33 244 questions (Supabase → dumped CDN JSON) + 13-file static import fallback
+- 14 ENT subjects in registry (russian_lang + literature available; kazakh_lang locked), **29 026** CDN questions (Supabase → dumped CDN JSON) + 14-file static import fallback
+- Profile combo **Русский язык — Русская литература** selectable in onboarding; literature CDN resolves via `resolveLiteratureCdnSid` (`literature_russian` by default / when paired with `russian_lang`)
 - 3 question types: single choice, multiple answer, matching
 - Full ENT simulation (120q, 5 subjects, 4h, 140 pts, profile blocks)
 - AI explanations, study plans, question generation, AI tutor (default **OpenRouter `qwen/qwen3.7-plus`**; provider-switchable — see AI provider note below)

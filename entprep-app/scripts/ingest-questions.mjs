@@ -68,6 +68,10 @@ const SUBJECT_REGISTRY = {
   informatics:   { file: 'data/questions/informatics.ts',      exp: 'INFO', isReading: false },
   law:           { file: 'data/questions/law.ts',              exp: 'LAW',  isReading: false },
   literature:    { file: 'data/questions/literature.ts',       exp: 'LIT',  isReading: false },
+  // No static-fallback file yet (draft spec only, no content sourced) — the Supabase path
+  // works today; the static-file path is only hit once one of these is authored.
+  kazakh_lang:   { file: 'data/questions/kazakh_lang.ts',       exp: 'KZL',  isReading: false },
+  russian_lang:  { file: 'data/questions/russian_lang.ts',      exp: 'RUL',  isReading: false },
 };
 
 // STEM_SUBJECTS imported from ./utils/constants.mjs

@@ -1,6 +1,6 @@
 import type { Question, Passage } from '../types/index';
 import { getQType } from '../types/index';
-import { getPool, getPassages } from './questionStore';
+import { getPool, getPassages, resolveLiteratureCdnSid } from './questionStore';
 import { TOPIC_MAP, getTopicQuestions } from '../config/topics';
 import { ALL_PROFILES_BASE } from '../config/subjects';
 
@@ -140,7 +140,7 @@ function balancedSample(source: Question[], n: number, shuffle: boolean): Questi
   return shuffle ? shuffleArray(result).slice(0, n) : result.slice(0, n);
 }
 
-async function getQs(sid: string, n: number, shuffle: boolean = true, topicId: string | null = null, lang?: 'ru' | 'kk'): Promise<Question[]> {
+async function getQs(sid: string, n: number, shuffle: boolean = true, topicId: string | null = null, lang?: 'ru' | 'kk', profileSubjects?: string[]): Promise<Question[]> {
   if (sid === "reading") {
     const passages: Passage[] = await getPassages(lang);
     const s = shuffle ? shuffleArray(passages) : [...passages];
@@ -154,7 +154,7 @@ async function getQs(sid: string, n: number, shuffle: boolean = true, topicId: s
     return shuffle ? r.slice(0, n).map(shuffleOptions) : r.slice(0, n).map(copyQuestion);
   }
 
-  const pool: Question[] = await getPool(sid, lang);
+  const pool: Question[] = await getPool(sid, lang, resolveLiteratureCdnSid(profileSubjects));
   if (!pool || pool.length === 0) return [];
 
   let source: Question[] = pool;

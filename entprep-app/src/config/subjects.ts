@@ -14,7 +14,8 @@ export const SUBJECT_META: Record<string, SubjectMeta> = {
   informatics:{name:"Информатика",color:"#06B6D4"},
   law:{name:"Основы права",color:"#D97706"},
   literature:{name:"Литература",color:"#E11D48"},
-  native_lang:{name:"Каз/Рус язык",color:"#0EA5E9"},
+  kazakh_lang:{name:"Қазақ тілі",color:"#00AFCA"},
+  russian_lang:{name:"Русский язык",color:"#3B82F6"},
 };
 
 export const ALL_PROFILES_BASE: ProfileSubject[] = [
@@ -27,8 +28,9 @@ export const ALL_PROFILES_BASE: ProfileSubject[] = [
   {id:"world_history",name:"Всемирная история",icon:"📜",color:"#8B5CF6",cnt:20,available:true,examCnt:40},
   {id:"informatics",name:"Информатика",icon:"💾",color:"#06B6D4",cnt:20,available:true,examCnt:40},
   {id:"law",name:"Основы права",icon:"⚖️",color:"#D97706",cnt:20,available:true,examCnt:40},
-  {id:"literature",name:"Литература",icon:"📚",color:"#E11D48",cnt:20,available:false,examCnt:40},
-  {id:"native_lang",name:"Каз/Рус язык",icon:"🇰🇿",color:"#0EA5E9",cnt:20,available:false,examCnt:40},
+  {id:"literature",name:"Литература",icon:"📚",color:"#E11D48",cnt:20,available:true,examCnt:40},
+  {id:"kazakh_lang",name:"Қазақ тілі",icon:"🇰🇿",color:"#00AFCA",cnt:20,available:false,examCnt:40},
+  {id:"russian_lang",name:"Русский язык",icon:"🇷🇺",color:"#3B82F6",cnt:20,available:true,examCnt:40},
 ];
 
 export const SUBS_BASE: Record<string, SubjectConfig> = {
@@ -39,8 +41,9 @@ export const SUBS_BASE: Record<string, SubjectConfig> = {
 
 // Official ЕНТ profile-subject combinations (bidirectional). Onboarding lets a
 // student pick only these pairs — after the first pick, only valid partners stay
-// selectable. The native-language ↔ literature pair is listed for completeness,
-// but both subjects are available:false (locked) until content exists.
+// selectable. Literature pairs with either native-language track (Kazakh or
+// Russian) for philology/pedagogical specialties. Russian track is unlocked
+// (russian_lang + literature); kazakh_lang stays locked until its bank exists.
 export const PROFILE_PAIRS: [string, string][] = [
   ['math_profile', 'physics'],
   ['math_profile', 'informatics'],
@@ -51,7 +54,8 @@ export const PROFILE_PAIRS: [string, string][] = [
   ['english', 'geography'],
   ['world_history', 'law'],
   ['world_history', 'geography'],
-  ['native_lang', 'literature'],
+  ['kazakh_lang', 'literature'],
+  ['russian_lang', 'literature'],
 ];
 
 // subject id -> valid partner ids (derived from PROFILE_PAIRS, both directions).

@@ -5,7 +5,7 @@ import { CARD_COMPACT, TYPE, COLORS, scoreColor, FF, FS, R } from '../constants/
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useNav } from '../contexts/NavigationContext';
 import { useApp } from '../contexts/AppContext';
-import { getPool, getPoolSize } from '../utils/questionStore';
+import { getPool, getPoolSize, resolveLiteratureCdnSid } from '../utils/questionStore';
 import { assembleProfileSection } from '../utils/questionAssembler';
 import { PROFILE_BLOCKS } from '../config/ent';
 import { useT } from '../locales';
@@ -24,7 +24,7 @@ interface SubjectDetailProps {
 
 export default function SubjectDetail({ sid }: SubjectDetailProps) {
   const { nav, goHome, setCustomQs, setCurSub, setScreen } = useNav();
-  const { hist, st: settings } = useApp();
+  const { hist, st: settings, prof } = useApp();
   const isKk = settings.lang === 'kk';
   const t = useT();
   const bp = useBreakpoint();
@@ -80,7 +80,7 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
     // PERF-1: read the tiny <sid>.meta.json (post-quarantine counts) instead of downloading
     // and parsing the entire multi-MB subject pool just to render topic counts + Start. The
     // full pool is fetched lazily only when a test actually starts (getQs / assembleProfileSection).
-    const cdnSid = sid === 'literature' ? 'literature_russian' : sid;
+    const cdnSid = sid === 'literature' ? resolveLiteratureCdnSid(prof) : sid;
     (async () => {
       try {
         const resp = await fetch(`/data/${cdnSid}.meta.json`);
@@ -100,7 +100,7 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
         // Meta missing/unreadable → fall back to deriving counts from the full pool.
         captureError(err, { context: 'SubjectDetail.meta', sid });
         try {
-          const pool = await getPool(sid);
+          const pool = await getPool(sid, undefined, resolveLiteratureCdnSid(prof));
           if (cancelled) return;
           fromPool(pool);
         } catch (err2) {
@@ -112,13 +112,13 @@ export default function SubjectDetail({ sid }: SubjectDetailProps) {
     })();
 
     return () => { cancelled = true; };
-  }, [sid, topics]);
+  }, [sid, topics, prof]);
 
   const startExam = async () => {
     if (examLoading) return;
     setExamLoading(true);
     try {
-      const qs = await assembleProfileSection(sid, PROFILE_BLOCKS, true, settings.lang);
+      const qs = await assembleProfileSection(sid, PROFILE_BLOCKS, true, settings.lang, prof);
       if (qs.length > 0) {
         setCustomQs(qs);
         setCurSub(sid);

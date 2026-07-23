@@ -21,6 +21,7 @@ const ALL_SUBJECTS = [
   'math', 'reading', 'history',
   'math_profile', 'physics', 'biology', 'english',
   'chemistry', 'geography', 'world_history', 'informatics', 'law', 'literature',
+  'russian_lang',
 ];
 
 // Validate all subjects exist in the canonical list

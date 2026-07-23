@@ -174,7 +174,8 @@ export type SubjectId =
   | 'math' | 'reading' | 'history'
   | 'geography' | 'english' | 'math_profile'
   | 'physics' | 'biology' | 'chemistry'
-  | 'world_history' | 'informatics' | 'law' | 'literature';
+  | 'world_history' | 'informatics' | 'law' | 'literature'
+  | 'kazakh_lang' | 'russian_lang';
 
 // ── ENT Exam Config ────────────────────────────────────────────────────────
 
