@@ -12,6 +12,11 @@ const ALLOWED_TYPES = new Set([
   "fullscreen_exit",
   "session_start",
   "session_end",
+  "camera_consent_accepted",
+  "camera_consent_declined",
+  "camera_start",
+  "camera_denied",
+  "camera_stopped",
 ]);
 
 const sbHeaders = {

@@ -8,10 +8,20 @@ export type ProctorEventType =
   | 'focus'
   | 'fullscreen_exit'
   | 'session_start'
-  | 'session_end';
+  | 'session_end'
+  | 'camera_consent_accepted'
+  | 'camera_consent_declined'
+  | 'camera_start'
+  | 'camera_denied'
+  | 'camera_stopped';
 
 export function isSoftProctorEnabled(): boolean {
   return isSchoolTenant() || import.meta.env.VITE_SOFT_PROCTOR === 'true';
+}
+
+/** Hard stub (consent + optional camera PIP). School builds on by default with soft. */
+export function isHardProctorEnabled(): boolean {
+  return isSchoolTenant() || import.meta.env.VITE_HARD_PROCTOR === 'true';
 }
 
 /** @deprecated use isSoftProctorEnabled */
@@ -35,7 +45,8 @@ export async function logProctorEvent(
 export async function logProctorEvents(
   events: Array<{ session_id: string; event_type: ProctorEventType; meta?: Record<string, unknown> }>,
 ): Promise<void> {
-  if (!isSoftProctorEnabled() || !events.length || !supabase) return;
+  // Hard stub still needs the log pipe even if only VITE_HARD_PROCTOR is set.
+  if ((!isSoftProctorEnabled() && !isHardProctorEnabled()) || !events.length || !supabase) return;
   try {
     const { data: { session } } = await supabase.auth.getSession();
     const token = session?.access_token;
@@ -46,6 +57,6 @@ export async function logProctorEvents(
       body: JSON.stringify({ events }),
     });
   } catch {
-    /* soft proctor must never break the exam */
+    /* proctor must never break the exam */
   }
 }

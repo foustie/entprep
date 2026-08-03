@@ -1258,11 +1258,28 @@ const kk: Translations = {
     proctorTabSwitch: 'қойындыдан кету',
     proctorFullscreenExit: 'толық экраннан шығу',
     proctorFocusReturn: 'қойындыға оралды',
+    proctorCameraStart: 'камера қосылды',
+    proctorCameraDenied: 'камера қабылданбады',
+    proctorCameraStopped: 'камера өшірілді',
+    proctorCameraConsentOk: 'камераға келісім',
+    proctorCameraConsentNo: 'камерадан бас тарту',
+    proctorStubBadge: 'Прокторинг: stub (камера)',
   },
 
   // ── Soft proctoring (WS6) ────────────────────────────────────────────
   proctor: {
     tabSwitchWarning: 'Тестке қайтыңыз — қойындыдан кету тіркеледі',
+  },
+
+  hardProctor: {
+    title: 'Прокторинг',
+    body: 'Толық ҰБТ кезінде мектеп тұтастықты бақылау үшін камераны пайдалануы мүмкін. Бұл нұсқада бейне серверге жазылмайды — тек жергілікті алдын ала қарау және мұғалім журналы.',
+    policy: 'Бұзушылықтар тек тіркеледі (ескерту + журнал). Балл автоматты түрде нөлденбейді. Камерасыз жалғастыруға болады.',
+    accept: 'Камераға рұқсат',
+    decline: 'Камерасыз жалғастыру',
+    cameraDenied: 'Камера қолжетімсіз — емтихан жалғасады, оқиға жазылды',
+    cameraStopped: 'Камера өшті — емтихан жалғасады',
+    stubBadge: 'Прокторинг: stub (камера)',
   },
 
   landing: {

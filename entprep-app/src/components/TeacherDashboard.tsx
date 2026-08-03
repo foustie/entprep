@@ -869,11 +869,22 @@ export default function TeacherDashboard({ onBack }: Props) {
                       const events = proctorByStudent[st.id] || [];
                       // Session start/end are bookkeeping, not distractions — only count
                       // the signals a teacher actually cares about.
-                      const distractions = events.filter(ev => ev.event_type !== 'session_start' && ev.event_type !== 'session_end' && ev.event_type !== 'focus');
+                      const distractions = events.filter(ev =>
+                        ev.event_type !== 'session_start'
+                        && ev.event_type !== 'session_end'
+                        && ev.event_type !== 'focus'
+                        && ev.event_type !== 'camera_consent_accepted'
+                        && ev.event_type !== 'camera_start'
+                      );
                       const label = (type: string) => {
                         if (type === 'visibility_hidden' || type === 'blur') return tt.proctorTabSwitch;
                         if (type === 'fullscreen_exit') return tt.proctorFullscreenExit;
                         if (type === 'focus') return tt.proctorFocusReturn;
+                        if (type === 'camera_denied') return tt.proctorCameraDenied;
+                        if (type === 'camera_stopped') return tt.proctorCameraStopped;
+                        if (type === 'camera_consent_declined') return tt.proctorCameraConsentNo;
+                        if (type === 'camera_consent_accepted') return tt.proctorCameraConsentOk;
+                        if (type === 'camera_start') return tt.proctorCameraStart;
                         return type;
                       };
                       return (
@@ -888,6 +899,7 @@ export default function TeacherDashboard({ onBack }: Props) {
                               </span>
                             )}
                           </div>
+                          <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 6 }}>{tt.proctorStubBadge}</div>
                           {distractions.length === 0 ? (
                             <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tt.proctorEmpty}</div>
                           ) : (

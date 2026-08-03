@@ -31,7 +31,10 @@ import { getSingleCorrect, getQType } from '../types';
 import { calcTestXP } from '../utils/xpHelpers';
 import ScoreRing from './ui/ScoreRing';
 import { useT } from '../locales';
-import { isSoftProctorEnabled, newProctorSessionId, logProctorEvent } from '../utils/proctorHelpers';
+import { isSoftProctorEnabled, isHardProctorEnabled, newProctorSessionId, logProctorEvent } from '../utils/proctorHelpers';
+import { getHardProctorAdapter } from '../utils/hardProctor';
+import type { HardProctorAdapter } from '../utils/hardProctor';
+import HardProctorConsent from './ui/HardProctorConsent';
 // FullENT is free unlimited — no AI limits needed
 
 interface FullENTProps {
@@ -61,8 +64,11 @@ export default function FullENT({ finish }: FullENTProps) {
   const subName = (id: string) => (t.subjects as Record<string, string>)[id] || id;
 
   const [phase, setPhase] = useState<"intro" | "test" | "results">("intro");
+  const [showHardConsent, setShowHardConsent] = useState(false);
   const [sections, setSections] = useState<Section[] | null>(null);
   const [sectionsLoading, setSectionsLoading] = useState(true);
+  const hardAdapterRef = useRef<HardProctorAdapter>(getHardProctorAdapter());
+  const hardEnabledRef = useRef(isHardProctorEnabled());
 
   useEffect(() => { let cancelled = false; (async () => {
     try {
@@ -165,18 +171,37 @@ export default function FullENT({ finish }: FullENTProps) {
     return () => { window.removeEventListener('offline', goOffline); window.removeEventListener('online', goOnline); };
   }, [phase, toast, t.test]);
 
-  // ── WS6: Soft proctoring ─────────────────────────────────────────────────
-  // Warn+log ONLY — never auto-fails, never touches scoring (see finishENT,
-  // which computes results purely from `answers`). Enabled on the school WL
-  // tenant, or opt-in via VITE_SOFT_PROCTOR for retail pilots/testing.
-  const softProctorRef = useRef(isSoftProctorEnabled());
+  // ── Soft + hard proctoring ───────────────────────────────────────────────
+  // Warn+log ONLY — never auto-fails, never touches scoring (see finishENT).
+  const softProctorRef = useRef(isSoftProctorEnabled() || isHardProctorEnabled());
   const proctorSessionRef = useRef<string | null>(null);
+  const pendingHardConsentRef = useRef<boolean | null>(null);
+  const hardCameraStartedRef = useRef(false);
+
   useEffect(() => {
-    if (!softProctorRef.current || phase !== 'test' || proctorSessionRef.current) return;
-    const sid = newProctorSessionId();
-    proctorSessionRef.current = sid;
-    logProctorEvent(sid, 'session_start');
-  }, [phase]);
+    if (!softProctorRef.current || phase !== 'test') return;
+    let sid = proctorSessionRef.current;
+    if (!sid) {
+      sid = newProctorSessionId();
+      proctorSessionRef.current = sid;
+      void logProctorEvent(sid, 'session_start');
+    }
+
+    if (hardEnabledRef.current && pendingHardConsentRef.current !== null && !hardCameraStartedRef.current) {
+      const accepted = pendingHardConsentRef.current;
+      pendingHardConsentRef.current = null;
+      hardCameraStartedRef.current = true;
+      void (async () => {
+        await hardAdapterRef.current.completeConsent(accepted, sid!);
+        if (accepted) {
+          await hardAdapterRef.current.startSession({
+            sessionId: sid!,
+            onCameraStopped: () => toast.warning(t.hardProctor.cameraStopped),
+          });
+        }
+      })();
+    }
+  }, [phase, toast, t.hardProctor]);
 
   useEffect(() => {
     if (!softProctorRef.current || phase !== 'test') return;
@@ -198,6 +223,30 @@ export default function FullENT({ finish }: FullENTProps) {
       window.removeEventListener('blur', onBlur);
     };
   }, [phase, toast, t.proctor]);
+
+  const beginTest = () => {
+    if (!isPremium) {
+      const lastFull = localStorage.getItem('entprep_last_fullent');
+      const today = new Date().toDateString();
+      if (lastFull === today) { openPaywall('fullent'); return; }
+      localStorage.setItem('entprep_last_fullent', today);
+    }
+    finishedRef.current = false;
+    hardCameraStartedRef.current = false;
+    proctorSessionRef.current = null;
+    if (hardEnabledRef.current) {
+      setShowHardConsent(true);
+      return;
+    }
+    setPhase('test');
+  };
+
+  const finishHardConsent = (accepted: boolean) => {
+    setShowHardConsent(false);
+    pendingHardConsentRef.current = accepted;
+    if (!accepted) toast.warning(t.hardProctor.cameraDenied);
+    setPhase('test');
+  };
 
   // Keyboard navigation for answer options
   useEffect(() => {
@@ -246,6 +295,8 @@ export default function FullENT({ finish }: FullENTProps) {
     finishedRef.current = true;
     if (timerRef.current) clearInterval(timerRef.current);
     if (proctorSessionRef.current) logProctorEvent(proctorSessionRef.current, 'session_end');
+    void hardAdapterRef.current.stopSession();
+    hardCameraStartedRef.current = false;
     flushQTime(); // capture time spent on the question visible at finish
     setPhase("results");
     const r = calcResults();
@@ -503,16 +554,7 @@ export default function FullENT({ finish }: FullENTProps) {
       </div>
 
       {/* Start CTA */}
-      <button onClick={() => {
-        if (!isPremium) {
-          const lastFull = localStorage.getItem('entprep_last_fullent');
-          const today = new Date().toDateString();
-          if (lastFull === today) { openPaywall('fullent'); return; }
-          localStorage.setItem('entprep_last_fullent', today);
-        }
-        finishedRef.current = false; // fresh run: allow exactly one finish
-        setPhase("test");
-      }} style={{
+      <button onClick={beginTest} style={{
         width: "100%", padding: "16px",
         background: COLORS.streak,
         color: "#fff",
@@ -526,6 +568,12 @@ export default function FullENT({ finish }: FullENTProps) {
       }}>
         <Play size={18} strokeWidth={3} fill="#fff" />{t.fullent.startEnt}
       </button>
+      {showHardConsent && (
+        <HardProctorConsent
+          onAccept={() => finishHardConsent(true)}
+          onDecline={() => finishHardConsent(false)}
+        />
+      )}
     </div>
   );
 

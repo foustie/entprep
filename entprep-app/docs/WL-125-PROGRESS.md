@@ -12,7 +12,9 @@ Hosting choice: **A** (Netlify later + same Supabase, `tenant_id=125`).
 | feat(teacher): nav + multi-class + kick/leave | Done |
 | feat(school-content): import + assign | Done (needs migration to run live) |
 | feat(proctor): soft events + teacher log | Done (needs migration to run live) |
+| feat(proctor): hard adapter stub (camera consent + PIP) | Done (needs hard-events migration) |
 | chore(deploy): domain + strip landing | Shell done; Netlify/DNS **blocked** until you say go |
+| Teacher onboarding script | `docs/WL-125-TEACHER-ONBOARDING.md` |
 
 ## Local school preview
 
