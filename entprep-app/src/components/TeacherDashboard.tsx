@@ -5,10 +5,13 @@ import { TOPIC_MAP } from '../config/topics';
 import { useAuth } from '../contexts/AuthContext';
 import { API_BASE } from '../config/app';
 import { supabase } from '../config/supabase';
-import { ArrowLeft, Users, Copy, Check, TrendingUp, AlertTriangle, ArrowUp, Target, Printer, ChevronRight } from 'lucide-react';
+import { isSchoolTenant } from '../config/tenant';
+import { useNav } from '../contexts/NavigationContext';
+import { ArrowLeft, Users, Copy, Check, TrendingUp, AlertTriangle, ArrowUp, Target, Printer, ChevronRight, Upload, PlayCircle, FileJson, Plus, UserMinus } from 'lucide-react';
 import Button from './ui/Button';
 import { useT } from '../locales';
 import { pluralizeForms } from '../utils/formatters';
+import type { Question } from '../types';
 
 interface WeakTopic {
   tp: string;
@@ -57,14 +60,51 @@ interface Props {
   onBack: () => void;
 }
 
-async function teacherAPI<T>(action: string, body?: Record<string, unknown>): Promise<T> {
+async function teacherAPI<T>(action: string, body?: Record<string, unknown>, query?: Record<string, string>): Promise<T> {
   if (!supabase) throw new Error('No supabase');
   const session = await supabase.auth.getSession();
   const token = session?.data.session?.access_token;
   if (!token) throw new Error('Not authenticated');
 
   const method = body ? 'POST' : 'GET';
-  const res = await fetch(`${API_BASE}/api/teacher?action=${action}`, {
+  const qs = query && Object.keys(query).length ? `&${new URLSearchParams(query).toString()}` : '';
+  const res = await fetch(`${API_BASE}/api/teacher?action=${action}${qs}`, {
+    method,
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    ...(body ? { body: JSON.stringify(body) } : {}),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Server error' }));
+    throw new Error(err.error || 'Request failed');
+  }
+  return res.json();
+}
+
+// WS5: school pack import/assign — separate endpoint from teacherAPI above
+// (netlify/functions/school-content.mjs), same auth pattern.
+interface QuestionPack {
+  id: string;
+  subject: string;
+  title: string | null;
+  payload: Question[] | { questions: Question[] };
+  created_by: string;
+  created_at: string;
+  assigned_class_ids: string[];
+}
+
+function packQuestions(pack: QuestionPack): Question[] {
+  return Array.isArray(pack.payload) ? pack.payload : (pack.payload?.questions || []);
+}
+
+async function schoolAPI<T>(action: string, body?: Record<string, unknown>): Promise<T> {
+  if (!supabase) throw new Error('No supabase');
+  const session = await supabase.auth.getSession();
+  const token = session?.data.session?.access_token;
+  if (!token) throw new Error('Not authenticated');
+
+  const method = body ? 'POST' : 'GET';
+  const res = await fetch(`${API_BASE}/api/school-content?action=${action}`, {
     method,
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
     ...(body ? { body: JSON.stringify(body) } : {}),
@@ -91,10 +131,12 @@ function timeAgo(dateStr: string | null, labels: { noData: string; minAgo: strin
 
 export default function TeacherDashboard({ onBack }: Props) {
   const { user } = useAuth();
+  const { navToErrorTest } = useNav();
   const t = useT();
   const tt = t.teacher;
   const [cls, setCls] = useState<ClassData | null>(null);
   const [students, setStudents] = useState<StudentData[]>([]);
+  const [proctorByStudent, setProctorByStudent] = useState<Record<string, Array<{ event_type: string; created_at: string }>>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -103,19 +145,142 @@ export default function TeacherDashboard({ onBack }: Props) {
   const [filterSubject, setFilterSubject] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'score' | 'tests' | 'active'>('score');
 
+  // WS5: school test packs
+  const [packs, setPacks] = useState<QuestionPack[]>([]);
+  const [packSubject, setPackSubject] = useState('');
+  const [packTitle, setPackTitle] = useState('');
+  const [packPaste, setPackPaste] = useState('');
+  const [importing, setImporting] = useState(false);
+  const [importMsg, setImportMsg] = useState<string | null>(null);
+  const [importErr, setImportErr] = useState<string | null>(null);
+  const [assigningId, setAssigningId] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const loadPacks = useCallback(async () => {
+    try {
+      const data = await schoolAPI<{ packs: QuestionPack[] }>('list_packs');
+      setPacks(data.packs || []);
+    } catch (e) {
+      setImportErr((e as Error).message);
+    }
+  }, []);
+
+  useEffect(() => { if (isSchoolTenant()) loadPacks(); }, [loadPacks]);
+
+  const handlePackFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setPackPaste(String(reader.result || ''));
+    reader.readAsText(file);
+  };
+
+  const doImportPack = async () => {
+    setImportErr(null);
+    setImportMsg(null);
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(packPaste);
+    } catch {
+      setImportErr(tt.packInvalidJson);
+      return;
+    }
+    const questions = Array.isArray(parsed) ? parsed : (parsed as { questions?: unknown[] } | null)?.questions;
+    if (!Array.isArray(questions) || questions.length === 0) {
+      setImportErr(tt.packNoQuestions);
+      return;
+    }
+    try {
+      setImporting(true);
+      const data = await schoolAPI<{ imported: number; skipped: number }>('import_pack', {
+        subject: packSubject.trim(),
+        title: packTitle.trim() || undefined,
+        questions,
+      });
+      let msg = tt.packImportSuccess.replace('{n}', String(data.imported));
+      if (data.skipped) msg += tt.packImportSkipped.replace('{n}', String(data.skipped));
+      setImportMsg(msg);
+      setPackPaste('');
+      setPackTitle('');
+      await loadPacks();
+    } catch (e) {
+      setImportErr((e as Error).message);
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const doAssignPack = async (packId: string) => {
+    if (!cls) return;
+    try {
+      setAssigningId(packId);
+      setImportErr(null);
+      await schoolAPI('assign_pack', { pack_id: packId, class_id: cls.id });
+      await loadPacks();
+    } catch (e) {
+      setImportErr((e as Error).message);
+    } finally {
+      setAssigningId(null);
+    }
+  };
+
+  const runPack = async (pack: QuestionPack) => {
+    try {
+      if (!supabase) return;
+      const session = await supabase.auth.getSession();
+      const token = session?.data.session?.access_token;
+      const res = await fetch(`${API_BASE}/api/school-content?action=get_pack&pack_id=${pack.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || 'Failed');
+      const qs = packQuestions(body.pack);
+      if (!qs.length) return;
+      navToErrorTest(qs.map(q => ({ ...q, _su: q._su || pack.subject })));
+    } catch (e) {
+      setImportErr((e as Error).message);
+    }
+  };
+
+  const loadProctor = async (studentId: string) => {
+    try {
+      if (!supabase) return;
+      const session = await supabase.auth.getSession();
+      const token = session?.data.session?.access_token;
+      const res = await fetch(`${API_BASE}/api/proctor?action=student_events&student_id=${studentId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return;
+      const body = await res.json();
+      setProctorByStudent(prev => ({ ...prev, [studentId]: body.events || [] }));
+    } catch { /* ignore */ }
+  };
+
   // Create class form
   const [creating, setCreating] = useState(false);
   const [className, setClassName] = useState('');
   const [schoolName, setSchoolName] = useState('');
   const [expandedStudent, setExpandedStudent] = useState<string | null>(null);
 
-  const loadData = useCallback(async () => {
+  // Multi-class: teacher can own several classes — a simple switcher when >1.
+  const [classes, setClasses] = useState<ClassData[]>([]);
+  const [showAddClass, setShowAddClass] = useState(false);
+
+  // Kick student (teacher-only)
+  const [kickConfirmId, setKickConfirmId] = useState<string | null>(null);
+  const [kicking, setKicking] = useState(false);
+
+  const loadData = useCallback(async (classId?: string) => {
     try {
       setLoading(true);
       setError(null);
-      const data = await teacherAPI<{ class: ClassData | null; students?: StudentData[] }>('get_class');
+      const data = await teacherAPI<{ class: ClassData | null; students?: StudentData[]; classes?: ClassData[] }>(
+        'get_class', undefined, classId ? { class_id: classId } : undefined,
+      );
       setCls(data.class);
       setStudents(data.students || []);
+      setClasses(data.classes || (data.class ? [data.class] : []));
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -133,11 +298,29 @@ export default function TeacherDashboard({ onBack }: Props) {
         name: className.trim(),
         school: schoolName.trim(),
       });
-      setCls(data.class);
+      setClassName('');
+      setSchoolName('');
+      setShowAddClass(false);
+      await loadData(data.class.id);
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleKick = async (studentId: string) => {
+    if (!cls) return;
+    try {
+      setKicking(true);
+      await teacherAPI('kick_student', { class_id: cls.id, student_id: studentId });
+      setStudents(prev => prev.filter(s => s.id !== studentId));
+      setKickConfirmId(null);
+      if (expandedStudent === studentId) setExpandedStudent(null);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setKicking(false);
     }
   };
 
@@ -276,14 +459,62 @@ export default function TeacherDashboard({ onBack }: Props) {
           <ArrowLeft size={18} /> {t.back}
         </button>
         <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={() => setShowAddClass(v => !v)} aria-label={tt.addClass} title={tt.addClass} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', color: COLORS.teal, fontSize: 13, fontWeight: 600 }}>
+            <Plus size={14} /> {tt.addClass}
+          </button>
           <button onClick={() => window.print()} aria-label={tt.print} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 13 }}>
             <Printer size={14} />
           </button>
-          <button onClick={loadData} style={{ background: 'none', border: 'none', cursor: 'pointer', color: COLORS.teal, fontSize: 13, fontWeight: 600 }}>
+          <button onClick={() => loadData(cls.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: COLORS.teal, fontSize: 13, fontWeight: 600 }}>
             {tt.refresh}
           </button>
         </div>
       </div>
+
+      {/* Add another class — inline create form */}
+      {showAddClass && (
+        <div style={{ ...CARD, marginBottom: 16, padding: '18px 16px' }}>
+          <label style={{ ...SECTION_LABEL, display: 'block', marginBottom: 6 }}>{tt.className}</label>
+          <input
+            value={className}
+            onChange={e => setClassName(e.target.value)}
+            placeholder={tt.classNamePlaceholder}
+            maxLength={20}
+            style={{ width: '100%', padding: '10px 12px', borderRadius: R.md, border: '1px solid var(--border-md)', background: 'var(--bg-subtle)', color: 'var(--text)', fontSize: 14, marginBottom: 10, boxSizing: 'border-box' }}
+          />
+          <label style={{ ...SECTION_LABEL, display: 'block', marginBottom: 6 }}>{tt.school}</label>
+          <input
+            value={schoolName}
+            onChange={e => setSchoolName(e.target.value)}
+            placeholder={tt.schoolPlaceholder}
+            maxLength={100}
+            style={{ width: '100%', padding: '10px 12px', borderRadius: R.md, border: '1px solid var(--border-md)', background: 'var(--bg-subtle)', color: 'var(--text)', fontSize: 14, marginBottom: 12, boxSizing: 'border-box' }}
+          />
+          {error && <p style={{ color: COLORS.red, fontSize: 13, marginBottom: 12 }}>{error}</p>}
+          <Button onClick={handleCreate} disabled={creating || !className.trim() || !schoolName.trim()} style={{ width: '100%' }}>
+            {creating ? tt.creating : tt.createClass}
+          </Button>
+        </div>
+      )}
+
+      {/* Class switcher — only shown when the teacher owns more than one class */}
+      {classes.length > 1 && (
+        <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
+          {classes.map(c => (
+            <button
+              key={c.id}
+              onClick={() => loadData(c.id)}
+              style={{
+                padding: '8px 14px', borderRadius: R.sm, border: `1px solid ${c.id === cls.id ? COLORS.teal : 'var(--border-md)'}`,
+                background: c.id === cls.id ? TINT.teal.bgLight : 'var(--bg-card)', color: c.id === cls.id ? COLORS.teal : 'var(--text)',
+                cursor: 'pointer', fontSize: 12, fontWeight: 600,
+              }}
+            >
+              {c.name}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Class info + invite code */}
       <div style={{ ...CARD, marginBottom: 16, padding: '20px 18px' }}>
@@ -308,6 +539,113 @@ export default function TeacherDashboard({ onBack }: Props) {
           </button>
         </div>
       </div>
+
+      {/* WS5: school test packs — import own JSON test, assign to class, launch */}
+      {isSchoolTenant() && (
+        <div style={{ ...CARD, marginBottom: 16, padding: '20px 18px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+            <FileJson size={16} color={COLORS.teal} />
+            <h2 style={{ ...TYPE.h3 }}>{tt.packsTitle}</h2>
+          </div>
+          <p style={{ ...TYPE.bodySmall, marginBottom: 16 }}>{tt.packsHint}</p>
+
+          <label style={{ ...SECTION_LABEL, display: 'block', marginBottom: 6 }}>{tt.packSubject}</label>
+          <input
+            value={packSubject}
+            onChange={e => setPackSubject(e.target.value)}
+            placeholder={tt.packSubjectPlaceholder}
+            maxLength={100}
+            style={{ width: '100%', padding: '10px 12px', borderRadius: R.md, border: '1px solid var(--border-md)', background: 'var(--bg-subtle)', color: 'var(--text)', fontSize: 14, marginBottom: 12, boxSizing: 'border-box' }}
+          />
+
+          <label style={{ ...SECTION_LABEL, display: 'block', marginBottom: 6 }}>{tt.packTitle}</label>
+          <input
+            value={packTitle}
+            onChange={e => setPackTitle(e.target.value)}
+            placeholder={tt.packTitlePlaceholder}
+            maxLength={200}
+            style={{ width: '100%', padding: '10px 12px', borderRadius: R.md, border: '1px solid var(--border-md)', background: 'var(--bg-subtle)', color: 'var(--text)', fontSize: 14, marginBottom: 12, boxSizing: 'border-box' }}
+          />
+
+          <input ref={fileInputRef} type="file" accept="application/json,.json" onChange={handlePackFile} style={{ display: 'none' }} />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: R.sm, border: '1px solid var(--border-md)', background: 'var(--bg-card)', color: 'var(--text)', cursor: 'pointer', fontSize: 12, fontWeight: 600, marginBottom: 8 }}
+          >
+            <Upload size={14} /> {tt.packUploadFile}
+          </button>
+
+          <label style={{ ...SECTION_LABEL, display: 'block', marginBottom: 6 }}>{tt.packOrPaste}</label>
+          <textarea
+            value={packPaste}
+            onChange={e => setPackPaste(e.target.value)}
+            placeholder={tt.packPastePlaceholder}
+            rows={5}
+            style={{ width: '100%', padding: '10px 12px', borderRadius: R.md, border: '1px solid var(--border-md)', background: 'var(--bg-subtle)', color: 'var(--text)', fontSize: 12, fontFamily: FF.mono, marginBottom: 12, boxSizing: 'border-box', resize: 'vertical' }}
+          />
+
+          {importErr && <p style={{ color: COLORS.red, fontSize: 13, marginBottom: 12 }}>{importErr}</p>}
+          {importMsg && <p style={{ color: '#58CC02', fontSize: 13, marginBottom: 12 }}>{importMsg}</p>}
+
+          <Button
+            onClick={doImportPack}
+            disabled={importing || !packSubject.trim() || !packPaste.trim()}
+            style={{ width: '100%', marginBottom: packs.length > 0 ? 20 : 0 }}
+          >
+            {importing ? tt.packImporting : tt.packImport}
+          </Button>
+
+          {packs.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {packs.map(pack => {
+                const qCount = packQuestions(pack).length;
+                const isAssigned = !!cls && pack.assigned_class_ids.includes(cls.id);
+                return (
+                  <div key={pack.id} style={{ ...CARD_COMPACT, padding: '12px 14px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {pack.title || pack.subject}
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                          {pack.subject} • {tt.packQuestionsCount.replace('{n}', String(qCount))}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                        <button
+                          onClick={() => doAssignPack(pack.id)}
+                          disabled={!cls || isAssigned || assigningId === pack.id}
+                          title={!cls ? tt.packNeedClassFirst : undefined}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 4, padding: '7px 10px', borderRadius: R.sm, border: '1px solid var(--border-md)',
+                            background: isAssigned ? TINT.teal.bgLight : 'var(--bg-card)', color: isAssigned ? COLORS.teal : 'var(--text)',
+                            cursor: !cls || isAssigned ? 'default' : 'pointer', fontSize: 11, fontWeight: 600, opacity: !cls ? 0.5 : 1,
+                          }}
+                        >
+                          {isAssigned ? <Check size={12} /> : null}
+                          {assigningId === pack.id ? tt.packAssigning : isAssigned ? tt.packAssigned : tt.packAssign}
+                        </button>
+                        <button
+                          onClick={() => runPack(pack)}
+                          aria-label={tt.packRun}
+                          title={tt.packRun}
+                          style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '7px 10px', borderRadius: R.sm, border: 'none', background: COLORS.teal, color: '#fff', cursor: 'pointer', fontSize: 11, fontWeight: 600 }}
+                        >
+                          <PlayCircle size={12} /> {tt.packRun}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {packs.length === 0 && (
+            <p style={{ ...TYPE.bodySmall, textAlign: 'center', marginTop: 4 }}>{tt.packListEmpty}</p>
+          )}
+        </div>
+      )}
 
       {/* Summary stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 16 }}>
@@ -422,7 +760,11 @@ export default function TeacherDashboard({ onBack }: Props) {
                   role="button"
                   tabIndex={0}
                   aria-expanded={isExpanded}
-                  onClick={() => setExpandedStudent(isExpanded ? null : st.id)}
+                  onClick={() => {
+                    const next = isExpanded ? null : st.id;
+                    setExpandedStudent(next);
+                    if (next && isSchoolTenant()) loadProctor(next);
+                  }}
                   onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpandedStudent(isExpanded ? null : st.id); } }}
                   style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}
                 >
@@ -521,6 +863,72 @@ export default function TeacherDashboard({ onBack }: Props) {
                         ))}
                       </div>
                     )}
+
+                    {/* Soft proctor journal — WS6: warn+log only, never affects scoring */}
+                    {isSchoolTenant() && (() => {
+                      const events = proctorByStudent[st.id] || [];
+                      // Session start/end are bookkeeping, not distractions — only count
+                      // the signals a teacher actually cares about.
+                      const distractions = events.filter(ev => ev.event_type !== 'session_start' && ev.event_type !== 'session_end' && ev.event_type !== 'focus');
+                      const label = (type: string) => {
+                        if (type === 'visibility_hidden' || type === 'blur') return tt.proctorTabSwitch;
+                        if (type === 'fullscreen_exit') return tt.proctorFullscreenExit;
+                        if (type === 'focus') return tt.proctorFocusReturn;
+                        return type;
+                      };
+                      return (
+                        <div style={{ paddingTop: 8 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                              {tt.proctorLog}
+                            </span>
+                            {distractions.length > 0 && (
+                              <span style={{ fontSize: 11, fontWeight: 700, color: COLORS.amber }}>
+                                {distractions.length} {pluralizeForms(distractions.length, tt.proctorEventWord)}
+                              </span>
+                            )}
+                          </div>
+                          {distractions.length === 0 ? (
+                            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tt.proctorEmpty}</div>
+                          ) : (
+                            distractions.slice(0, 12).map((ev, idx) => (
+                              <div key={`${ev.created_at}-${idx}`} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, padding: '2px 0' }}>
+                                <span style={{ color: 'var(--text-body)' }}>{label(ev.event_type)}</span>
+                                <span style={{ color: 'var(--text-muted)' }}>{new Date(ev.created_at).toLocaleString('ru-RU')}</span>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      );
+                    })()}
+
+                    {/* Kick student */}
+                    <div style={{ paddingTop: 12, marginTop: 8, borderTop: '1px solid var(--border)' }}>
+                      {kickConfirmId === st.id ? (
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button
+                            onClick={() => handleKick(st.id)}
+                            disabled={kicking}
+                            style={{ flex: 1, padding: '8px', background: COLORS.red, border: 'none', borderRadius: R.md, color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                          >
+                            {t.yes}
+                          </button>
+                          <button
+                            onClick={() => setKickConfirmId(null)}
+                            style={{ flex: 1, padding: '8px', background: 'transparent', border: '1px solid var(--border-md)', borderRadius: R.md, color: 'var(--text-secondary)', fontSize: 11, cursor: 'pointer' }}
+                          >
+                            {t.cancel}
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setKickConfirmId(st.id)}
+                          style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', color: COLORS.red, fontSize: 12, fontWeight: 600, padding: 0 }}
+                        >
+                          <UserMinus size={13} /> {tt.kick}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>

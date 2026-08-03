@@ -2,6 +2,16 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
+const tenantName = process.env.VITE_TENANT_NAME?.trim()
+const tenantShort = process.env.VITE_TENANT_SHORT_NAME?.trim()
+const pwaName = tenantName
+  ? `${tenantName} — Подготовка к ЕНТ`
+  : 'ENTprep — Подготовка к ЕНТ'
+const pwaShortName = tenantShort || tenantName || 'ENTprep'
+const pwaDescription = tenantName
+  ? `Подготовка к ЕНТ: 30 000+ вопросов, AI-помощник, адаптивное обучение — ${tenantName}`
+  : 'Подготовка к ЕНТ: 30 000+ вопросов, 13 предметов, AI-помощник, адаптивное обучение'
+
 export default defineConfig({
   test: {
     environment: 'jsdom',
@@ -29,9 +39,9 @@ export default defineConfig({
       srcDir: 'src',
       filename: 'sw.ts',
       manifest: {
-        name: 'ENTprep — Подготовка к ЕНТ',
-        short_name: 'ENTprep',
-        description: 'Подготовка к ЕНТ: 30 000+ вопросов, 13 предметов, AI-помощник, адаптивное обучение',
+        name: pwaName,
+        short_name: pwaShortName,
+        description: pwaDescription,
         theme_color: '#FAFAF8',
         background_color: '#FAFAF8',
         lang: 'ru',

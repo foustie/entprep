@@ -16,6 +16,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import PaywallScreen from './ui/PaywallScreen';
+import { TENANT } from '../config/tenant';
 
 const INK = 'var(--ink)';
 
@@ -73,7 +74,7 @@ export default function ProfileTab() {
   const displayName = profile?.display_name
     || (user?.user_metadata?.full_name as string | undefined)
     || customNickname
-    || 'ENTprep User';
+    || `${TENANT.name} User`;
   const avatarUrl = profile?.avatar_url
     || (user?.user_metadata?.avatar_url as string | undefined)
     || null;
@@ -226,8 +227,8 @@ export default function ProfileTab() {
         />
       </div>
 
-      {/* PRO upsell — non-premium authed users */}
-      {user && !isPremium && (
+      {/* PRO upsell — non-premium authed users (retail only) */}
+      {user && !isPremium && !TENANT.hidePaywall && (
         <>
           <ProBanner
             featureText={`${(t.paywall as Record<string, string>)?.feat1 || 'AI без лимита'} · ${(t.paywall as Record<string, string>)?.ctaSeason || '9 990₸ за сезон'}`}
@@ -400,7 +401,6 @@ function StatCard({
   );
 }
 
-// ── PRO banner (streak CTA + press depth) ───────────────────────────────
 function ProBanner({ featureText, onClick }: { featureText: string; onClick: () => void }) {
   const [pressed, setPressed] = useState(false);
   const style: CSSProperties = {
@@ -446,7 +446,7 @@ function ProBanner({ featureText, onClick }: { featureText: string; onClick: () 
           letterSpacing: '0.03em', textTransform: 'uppercase',
           lineHeight: 1.1,
         }}>
-          ENTprep PRO
+          {TENANT.name} PRO
         </span>
         <span style={{
           display: 'block',

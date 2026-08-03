@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getPoolSize, getTotalQ } from '../utils/questionStore';
 import { UNIS } from '../data/universities';
 import { supabase } from '../config/supabase';
@@ -8,7 +8,7 @@ import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useApp } from '../contexts/AppContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useNav } from '../contexts/NavigationContext';
-import { API_BASE } from '../config/app';
+import { API_BASE, TEACHER_EMAILS } from '../config/app';
 import { useToast } from '../contexts/ToastContext';
 import { useT } from '../locales';
 import { getGoalProgress } from '../utils/competitionHelpers';
@@ -56,7 +56,7 @@ const ROW_LAST: React.CSSProperties = {
 
 export default function Settings() {
   const { st, updSt, hist, clearHist, resetProfile } = useApp();
-  const { user, isAdmin, profile, needsNickname, refreshProfile, isPremium } = useAuth();
+  const { user, isAdmin, profile, needsNickname, refreshProfile, isPremium, refreshSchoolClass } = useAuth();
   const { nav, setScreen, setTab } = useNav();
   const toast = useToast();
   const t = useT();
@@ -81,6 +81,8 @@ export default function Settings() {
   const [classCode, setClassCode] = useState('');
   const [classJoining, setClassJoining] = useState(false);
   const [classMsg, setClassMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [myClass, setMyClass] = useState<{ id: string; name: string; school: string; invite_code: string } | null>(null);
+  const [leavingClass, setLeavingClass] = useState(false);
   const [goalTarget, setGoalTarget] = useState(() => st.goal?.target || 100);
   const [goalDate, setGoalDate] = useState(() => st.goal?.date || '');
   const goalProg = getGoalProgress(hist, st.goal);
@@ -111,6 +113,50 @@ export default function Settings() {
     }
   };
   const handleResetProfile = () => { resetProfile(); setScreen('profile'); setTab('home'); setCfResetProfile(false); };
+
+  // Class membership (student side) — drives whether the "leave class" row shows.
+  const loadMyClass = useCallback(async () => {
+    if (!user || !supabase) { setMyClass(null); return; }
+    try {
+      const session = await supabase.auth.getSession();
+      const token = session?.data.session?.access_token;
+      if (!token) return;
+      const res = await fetch(`${API_BASE}/api/teacher?action=my_class`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      setMyClass(data.class || null);
+    } catch { /* keep last known state on network error */ }
+  }, [user]);
+
+  useEffect(() => { loadMyClass(); }, [loadMyClass]);
+
+  const handleLeaveClass = async () => {
+    if (!supabase || !myClass) return;
+    setLeavingClass(true);
+    setClassMsg(null);
+    try {
+      const session = await supabase.auth.getSession();
+      const token = session?.data.session?.access_token;
+      const res = await fetch(`${API_BASE}/api/teacher?action=leave_class`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ class_id: myClass.id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setClassMsg({ ok: false, text: data.error || t.error });
+      } else {
+        setMyClass(null);
+        refreshSchoolClass?.();
+      }
+    } catch {
+      setClassMsg({ ok: false, text: t.settings.classJoinNetworkError });
+    } finally {
+      setLeavingClass(false);
+    }
+  };
   const lang = st.lang || 'ru';
   const fmtDate = (d?: string | null) =>
     d ? new Date(d).toLocaleDateString(lang === 'kk' ? 'kk-KZ' : 'ru-RU') : '';
@@ -524,7 +570,30 @@ export default function Settings() {
       {/* ════════ CLASS ════════ */}
       {user && (
         <Section icon={<GraduationCap size={11} />} label={t.settings.sectionClass}>
-          {/* Teacher dashboard hidden — 7 classes, 1 member. Access via direct nav('teacher') */}
+          {(!TEACHER_EMAILS.length || TEACHER_EMAILS.includes((user.email || '').toLowerCase())) && (
+            <button
+              onClick={() => nav('teacher')}
+              style={{ ...ROW, width: '100%', background: 'none', border: 'none', borderBottom: '1px solid var(--border-light)', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8, color: COLORS.teal, fontSize: 13, fontWeight: 600 }}
+            >
+              <GraduationCap size={15} /> {t.teacher.openPanel}
+            </button>
+          )}
+          {/* Current class + leave (only when actually a member) */}
+          {myClass && (
+            <div style={ROW}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <BookOpen size={15} /> {myClass.name} · {myClass.school}
+              </div>
+              <button
+                onClick={handleLeaveClass}
+                disabled={leavingClass}
+                style={{ background: 'none', border: 'none', color: COLORS.red, fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: 0, opacity: leavingClass ? 0.6 : 1 }}
+              >
+                {t.teacher.leaveClass}
+              </button>
+            </div>
+          )}
+
           {/* Join class with code */}
           <div style={ROW_LAST}>
             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -558,9 +627,12 @@ export default function Settings() {
                       setClassMsg({ ok: false, text: data.error || t.error });
                     } else if (data.already) {
                       setClassMsg({ ok: true, text: t.settings.classAlreadyJoined.replace('{class}', data.class.name) });
+                      loadMyClass();
                     } else {
                       setClassMsg({ ok: true, text: t.settings.classJoined.replace('{class}', data.class.name).replace('{school}', data.class.school) });
                       setClassCode('');
+                      loadMyClass();
+                      refreshSchoolClass?.();
                     }
                   } catch {
                     setClassMsg({ ok: false, text: t.settings.classJoinNetworkError });

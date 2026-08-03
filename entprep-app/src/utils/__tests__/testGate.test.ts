@@ -89,17 +89,17 @@ describe('computeTestGate', () => {
   });
 
   it('returns "ok" for a free user under the weekly limit', () => {
-    expect(computeTestGate({ user: { id: 'u1' }, isPremium: false, hist: someTests(0) })).toBe('ok');
-    expect(computeTestGate({ user: { id: 'u1' }, isPremium: false, hist: someTests(FREE_WEEKLY_TESTS - 1) })).toBe('ok');
+    expect(computeTestGate({ user: { id: 'u1' }, isPremium: false, hist: someTests(0), now: FIXED_NOW })).toBe('ok');
+    expect(computeTestGate({ user: { id: 'u1' }, isPremium: false, hist: someTests(FREE_WEEKLY_TESTS - 1), now: FIXED_NOW })).toBe('ok');
   });
 
   it('returns "paywall" for a free user at/over the weekly limit', () => {
-    expect(computeTestGate({ user: { id: 'u1' }, isPremium: false, hist: someTests(FREE_WEEKLY_TESTS) })).toBe('paywall');
-    expect(computeTestGate({ user: { id: 'u1' }, isPremium: false, hist: someTests(FREE_WEEKLY_TESTS + 3) })).toBe('paywall');
+    expect(computeTestGate({ user: { id: 'u1' }, isPremium: false, hist: someTests(FREE_WEEKLY_TESTS), now: FIXED_NOW })).toBe('paywall');
+    expect(computeTestGate({ user: { id: 'u1' }, isPremium: false, hist: someTests(FREE_WEEKLY_TESTS + 3), now: FIXED_NOW })).toBe('paywall');
   });
 
   it('always returns "ok" for premium users regardless of count', () => {
-    expect(computeTestGate({ user: { id: 'u1' }, isPremium: true, hist: someTests(100) })).toBe('ok');
+    expect(computeTestGate({ user: { id: 'u1' }, isPremium: true, hist: someTests(100), now: FIXED_NOW })).toBe('ok');
   });
 
   it('re-opens access once old tests fall out of the 7-day window', () => {

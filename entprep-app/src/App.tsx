@@ -26,6 +26,7 @@ import InstallPrompt from './components/InstallPrompt';
 import OfflineBanner from './components/OfflineBanner';
 import UpdatePrompt from './components/UpdatePrompt';
 import { API_BASE } from './config/app';
+import { TENANT, tenantAccentCss } from './config/tenant';
 import { supabase } from './config/supabase';
 import { useAuth } from './contexts/AuthContext';
 import { trackEvent } from './utils/analytics';
@@ -133,7 +134,8 @@ function AppContent() {
       tutor: 'AI Tutor',
     };
     const title = SCREEN_TITLES[screen];
-    document.title = title ? `${title} — ENTprep` : 'ENTprep — Бесплатная подготовка к ЕНТ';
+    const brand = TENANT.name;
+    document.title = title ? `${title} — ${brand}` : `${brand} — Бесплатная подготовка к ЕНТ`;
     if (screen) trackEvent('Screen View', { screen });
   }, [screen, tr]);
 
@@ -242,6 +244,7 @@ function AppContent() {
   // the render stays pure — no setState during render. 'login' is a pure conditional
   // render below (early return). 'ok' falls through to the normal test render.
   useEffect(() => {
+    if (TENANT.hidePaywall) return;
     if (isTestScreen && testGate === 'paywall') {
       openPaywall('test_limit');
       goHome();
@@ -262,20 +265,20 @@ function AppContent() {
     // Always go home — Andy will invite user to first test via speech bubble
     goHome();
   };
-  // Landing page for unauthenticated visitors with no test history
+  // Landing page for unauthenticated visitors with no test history (retail only)
   const [landingDismissed, setLandingDismissed] = useState(() => !!localStorage.getItem('entprep_landing_seen'));
-  const isNewVisitor = !user && hist.length === 0 && !landingDismissed;
+  const isNewVisitor = !TENANT.hideMarketingLanding && !user && hist.length === 0 && !landingDismissed;
 
   if (isNewVisitor && !landingDismissed) return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: FF.body }}>
-      <style>{`:root{${themeToCss(palette)}}${GLOBAL_STYLES}`}</style>
+      <style>{`:root{${themeToCss(palette)};${tenantAccentCss()}}${GLOBAL_STYLES}`}</style>
       <Suspense fallback={<LoadingSpinner />}><Landing totalQ={totalQ} onStart={() => { localStorage.setItem('entprep_landing_seen', '1'); setLandingDismissed(true); }} /></Suspense>
     </div>
   );
 
   if (showAuthPrompt) return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: FF.body, maxWidth: LAYOUT.maxWidth, margin: "0 auto", position: "relative" }}>
-      <style>{`:root{${themeToCss(palette)}}${GLOBAL_STYLES}`}</style>
+      <style>{`:root{${themeToCss(palette)};${tenantAccentCss()}}${GLOBAL_STYLES}`}</style>
       <Suspense fallback={<LoadingSpinner />}><AuthPrompt onFinish={finishAuthPrompt} /></Suspense>
     </div>
   );
@@ -284,7 +287,7 @@ function AppContent() {
   // onFinish (sign-in completes via reload, or "Later") returns HOME; never skips in.
   if (isTestScreen && testGate === 'login') return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: FF.body, maxWidth: LAYOUT.maxWidth, margin: "0 auto", position: "relative" }}>
-      <style>{`:root{${themeToCss(palette)}}${GLOBAL_STYLES}`}</style>
+      <style>{`:root{${themeToCss(palette)};${tenantAccentCss()}}${GLOBAL_STYLES}`}</style>
       <Suspense fallback={<LoadingSpinner />}><AuthPrompt testStartWall onFinish={goHome} /></Suspense>
     </div>
   );
@@ -443,7 +446,7 @@ function AppContent() {
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: FF.body }}>
-      <style>{`:root{${themeToCss(palette)}}${GLOBAL_STYLES}`}</style>
+      <style>{`:root{${themeToCss(palette)};${tenantAccentCss()}}${GLOBAL_STYLES}`}</style>
       <OfflineBanner />
       {isDesktop && showNav ? (
         <div style={{ display: "flex", minHeight: "100vh" }}>
@@ -468,7 +471,7 @@ function AppContent() {
       <InstallPrompt />
       <UpdatePrompt />
       <Suspense fallback={null}><PushPrompt /></Suspense>
-      <Suspense fallback={null}><PaywallModal open={paywallReason !== null} reason={paywallReason} onClose={closePaywall} /></Suspense>
+      <Suspense fallback={null}><PaywallModal open={!TENANT.hidePaywall && paywallReason !== null} reason={paywallReason} onClose={closePaywall} /></Suspense>
     </div>
   );
 }

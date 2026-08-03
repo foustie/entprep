@@ -14,6 +14,7 @@ import {
 import type { TutorMessage, StudentProfile } from '../utils/tutorHelpers';
 import { trackEvent } from '../utils/analytics';
 import { consumeTutor as consumeTutorLimit, getTutorRemaining } from '../utils/aiLimits';
+import { isSchoolTenant, TENANT } from '../config/tenant';
 import { API_BASE } from '../config/app';
 import BackButton from './ui/BackButton';
 import SubjectIcon from './ui/SubjectIcon';
@@ -31,7 +32,10 @@ const ACCENT = '#8b5cf6';
 
 export default function AiTutor({ initialSubject, initialTopicId, initialMode, initialMessage }: Props) {
   const { goHome, nav } = useNav();
-  const { user, isPremium } = useAuth();
+  const { user, isPremium, isSchoolSeat } = useAuth();
+  const schoolAiCap = isSchoolTenant() && TENANT.aiMonthlyCapPerUser > 0 && isSchoolSeat;
+  // Retail free users: daily limit. School seats: monthly cap even though "premium".
+  const enforceTutorQuota = !isPremium || schoolAiCap;
   const { hist, st } = useApp();
   const toast = useToast();
   const t = useT();
@@ -138,9 +142,13 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
     if (!user) { toast.error(t.test.loginRequired); sendingRef.current = false; return; }
     // Gate only — do NOT consume here. The quota is consumed after a successful
     // response so failed/timed-out/429 sends don't burn a free user's daily message.
-    if (!isPremium && getTutorRemaining() <= 0) {
+    if (enforceTutorQuota && getTutorRemaining() <= 0) {
       trackEvent('AI Tutor Limit Hit');
-      setShowPaywall(true);
+      if (schoolAiCap) {
+        toast.error(t.tutor.limitReached);
+      } else {
+        setShowPaywall(true);
+      }
       sendingRef.current = false;
       return;
     }
@@ -174,8 +182,8 @@ export default function AiTutor({ initialSubject, initialTopicId, initialMode, i
         updated[placeholderIdx] = { role: 'assistant', content: res.text, timestamp: Date.now() };
         return updated;
       });
-      // Consume the daily quota only on a successful response (one per success).
-      if (!isPremium) consumeTutorLimit();
+      // Consume quota only on a successful response (one per success).
+      if (enforceTutorQuota) consumeTutorLimit();
       trackEvent('tutor_message', { subject, mode });
     } catch (e: unknown) {
       const errMsg = e instanceof Error ? e.message : t.tutor.errorWord;

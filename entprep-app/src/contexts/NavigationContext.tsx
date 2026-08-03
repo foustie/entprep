@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useMemo } from
 import { SCREENS } from '../constants/screens';
 import { parseChallengeUrl } from '../utils/shareHelpers';
 import { parseDuelInviteParam } from '../utils/duelHelpers';
+import { TENANT } from '../config/tenant';
 import type { Question, ChallengeData, PaywallReason } from '../types/index';
 
 interface NavigationContextValue {
@@ -52,7 +53,11 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
   const [navNonce, setNavNonce] = useState(0);
 
   const closePaywall = useCallback(() => setPaywallReason(null), []);
-  const openPaywall = useCallback((reason: PaywallReason) => setPaywallReason(reason), []);
+  const openPaywall = useCallback((reason: PaywallReason) => {
+    // School WL builds have licensed seats — never surface Lemon/RC upgrade UI.
+    if (TENANT.hidePaywall) return;
+    setPaywallReason(reason);
+  }, []);
 
   const nav = useCallback((target: string, sub?: string | null, topic?: string | null) => {
     setNavNonce((n) => n + 1);

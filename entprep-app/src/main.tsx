@@ -2,10 +2,31 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import { initSentry } from './config/sentry'
+import { TENANT, isSchoolTenant } from './config/tenant'
 import { Capacitor } from '@capacitor/core'
 import { captureRefFromUrl, getPendingReferral, flushPendingReferral, savePendingReferral } from './utils/referralHelpers'
 
 initSentry();
+
+/** School builds: override static index.html branding before React mounts. */
+function applyTenantDocumentBranding() {
+  if (!isSchoolTenant()) return;
+  const name = TENANT.name;
+  const short = TENANT.shortName || name;
+  document.title = `${name} — Подготовка к ЕНТ`;
+  const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+  if (appleTitle) appleTitle.setAttribute('content', short);
+  const splashLogo = document.querySelector('#splash .logo');
+  if (splashLogo) {
+    splashLogo.innerHTML = `<span style="color:${TENANT.accent}">${name}</span>`;
+  }
+  if (TENANT.faviconUrl && TENANT.faviconUrl !== '/favicon.svg') {
+    document.querySelectorAll('link[rel="icon"], link[rel="apple-touch-icon"]').forEach((el) => {
+      el.setAttribute('href', TENANT.faviconUrl);
+    });
+  }
+}
+applyTenantDocumentBranding();
 
 // Clean up old PKCE-era storage key (v1 → v2 migration, Apr 15)
 try { localStorage.removeItem('entprep-auth'); } catch { /* ignore */ }

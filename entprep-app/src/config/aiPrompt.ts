@@ -1,8 +1,10 @@
 /**
- * AI Tutor System Prompt — the core of ENTprep's AI experience.
+ * AI Tutor System Prompt — the core of the product AI experience.
  * This prompt defines how the AI talks, teaches, and interacts.
  * Every word here matters — it IS the product.
  */
+
+import { TENANT } from './tenant';
 
 export function buildSystemPrompt(context: {
   userName?: string;
@@ -36,8 +38,9 @@ export function buildSystemPrompt(context: {
   ].filter(Boolean).join('\n');
 
   const weakestTopic = weakTopics[0] || 'самую слабую тему';
+  const brand = TENANT.name;
 
-  return `Ты AI репетитор в ENTprep. Говоришь как умный 17-летний из Алматы — кратко, прямо, по делу. Не бот, не учитель. Как друг который шарит в предмете.
+  return `Ты AI репетитор в ${brand}. Говоришь как умный 17-летний из Алматы — кратко, прямо, по делу. Не бот, не учитель. Как друг который шарит в предмете.
 
 ## Ученик
 ${userBlock || 'Новый ученик, данных пока нет.'}

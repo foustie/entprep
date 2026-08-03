@@ -62,11 +62,11 @@ entprep-app/src/
 ├── data/universities.ts # 52 universities
 └── sw.ts                # Service worker (Workbox + push)
 
-entprep-app/netlify/functions/   # Serverless API (20 functions)
+entprep-app/netlify/functions/   # Serverless API (~21 functions)
 ├── ai-explain.mjs, ai-generate.mjs, ai-tutor.mjs, study-plan-focus.mjs
 ├── admin-action.mjs, leaderboard.mjs, social.mjs, duel.mjs, analytics.mjs
 ├── revenuecat-webhook.mjs, lemon-webhook.mjs, lemon-reconcile.mjs, lemon-subscription.mjs, promo.mjs
-├── questions.mjs, public-questions.mjs, teacher.mjs, delete-account.mjs
+├── questions.mjs, public-questions.mjs, teacher.mjs, delete-account.mjs, proctor.mjs
 ├── push-subscribe.mjs, push-cron.mjs
 └── utils/shared.mjs, constants.mjs, quality.mjs, rag.mjs, ai.mjs
 
@@ -112,6 +112,7 @@ entprep-app/scripts/             # Build, deploy & question-generation scripts (
 - Dark/light theme, bilingual (Russian + Kazakh) — UI + question content (q_kk, o_kk, e_kk columns)
 - PWA, Sentry, Plausible analytics
 - University grant calculator (52 universities)
+- Soft proctoring (school WL, WS6): `proctor_events` table logs tab-switch/blur/fullscreen-exit signals during Full-ENT (`netlify/functions/proctor.mjs`, `src/utils/proctorHelpers.ts`); warn+log only, never auto-fails or touches scoring; teacher reviews per-student in `TeacherDashboard`. Enabled via `isSoftProctorEnabled()` (school tenant or `VITE_SOFT_PROCTOR=true`)
 
 ## Development Commands
 

@@ -31,6 +31,7 @@ import { getSingleCorrect, getQType } from '../types';
 import { calcTestXP } from '../utils/xpHelpers';
 import ScoreRing from './ui/ScoreRing';
 import { useT } from '../locales';
+import { isSoftProctorEnabled, newProctorSessionId, logProctorEvent } from '../utils/proctorHelpers';
 // FullENT is free unlimited — no AI limits needed
 
 interface FullENTProps {
@@ -164,6 +165,40 @@ export default function FullENT({ finish }: FullENTProps) {
     return () => { window.removeEventListener('offline', goOffline); window.removeEventListener('online', goOnline); };
   }, [phase, toast, t.test]);
 
+  // ── WS6: Soft proctoring ─────────────────────────────────────────────────
+  // Warn+log ONLY — never auto-fails, never touches scoring (see finishENT,
+  // which computes results purely from `answers`). Enabled on the school WL
+  // tenant, or opt-in via VITE_SOFT_PROCTOR for retail pilots/testing.
+  const softProctorRef = useRef(isSoftProctorEnabled());
+  const proctorSessionRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!softProctorRef.current || phase !== 'test' || proctorSessionRef.current) return;
+    const sid = newProctorSessionId();
+    proctorSessionRef.current = sid;
+    logProctorEvent(sid, 'session_start');
+  }, [phase]);
+
+  useEffect(() => {
+    if (!softProctorRef.current || phase !== 'test') return;
+    const onVisibility = () => {
+      const sid = proctorSessionRef.current;
+      if (!sid) return;
+      if (document.hidden) {
+        logProctorEvent(sid, 'visibility_hidden');
+        toast.warning(t.proctor.tabSwitchWarning);
+      } else {
+        logProctorEvent(sid, 'focus');
+      }
+    };
+    const onBlur = () => { if (proctorSessionRef.current) logProctorEvent(proctorSessionRef.current, 'blur'); };
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('blur', onBlur);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('blur', onBlur);
+    };
+  }, [phase, toast, t.proctor]);
+
   // Keyboard navigation for answer options
   useEffect(() => {
     if (phase !== 'test' || paused || offline || !sections || reportIdx !== null || showFinishConfirm) return;
@@ -210,6 +245,7 @@ export default function FullENT({ finish }: FullENTProps) {
     if (finishedRef.current) return; // BUG-2: guard against double-finish (timer + finish-early race)
     finishedRef.current = true;
     if (timerRef.current) clearInterval(timerRef.current);
+    if (proctorSessionRef.current) logProctorEvent(proctorSessionRef.current, 'session_end');
     flushQTime(); // capture time spent on the question visible at finish
     setPhase("results");
     const r = calcResults();

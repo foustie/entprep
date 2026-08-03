@@ -50,6 +50,132 @@ function generateInviteCode() {
   return code;
 }
 
+
+function parseTeacherEmails() {
+  return (process.env.TEACHER_EMAILS || "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function assertTeacherAllowed(user) {
+  const allow = parseTeacherEmails();
+  if (!allow.length) return null; // empty = open (backward compat)
+  const email = (user.email || "").toLowerCase();
+  if (!allow.includes(email)) {
+    return Response.json({ error: "Нет доступа учителя" }, { status: 403, headers: CORS_HEADERS });
+  }
+  return null;
+}
+
+async function buildClassPayload(cls) {
+  const members = await sbGet("class_members", `class_id=eq.${cls.id}&select=student_id,joined_at`);
+  if (!members.length) {
+    return { class: cls, students: [] };
+  }
+
+  const studentIds = members.map(m => m.student_id);
+  const profiles = await sbGet("profiles", `id=in.(${studentIds.join(",")})&select=id,nickname,avatar_url,xp,level,streak`);
+  const userData = await sbGet("user_data", `id=in.(${studentIds.join(",")})&select=id,hist`);
+
+  const students = studentIds.map(sid => {
+    const profile = profiles.find(p => p.id === sid) || {};
+    const data = userData.find(d => d.id === sid);
+    const hist = data?.hist || [];
+    const member = members.find(m => m.student_id === sid);
+
+    const totalTests = hist.filter(h => h.type !== 'fullent').length;
+    const totalCorrect = hist.reduce((s, h) => s + (h.co || 0), 0);
+    const totalQuestions = hist.reduce((s, h) => s + (h.to || 0), 0);
+    const avgScore = totalTests > 0 ? Math.round(hist.reduce((s, h) => s + (h.sc || 0), 0) / totalTests) : 0;
+    const lastActive = hist.length > 0 ? hist.reduce((latest, h) => (h.dt || '') > (latest || '') ? h.dt : latest, hist[0]?.dt || null) : null;
+
+    const sortedHist = [...hist].sort((a, b) => (a.dt || '').localeCompare(b.dt || ''));
+
+    const regular = sortedHist.filter(t => t.type !== 'fullent' && t.sc != null);
+    let predictedScore = null;
+    if (regular.length >= 3) {
+      const recent = regular.slice(-15);
+      let wSum = 0, wTot = 0;
+      for (let i = 0; i < recent.length; i++) {
+        const w = 1 + (i / recent.length);
+        wSum += (recent[i].sc || 0) * w;
+        wTot += w;
+      }
+      predictedScore = Math.round((wSum / wTot) * 1.4);
+    }
+
+    const topicMap = {};
+    const recentWithQd = sortedHist.filter(h => h.qd?.length).slice(-20);
+    for (const h of recentWithQd) {
+      for (const q of h.qd) {
+        if (!q.tp) continue;
+        if (!topicMap[q.tp]) topicMap[q.tp] = { correct: 0, total: 0 };
+        topicMap[q.tp].total++;
+        if (q.ok) topicMap[q.tp].correct++;
+      }
+    }
+    const weakTopics = Object.entries(topicMap)
+      .filter(([, v]) => v.total >= 3)
+      .map(([tp, v]) => ({ tp, correct: v.correct, total: v.total, pct: Math.round((v.correct / v.total) * 100) }))
+      .sort((a, b) => a.pct - b.pct)
+      .slice(0, 5);
+
+    const bySubject = {};
+    for (const h of hist) {
+      if (!bySubject[h.su]) bySubject[h.su] = { tests: 0, correct: 0, total: 0, scores: [] };
+      bySubject[h.su].tests++;
+      bySubject[h.su].correct += h.co || 0;
+      bySubject[h.su].total += h.to || 0;
+      bySubject[h.su].scores.push(h.sc || 0);
+    }
+    for (const subKey of Object.keys(bySubject)) {
+      const s = bySubject[subKey];
+      s.avgScore = Math.round(s.scores.reduce((a, b) => a + b, 0) / s.scores.length);
+      if (s.scores.length >= 3) {
+        const first3 = s.scores.slice(0, 3);
+        const latest3 = s.scores.slice(-3);
+        s.firstAvg = Math.round(first3.reduce((a, b) => a + b, 0) / first3.length);
+        s.latestAvg = Math.round(latest3.reduce((a, b) => a + b, 0) / latest3.length);
+        s.growth = s.latestAvg - s.firstAvg;
+      }
+      delete s.scores;
+    }
+
+    let growth = null;
+    if (hist.length >= 3) {
+      const sorted = [...hist].sort((a, b) => (a.dt || '').localeCompare(b.dt || ''));
+      const first3 = sorted.slice(0, 3);
+      const latest3 = sorted.slice(-3);
+      const firstAvg = Math.round(first3.reduce((s, h) => s + (h.sc || 0), 0) / first3.length);
+      const latestAvg = Math.round(latest3.reduce((s, h) => s + (h.sc || 0), 0) / latest3.length);
+      growth = latestAvg - firstAvg;
+    }
+
+    return {
+      id: sid,
+      nickname: profile.nickname || "Ученик",
+      avatar_url: profile.avatar_url,
+      xp: profile.xp || 0,
+      level: profile.level || 1,
+      streak: profile.streak || 0,
+      joined_at: member?.joined_at,
+      totalTests,
+      totalCorrect,
+      totalQuestions,
+      avgScore,
+      lastActive,
+      bySubject,
+      growth,
+      predictedScore,
+      weakTopics,
+    };
+  });
+
+  return { class: cls, students };
+}
+
+
 const rateLimit = createRateLimiter("teacher", { max: 30, windowSec: 60 });
 
 export default async function handler(req) {
@@ -68,141 +194,41 @@ export default async function handler(req) {
     switch (action) {
       // ── Get teacher's class + students ──────────────────────────────
       case "get_class": {
-        // Find teacher's class
-        const classes = await sbGet("classes", `teacher_id=eq.${user.id}&select=*`);
-        if (!classes.length) return Response.json({ class: null }, { headers: CORS_HEADERS });
-
-        const cls = classes[0];
-
-        // Get members
-        const members = await sbGet("class_members", `class_id=eq.${cls.id}&select=student_id,joined_at`);
-        if (!members.length) {
-          return Response.json({ class: cls, students: [] }, { headers: CORS_HEADERS });
+        const classIdParam = url.searchParams.get("class_id");
+        let bodyClassId = null;
+        if (req.method === "POST") {
+          try {
+            const body = await req.json();
+            bodyClassId = body?.class_id || null;
+          } catch { /* no body */ }
         }
+        const wantedId = classIdParam || bodyClassId;
 
-        const studentIds = members.map(m => m.student_id);
+        const classes = await sbGet("classes", `teacher_id=eq.${user.id}&select=*&order=created_at.desc`);
+        if (!classes.length) return Response.json({ class: null, classes: [] }, { headers: CORS_HEADERS });
 
-        // Get profiles
-        const profiles = await sbGet("profiles", `id=in.(${studentIds.join(",")})&select=id,nickname,avatar_url,xp,level,streak`);
+        const cls = wantedId
+          ? classes.find((c) => c.id === wantedId)
+          : classes[0];
+        if (!cls) return Response.json({ error: "Класс не найден" }, { status: 404, headers: CORS_HEADERS });
 
-        // Get user_data (test history)
-        const userData = await sbGet("user_data", `id=in.(${studentIds.join(",")})&select=id,hist`);
+        const payload = await buildClassPayload(cls);
+        return Response.json({ ...payload, classes }, { headers: CORS_HEADERS });
+      }
 
-        // Merge data
-        const students = studentIds.map(sid => {
-          const profile = profiles.find(p => p.id === sid) || {};
-          const data = userData.find(d => d.id === sid);
-          const hist = data?.hist || [];
-          const member = members.find(m => m.student_id === sid);
-
-          // Compute stats from history (exclude fullent simulations)
-          const totalTests = hist.filter(h => h.type !== 'fullent').length;
-          const totalCorrect = hist.reduce((s, h) => s + (h.co || 0), 0);
-          const totalQuestions = hist.reduce((s, h) => s + (h.to || 0), 0);
-          const avgScore = totalTests > 0 ? Math.round(hist.reduce((s, h) => s + (h.sc || 0), 0) / totalTests) : 0;
-          const lastActive = hist.length > 0 ? hist.reduce((latest, h) => (h.dt || '') > (latest || '') ? h.dt : latest, hist[0]?.dt || null) : null;
-
-          // Sort hist chronologically for correct slicing
-          const sortedHist = [...hist].sort((a, b) => (a.dt || '').localeCompare(b.dt || ''));
-
-          // Predicted ENT score (weighted average of last 15 tests → ×1.4)
-          const regular = sortedHist.filter(t => t.type !== 'fullent' && t.sc != null);
-          let predictedScore = null;
-          if (regular.length >= 3) {
-            const recent = regular.slice(-15);
-            let wSum = 0, wTot = 0;
-            for (let i = 0; i < recent.length; i++) {
-              const w = 1 + (i / recent.length);
-              wSum += (recent[i].sc || 0) * w;
-              wTot += w;
-            }
-            predictedScore = Math.round((wSum / wTot) * 1.4);
-          }
-
-          // Topic-level weak spots (from last 20 tests with qd, sorted)
-          const topicMap = {};
-          const recentWithQd = sortedHist.filter(h => h.qd?.length).slice(-20);
-          for (const h of recentWithQd) {
-            for (const q of h.qd) {
-              if (!q.tp) continue;
-              if (!topicMap[q.tp]) topicMap[q.tp] = { correct: 0, total: 0 };
-              topicMap[q.tp].total++;
-              if (q.ok) topicMap[q.tp].correct++;
-            }
-          }
-          // Bottom 5 weakest topics (min 3 questions attempted)
-          const weakTopics = Object.entries(topicMap)
-            .filter(([, v]) => v.total >= 3)
-            .map(([tp, v]) => ({ tp, correct: v.correct, total: v.total, pct: Math.round((v.correct / v.total) * 100) }))
-            .sort((a, b) => a.pct - b.pct)
-            .slice(0, 5);
-
-          // Per-subject breakdown
-          const bySubject = {};
-          for (const h of hist) {
-            if (!bySubject[h.su]) bySubject[h.su] = { tests: 0, correct: 0, total: 0, scores: [] };
-            bySubject[h.su].tests++;
-            bySubject[h.su].correct += h.co || 0;
-            bySubject[h.su].total += h.to || 0;
-            bySubject[h.su].scores.push(h.sc || 0);
-          }
-          // Average scores per subject + growth (first 3 vs latest 3)
-          for (const subKey of Object.keys(bySubject)) {
-            const s = bySubject[subKey];
-            s.avgScore = Math.round(s.scores.reduce((a, b) => a + b, 0) / s.scores.length);
-            if (s.scores.length >= 3) {
-              const first3 = s.scores.slice(0, 3);
-              const latest3 = s.scores.slice(-3);
-              s.firstAvg = Math.round(first3.reduce((a, b) => a + b, 0) / first3.length);
-              s.latestAvg = Math.round(latest3.reduce((a, b) => a + b, 0) / latest3.length);
-              s.growth = s.latestAvg - s.firstAvg;
-            }
-            delete s.scores;
-          }
-
-          // Overall growth: first 3 tests avg vs latest 3
-          let growth = null;
-          if (hist.length >= 3) {
-            const sorted = [...hist].sort((a, b) => (a.dt || '').localeCompare(b.dt || ''));
-            const first3 = sorted.slice(0, 3);
-            const latest3 = sorted.slice(-3);
-            const firstAvg = Math.round(first3.reduce((s, h) => s + (h.sc || 0), 0) / first3.length);
-            const latestAvg = Math.round(latest3.reduce((s, h) => s + (h.sc || 0), 0) / latest3.length);
-            growth = latestAvg - firstAvg;
-          }
-
-          return {
-            id: sid,
-            nickname: profile.nickname || "Ученик",
-            avatar_url: profile.avatar_url,
-            xp: profile.xp || 0,
-            level: profile.level || 1,
-            streak: profile.streak || 0,
-            joined_at: member?.joined_at,
-            totalTests,
-            totalCorrect,
-            totalQuestions,
-            avgScore,
-            lastActive,
-            bySubject,
-            growth,
-            predictedScore,
-            weakTopics,
-          };
-        });
-
-        return Response.json({ class: cls, students }, { headers: CORS_HEADERS });
+      case "list_classes": {
+        const classes = await sbGet("classes", `teacher_id=eq.${user.id}&select=*&order=created_at.desc`);
+        return Response.json({ classes }, { headers: CORS_HEADERS });
       }
 
       // ── Create class ────────────────────────────────────────────────
       case "create_class": {
+        const denied = assertTeacherAllowed(user);
+        if (denied) return denied;
+
         const body = await req.json();
         const { name, school } = body;
         if (!name || !school) return Response.json({ error: "name and school required" }, { status: 400, headers: CORS_HEADERS });
-
-        // Check if teacher already has a class
-        const existing = await sbGet("classes", `teacher_id=eq.${user.id}&select=id`);
-        if (existing.length) return Response.json({ error: "У вас уже есть класс" }, { status: 409, headers: CORS_HEADERS });
 
         // Generate unique invite code (retry on collision)
         let invite_code;
@@ -245,13 +271,39 @@ export default async function handler(req) {
         return Response.json({ class: cls, joined: true }, { status: 201, headers: CORS_HEADERS });
       }
 
+      // ── Kick student (teacher) ──────────────────────────────────────
+      case "kick_student": {
+        const body = await req.json();
+        const { class_id, student_id } = body || {};
+        if (!class_id || !student_id) {
+          return Response.json({ error: "class_id and student_id required" }, { status: 400, headers: CORS_HEADERS });
+        }
+        const owned = await sbGet("classes", `id=eq.${class_id}&teacher_id=eq.${user.id}&select=id`);
+        if (!owned.length) return Response.json({ error: "Класс не найден" }, { status: 404, headers: CORS_HEADERS });
+        await sbDelete("class_members", `class_id=eq.${class_id}&student_id=eq.${student_id}`);
+        return Response.json({ ok: true }, { headers: CORS_HEADERS });
+      }
+
+      // ── Leave class (student) ───────────────────────────────────────
+      case "leave_class": {
+        const body = await req.json().catch(() => ({}));
+        let class_id = body?.class_id;
+        if (!class_id) {
+          const memberships = await sbGet("class_members", `student_id=eq.${user.id}&select=class_id`);
+          if (!memberships.length) return Response.json({ error: "Вы не в классе" }, { status: 404, headers: CORS_HEADERS });
+          class_id = memberships[0].class_id;
+        }
+        await sbDelete("class_members", `class_id=eq.${class_id}&student_id=eq.${user.id}`);
+        return Response.json({ ok: true }, { headers: CORS_HEADERS });
+      }
+
       // ── Get student's class info ────────────────────────────────────
       case "my_class": {
         const memberships = await sbGet("class_members", `student_id=eq.${user.id}&select=class_id`);
         if (!memberships.length) return Response.json({ class: null }, { headers: CORS_HEADERS });
 
         const classId = memberships[0].class_id;
-        const classes = await sbGet("classes", `id=eq.${classId}&select=name,school,invite_code`);
+        const classes = await sbGet("classes", `id=eq.${classId}&select=id,name,school,invite_code`);
 
         return Response.json({ class: classes[0] || null }, { headers: CORS_HEADERS });
       }

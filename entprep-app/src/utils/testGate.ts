@@ -69,10 +69,12 @@ export function computeTestGate(args: {
    * we never show the paywall — premium status isn't known yet and a paying user
    * must never be bounced. Self-heals to the real verdict once it settles. */
   premiumLoading?: boolean;
+  /** Optional clock for tests (defaults to now). */
+  now?: Date;
 }): TestGateStatus {
-  const { user, isPremium, hist, premiumLoading } = args;
+  const { user, isPremium, hist, premiumLoading, now } = args;
   if (!user) return 'login';
   if (premiumLoading) return 'ok';
-  if (!isPremium && testsThisWeek(hist) >= FREE_WEEKLY_TESTS) return 'paywall';
+  if (!isPremium && testsThisWeek(hist, now) >= FREE_WEEKLY_TESTS) return 'paywall';
   return 'ok';
 }

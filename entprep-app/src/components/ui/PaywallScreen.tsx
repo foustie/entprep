@@ -13,6 +13,7 @@ import { trackEvent } from '../../utils/analytics';
 import SendToMomSheet from '../SendToMomSheet';
 import PaywallModal from '../PaywallModal';
 import { lemonCheckoutUrl } from '../../config/payment';
+import { TENANT } from '../../config/tenant';
 
 interface PaywallScreenProps {
   trigger: 'explain_limit' | 'tutor_limit' | 'fullent_result';
@@ -408,7 +409,7 @@ function WebPaywallScreen({ trigger, score, onClose }: PaywallScreenProps) {
             <div style={{ ...priceRow(TINT.streak.bgLight, false), borderTop: `2px solid ${INK}` }}>
               <span style={{ ...priceLabel, color: COLORS.streak, fontWeight: 900 }}>
                 <span style={{ display: 'inline-block', transform: 'translateY(-1px)', marginRight: 4 }}>★</span>
-                ENTprep PRO
+                {TENANT.name} PRO
               </span>
               <span style={{
                 fontFamily: FF.display,

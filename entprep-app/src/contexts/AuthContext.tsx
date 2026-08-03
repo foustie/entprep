@@ -4,21 +4,28 @@ import { setUser as setSentryUser } from '../config/sentry';
 import { getMyProfile } from '../utils/socialHelpers';
 import type { AuthUser, Profile } from '../types/index';
 import { trackEvent } from '../utils/analytics';
-import { ADMIN_EMAILS } from '../config/app';
+import { ADMIN_EMAILS, API_BASE, TEACHER_EMAILS } from '../config/app';
 import { initPurchases, loginPurchases, logoutPurchases, checkPremiumStatus } from '../config/purchases';
+import { isSchoolSeat as computeSchoolSeat, isSchoolTenant } from '../config/tenant';
 
 interface AuthContextValue {
   user: AuthUser | null;
   profile: Profile | null;
   isPremium: boolean;
+  /** School-licensed seat (WL build) — implies premium without Lemon/RC. */
+  isSchoolSeat: boolean;
   /** True between sign-in and the first resolution of the subscription check.
    * While true, premium status is not yet known — callers must NOT treat the user
    * as free (e.g. the test-start paywall defers until this settles). */
   premiumLoading: boolean;
   isAdmin: boolean;
+  /** WL school MVP: gates the teacher entry in Settings + is mirrored server-side for create_class. */
+  isTeacher: boolean;
   needsNickname: boolean;
   refreshUser: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  /** Re-checks class membership (my_class) — call after join/leave so isSchoolSeat updates without a reload. */
+  refreshSchoolClass: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -28,6 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [nativePremium, setNativePremium] = useState(false);
   const [dbPremium, setDbPremium] = useState(false);
+  const [inSchoolClass, setInSchoolClass] = useState(false);
   // Tracks whether the subscription check has resolved at least once for the
   // current user. Drives `premiumLoading` so the test-start gate never bounces a
   // (possibly premium) user to the paywall during the async load window.
@@ -36,6 +44,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // resolves a beat later. premiumLoading waits for BOTH so a native subscriber (premium only
   // in RC, not the DB) isn't briefly bounced to the paywall before RC settles.
   const [nativeChecked, setNativeChecked] = useState(false);
+
+  const checkSchoolClass = useCallback(async () => {
+    if (!isSchoolTenant() || !supabase) {
+      setInSchoolClass(false);
+      return;
+    }
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        setInSchoolClass(false);
+        return;
+      }
+      const res = await fetch(`${API_BASE}/api/teacher?action=my_class`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        setInSchoolClass(false);
+        return;
+      }
+      const body = await res.json();
+      setInSchoolClass(!!(body?.class || body?.id || body?.members));
+    } catch {
+      setInSchoolClass(false);
+    }
+  }, []);
 
   // Check subscriptions table (authoritative source, RLS allows reading own row).
   // maybeSingle() — return null on 0 rows instead of throwing, since most users
@@ -118,6 +152,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (u) {
         refreshProfile();
+        checkSchoolClass().catch(() => setInSchoolClass(false));
         checkSubscription(u.id)
           .then(setDbPremium)
           .catch(() => setDbPremium(false))
@@ -136,6 +171,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setProfile(null);
         setDbPremium(false);
         setNativePremium(false);
+        setInSchoolClass(false);
         setPremiumChecked(false);
         setNativeChecked(false);
         logoutPurchases().catch((err) => console.error('logoutPurchases failed:', err));
@@ -161,7 +197,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => { subscription.unsubscribe(); };
-  }, [refreshProfile, checkSubscription]);
+  }, [refreshProfile, checkSubscription, checkSchoolClass]);
 
   // Post-checkout refresh: when the user comes back from the Lemon Squeezy
   // checkout tab (or refocuses the app), re-check subscription status so the
@@ -189,26 +225,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user, checkSubscription]);
 
   const isAdmin = useMemo(() => !!user?.email && ADMIN_EMAILS.includes(user.email), [user]);
+  // Backward compat: empty allowlist = any signed-in user can be a teacher.
+  const isTeacher = useMemo(() => {
+    if (!user) return false;
+    if (TEACHER_EMAILS.length === 0) return true;
+    return !!user.email && TEACHER_EMAILS.includes(user.email.toLowerCase());
+  }, [user]);
   const needsNickname = useMemo(() => !!profile && profile.nickname.startsWith('user_'), [profile]);
 
   const FREE_PREMIUM = false as boolean;
+  const schoolSeat = useMemo(
+    () => !!user && computeSchoolSeat({ email: user.email, inSchoolClass }),
+    [user, inSchoolClass],
+  );
   // PAY-3: premium is derived only from authoritative sources. The previous
   // user_metadata.is_premium fallback was client-writable (supabase.auth.updateUser),
   // letting any user self-grant Premium — removed.
+  // School seats (WL) grant premium without Lemon/RC.
   const isPremium = useMemo(
-    () => FREE_PREMIUM || isAdmin || nativePremium || dbPremium,
-    [FREE_PREMIUM, isAdmin, nativePremium, dbPremium],
+    () => FREE_PREMIUM || isAdmin || nativePremium || dbPremium || schoolSeat,
+    [FREE_PREMIUM, isAdmin, nativePremium, dbPremium, schoolSeat],
   );
   // A signed-in user whose subscription check hasn't resolved yet. Admins are known
   // synchronously from the email, so they're never considered "loading".
+  // School seats-all is known synchronously — skip the loading window.
   const premiumLoading = useMemo(
-    () => !!user && !isAdmin && !(premiumChecked && nativeChecked),
-    [user, isAdmin, premiumChecked, nativeChecked],
+    () => !!user && !isAdmin && !schoolSeat && !(premiumChecked && nativeChecked),
+    [user, isAdmin, schoolSeat, premiumChecked, nativeChecked],
   );
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, profile, isPremium, premiumLoading, isAdmin, needsNickname, refreshUser, refreshProfile }),
-    [user, profile, isPremium, premiumLoading, isAdmin, needsNickname, refreshUser, refreshProfile],
+    () => ({
+      user,
+      profile,
+      isPremium,
+      isSchoolSeat: schoolSeat,
+      premiumLoading,
+      isAdmin,
+      isTeacher,
+      needsNickname,
+      refreshUser,
+      refreshProfile,
+      refreshSchoolClass: checkSchoolClass,
+    }),
+    [user, profile, isPremium, schoolSeat, premiumLoading, isAdmin, isTeacher, needsNickname, refreshUser, refreshProfile, checkSchoolClass],
   );
 
   return (

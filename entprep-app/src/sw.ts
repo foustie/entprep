@@ -3,8 +3,12 @@ import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
 import { registerRoute, NavigationRoute } from 'workbox-routing';
 import { CacheFirst, NetworkFirst } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
+import { TENANT } from './config/tenant';
 
 declare let self: ServiceWorkerGlobalScope;
+
+/** Build-time tenant label for push notification fallbacks (injectManifest bundles tenant.ts). */
+const SW_BRAND = TENANT.shortName || TENANT.name || 'ENTprep';
 
 // ── SW activation: auto-skipWaiting on install ──────────────────────────
 // Returning users get new version silently on next visit (next navigation
@@ -65,7 +69,7 @@ self.addEventListener('push', (event) => {
     const payload = event.data.json();
     const { title, body, icon, tag, url, badge } = payload;
     event.waitUntil(
-      self.registration.showNotification(title || 'ENTprep', {
+      self.registration.showNotification(title || SW_BRAND, {
         body: body || '',
         icon: icon || '/icon-192.png',
         badge: badge || '/icon-96.png',
@@ -76,7 +80,7 @@ self.addEventListener('push', (event) => {
     );
   } catch {
     event.waitUntil(
-      self.registration.showNotification('ENTprep', {
+      self.registration.showNotification(SW_BRAND, {
         body: event.data.text(),
         icon: '/icon-192.png',
       })
