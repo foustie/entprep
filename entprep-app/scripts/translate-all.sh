@@ -5,8 +5,8 @@
 set -e
 
 API_KEY=${ANTHROPIC_API_KEY:?ANTHROPIC_API_KEY required}
-SB_URL=https://mztujmeykhlgwqpdoilf.supabase.co
-SB_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im16dHVqbWV5a2hsZ3dxcGRvaWxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNjI0ODAsImV4cCI6MjA4NjgzODQ4MH0.6_ui3S3wM3uOd-4VuNAQd4h3KFWoXUH2fHrwTNn28fw
+SB_URL=${SUPABASE_URL:?SUPABASE_URL required}
+SB_KEY=${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY required}
 
 # reading has long passages — use smaller batches
 READING_BATCH=3
